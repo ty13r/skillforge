@@ -1,6 +1,8 @@
 interface StatusGlowProps {
   variant?: "success" | "running" | "warning" | "error" | "neutral";
   className?: string;
+  /** When true, the dot pulses to indicate active state. Defaults to true for "running" and "warning". */
+  pulse?: boolean;
 }
 
 const COLORS: Record<NonNullable<StatusGlowProps["variant"]>, string> = {
@@ -14,12 +16,16 @@ const COLORS: Record<NonNullable<StatusGlowProps["variant"]>, string> = {
 export default function StatusGlow({
   variant = "neutral",
   className = "",
+  pulse,
 }: StatusGlowProps) {
+  const shouldPulse =
+    pulse ?? (variant === "running" || variant === "warning");
   return (
     <span
       className={
         "inline-block h-2 w-2 rounded-full shadow-glow " +
         COLORS[variant] +
+        (shouldPulse ? " animate-pulse-glow" : "") +
         " " +
         className
       }

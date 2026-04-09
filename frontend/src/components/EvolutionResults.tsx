@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import FitnessChart from "./FitnessChart";
 import FitnessRadar from "./FitnessRadar";
 import PrimaryButton from "./PrimaryButton";
 import Sidebar from "./Sidebar";
-import type { EvolutionSocketState } from "../hooks/useEvolutionSocket";
+import { derivePhases, type EvolutionSocketState } from "../hooks/useEvolutionSocket";
 import type { RunDetail } from "../types";
 
 interface EvolutionResultsProps {
@@ -20,6 +21,9 @@ export default function EvolutionResults({
 }: EvolutionResultsProps) {
   const finalGen = sockState.generations.at(-1);
   const bestFitness = finalGen?.best_fitness ?? 0;
+
+  // Phase diagram in the sidebar — at this screen everything is complete
+  const phases = useMemo(() => derivePhases(sockState, 0), [sockState]);
 
   // Pull objectives from the latest generation_complete or scores_published event
   const lastScores = sockState.events
@@ -48,6 +52,7 @@ export default function EvolutionResults({
         runId={runId}
         generation={sockState.currentGeneration}
         totalGenerations={runDetail?.num_generations}
+        phases={phases}
       />
       <div className="flex-1 px-8 py-6">
         <div className="flex items-center justify-between">

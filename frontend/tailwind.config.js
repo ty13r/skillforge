@@ -36,6 +36,31 @@ export default {
       backgroundImage: {
         'primary-gradient': 'linear-gradient(45deg, #c0c1ff 0%, #8083ff 100%)',
         'hero-radial': 'radial-gradient(ellipse at top right, rgba(192,193,255,0.15), transparent 60%)',
+        'shimmer-stripe': 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)',
+      },
+      keyframes: {
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 8px currentColor', opacity: '1' },
+          '50%': { boxShadow: '0 0 18px currentColor', opacity: '0.85' },
+        },
+        'slide-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        'breathe-border': {
+          '0%, 100%': { borderColor: 'rgba(192,193,255,0.4)' },
+          '50%': { borderColor: 'rgba(192,193,255,0.9)' },
+        },
+      },
+      animation: {
+        'pulse-glow': 'pulse-glow 1.6s ease-in-out infinite',
+        'slide-in-up': 'slide-in-up 0.25s ease-out',
+        shimmer: 'shimmer 2s linear infinite',
+        'breathe-border': 'breathe-border 2s ease-in-out infinite',
       },
     },
   },

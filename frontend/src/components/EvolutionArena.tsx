@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import BreedingReport from "./BreedingReport";
@@ -9,7 +9,7 @@ import JudgingPipelinePill from "./JudgingPipelinePill";
 import LiveFeedLog from "./LiveFeedLog";
 import Sidebar from "./Sidebar";
 import StatusGlow from "./StatusGlow";
-import { useEvolutionSocket } from "../hooks/useEvolutionSocket";
+import { derivePhases, useEvolutionSocket } from "../hooks/useEvolutionSocket";
 import type { RunDetail } from "../types";
 
 const JUDGING_LAYERS: { layer: string; label: string }[] = [
@@ -46,6 +46,22 @@ export default function EvolutionArena() {
     return () => clearInterval(id);
   }, [sockState.isComplete, sockState.isFailed, startTime]);
 
+  // Expected number of (skill, challenge) competitor runs in the active gen
+  const expectedCompetitors = useMemo(() => {
+    const pop = runDetail?.population_size ?? 5;
+    // Number of challenges from the events; falls back to 3 (engine default)
+    const challengesDesigned = sockState.events.filter(
+      (e) => e.event === "challenge_designed",
+    ).length;
+    return pop * Math.max(challengesDesigned, 1);
+  }, [runDetail, sockState.events]);
+
+  // Compute phase states for the sidebar diagram
+  const phases = useMemo(
+    () => derivePhases(sockState, expectedCompetitors),
+    [sockState, expectedCompetitors],
+  );
+
   if (!runId) return null;
 
   // If complete, render the results screen
@@ -67,6 +83,7 @@ export default function EvolutionArena() {
         runId={runId}
         generation={sockState.currentGeneration}
         totalGenerations={runDetail?.num_generations}
+        phases={phases}
       />
 
       <div className="flex-1 px-8 py-6">

@@ -6,7 +6,9 @@ interface JudgingPipelinePillProps {
 
 const STATUS_CLASS: Record<JudgingPipelinePillProps["status"], string> = {
   pending: "bg-surface-container-high text-on-surface-dim",
-  running: "bg-secondary/15 text-secondary shadow-glow",
+  running:
+    "bg-secondary/15 text-secondary shadow-glow animate-pulse-glow " +
+    "bg-shimmer-stripe bg-[length:200%_100%] animate-shimmer",
   complete: "bg-tertiary/15 text-tertiary",
 };
 

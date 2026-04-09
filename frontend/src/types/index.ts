@@ -130,3 +130,22 @@ export interface GenerationStats {
   pareto_front?: string[];
   status: "running" | "judging" | "breeding" | "complete";
 }
+
+// --- Process flow phases (drives the sidebar diagram) ----------------------
+
+export type PhaseId =
+  | "design_challenges"
+  | "spawn_or_breed"
+  | "compete"
+  | "judge"
+  | "score_select"
+  | "finalize";
+
+export type PhaseStatus = "pending" | "running" | "complete" | "failed";
+
+export interface PhaseState {
+  id: PhaseId;
+  label: string;
+  status: PhaseStatus;
+  detail?: string; // sub-progress like "8 of 15 competitors" or "L3 trace analysis"
+}

@@ -22,6 +22,22 @@ const ACTOR_COLOR: Record<string, string> = {
   run_failed: "text-error",
 };
 
+const ACTOR_BAR_BG: Record<string, string> = {
+  run_started: "bg-primary",
+  challenge_designed: "bg-secondary",
+  generation_started: "bg-secondary",
+  competitor_started: "bg-on-surface",
+  competitor_finished: "bg-tertiary",
+  judging_started: "bg-warning",
+  scores_published: "bg-tertiary",
+  cost_update: "bg-on-surface-dim",
+  breeding_started: "bg-primary",
+  breeding_report: "bg-primary",
+  generation_complete: "bg-tertiary",
+  evolution_complete: "bg-tertiary",
+  run_failed: "bg-error",
+};
+
 function formatEvent(ev: EvolutionEvent): string {
   switch (ev.event) {
     case "run_started":
@@ -86,15 +102,30 @@ export default function LiveFeedLog({ events }: LiveFeedLogProps) {
         className="max-h-64 overflow-y-auto px-4 pb-3 font-mono text-xs"
       >
         {events.length === 0 ? (
-          <p className="text-on-surface-dim">Waiting for events...</p>
+          <p className="py-2 text-on-surface-dim">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-secondary mr-2 align-middle" />
+            Waiting for events from the engine...
+          </p>
         ) : (
           events.map((ev, i) => (
-            <div key={i} className="py-0.5">
-              <span className="text-on-surface-dim">[{timestamp()}]</span>{" "}
+            <div
+              key={i}
+              className="flex items-start gap-2 py-0.5 animate-slide-in-up"
+            >
+              <span
+                className={
+                  "mt-[0.4rem] inline-block h-1 w-1 shrink-0 rounded-full " +
+                  (ACTOR_BAR_BG[ev.event] ?? "bg-on-surface-dim")
+                }
+                aria-hidden="true"
+              />
+              <span className="text-on-surface-dim">[{timestamp()}]</span>
               <span className={ACTOR_COLOR[ev.event] ?? "text-on-surface"}>
                 {ev.event.toUpperCase()}:
-              </span>{" "}
-              <span className="text-on-surface">{formatEvent(ev)}</span>
+              </span>
+              <span className="text-on-surface flex-1 min-w-0 break-words">
+                {formatEvent(ev)}
+              </span>
             </div>
           ))
         )}

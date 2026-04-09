@@ -4,6 +4,7 @@ import type {
   CompetitorView,
   EvolutionEvent,
   GenerationStats,
+  PhaseState,
 } from "../types";
 
 export type ConnectionStatus = "connecting" | "open" | "closed" | "error";
@@ -21,6 +22,12 @@ export interface EvolutionSocketState {
   latestBreedingReport?: string;
   latestLessons?: string[];
   bestSkillId?: string | null;
+  /** Total competitors expected for the current generation (pop × challenges) */
+  expectedCompetitors: number;
+  /** Number of competitors that have finished in the current generation */
+  finishedCompetitors: number;
+  /** Last "tick" timestamp from any non-heartbeat event — used for stale detection */
+  lastEventAt: number;
 }
 
 const INITIAL_STATE: EvolutionSocketState = {
@@ -32,6 +39,9 @@ const INITIAL_STATE: EvolutionSocketState = {
   isComplete: false,
   isFailed: false,
   totalCostUsd: 0,
+  expectedCompetitors: 0,
+  finishedCompetitors: 0,
+  lastEventAt: 0,
 };
 
 /**
@@ -113,7 +123,7 @@ function applyEvent(
   ev: EvolutionEvent,
 ): EvolutionSocketState {
   const events = [...state.events, ev];
-  let next = { ...state, events };
+  const next = { ...state, events, lastEventAt: Date.now() };
 
   switch (ev.event) {
     case "generation_started":
@@ -123,6 +133,9 @@ function applyEvent(
         status: "running",
       });
       next.competitors = []; // reset for new generation
+      next.finishedCompetitors = 0;
+      // expectedCompetitors gets set on first competitor_started below if
+      // we don't already know it
       break;
 
     case "competitor_started":
@@ -141,6 +154,7 @@ function applyEvent(
         challengeId: ev.challenge_id,
         state: "done",
       });
+      next.finishedCompetitors = next.finishedCompetitors + 1;
       break;
 
     case "judging_started":
@@ -200,6 +214,148 @@ function applyEvent(
 
   return next;
 }
+
+// ----------------------------------------------------------------------------
+// Derive PhaseState[] for the sidebar process flow diagram
+// ----------------------------------------------------------------------------
+
+/**
+ * Map the current socket state to an ordered list of PhaseState objects.
+ *
+ * The phases reflect the per-generation cycle SkillForge runs:
+ *   1. design_challenges (gen 0 only — finalized after the very first event)
+ *   2. spawn_or_breed    (Spawner on gen 0, Breeder on gen 1+)
+ *   3. compete           (run all competitors)
+ *   4. judge             (L1-L5 pipeline)
+ *   5. score_select      (Pareto + best skill selection for this gen)
+ *   6. finalize          (only highlighted on the last generation, becomes
+ *                         "evolution complete" once isComplete is true)
+ *
+ * The phase corresponding to the most recent event is "running".
+ * Anything before it is "complete". Anything after is "pending".
+ */
+export function derivePhases(
+  state: EvolutionSocketState,
+  expectedCompetitors: number,
+): PhaseState[] {
+  const events = state.events;
+  const has = (name: string) =>
+    events.some((e) => e.event === name);
+
+  // Default labels
+  const labels: Record<PhaseState["id"], string> = {
+    design_challenges: "Design Challenges",
+    spawn_or_breed: state.currentGeneration === 0 ? "Spawn Population" : "Breed Next Gen",
+    compete: "Run Competitors",
+    judge: "Judge L1-L5",
+    score_select: "Score & Select",
+    finalize: "Finalize",
+  };
+
+  const phases: PhaseState[] = (
+    [
+      "design_challenges",
+      "spawn_or_breed",
+      "compete",
+      "judge",
+      "score_select",
+      "finalize",
+    ] as PhaseState["id"][]
+  ).map((id) => ({ id, label: labels[id], status: "pending" as const }));
+
+  if (state.isFailed) {
+    // Mark whatever phase the run was in as failed; mark prior as complete.
+    const lastRunningIdx = phases.findIndex((p) => p.status === "running");
+    if (lastRunningIdx >= 0) phases[lastRunningIdx].status = "failed";
+    else phases[0].status = "failed";
+    return phases;
+  }
+
+  if (state.isComplete) {
+    return phases.map((p) => ({ ...p, status: "complete" as const }));
+  }
+
+  // --- Walk forward through phases based on what events have fired ---
+
+  // Phase 1: design_challenges
+  if (has("challenge_design_started") || has("challenge_designed")) {
+    if (has("generation_started")) {
+      phases[0].status = "complete";
+    } else {
+      phases[0].status = "running";
+      const designed = events.filter((e) => e.event === "challenge_designed").length;
+      phases[0].detail = designed > 0 ? `${designed} designed` : "designing...";
+      return phases;
+    }
+  }
+
+  // Phase 2: spawn_or_breed
+  if (has("generation_started")) {
+    if (has("competitor_started") || has("breeding_started")) {
+      // For gen 0, breeding_started never fires, so just check competitor_started
+      if (has("competitor_started")) {
+        phases[1].status = "complete";
+      } else if (state.currentGeneration > 0 && has("breeding_started")) {
+        phases[1].status = "running";
+        phases[1].detail = state.latestBreedingReport ? "report ready" : "thinking...";
+        return phases;
+      }
+    } else {
+      phases[1].status = "running";
+      phases[1].detail =
+        state.currentGeneration === 0 ? "generating skills..." : "breeding...";
+      return phases;
+    }
+  }
+
+  // Phase 3: compete
+  if (has("competitor_started")) {
+    if (has("judging_started")) {
+      phases[2].status = "complete";
+    } else {
+      phases[2].status = "running";
+      const expected = Math.max(expectedCompetitors, state.competitors.length);
+      const finished = state.finishedCompetitors;
+      phases[2].detail =
+        expected > 0 ? `${finished} of ${expected}` : `${finished} done`;
+      return phases;
+    }
+  }
+
+  // Phase 4: judge
+  if (has("judging_started")) {
+    if (has("scores_published")) {
+      phases[3].status = "complete";
+    } else {
+      phases[3].status = "running";
+      phases[3].detail = "L1 → L5";
+      return phases;
+    }
+  }
+
+  // Phase 5: score_select
+  if (has("scores_published")) {
+    if (has("generation_complete")) {
+      phases[4].status = "complete";
+    } else {
+      phases[4].status = "running";
+      const lastGen = state.generations.at(-1);
+      phases[4].detail = lastGen?.best_fitness != null
+        ? `best ${lastGen.best_fitness.toFixed(2)}`
+        : undefined;
+      return phases;
+    }
+  }
+
+  // Phase 6: finalize / next-gen breeding
+  if (has("generation_complete")) {
+    phases[5].status = "running";
+    phases[5].detail = "next generation...";
+  }
+
+  return phases;
+}
+
 
 function upsertGeneration(
   list: GenerationStats[],
