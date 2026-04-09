@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from skillforge.api.debug import router as debug_router
 from skillforge.api.routes import router as api_router
 from skillforge.api.websocket import router as ws_router
 from skillforge.db.database import init_db
@@ -40,6 +41,7 @@ app = FastAPI(
 
 app.include_router(api_router)
 app.include_router(ws_router)
+app.include_router(debug_router)
 
 
 @app.get("/api/health")
