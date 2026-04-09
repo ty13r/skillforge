@@ -24,6 +24,7 @@ import re
 from datetime import UTC, datetime
 
 from anthropic import AsyncAnthropic
+from skillforge.agents._llm import stream_text
 
 from skillforge.agents.spawner import breed_next_gen, spawn_gen0
 from skillforge.config import (
@@ -407,12 +408,12 @@ async def _extract_lessons(context: str, learning_log: list[str]) -> list[str]:
 
     try:
         client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
-        response = await client.messages.create(
+        text = await stream_text(
+            client,
             model=model_for("breeder"),
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = response.content[0].text if response.content else ""
     except Exception as exc:  # noqa: BLE001
         return [f"(lesson extraction failed: {exc})"]
 
@@ -446,12 +447,12 @@ async def _extract_breeding_report(
 
     try:
         client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
-        response = await client.messages.create(
+        return await stream_text(
+            client,
             model=model_for("breeder"),
             max_tokens=800,
             messages=[{"role": "user", "content": prompt}],
         )
-        return response.content[0].text if response.content else ""
     except Exception as exc:  # noqa: BLE001
         return f"(breeding report failed: {exc})"
 
@@ -480,12 +481,12 @@ async def _extract_consolidated(
 
     try:
         client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
-        response = await client.messages.create(
+        text = await stream_text(
+            client,
             model=model_for("breeder"),
             max_tokens=1200,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = response.content[0].text if response.content else ""
     except Exception as exc:  # noqa: BLE001
         return ([f"(consolidated extraction failed: {exc})"], "")
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 
 from anthropic import AsyncAnthropic
+from skillforge.agents._llm import stream_text
 
 from skillforge.config import ANTHROPIC_API_KEY, model_for
 from skillforge.models import SkillGenome
@@ -57,14 +58,12 @@ async def run_l2(
     )
 
     client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
-    response = await client.messages.create(
+    text = await stream_text(
+        client,
         model=model_for("l2_trigger"),
         max_tokens=len(all_prompts) * 10 + 100,  # ~10 tokens per Y/N line
         messages=[{"role": "user", "content": user_prompt}],
     )
-
-    # Parse response
-    text = response.content[0].text if response.content else ""
     predictions = _parse_yn_response(text, len(all_prompts))
 
     n_trigger = len(should_trigger)

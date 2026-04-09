@@ -13,6 +13,7 @@ import json
 import re
 
 from anthropic import AsyncAnthropic
+from skillforge.agents._llm import stream_text
 
 from skillforge.config import ANTHROPIC_API_KEY, L4_STRATEGY, model_for
 from skillforge.models import CompetitionResult
@@ -146,12 +147,13 @@ async def _compare_pair(
     )
 
     try:
-        response = await client.messages.create(
+        raw = await stream_text(
+            client,
             model=model_for("judge_comparative"),
             max_tokens=10,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = (response.content[0].text if response.content else "").strip().upper()
+        text = raw.strip().upper()
     except Exception:  # noqa: BLE001
         return "tie"
 
@@ -188,12 +190,12 @@ async def _run_batched_rank(results: list[CompetitionResult]) -> None:
     )
 
     try:
-        response = await client.messages.create(
+        text = await stream_text(
+            client,
             model=model_for("judge_comparative"),
             max_tokens=100,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = response.content[0].text if response.content else "[]"
     except Exception:  # noqa: BLE001
         for r in results:
             r.pairwise_wins = {c: 0 for c in _OBJECTIVES}

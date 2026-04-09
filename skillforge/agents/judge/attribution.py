@@ -14,6 +14,7 @@ import json
 import re
 
 from anthropic import AsyncAnthropic
+from skillforge.agents._llm import stream_text
 
 from skillforge.config import ANTHROPIC_API_KEY, model_for
 from skillforge.models import CompetitionResult, SkillGenome
@@ -40,12 +41,12 @@ async def run_l5(result: CompetitionResult, skill: SkillGenome) -> CompetitionRe
 
     client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
     try:
-        response = await client.messages.create(
+        text = await stream_text(
+            client,
             model=model_for("judge_attribution"),
             max_tokens=1500,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = response.content[0].text if response.content else ""
     except Exception as exc:  # noqa: BLE001
         result.judge_reasoning += f" [L5: attribution API error: {exc}]"
         return result
