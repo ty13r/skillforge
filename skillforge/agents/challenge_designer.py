@@ -38,37 +38,85 @@ _SCHEMA_DESCRIPTION = """[
 def _extract_json_array(text: str) -> list[dict]:
     """Extract a JSON array from text.
 
-    Tries fenced ```json ... ``` blocks first, then falls back to finding
-    the first ``[`` and its matching ``]``.
+    Robust against:
+      1. Raw JSON array (ideal case)
+      2. ``` json ... ``` fences with nested backticks in string values
+      3. JSON embedded in prose with `[`/`]` characters in string literals
 
     Raises:
         ValueError: if no valid JSON array can be extracted.
     """
-    # 1. Try fenced block
-    fence_match = re.search(r"```json\s*(.*?)```", text, re.DOTALL)
-    if fence_match:
-        candidate = fence_match.group(1).strip()
+    candidate = text.strip()
+
+    # 1. Try the whole text as JSON
+    if candidate.startswith("[") and candidate.endswith("]"):
         try:
             result = json.loads(candidate)
             if isinstance(result, list):
                 return result
         except json.JSONDecodeError:
-            pass  # fall through to bracket search
+            pass
 
-    # 2. Fall back to first [ ... ] pair
-    start = text.find("[")
-    if start != -1:
-        end = text.rfind("]")
-        if end != -1 and end > start:
-            candidate = text[start : end + 1]
-            try:
-                result = json.loads(candidate)
-                if isinstance(result, list):
-                    return result
-            except json.JSONDecodeError:
-                pass
+    # 2. Strip outer ```json ... ``` fence greedily
+    fence_match = re.search(r"```(?:json)?\s*\n?(.*)\n?```", text, re.DOTALL)
+    if fence_match:
+        fenced = fence_match.group(1).strip()
+        try:
+            result = json.loads(fenced)
+            if isinstance(result, list):
+                return result
+        except json.JSONDecodeError:
+            text_to_scan = fenced
+        else:
+            text_to_scan = fenced
+    else:
+        text_to_scan = text
+
+    # 3. Bracket-depth scan respecting string literal state
+    array = _scan_outermost_array(text_to_scan)
+    if array is not None:
+        try:
+            result = json.loads(array)
+            if isinstance(result, list):
+                return result
+        except json.JSONDecodeError:
+            pass
 
     raise ValueError("No valid JSON array found in response text")
+
+
+def _scan_outermost_array(text: str) -> str | None:
+    """Find the outermost JSON array via bracket-depth scanning that
+    respects string literal state. Returns substring including ``[`` and
+    ``]``, or ``None`` if no balanced array found.
+    """
+    start = text.find("[")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return None
 
 
 def _build_system_prompt(specialization: str, n: int) -> str:

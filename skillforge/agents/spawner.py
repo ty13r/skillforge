@@ -72,37 +72,93 @@ def _read_bible_patterns() -> str:
 def _extract_json_array(text: str) -> list[dict]:
     """Extract a JSON array from text.
 
-    Tries fenced ```json ... ``` blocks first, then falls back to finding
-    the first ``[`` and its matching ``]``.
+    Handles three cases robustly:
+      1. Whole response is a raw JSON array
+      2. Response is wrapped in ``` json ... ``` fences (greedy match of
+         the outermost fence — SKILL.md content can contain nested fences
+         that a non-greedy match would trip over)
+      3. JSON array embedded in prose, extracted via bracket-depth scanning
+         that respects string literal state (handles `[` and `]` inside
+         string values like Python list comp examples)
 
     Raises:
         ValueError: if no valid JSON array can be extracted.
     """
-    # 1. Try fenced block
-    fence_match = re.search(r"```json\s*(.*?)```", text, re.DOTALL)
-    if fence_match:
-        candidate = fence_match.group(1).strip()
+    candidate = text.strip()
+
+    # 1. Try the whole text as JSON (ideal case)
+    if candidate.startswith("[") and candidate.endswith("]"):
         try:
             result = json.loads(candidate)
             if isinstance(result, list):
                 return result
         except json.JSONDecodeError:
-            pass  # fall through to bracket search
+            pass
 
-    # 2. Fall back to first [ ... ] pair
-    start = text.find("[")
-    if start != -1:
-        end = text.rfind("]")
-        if end != -1 and end > start:
-            candidate = text[start : end + 1]
-            try:
-                result = json.loads(candidate)
-                if isinstance(result, list):
-                    return result
-            except json.JSONDecodeError:
-                pass
+    # 2. Strip outer ```json ... ``` fence greedily (matches LAST ```).
+    #    Non-greedy would stop at the first nested ``` inside string values.
+    fence_match = re.search(r"```(?:json)?\s*\n?(.*)\n?```", text, re.DOTALL)
+    if fence_match:
+        fenced = fence_match.group(1).strip()
+        try:
+            result = json.loads(fenced)
+            if isinstance(result, list):
+                return result
+        except json.JSONDecodeError:
+            # Fall through to bracket scanning on the fenced content
+            text_to_scan = fenced
+        else:
+            text_to_scan = fenced
+    else:
+        text_to_scan = text
+
+    # 3. Bracket-depth scan that respects JSON string literal state
+    array = _scan_outermost_array(text_to_scan)
+    if array is not None:
+        try:
+            result = json.loads(array)
+            if isinstance(result, list):
+                return result
+        except json.JSONDecodeError:
+            pass
 
     raise ValueError("No valid JSON array found in response text")
+
+
+def _scan_outermost_array(text: str) -> str | None:
+    """Find the outermost JSON array substring via bracket-depth scanning.
+
+    Properly tracks string literal state so brackets inside string values
+    don't throw off the depth counter. Returns the substring (including the
+    outer ``[`` and ``]``), or ``None`` if no balanced array is found.
+    """
+    start = text.find("[")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return None
 
 
 def _extract_response_text(response) -> str:
@@ -119,6 +175,21 @@ def _extract_response_text(response) -> str:
         if text:
             parts.append(text)
     return "\n".join(parts)
+
+
+def _save_debug_response(label: str, text: str) -> None:
+    """Write the last raw LLM response to /tmp for post-hoc debugging.
+
+    Non-fatal — any write error is silently swallowed. This is for diagnosing
+    parse failures during live runs; in production the text is ephemeral.
+    """
+    try:
+        from pathlib import Path
+
+        path = Path("/tmp") / f"sf-{label}.txt"
+        path.write_text(text)
+    except OSError:
+        pass
 
 
 def _parse_genomes(
@@ -308,29 +379,47 @@ async def spawn_gen0(specialization: str, pop_size: int) -> list[SkillGenome]:
 
     # Attempt 1
     text = await _generate(system_prompt)
+    _save_debug_response("spawn_gen0_attempt1", text)
 
     try:
         raw = _extract_json_array(text)
-    except ValueError as exc:
-        raise ValueError(
-            f"spawner failed to produce valid JSON on first attempt: {exc}"
-        ) from exc
+        genomes = _parse_genomes(raw, generation=0)
+        valid_genomes, invalid = _validate_genomes(genomes)
+        first_attempt_failed = False
+    except ValueError:
+        # JSON parse failure — treat as if everything was invalid so the
+        # retry path runs.
+        genomes = []
+        valid_genomes = []
+        invalid = {}
+        first_attempt_failed = True
 
-    genomes = _parse_genomes(raw, generation=0)
-    valid_genomes, invalid = _validate_genomes(genomes)
-
-    if not invalid:
+    if not first_attempt_failed and not invalid:
         return valid_genomes
 
-    # Attempt 2 — repair
-    repair_prompt = _build_repair_prompt(system_prompt, invalid, genomes)
-    text = await _generate(repair_prompt)
+    # Attempt 2 — retry. Use the same prompt if JSON parse failed (Claude
+    # just didn't follow instructions), or a targeted repair prompt if
+    # the skills parsed but failed validation.
+    if first_attempt_failed:
+        retry_prompt = (
+            system_prompt
+            + "\n\nCRITICAL: Your previous response did not contain a valid JSON "
+            "array. You must respond with ONLY a JSON array — no prose, no "
+            "markdown before or after the array. The array must start with [ "
+            "and end with ]. No explanations."
+        )
+    else:
+        retry_prompt = _build_repair_prompt(system_prompt, invalid, genomes)
+
+    text = await _generate(retry_prompt)
+    _save_debug_response("spawn_gen0_attempt2", text)
 
     try:
         raw2 = _extract_json_array(text)
     except ValueError as exc:
         raise ValueError(
-            f"spawner failed to produce valid JSON on retry: {exc}"
+            f"spawner failed to produce valid JSON on retry: {exc}. "
+            f"See /tmp/sf-spawn_gen0_attempt2.txt for the raw response."
         ) from exc
 
     genomes2 = _parse_genomes(raw2, generation=0)
