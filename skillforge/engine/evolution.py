@@ -45,6 +45,32 @@ _COST_PER_TURN_USD = 0.02
 _COST_PER_JUDGE_CALL_USD = 0.005
 
 
+async def _gated_competitor(
+    *,
+    semaphore: asyncio.Semaphore,
+    run_id: str,
+    generation: int,
+    competitor_idx: int,
+    skill,
+    challenge,
+):
+    """Wrap _run_one_competitor in a semaphore acquire/release.
+
+    The semaphore is passed in explicitly rather than closed-over from the
+    enclosing loop, so ruff's B023 doesn't flag loop-variable capture and
+    the behavior is deterministic even if the engine is refactored to
+    interleave generations in the future.
+    """
+    async with semaphore:
+        return await _run_one_competitor(
+            run_id=run_id,
+            generation=generation,
+            competitor_idx=competitor_idx,
+            skill=skill,
+            challenge=challenge,
+        )
+
+
 async def _run_one_competitor(
     run_id: str,
     generation: int,
@@ -167,13 +193,27 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                     new_lessons=new_lessons,
                 )
 
-            # --- Competitor execution (parallel) ----------------------
-            # All (skill, challenge) pairs run concurrently via asyncio.gather.
-            # At pop=5 × challenges=3, that's 15 parallel competitors — each
-            # calling the Agent SDK in its own isolated sandbox. ~10x speedup
-            # over sequential at this scale.
+            # --- Competitor execution (semaphore-gated) ---------------
+            # Each (skill, challenge) pair runs in its own coroutine, but the
+            # total number of concurrent competitors is gated by a semaphore
+            # with size config.COMPETITOR_CONCURRENCY.
+            #
+            # Default = 1 (sequential) because the Claude Agent SDK's query()
+            # wraps a local `claude` CLI subprocess, and N>1 causes subprocess
+            # file/pipe/auth contention producing "Command failed with exit
+            # code 1" on every competitor (reproduced during the first
+            # parallel live validation run).
+            #
+            # Raising this above 1 is only safe after migrating the Competitor
+            # to Anthropic Managed Agents (cloud containers, no local
+            # subprocess). Deferred to v1.1.
+            from skillforge.config import COMPETITOR_CONCURRENCY
+
+            semaphore = asyncio.Semaphore(COMPETITOR_CONCURRENCY)
+
             competitor_tasks = [
-                _run_one_competitor(
+                _gated_competitor(
+                    semaphore=semaphore,
                     run_id=run.id,
                     generation=gen_num,
                     competitor_idx=competitor_idx,

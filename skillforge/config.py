@@ -76,6 +76,17 @@ BREEDER_CALL_MODE: str = os.getenv("SKILLFORGE_BREEDER_CALL_MODE", "separate")  
 # debugging in MVP; on for production runs where DB size matters.
 COMPRESS_TRACES: bool = os.getenv("SKILLFORGE_COMPRESS_TRACES", "0") == "1"
 
+# Maximum number of parallel Competitor runs. Each Competitor invokes the
+# Claude Agent SDK's query(), which spawns a local `claude` CLI subprocess.
+# The SDK hits a "Command failed with exit code 1" concurrency bug when
+# multiple subprocesses run in the same Python process (file/pipe/auth
+# contention). Default 1 = sequential = safe.
+#
+# A future migration to Anthropic's Managed Agents API would run competitors
+# in isolated cloud containers (no local subprocess bug) and let this flag
+# be raised to pop_size × challenges for ~10x speedup. Until then: 1.
+COMPETITOR_CONCURRENCY: int = int(os.getenv("SKILLFORGE_COMPETITOR_CONCURRENCY", "1"))
+
 # --- Models -------------------------------------------------------------------
 
 DEFAULT_MODEL: str = os.getenv("SKILLFORGE_MODEL_DEFAULT", "claude-sonnet-4-6")
