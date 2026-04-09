@@ -65,9 +65,15 @@ async def validate(req: ValidateRequest) -> ValidateResponse:
 
 @router.get("/status")
 async def status() -> dict:
-    """Report whether gating is enabled. Used by the frontend to decide
-    whether to show the gate at all."""
-    return {"gating_enabled": bool(INVITE_CODES)}
+    """Report whether gating is enabled + how many codes were loaded.
+
+    The ``codes_loaded`` count is safe to expose (no values) and useful
+    for diagnosing env-var injection issues on hosting platforms.
+    """
+    return {
+        "gating_enabled": bool(INVITE_CODES),
+        "codes_loaded": len(INVITE_CODES),
+    }
 
 
 @router.post("/request")
