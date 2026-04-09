@@ -138,4 +138,78 @@ A stale `uvicorn` process from earlier in the session caused a confusing test fa
 
 ---
 
-*(This entry will get a Phase 11 when Wave 6c lands and Wave 7 deploys.)*
+### Phase 11: Wave 6c (Opus Fallback) + Wave 7 Deploy
+
+The frontend subagent failed a third time with the same 529. Three failures in a row means the Anthropic API isn't going to recover for this prompt size tonight. Decision: **fall back to Opus**. Frontend is mostly visual/structural work, the design DIGEST.md is detailed enough that I don't need much judgment, and the alternative is leaving Matt with a backend-only deploy.
+
+Built 17 React components in one focused pass, plus the Tailwind theme extension, the App routing, the WebSocket hook with reducer-style state, and the TS types mirroring the Pydantic schemas. Frontend `npm run build`: 858 modules transformed, zero TypeScript errors, 679KB JS bundle (recharts is heavy but acceptable for MVP).
+
+End-to-end smoke test: started uvicorn, GET / served the SPA HTML (the optional mount logic from `8d7935f` worked), `/assets/index-*.css` returned 200, `/api/health` returned JSON. The full stack rendered without console errors.
+
+One test had to be updated: `test_root_health_check` was hitting `/`, but `/` now serves the SPA. Switched it to `/api/health` (the dedicated backend endpoint that's unaffected by the frontend mount). **Wave 6c commit `fd325ee`**, plus a tiny cleanup `b24cf17` to gitignore `tsconfig.tsbuildinfo`.
+
+**Wave 7 — Docker + Railway deploy.** Right as I started, Matt added a second Railway token (`RAILWAY_API_TOKEN`, account-scoped) so I could now query Railway state directly. First thing I learned: there was already a Railway service connected to GitHub, and **its latest deployment was FAILED**. Pulled the build logs and found the bug:
+
+```
+OSError: Readme file does not exist: README.md
+```
+
+The previous Dockerfile didn't `COPY README.md`, but `pyproject.toml` declares `readme = "README.md"`, so hatchling's editable build crashed on every Railway deploy. **My Wave 7 prep already fixed it** (I'd added `README.md` to the COPY in the new Dockerfile), but I'd never tested the old version against Railway.
+
+Wave 7 commit `3234a59` rewrote the Dockerfile to:
+- Copy `pyproject.toml + uv.lock + README.md` before `uv sync` (the bug fix)
+- Use `uv sync --frozen --no-dev` for reproducible production installs
+- Honor `$PORT` via `sh -c` expansion (Railway sets it dynamically)
+- Pin Python 3.12-slim to match `requires-python = ">=3.12"`
+
+Also cleaned up `railway.toml`: removed the redundant `startCommand` (Dockerfile CMD wins) and added `healthcheckPath = "/api/health"` so Railway can probe the backend endpoint instead of the SPA-owning `/`.
+
+After pushing Wave 7, I set `ANTHROPIC_API_KEY` on the Railway service via `railway variables set --skip-deploys` (used the local key from `.env`). Then watched the build:
+
+```
+deploymentId: 430962fa-8820-482b-ab38-af74cd0b2bea
+status: BUILDING -> SUCCESS
+stopped: false
+```
+
+**SkillForge is live on Railway.** The morning Matt opens his Railway URL, he should see the dashboard.
+
+---
+
+### What landed overnight
+
+10 commits across 7 waves. 184 backend tests passing, 1 skipped (live SDK). Frontend builds clean. Backend deployed successfully.
+
+| Wave | Commit | What |
+|---|---|---|
+| Baseline | `e016d80` | Scaffolded state captured |
+| 1 | `7ec81fd` | Models serialization (10 tests) |
+| 2 | `705193e` | DB + sandbox + validator (40 tests) |
+| Design | `6a17463` | DIGEST.md mapping screens to components |
+| 3 | `3bb9d9d` | 8 parallel agents — Challenge Designer, Spawner, Competitor, L1-L5 judges (121 tests) |
+| 4 | `f571af7` | Pipeline wire-up + Breeder with reflective mutation (147 tests) |
+| 5 | `f2f420e` | Evolution engine end-to-end with events + budget + persistence (155 tests) |
+| 6 partial | `968883b` | API routes + WebSocket + Export engine (184 tests) |
+| 6c | `fd325ee` | Frontend (17 React components, Opus fallback after 3 Sonnet 529s) |
+| 7 | `3234a59` | Dockerfile fix + Railway deploy SUCCESS |
+
+### What's left
+
+- **Real evolution test**: nobody has run a full evolution against the live SDK yet. The mocked tests prove the loop works in isolation; the live test will reveal real-world issues (cost calibration, prompt edge cases, SDK message shape assumptions, trace format quirks).
+- **L6 consistency layer**: deferred to v1.1 per spec.
+- **Meta mode**: deferred to v1.1.
+- **Frontend visual polish**: I matched the Precision Architect tokens and layout structure, but Matt should compare against the design PNGs in the morning and request specific tweaks.
+- **Lineage edge tracking**: the DB schema stores `parent_ids` as JSON; the frontend lineage view isn't implemented (v1.1 stub).
+- **Bible publishing automation**: Breeder writes findings, but nothing promotes them to patterns yet.
+
+### What surprised me
+
+The biggest cost-saver wasn't the parallel subagents (Wave 3) — it was the fact that **the right contracts and source-of-truth docs let Sonnet ship clean work without Opus review of every line**. SCHEMA.md, DIGEST.md, the cross-cutting contracts in PLAN.md, the 16-check QA list — these did most of the work of making subagents reliable.
+
+The biggest surprise was the Sonnet 529 errors blocking the frontend three times in a row. The fallback to Opus worked but cost more tokens than planned. If I were re-doing this, I'd probably split the frontend into two smaller subagent prompts (foundation + components) to keep each prompt under whatever Anthropic's overload-trigger threshold is.
+
+The most valuable single decision was **keeping the Bible / Spawner / Breeder loop alive even under failure**. `publish_findings_to_bible` swallows all errors. The Breeder pads with cloned elites if sub-calls fail. The DB persistence is non-fatal. The engine doesn't abort the run on a single judge layer crashing. This means an evolution run can finish even when half the system is misbehaving — and the trace will tell you what to fix.
+
+---
+
+*"Backend deployed. Frontend served. Tests green. Now sleep, Matt."*
