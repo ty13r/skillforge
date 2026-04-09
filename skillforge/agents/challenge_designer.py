@@ -1,9 +1,14 @@
 """Challenge Designer — auto-generates evaluation challenges from a specialization.
 
-Uses the Claude Agent SDK ``query()`` with WebSearch enabled (gated by
-``config.WEBSEARCH_ENABLED``) to ground challenges in real-world examples of
-the specialization domain. Produces 3-5 challenges spanning easy/medium/hard
-with distinct verification methods.
+Uses the Anthropic Messages API directly (NOT the Agent SDK's query()) because
+this is a pure generation task with no tool use. The Agent SDK is for agentic
+loops; direct API is faster, simpler, and avoids the multi-turn session
+overhead that caused the overnight live test to hang.
+
+WebSearch is not available via the direct API, so the MVP challenge designer
+does not ground challenges in real-world examples via search. That's a v1.1
+improvement — we can add WebSearch as a tool definition in the Messages API
+request when we're ready.
 """
 
 from __future__ import annotations
@@ -12,9 +17,9 @@ import json
 import re
 import uuid
 
-from claude_agent_sdk import ClaudeAgentOptions, query
+from anthropic import AsyncAnthropic
 
-from skillforge.config import WEBSEARCH_ENABLED, model_for
+from skillforge.config import ANTHROPIC_API_KEY, model_for
 from skillforge.models import Challenge
 
 # JSON schema description embedded in prompts
@@ -66,29 +71,6 @@ def _extract_json_array(text: str) -> list[dict]:
     raise ValueError("No valid JSON array found in response text")
 
 
-def _collect_text(messages: list) -> str:
-    """Collect all text from assistant messages into a single string.
-
-    Handles real ``AssistantMessage`` objects (content blocks with TextBlock)
-    as well as duck-typed test fakes that expose ``.content`` with objects
-    having a ``.text`` attribute.
-    """
-    parts: list[str] = []
-    for msg in messages:
-        content = getattr(msg, "content", None)
-        if content is None:
-            continue
-        if isinstance(content, str):
-            parts.append(content)
-        elif isinstance(content, list):
-            for block in content:
-                # Real SDK: TextBlock has .text; fakes also have .text
-                text_val = getattr(block, "text", None)
-                if text_val is not None:
-                    parts.append(text_val)
-    return "\n".join(parts)
-
-
 def _build_system_prompt(specialization: str, n: int) -> str:
     return (
         f"You design evaluation challenges for a Claude Skill specialized in: {specialization}. "
@@ -126,8 +108,30 @@ def _parse_challenges(raw: list[dict]) -> list[Challenge]:
     return challenges
 
 
+async def _generate(prompt: str) -> str:
+    """Single-shot Anthropic API call. Returns the assistant's text response."""
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    response = await client.messages.create(
+        model=model_for("challenge_designer"),
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    if not response.content:
+        return ""
+    # Content is a list of blocks; extract text from any TextBlock
+    parts = []
+    for block in response.content:
+        text = getattr(block, "text", None)
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
+
+
 async def design_challenges(specialization: str, n: int = 3) -> list[Challenge]:
     """Generate ``n`` challenges for the given specialization.
+
+    Uses the Anthropic Messages API directly for pure JSON generation. One
+    retry on parse failure, then raises.
 
     Args:
         specialization: Description of the Skill domain to design challenges for.
@@ -140,31 +144,14 @@ async def design_challenges(specialization: str, n: int = 3) -> list[Challenge]:
         ValueError: if JSON cannot be parsed after 2 attempts, or if the
             number of returned challenges does not equal ``n``.
     """
-    allowed_tools = ["WebSearch"] if WEBSEARCH_ENABLED else []
-    options = ClaudeAgentOptions(
-        permission_mode="dontAsk",
-        allowed_tools=allowed_tools,
-        model=model_for("challenge_designer"),
-    )
-
     # Attempt 1
-    system_prompt = _build_system_prompt(specialization, n)
-    collected_msgs: list = []
-    async for msg in query(prompt=system_prompt, options=options):
-        collected_msgs.append(msg)
-
-    text = _collect_text(collected_msgs)
+    text = await _generate(_build_system_prompt(specialization, n))
 
     try:
         raw = _extract_json_array(text)
     except ValueError:
         # Attempt 2 — retry with more explicit prompt
-        retry_prompt = _build_retry_prompt(specialization, n)
-        collected_msgs = []
-        async for msg in query(prompt=retry_prompt, options=options):
-            collected_msgs.append(msg)
-
-        text = _collect_text(collected_msgs)
+        text = await _generate(_build_retry_prompt(specialization, n))
         try:
             raw = _extract_json_array(text)
         except ValueError as err:

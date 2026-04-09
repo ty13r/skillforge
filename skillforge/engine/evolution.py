@@ -29,6 +29,7 @@ from skillforge.agents.challenge_designer import design_challenges
 from skillforge.agents.competitor import run_competitor
 from skillforge.agents.judge.pipeline import run_judging_pipeline
 from skillforge.agents.spawner import spawn_gen0
+from skillforge.db.database import init_db
 from skillforge.db.queries import save_run
 from skillforge.engine.events import emit
 from skillforge.engine.sandbox import cleanup_sandbox, create_sandbox
@@ -67,6 +68,15 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
     """
     run.status = "running"
     run.created_at = run.created_at or datetime.now(UTC)
+
+    # Ensure DB schema exists. init_db is idempotent (CREATE TABLE IF NOT EXISTS).
+    # Makes the engine self-contained regardless of caller — tests don't call
+    # init_db; the FastAPI lifespan handler does in production but calling it
+    # again here is a no-op.
+    try:
+        await init_db()
+    except Exception as exc:  # noqa: BLE001
+        print(f"evolution: init_db failed: {exc}")
 
     await emit(run.id, "run_started", specialization=run.specialization)
 

@@ -1,44 +1,40 @@
-"""Agent tests: Challenge Designer, Spawner, Competitor, Breeder (Step 6)."""
+"""Agent tests: Challenge Designer, Spawner, Competitor, Breeder (Step 6).
+
+Challenge Designer and Spawner use the Anthropic Messages API directly
+(NOT the Agent SDK's query()). Tests mock the internal ``_generate`` helper
+which takes a prompt string and returns a text string — a much simpler
+seam than mocking the API client.
+"""
 
 from unittest.mock import patch
 
 import pytest
 
-claude_agent_sdk = pytest.importorskip("claude_agent_sdk")
-
-from skillforge.agents.challenge_designer import design_challenges  # noqa: E402
-from skillforge.agents.spawner import breed_next_gen, spawn_gen0  # noqa: E402
-from skillforge.engine.sandbox import validate_skill_structure  # noqa: E402
-from skillforge.models import Challenge, SkillGenome  # noqa: E402
+from skillforge.agents.challenge_designer import design_challenges
+from skillforge.agents.spawner import breed_next_gen, spawn_gen0
+from skillforge.engine.sandbox import validate_skill_structure
+from skillforge.models import Challenge, SkillGenome
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Mock helpers — the new seam is just "prompt in, text out"
 # ---------------------------------------------------------------------------
 
 
-class FakeMessage:
-    """Minimal stand-in for Agent SDK message objects."""
+def _make_generate_mock(responses: list[str]):
+    """Return an async side_effect function that yields ``responses`` in order.
 
-    def __init__(self, text: str):
-        # The real SDK messages have content blocks; we mock the shape our
-        # extractor actually reads. Store text on a .text attribute AND on
-        # .content as a list of objects with .text, so whichever path the
-        # implementation uses will work.
-        self.text = text
+    After all responses are consumed, subsequent calls return the last
+    response (defensive — avoids IndexError if the code accidentally
+    calls one more time than expected).
+    """
+    idx = {"i": 0}
 
-        # Match the claude_agent_sdk.AssistantMessage shape: .content is a
-        # list of content blocks with .text
-        class _Block:
-            def __init__(self, t: str) -> None:
-                self.text = t
+    async def fake_generate(prompt: str) -> str:
+        i = min(idx["i"], len(responses) - 1)
+        idx["i"] += 1
+        return responses[i]
 
-        self.content = [_Block(text)]
-
-
-async def _fake_query_from(messages: list[str]):
-    """Async generator that yields FakeMessage objects for each text."""
-    for text in messages:
-        yield FakeMessage(text)
+    return fake_generate
 
 
 # A reusable valid payload of 3 challenges
@@ -75,73 +71,60 @@ _THREE_CHALLENGES_JSON = """[
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
 async def test_design_challenges_returns_n_challenges():
     """Happy path: fenced JSON block → 3 challenges."""
-    fake_msg_text = f"Here are the challenges:\n```json\n{_THREE_CHALLENGES_JSON}\n```"
+    fake_text = f"Here are the challenges:\n```json\n{_THREE_CHALLENGES_JSON}\n```"
 
-    with patch("skillforge.agents.challenge_designer.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_msg_text])
+    with patch(
+        "skillforge.agents.challenge_designer._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ):
         challenges = await design_challenges("Elixir LiveView specialist", n=3)
 
     assert len(challenges) == 3
     assert all(isinstance(c, Challenge) for c in challenges)
     assert {c.difficulty for c in challenges} == {"easy", "medium", "hard"}
-    assert all(c.id for c in challenges)  # UUIDs populated
+    assert all(c.id for c in challenges)
 
 
-@pytest.mark.asyncio
 async def test_design_challenges_accepts_bare_json_array():
     """No ```json fence — just a bare JSON array in the response."""
-    bare_text = _THREE_CHALLENGES_JSON.strip()
-
-    with patch("skillforge.agents.challenge_designer.query") as mock_query:
-        mock_query.return_value = _fake_query_from([bare_text])
-        challenges = await design_challenges("Elixir LiveView specialist", n=3)
-
-    assert len(challenges) == 3
-    assert all(isinstance(c, Challenge) for c in challenges)
-
-
-@pytest.mark.asyncio
-async def test_design_challenges_retries_on_parse_failure():
-    """First response is garbage; second is valid. Mock called twice."""
-    good_text = f"```json\n{_THREE_CHALLENGES_JSON}\n```"
-
-    call_count = 0
-
-    def _side_effect_query(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return _fake_query_from(["This is not JSON at all!"])
-        else:
-            return _fake_query_from([good_text])
-
     with patch(
-        "skillforge.agents.challenge_designer.query", side_effect=_side_effect_query
+        "skillforge.agents.challenge_designer._generate",
+        side_effect=_make_generate_mock([_THREE_CHALLENGES_JSON.strip()]),
     ):
         challenges = await design_challenges("Elixir LiveView specialist", n=3)
 
-    assert call_count == 2
     assert len(challenges) == 3
     assert all(isinstance(c, Challenge) for c in challenges)
 
 
-@pytest.mark.asyncio
+async def test_design_challenges_retries_on_parse_failure():
+    """First response is garbage; second is valid. _generate called twice."""
+    good_text = f"```json\n{_THREE_CHALLENGES_JSON}\n```"
+
+    call_count = {"n": 0}
+
+    async def fake(prompt: str) -> str:
+        call_count["n"] += 1
+        return "This is not JSON at all!" if call_count["n"] == 1 else good_text
+
+    with patch("skillforge.agents.challenge_designer._generate", side_effect=fake):
+        challenges = await design_challenges("Elixir LiveView specialist", n=3)
+
+    assert call_count["n"] == 2
+    assert len(challenges) == 3
+
+
 async def test_design_challenges_raises_on_repeated_parse_failure():
-    """Both attempts return garbage → ValueError with a clear message."""
-
-    def _garbage_query(*args, **kwargs):
-        return _fake_query_from(["not json at all"])
-
+    """Both attempts return garbage → ValueError."""
     with patch(
-        "skillforge.agents.challenge_designer.query", side_effect=_garbage_query
+        "skillforge.agents.challenge_designer._generate",
+        side_effect=_make_generate_mock(["not json at all", "still not json"]),
     ), pytest.raises(ValueError, match="2 attempts"):
         await design_challenges("Elixir LiveView specialist", n=3)
 
 
-@pytest.mark.asyncio
 async def test_design_challenges_raises_if_count_mismatch():
     """Claude returns 2 challenges but n=3 → ValueError."""
     two_challenges_json = """[
@@ -164,23 +147,25 @@ async def test_design_challenges_raises_if_count_mismatch():
     ]"""
     fake_text = f"```json\n{two_challenges_json}\n```"
 
-    with patch("skillforge.agents.challenge_designer.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_text])
-        with pytest.raises(ValueError, match="expected 3"):
-            await design_challenges("Elixir LiveView specialist", n=3)
+    with patch(
+        "skillforge.agents.challenge_designer._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ), pytest.raises(ValueError, match="expected 3"):
+        await design_challenges("Elixir LiveView specialist", n=3)
 
 
-@pytest.mark.asyncio
 async def test_design_challenges_generates_unique_ids():
     """All returned Challenges have distinct UUIDs."""
     fake_text = f"```json\n{_THREE_CHALLENGES_JSON}\n```"
 
-    with patch("skillforge.agents.challenge_designer.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_text])
+    with patch(
+        "skillforge.agents.challenge_designer._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ):
         challenges = await design_challenges("Elixir LiveView specialist", n=3)
 
     ids = [c.id for c in challenges]
-    assert len(ids) == len(set(ids)), "UUIDs must be unique across all challenges"
+    assert len(ids) == len(set(ids))
 
 
 # ===========================================================================
@@ -269,30 +254,29 @@ def _make_parent_genome(name: str = "parent-skill", generation: int = 0) -> Skil
 # ===========================================================================
 
 
-@pytest.mark.asyncio
 async def test_spawn_gen0_returns_valid_population():
-    """Happy path: mock query returns 3 valid skills → 3 SkillGenome objects."""
-    skills = [_valid_skill_json(f"skill-{i}") for i in range(3)]
+    """Happy path: mock _generate returns 3 valid skills → 3 SkillGenome objects."""
     import json as _json
+
+    skills = [_valid_skill_json(f"skill-{i}") for i in range(3)]
     fake_text = _json.dumps(skills)
 
-    with patch("skillforge.agents.spawner.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_text])
+    with patch(
+        "skillforge.agents.spawner._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ):
         population = await spawn_gen0("Elixir specialist", pop_size=3)
 
     assert len(population) == 3
     assert all(isinstance(g, SkillGenome) for g in population)
     assert all(g.generation == 0 for g in population)
-    # All must pass validation
     for genome in population:
         violations = validate_skill_structure(genome)
         assert violations == [], f"Genome {genome.id} has violations: {violations}"
-    # All IDs must be unique
     ids = [g.id for g in population]
-    assert len(ids) == len(set(ids)), "Genome IDs must be unique"
+    assert len(ids) == len(set(ids))
 
 
-@pytest.mark.asyncio
 async def test_spawn_gen0_reads_bible_patterns():
     """System prompt must include bible pattern content."""
     import json as _json
@@ -301,54 +285,50 @@ async def test_spawn_gen0_reads_bible_patterns():
     fake_text = _json.dumps(skills)
     captured_prompts: list[str] = []
 
-    def _capturing_query(prompt: str, options=None):
+    async def capturing_generate(prompt: str) -> str:
         captured_prompts.append(prompt)
-        return _fake_query_from([fake_text])
+        return fake_text
 
-    with patch("skillforge.agents.spawner._read_bible_patterns", return_value="PATTERN_MARKER_ABC"), \
-         patch("skillforge.agents.spawner.query", side_effect=_capturing_query):
+    with patch(
+        "skillforge.agents.spawner._read_bible_patterns",
+        return_value="PATTERN_MARKER_ABC",
+    ), patch(
+        "skillforge.agents.spawner._generate",
+        side_effect=capturing_generate,
+    ):
         await spawn_gen0("test domain", pop_size=1)
 
-    assert captured_prompts, "query should have been called"
-    assert "PATTERN_MARKER_ABC" in captured_prompts[0], (
-        "Bible pattern marker must appear in the system prompt"
-    )
+    assert captured_prompts, "_generate should have been called"
+    assert "PATTERN_MARKER_ABC" in captured_prompts[0]
 
 
-@pytest.mark.asyncio
-async def test_spawn_gen0_handles_missing_bible_dir(tmp_path: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch):
+async def test_spawn_gen0_handles_missing_bible_dir(tmp_path, monkeypatch):
     """spawn_gen0 works even if BIBLE_DIR doesn't exist."""
-    import json as _json  # noqa: PLC0415,I001
-    import skillforge.agents.spawner as spawner_mod  # noqa: PLC0415,I001
+    import json as _json
 
-    # Point BIBLE_DIR at a nonexistent path
+    import skillforge.agents.spawner as spawner_mod
+
     monkeypatch.setattr(spawner_mod, "BIBLE_DIR", tmp_path / "nonexistent-bible-dir")
+    assert spawner_mod._read_bible_patterns() == ""
 
-    # _read_bible_patterns should return empty string
-    result = spawner_mod._read_bible_patterns()
-    assert result == ""
-
-    # spawn_gen0 should still work
     skills = [_valid_skill_json("my-skill")]
     fake_text = _json.dumps(skills)
 
-    with patch("skillforge.agents.spawner.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_text])
+    with patch(
+        "skillforge.agents.spawner._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ):
         population = await spawn_gen0("test domain", pop_size=1)
 
     assert len(population) == 1
     assert population[0].generation == 0
 
 
-@pytest.mark.asyncio
 async def test_spawn_gen0_retries_on_invalid_skill():
-    """First response has 1 invalid skill; second response fixes all. Assert 2 query calls."""
+    """First response has 1 invalid skill; second response fixes all."""
     import json as _json
 
-    # Valid skill for reference
     valid_skill = _valid_skill_json("good-skill")
-
-    # Invalid skill (missing frontmatter entirely)
     invalid_skill = {
         "name": "bad-skill",
         "skill_md_content": "# No frontmatter — this will fail validation",
@@ -356,32 +336,27 @@ async def test_spawn_gen0_retries_on_invalid_skill():
         "traits": [],
         "meta_strategy": "",
     }
-
-    # Two valid skills for the retry
     retry_skills = [_valid_skill_json("fixed-skill-1"), _valid_skill_json("fixed-skill-2")]
 
-    call_count = 0
+    call_count = {"n": 0}
 
-    def _side_effect_query(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return _fake_query_from([_json.dumps([valid_skill, invalid_skill])])
-        else:
-            return _fake_query_from([_json.dumps(retry_skills)])
+    async def fake(prompt: str) -> str:
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return _json.dumps([valid_skill, invalid_skill])
+        return _json.dumps(retry_skills)
 
-    with patch("skillforge.agents.spawner.query", side_effect=_side_effect_query):
+    with patch("skillforge.agents.spawner._generate", side_effect=fake):
         population = await spawn_gen0("test domain", pop_size=2)
 
-    assert call_count == 2, "Should have called query twice (initial + retry)"
+    assert call_count["n"] == 2
     assert len(population) >= 1
     for genome in population:
         assert validate_skill_structure(genome) == []
 
 
-@pytest.mark.asyncio
 async def test_spawn_gen0_raises_on_persistent_invalid():
-    """Both attempts return invalid skills → ValueError with violations in message."""
+    """Both attempts return invalid skills → ValueError with violations."""
     import json as _json
 
     bad_skill = {
@@ -391,12 +366,12 @@ async def test_spawn_gen0_raises_on_persistent_invalid():
         "traits": [],
         "meta_strategy": "",
     }
+    bad_text = _json.dumps([bad_skill])
 
-    def _bad_query(*args, **kwargs):
-        return _fake_query_from([_json.dumps([bad_skill])])
-
-    with patch("skillforge.agents.spawner.query", side_effect=_bad_query), \
-         pytest.raises(ValueError, match="invalid skills after retry"):
+    with patch(
+        "skillforge.agents.spawner._generate",
+        side_effect=_make_generate_mock([bad_text, bad_text]),
+    ), pytest.raises(ValueError, match="invalid skills after retry"):
         await spawn_gen0("test domain", pop_size=1)
 
 
@@ -405,7 +380,6 @@ async def test_spawn_gen0_raises_on_persistent_invalid():
 # ===========================================================================
 
 
-@pytest.mark.asyncio
 async def test_breed_next_gen_sets_parent_ids_and_generation():
     """Children must have generation=1 and parent_ids matching the parents."""
     import json as _json
@@ -415,11 +389,12 @@ async def test_breed_next_gen_sets_parent_ids_and_generation():
 
     child1 = _valid_skill_json_with_parent("child-one", [parent1.id, parent2.id])
     child2 = _valid_skill_json_with_parent("child-two", [parent1.id, parent2.id])
-
     fake_text = _json.dumps([child1, child2])
 
-    with patch("skillforge.agents.spawner.query") as mock_query:
-        mock_query.return_value = _fake_query_from([fake_text])
+    with patch(
+        "skillforge.agents.spawner._generate",
+        side_effect=_make_generate_mock([fake_text]),
+    ):
         children = await breed_next_gen(
             parents=[parent1, parent2],
             learning_log=["gen0: plan-first strategy outperformed dive-in"],
@@ -428,17 +403,13 @@ async def test_breed_next_gen_sets_parent_ids_and_generation():
 
     assert len(children) == 2
     assert all(isinstance(c, SkillGenome) for c in children)
-    assert all(c.generation == 1 for c in children), "Children should be generation 1"
-    # Each child should reference the parent IDs
+    assert all(c.generation == 1 for c in children)
     for child in children:
-        assert parent1.id in child.parent_ids or parent2.id in child.parent_ids, (
-            f"Child {child.id} should reference at least one parent ID"
-        )
+        assert parent1.id in child.parent_ids or parent2.id in child.parent_ids
 
 
-@pytest.mark.asyncio
 async def test_breed_next_gen_includes_learning_log_in_prompt():
-    """Learning log marker must appear in the system prompt sent to Claude."""
+    """Learning log marker must appear in the prompt sent to Claude."""
     import json as _json
 
     parent = _make_parent_genome("parent-skill", generation=0)
@@ -447,21 +418,19 @@ async def test_breed_next_gen_includes_learning_log_in_prompt():
 
     captured_prompts: list[str] = []
 
-    def _capturing_query(prompt: str, options=None):
+    async def capturing_generate(prompt: str) -> str:
         captured_prompts.append(prompt)
-        return _fake_query_from([fake_text])
+        return fake_text
 
-    with patch("skillforge.agents.spawner.query", side_effect=_capturing_query):
+    with patch("skillforge.agents.spawner._generate", side_effect=capturing_generate):
         await breed_next_gen(
             parents=[parent],
             learning_log=["LOG_MARKER_XYZ"],
             breeding_instructions="Breed 1 child.",
         )
 
-    assert captured_prompts, "query should have been called"
-    assert "LOG_MARKER_XYZ" in captured_prompts[0], (
-        "Learning log marker must appear in the prompt sent to Claude"
-    )
+    assert captured_prompts
+    assert "LOG_MARKER_XYZ" in captured_prompts[0]
 
 
 # ---------------------------------------------------------------------------

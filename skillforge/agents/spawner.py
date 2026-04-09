@@ -8,7 +8,9 @@ Gen 1+: takes parent genomes + breeding instructions from the Breeder and
 produces child Skills. The Spawner MUST enforce all authoring constraints
 from ``engine.sandbox.validate_skill_structure``.
 
-Implemented in Step 6b.
+Uses the Anthropic Messages API directly (NOT the Agent SDK's query()) because
+this is a pure generation task with no tool use. The Agent SDK's query() is
+for agentic loops with tools and hung the overnight live test.
 """
 
 from __future__ import annotations
@@ -17,9 +19,9 @@ import json
 import re
 import uuid
 
-from claude_agent_sdk import ClaudeAgentOptions, query
+from anthropic import AsyncAnthropic
 
-from skillforge.config import BIBLE_DIR, GOLDEN_TEMPLATE_DIR, model_for
+from skillforge.config import ANTHROPIC_API_KEY, BIBLE_DIR, GOLDEN_TEMPLATE_DIR, model_for
 from skillforge.engine.sandbox import validate_skill_structure
 from skillforge.models import SkillGenome
 
@@ -103,25 +105,19 @@ def _extract_json_array(text: str) -> list[dict]:
     raise ValueError("No valid JSON array found in response text")
 
 
-def _collect_text(messages: list) -> str:
-    """Collect all text from assistant messages into a single string.
+def _extract_response_text(response) -> str:
+    """Extract text from an Anthropic Messages API response.
 
-    Handles real AssistantMessage objects (content blocks with TextBlock)
-    as well as duck-typed test fakes that expose .content with objects
-    having a .text attribute.
+    The response's ``content`` is a list of content blocks; extract any
+    that have a ``.text`` attribute.
     """
+    if not response.content:
+        return ""
     parts: list[str] = []
-    for msg in messages:
-        content = getattr(msg, "content", None)
-        if content is None:
-            continue
-        if isinstance(content, str):
-            parts.append(content)
-        elif isinstance(content, list):
-            for block in content:
-                text_val = getattr(block, "text", None)
-                if text_val is not None:
-                    parts.append(text_val)
+    for block in response.content:
+        text = getattr(block, "text", None)
+        if text:
+            parts.append(text)
     return "\n".join(parts)
 
 
@@ -149,17 +145,24 @@ def _parse_genomes(
     return genomes
 
 
-async def _run_query(system_prompt: str) -> list:
-    """Run a query with spawner options and collect all messages."""
-    options = ClaudeAgentOptions(
-        permission_mode="dontAsk",
-        allowed_tools=[],
+async def _generate(prompt: str) -> str:
+    """Streaming Anthropic API call. Returns the full assistant text response.
+
+    The Spawner generates structured JSON output containing multiple SKILL.md
+    files. Non-streaming requests get server-disconnected around the 3-4 minute
+    mark on prompts this size (~15KB input). Streaming keeps the connection
+    alive via incremental chunks and handles long generations reliably.
+    """
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=600.0)
+    parts: list[str] = []
+    async with client.messages.stream(
         model=model_for("spawner"),
-    )
-    collected_msgs: list = []
-    async for msg in query(prompt=system_prompt, options=options):
-        collected_msgs.append(msg)
-    return collected_msgs
+        max_tokens=8000,
+        messages=[{"role": "user", "content": prompt}],
+    ) as stream:
+        async for text in stream.text_stream:
+            parts.append(text)
+    return "".join(parts)
 
 
 def _validate_genomes(
@@ -304,8 +307,7 @@ async def spawn_gen0(specialization: str, pop_size: int) -> list[SkillGenome]:
     )
 
     # Attempt 1
-    collected_msgs = await _run_query(system_prompt)
-    text = _collect_text(collected_msgs)
+    text = await _generate(system_prompt)
 
     try:
         raw = _extract_json_array(text)
@@ -322,8 +324,7 @@ async def spawn_gen0(specialization: str, pop_size: int) -> list[SkillGenome]:
 
     # Attempt 2 — repair
     repair_prompt = _build_repair_prompt(system_prompt, invalid, genomes)
-    collected_msgs = await _run_query(repair_prompt)
-    text = _collect_text(collected_msgs)
+    text = await _generate(repair_prompt)
 
     try:
         raw2 = _extract_json_array(text)
@@ -374,8 +375,7 @@ async def breed_next_gen(
     )
 
     # Attempt 1
-    collected_msgs = await _run_query(system_prompt)
-    text = _collect_text(collected_msgs)
+    text = await _generate(system_prompt)
 
     try:
         raw = _extract_json_array(text)
@@ -408,8 +408,7 @@ async def breed_next_gen(
 
     # Attempt 2 — repair
     repair_prompt = _build_repair_prompt(system_prompt, invalid, children)
-    collected_msgs = await _run_query(repair_prompt)
-    text = _collect_text(collected_msgs)
+    text = await _generate(repair_prompt)
 
     try:
         raw2 = _extract_json_array(text)
