@@ -211,22 +211,26 @@ def _parse_challenges(raw: list[dict]) -> list[Challenge]:
 
 
 async def _generate(prompt: str) -> str:
-    """Single-shot Anthropic API call. Returns the assistant's text response."""
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
-    response = await client.messages.create(
+    """Streaming Anthropic API call. Returns the concatenated text response.
+
+    Uses `messages.stream()` so the TCP connection stays alive during long
+    generations — the non-streaming `create()` variant can silently drop
+    the connection and leave the client hanging indefinitely (observed
+    on the Spawner's ~15KB prompts; same fix applied here).
+
+    Also sets an explicit 300s read timeout as a belt-and-suspenders hard
+    cap so the engine fails loudly instead of hanging forever.
+    """
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
+    parts: list[str] = []
+    async with client.messages.stream(
         model=model_for("challenge_designer"),
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
-    )
-    if not response.content:
-        return ""
-    # Content is a list of blocks; extract text from any TextBlock
-    parts = []
-    for block in response.content:
-        text = getattr(block, "text", None)
-        if text:
+    ) as stream:
+        async for text in stream.text_stream:
             parts.append(text)
-    return "\n".join(parts)
+    return "".join(parts)
 
 
 async def design_challenges(specialization: str, n: int = 3) -> list[Challenge]:
