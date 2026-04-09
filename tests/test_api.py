@@ -62,7 +62,12 @@ def _make_run(
 
 
 def test_root_health_check(client):
-    resp = client.get("/")
+    """The /api/health endpoint always returns JSON regardless of frontend state.
+
+    The / route serves the SPA when frontend/dist exists; tests should use the
+    dedicated /api/health endpoint to avoid coupling to that conditional mount.
+    """
+    resp = client.get("/api/health")
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"

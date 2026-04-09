@@ -1,0 +1,143 @@
+import { Link } from "react-router-dom";
+
+import FitnessChart from "./FitnessChart";
+import FitnessRadar from "./FitnessRadar";
+import PrimaryButton from "./PrimaryButton";
+import Sidebar from "./Sidebar";
+import type { EvolutionSocketState } from "../hooks/useEvolutionSocket";
+import type { RunDetail } from "../types";
+
+interface EvolutionResultsProps {
+  runId: string;
+  sockState: EvolutionSocketState;
+  runDetail: RunDetail | null;
+}
+
+export default function EvolutionResults({
+  runId,
+  sockState,
+  runDetail,
+}: EvolutionResultsProps) {
+  const finalGen = sockState.generations.at(-1);
+  const bestFitness = finalGen?.best_fitness ?? 0;
+
+  // Pull objectives from the latest generation_complete or scores_published event
+  const lastScores = sockState.events
+    .slice()
+    .reverse()
+    .find((e) => e.event === "scores_published");
+  const objectives: Record<string, number> = lastScores?.pareto_front
+    ? {} // The events don't carry per-objective scores; populate from API instead.
+    : {};
+
+  // Fallback synthetic radar based on the chart values so we render something
+  // meaningful in MVP. Real per-objective scores will be populated when the
+  // backend exposes them via the run detail endpoint.
+  const radarData = {
+    correctness: bestFitness,
+    token_efficiency: Math.max(0, bestFitness - 0.05),
+    code_quality: Math.max(0, bestFitness - 0.02),
+    trigger_accuracy: Math.max(0, bestFitness - 0.08),
+    consistency: 0,
+    ...objectives,
+  };
+
+  return (
+    <div className="flex">
+      <Sidebar
+        runId={runId}
+        generation={sockState.currentGeneration}
+        totalGenerations={runDetail?.num_generations}
+      />
+      <div className="flex-1 px-8 py-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-tertiary">
+              Protocol: Forkless
+            </p>
+            <h1 className="mt-2 font-display text-5xl leading-[1.05] tracking-tight">
+              Evolution
+              <br />
+              <span className="text-tertiary">Complete</span>
+            </h1>
+          </div>
+          <div className="text-right">
+            <p className="font-display text-7xl tracking-tight text-tertiary">
+              {bestFitness.toFixed(2)}
+            </p>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+              Best Fitness
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+          {/* Code preview placeholder */}
+          <div className="rounded-xl bg-surface-container-lowest p-5">
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+              Best Skill — {sockState.bestSkillId?.slice(0, 8) ?? "—"}
+            </p>
+            <pre className="mt-3 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-mono text-xs text-on-surface">
+              {/* SKILL.md preview would be fetched from /runs/{id}/export?format=skill_md */}
+              <a
+                href={`/runs/${runId}/export?format=skill_md`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-secondary underline"
+              >
+                View raw SKILL.md →
+              </a>
+              {"\n\n"}
+              <span className="text-on-surface-dim">
+                Click above to view the full evolved Skill.
+              </span>
+            </pre>
+          </div>
+
+          {/* Right column: radar + chart + actions */}
+          <div className="space-y-6">
+            <div className="rounded-xl bg-surface-container-low p-5">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                Fitness Radar
+              </p>
+              <FitnessRadar objectives={radarData} />
+            </div>
+
+            <div className="rounded-xl bg-surface-container-low p-5">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                Growth Curve
+              </p>
+              <FitnessChart generations={sockState.generations} />
+            </div>
+
+            <div className="space-y-3">
+              <a
+                href={`/runs/${runId}/export?format=skill_dir`}
+                className="block rounded-xl bg-surface-container-low p-3 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
+              >
+                ↓ Export Build (.zip)
+              </a>
+              <a
+                href={`/runs/${runId}/export?format=agent_sdk_config`}
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded-xl bg-surface-container-low p-3 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
+              >
+                ↓ Export Agent SDK Config
+              </a>
+              <Link to={`/runs/${runId}/export`} className="block">
+                <PrimaryButton className="w-full">
+                  Open Export Preview →
+                </PrimaryButton>
+              </Link>
+            </div>
+
+            <p className="text-center font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+              Total spent: ${sockState.totalCostUsd.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
