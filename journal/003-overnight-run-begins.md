@@ -45,4 +45,97 @@ Delegated to one Sonnet subagent via the Agent tool with a self-contained prompt
 
 ---
 
-*(Sections below will be filled in as the overnight run progresses.)*
+### Phase 3: Wave 1 — Models Serialization
+
+Step 3 delegated to one Sonnet subagent. The job: implement `to_dict`/`from_dict` on all five dataclasses (`SkillGenome`, `Challenge`, `Generation`, `EvolutionRun`, `CompetitionResult`), plus a `_serde.py` helper for datetime ISO conversion, plus 10 round-trip tests in `tests/test_models.py`.
+
+Subagent landed clean. One judgment call I noted: it imported from `skillforge.models._serde` directly (not via `skillforge.models`) to avoid a circular import — `__init__.py` re-exports `EvolutionRun` from `run.py`, so `run.py` can't import from the package. Smart fix.
+
+One ruff issue surfaced that turned out to be pre-existing scaffolding debt: `api/schemas.py` used `class Mode(str, Enum)` instead of `Mode(StrEnum)`. Python 3.12+ wants the latter. Fixed in the same commit since the QA gate requires ruff clean.
+
+**Wave 1 commit `7ec81fd`** — 10 tests passing, up from 2.
+
+### Phase 4: Wave 2 — DB + Sandbox
+
+Step 4 (DB) and Step 5 (sandbox) delegated to two Sonnet subagents in parallel — they share no source files. I noticed a potential race where both might try to write the same test file, but each was given a dedicated test file (`test_db.py` and `test_sandbox.py`) so it didn't matter.
+
+The DB subagent caught a real bug I'd missed: my plan said "use INSERT OR REPLACE for upserts," but `INSERT OR REPLACE` actually deletes the row first, which triggers `ON DELETE CASCADE` on `competition_results`, silently destroying result rows whenever a genome is re-saved (e.g., when `best_skill` is rewritten after generations). It switched to `INSERT INTO ... ON CONFLICT(id) DO UPDATE SET` which only updates fitness columns in place. Saved an entire class of data-loss bugs.
+
+The sandbox subagent surfaced a Wave 2 schema gap I'd flagged in PLAN.md: `EvolutionRun` dataclass was missing `max_budget_usd` and `failure_reason` even though `SCHEMA.md` listed them. The DB subagent defaulted them to 10.0 / NULL until Step 7 wired them through. (Wired in Wave 5 — see Phase 9.)
+
+The validator (`validate_skill_structure`) enforces all 8 Skill Authoring Constraints from SPEC.md: name regex, reserved words ban, description length + pushy pattern, body line count, example count, reference path resolution. The validator is the "no broken Skill leaves the system" gate that the Spawner, Breeder, and Export engine all use.
+
+**Wave 2 commit `705193e`** — 40 tests passing.
+
+### Phase 5: The Design Drop
+
+Mid-Wave 2, Matt asked me to set up `design/` and the journal, then said he'd drop designs "before sleeping." The designs landed mid-Wave 3: 8 screens following a coherent design system called "The Precision Architect" — dark obsidian surfaces, electric primary/secondary accents, Space Grotesk for hero headers, Inter for body, JetBrains Mono for metadata. Strong system, very buildable in Tailwind.
+
+I distilled the designs into `design/DIGEST.md` — an implementation contract that maps each screen to React components, lists Tailwind tokens with their hex values, specifies WebSocket bindings per screen, and flags MVP-vs-v1.1 scope. The Step 10 frontend subagent reads this file as its source of truth. **Design digest commit `6a17463`**.
+
+One scope shift the designs caused: the `skill_export_preview` screen was originally in the v1.1 bucket because I'd been thinking of export as a backend-only Step 9 thing. But the design includes a 3-card export view, so I moved it to MVP. Backend Step 9 is unchanged; frontend Step 10 just gained a screen.
+
+### Phase 6: Wave 3 — The 8-Subagent Parallel Burst
+
+This was the biggest cost-saving wave of the project. Step 6 has 8 independent modules: Challenge Designer, Spawner, Competitor, and the 5 judging layers (L1 deterministic / L2 trigger accuracy / L3 trace analysis / L4 comparative+Pareto / L5 trait attribution). Each is a self-contained algorithm operating on the same `CompetitionResult` shape — perfect for parallelization.
+
+I spawned them in batches as I worked through their prompts. Initially I parallelized 3a (Challenge Designer) and 3b (Spawner) without realizing they both wanted to write to `tests/test_agents.py` — a potential race condition. Caught it in time and gave each remaining subagent a dedicated test file (`tests/test_competitor.py`, `tests/test_judge_deterministic.py`, etc.). 3a and 3b raced cleanly because the second one read 3a's file first and appended.
+
+All 8 subagents landed green. Notable fidelity: the L4 comparative subagent correctly implemented the `L4_STRATEGY` dispatch from `config.py` (Flex-2 cost saver), and the L5 attribution subagent built the defensive parser that always returns valid dicts even on malformed LLM responses (the Breeder depends on these fields).
+
+**Wave 3 commit `3bb9d9d`** — 121 tests passing, up from 40.
+
+### Phase 7: Wave 4 — Pipeline + Breeder (Opus)
+
+Steps 6d (judging pipeline wire-up) and 6e (Breeder) are integration work. The pipeline orchestrates mutation across shared state (5 judge layers each writing into the same `CompetitionResult` and `Generation`); the Breeder makes judgment calls about slot allocation and reflective mutation. I retained both in Opus.
+
+The Breeder has the slot allocation formula I caught earlier as a scaling bug: `elitism = max(1, pop // 5 * 2)`, `wildcards = max(1, pop // 10)`, remainder split between diagnostic and crossover. Worked examples at pop=3, 5, 10, 20 all sum correctly. The `breed()` function guarantees `len(next_gen) == target_pop_size` even if sub-calls fail (pads with cloned elites).
+
+The Breeder also implements the `BREEDER_CALL_MODE` dispatch (Flex-3 cost saver): "separate" makes 4 LLM calls (default), "consolidated" makes 1 structured JSON call merging learning log + breeding report. Both modes return the same `(lessons, report)` tuple so callers don't care which is active.
+
+`publish_findings_to_bible` writes numbered finding files under `bible/findings/` with auto-incrementing filenames, appends to `bible/evolution-log.md`, and is **defensive**: any failure here is logged but never raised. A bible write failure must not abort an evolution run.
+
+**Wave 4 commit `f571af7`** — 147 tests passing.
+
+### Phase 8: GitHub Push + Railway Setup
+
+Mid-Wave 4, Matt asked me to push to GitHub. He was setting up Railway in parallel. I created `ty13r/skillforge` as a public repo, pushed all 5 wave commits + the historical scaffold commits, and updated the git policy to push-after-each-wave so Railway can auto-deploy.
+
+Two interesting bits:
+- **No git identity is set on the machine** — every commit passes `-c user.email/name` inline to avoid modifying global config (the "never update git config" rule). Matt can rewrite author history later if he wants his real identity.
+- **Railway token is a Project Token, not Account Token** — Matt's `RAILWAY_TOKEN` in `.env` works for `railway up` from a linked project but returns 401 on `railway whoami`/`list` (those are user-scoped). Documented and not a problem; main deploy path is GitHub push → Railway watching.
+
+### Phase 9: Wave 5 — Evolution Engine (Opus)
+
+Step 7 — the integration step where everything from Waves 1-4 hooks together. Phased per PLAN.md:
+1. Single-generation hardcoded
+2. Multi-generation loop
+3. Event queue emission (new `engine/events.py` module per spec)
+4. DB persistence after each generation
+5. Budget tracking with abort
+
+All 5 phases landed in one pass. The cost estimator is rough — `$0.02/turn + $0.005/judge call` — but it gives the budget abort something to work with. It will need calibration against real runs in v1.1.
+
+The Wave 2 schema gap finally got fixed: I added `max_budget_usd: float = 10.0` and `failure_reason: str | None = None` to `EvolutionRun`, updated `to_dict`/`from_dict` to round-trip them, and removed the hardcoded defaults from `db/queries.py`.
+
+I hit one bug I introduced in the engine: `emit(run.id, "run_started", run_id=run.id, ...)` — passing `run_id` both positionally and as a kwarg. The error message was clear (`emit() got multiple values for argument 'run_id'`) and the fix was a one-line edit. Wave 5's QA caught it before commit.
+
+Tests cover the full happy path, event ordering (`run_started -> ... -> evolution_complete`), DB persistence frequency, budget abort, multi-generation Breeder calls, bible publishing, sub-call failure with `run_failed` event emission, and DB-failure-doesn't-abort-the-run.
+
+**Wave 5 commit `f2f420e`** — 155 tests passing.
+
+### Phase 10: Wave 6 — API + Export + Frontend (partial)
+
+Three more Sonnet subagents in parallel: Step 8 (API + WebSocket), Step 9 (export engine), Step 10 (frontend implementation against the design digest).
+
+API and Export landed clean — 184 tests passing total. Manual smoke test of the running backend confirmed POST /evolve creates a real run with a UUID and ws_url, GET /runs lists the persisted run, the WebSocket handler accepts connections.
+
+But the **frontend subagent failed twice with Anthropic API 529 overloaded errors** — 0 tokens consumed, no work done. Sustained capacity issue, not a transient blip. Decision: commit Wave 6 as a partial (backend complete, frontend deferred), retry the frontend, and fall back to Opus if it fails again. **Wave 6 partial commit `968883b`** is the backend on `main`.
+
+While the third frontend retry runs, I'm doing Wave 7 prep that's safe: added optional frontend SPA mounting to `main.py` (serves `frontend/dist` if it exists, falls back to JSON health check otherwise). This means the Dockerfile can build the frontend stage when present and skip it when absent without breaking the deploy.
+
+A stale `uvicorn` process from earlier in the session caused a confusing test failure: I started a fresh uvicorn on port 8765, but the port was held by an old process (PID 28173) that had loaded the OLD `routes.py` with the "not implemented" stubs. My `curl POST /evolve` hit the stale process and returned the stub error, making me briefly doubt the new code. Killed the stale process, retested on port 8766, everything worked. **Lesson: kill background processes by PID before assuming a fresh start.**
+
+---
+
+*(This entry will get a Phase 11 when Wave 6c lands and Wave 7 deploys.)*
