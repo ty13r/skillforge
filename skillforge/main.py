@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="SkillForge",
-    description="Evolutionary breeding platform for Claude Agent Skills",
+    title="SKLD.run",
+    description="Evolve Claude Agent Skills through natural selection",
     version="0.1.0",
     lifespan=lifespan,
 )

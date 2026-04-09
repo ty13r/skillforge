@@ -1,8 +1,8 @@
-# SkillForge
+# SKLD.run
 
 Evolve Claude Agent Skills through natural selection.
 
-SkillForge breeds populations of SKILL.md files, competes them against auto-generated challenges, scores them with a 6-layer judging pipeline, and exports the winner as an installable Skill directory.
+SKLD.run (formerly SkillForge) breeds populations of SKILL.md files, competes them against auto-generated challenges, scores them with a 6-layer judging pipeline, and exports the winner as an installable Skill directory. The internal Python package and GitHub repo retain the `skillforge` name for now — the rename is brand-only.
 
 See [`SPEC.md`](./SPEC.md) for the full specification and [`CLAUDE.md`](./CLAUDE.md) for development guidance.
 

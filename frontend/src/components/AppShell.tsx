@@ -13,8 +13,8 @@ export default function AppShell() {
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
             <span className="font-display text-xl tracking-tight">
-              <span className="text-on-surface">Skill</span>
-              <span className="text-primary">Forge</span>
+              <span className="text-on-surface">SKLD</span>
+              <span className="text-primary">.run</span>
             </span>
           </Link>
 
