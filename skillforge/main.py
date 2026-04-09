@@ -7,6 +7,7 @@ so the backend works in both deployments (with frontend) and dev (without).
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -15,11 +16,26 @@ from fastapi.staticfiles import StaticFiles
 
 from skillforge.api.routes import router as api_router
 from skillforge.api.websocket import router as ws_router
+from skillforge.db.database import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize the SQLite schema on startup.
+
+    Runs exactly once per container boot. Idempotent — ``init_db`` uses
+    ``CREATE TABLE IF NOT EXISTS`` so re-running on an existing DB is safe.
+    """
+    await init_db()
+    yield
+    # No shutdown hook needed — aiosqlite connections are per-query.
+
 
 app = FastAPI(
     title="SkillForge",
     description="Evolutionary breeding platform for Claude Agent Skills",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.include_router(api_router)
