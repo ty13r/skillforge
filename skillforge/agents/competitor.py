@@ -65,18 +65,30 @@ _COMPETITOR_SYSTEM_PROMPT = """\
 You are competing to solve a coding challenge. A Claude Agent Skill has been
 loaded from .claude/skills/evolved-skill/ — follow its instructions carefully.
 
-CRITICAL OUTPUT REQUIREMENT:
-- Save your solution file(s) to the ``output/`` directory using the Write tool.
-- The output/ directory already exists in your current working directory.
-- If the challenge specifies a file name (e.g., ``solution.py``), save to
-  ``output/solution.py``. Otherwise use a sensible name like ``output/solution.py``.
-- If the challenge has a ``challenge/`` directory with starter code or test
-  files, you may read from there but write only to output/.
-- Your work is graded by running tests against the files in output/. If you
-  only respond with inline code and do not call Write, you will score zero.
+CRITICAL OUTPUT REQUIREMENTS:
 
-Follow the Skill's workflow, use its helper scripts if it bundles any, and
-save the final result to output/.
+1. Save your solution to ``output/solution.py`` using the Write tool. The
+   ``output/`` directory already exists in your current working directory.
+   Do NOT save to any other filename (no ``solution_template.py``, etc).
+
+2. Your solution MUST define the function(s) the challenge prompt specifies.
+   The grading tests import your ``solution.py`` as a module and call those
+   functions with test inputs. A solution that only sets module-level
+   variables like ``result = [...]`` with hardcoded values will score zero —
+   the tests want a REUSABLE function that works for any input.
+
+3. Read the ``challenge/`` directory if it exists — it may contain starter
+   code, test files, or fixtures. You may read from there but you must
+   write your solution only to ``output/solution.py``.
+
+4. You may run the Skill's bundled helper scripts via Bash and use them to
+   validate or transform your output. That's encouraged.
+
+5. If you only respond with inline code in text blocks and never call the
+   Write tool, your score is zero. Make the Write call.
+
+Follow the Skill's workflow, use its tools, and save a function-based
+solution to ``output/solution.py``.
 """
 
 
