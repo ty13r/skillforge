@@ -102,6 +102,7 @@ Derived from `docs/skills-research.md`:
 - Never `git push` unless the user explicitly asks. Never force-push. Never run destructive git ops (`reset --hard`, `branch -D`, `checkout .`) without explicit approval.
 - Each wave commit must ship with all QA checks passing (see PLAN.md §QA Checklist).
 - Baseline commit (before Wave 1) captures the scaffolded state as the starting point.
+- **Git identity**: no global git identity is set on this machine. Per-commit identity is passed inline via `git -c user.email="matt@skillforge.local" -c user.name="Matt (via Claude Code)" commit ...`. This honors the "never update git config" rule — nothing persists. Matt can rewrite author history later if he wants his real identity.
 
 ## Live SDK Test Budget
 - Matt has authorized up to **$5 of Anthropic API spend** for live SDK integration tests during overnight runs.
