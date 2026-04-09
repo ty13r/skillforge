@@ -13,6 +13,7 @@ venv/
 skillforge.db
 skillforge.db-journal
 /tmp/skillforge-*
+run-dumps/
 
 # Node / frontend
 node_modules/
