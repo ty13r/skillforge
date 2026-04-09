@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SkillForge Evolution Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#c7c4d7",
+                        "on-surface": "#dfe2f3",
+                        "background": "#0f131f",
+                        "inverse-primary": "#494bd6",
+                        "primary-container": "#8083ff",
+                        "inverse-surface": "#dfe2f3",
+                        "primary-fixed": "#e1e0ff",
+                        "on-secondary-fixed": "#001f25",
+                        "error": "#ffb4ab",
+                        "primary": "#c0c1ff",
+                        "on-primary-fixed": "#07006c",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#313442",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface": "#0f131f",
+                        "error-container": "#93000a",
+                        "secondary": "#5de6ff",
+                        "outline": "#908fa0",
+                        "on-tertiary-container": "#000703",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed": "#002113",
+                        "on-background": "#dfe2f3",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-bright": "#353946",
+                        "outline-variant": "#464554",
+                        "on-primary": "#1000a9",
+                        "surface-dim": "#0f131f",
+                        "on-primary-container": "#0d0096",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-secondary-fixed-variant": "#004e5a",
+                        "secondary-fixed": "#a2eeff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-tint": "#c0c1ff",
+                        "secondary-container": "#00cbe6",
+                        "surface-container-low": "#171b28",
+                        "surface-container-highest": "#313442",
+                        "tertiary-container": "#00885d",
+                        "on-secondary": "#00363e",
+                        "surface-container-lowest": "#0a0e1a",
+                        "inverse-on-surface": "#2c303d",
+                        "on-secondary-container": "#00515d",
+                        "surface-container": "#1b1f2c",
+                        "secondary-fixed-dim": "#2fd9f4",
+                        "on-tertiary": "#003824",
+                        "tertiary": "#4edea3",
+                        "surface-container-high": "#262a37",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(27, 31, 44, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .status-glow {
+            box-shadow: 0 0 8px #4edea3;
+        }
+        .tree-line {
+            background: linear-gradient(to bottom, #464554 50%, transparent 50%);
+            background-size: 1px 12px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0a0e1a] dark:bg-[#0a0e1a] bg-gradient-to-b from-white/5 to-transparent flat no shadows">
+<div class="flex items-center gap-8">
+<h1 class="text-2xl font-bold tracking-tighter text-indigo-400 dark:text-indigo-300 font-['Space_Grotesk']">SkillForge</h1>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="font-['Space_Grotesk'] text-indigo-400 border-b-2 border-indigo-500 pb-1 tracking-tight" href="#">Dashboard</a>
+<a class="font-['Space_Grotesk'] text-slate-400 hover:text-slate-200 tracking-tight transition-colors" href="#">Registry</a>
+<a class="font-['Space_Grotesk'] text-slate-400 hover:text-slate-200 tracking-tight transition-colors" href="#">Bible</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-1.5 rounded-full border border-outline-variant/20">
+<span class="text-xs font-['JetBrains_Mono'] text-on-surface-variant uppercase tracking-widest">Generation 2 of 3</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary status-glow"></span>
+<span class="text-[10px] font-bold text-tertiary uppercase tracking-tighter">Breeding...</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 p-2 rounded-xl cursor-pointer transition-colors" data-icon="settings">settings</span>
+<span class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 p-2 rounded-xl cursor-pointer transition-colors" data-icon="account_tree">account_tree</span>
+<img alt="Researcher Avatar" class="w-8 h-8 rounded-full border border-primary/20" data-alt="Close up of a professional digital avatar with sleek holographic elements and dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIQGf0tDIPlYNn3fHhpd3r6WqeyNpL4GKlTqKZWsxA2x46SlM97p5AXOKIOLY8Ku_LCx22z09zIlsbuTUefoHScJpAYbGWXdvnWkTEKTpVYRYSYJSMB1bkY15Nf_PYt2JfiacmktF84VkamVeg_MwKH9Xgbx2Tv8ZdSgxkxAWuVr7KX4QG77xsBknvpljUTBjFtax8xvPYWRRcHzrP2fWMNtAiDQdFaZHyz8bQ8672LJdimkZpd1M-Vu0flt6GJJFl24p6GiIDBMZG"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex flex-col p-4 bg-[#1b1f2c] dark:bg-[#1b1f2c] tonal-shift-right bg-slate-900/40 border-r border-outline-variant/10">
+<div class="mb-8 px-2">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="biotech" style="font-variation-settings: 'FILL' 1;">biotech</span>
+</div>
+<div>
+<p class="text-xs font-['JetBrains_Mono'] text-primary uppercase tracking-widest leading-none">Project Evolve</p>
+<p class="text-[10px] text-on-surface-variant/60 font-medium">Active Generation: v4.2</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined" data-icon="precision_manufacturing">precision_manufacturing</span>
+                Evolution Arena
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-800/30 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+                Breeding Reports
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-800/30 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+                Gen Stats
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-800/30 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+                Learning Logs
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-800/30 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+                Terminal
+            </a>
+</nav>
+<div class="mt-auto space-y-4 pt-4 border-t border-outline-variant/10">
+<button class="w-full py-2 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-xl text-xs uppercase tracking-wider hover:opacity-90 transition-opacity">
+                New Experiment
+            </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-cyan-300 transition-all font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span>
+                    Docs
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 mt-16 p-8 min-h-[calc(100vh-4rem)] bg-background">
+<div class="grid grid-cols-12 gap-8 max-w-[1400px] mx-auto">
+<!-- Left Column: Breeding Report -->
+<section class="col-span-12 lg:col-span-7 flex flex-col gap-8">
+<div class="glass-panel p-8 rounded-xl relative overflow-hidden">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h2 class="text-2xl font-['Space_Grotesk'] font-bold tracking-tight text-on-surface">Breeding Report</h2>
+<p class="text-[0.6875rem] font-['JetBrains_Mono'] text-secondary uppercase tracking-[0.2em]">Genealogy Mapping Phase</p>
+</div>
+<div class="px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20">
+<span class="text-[10px] font-bold text-secondary uppercase">Analysis Active</span>
+</div>
+</div>
+<!-- Visual Family Tree -->
+<div class="relative flex flex-col items-center gap-12 py-4">
+<!-- Parents Row -->
+<div class="flex gap-24 relative">
+<!-- Alpha -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-xl bg-surface-container-highest border border-primary/40 flex items-center justify-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors"></div>
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="robot_2">robot_2</span>
+</div>
+<div class="text-center">
+<p class="text-xs font-bold font-['JetBrains_Mono'] text-on-surface">Alpha</p>
+<p class="text-[10px] text-primary-fixed-dim">Score: 0.89</p>
+</div>
+</div>
+<!-- Charlie -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-xl bg-surface-container-highest border border-secondary/40 flex items-center justify-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-secondary/5 group-hover:bg-secondary/10 transition-colors"></div>
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="psychology">psychology</span>
+</div>
+<div class="text-center">
+<p class="text-xs font-bold font-['JetBrains_Mono'] text-on-surface">Charlie</p>
+<p class="text-[10px] text-secondary">Score: 0.82</p>
+</div>
+</div>
+<!-- Connection Lines (CSS generated) -->
+<div class="absolute top-8 left-1/2 -translate-x-1/2 w-32 h-px bg-outline-variant/30"></div>
+<div class="absolute top-8 left-1/2 -translate-x-1/2 w-px h-12 bg-outline-variant/30"></div>
+</div>
+<!-- Children Row -->
+<div class="grid grid-cols-4 gap-8 w-full">
+<!-- Alpha-2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-xl bg-surface-container-low border border-outline-variant/40 flex items-center justify-center">
+<span class="text-primary text-sm font-['JetBrains_Mono']">A2</span>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface">Alpha-2</p>
+<p class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">elitism</p>
+</div>
+</div>
+<!-- Gamma -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center">
+<span class="text-primary text-sm font-['JetBrains_Mono']">Γ</span>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface">Gamma</p>
+<p class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">crossover</p>
+</div>
+</div>
+<!-- Delta-2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-xl bg-surface-container-low border border-outline-variant/40 flex items-center justify-center">
+<span class="text-tertiary text-sm font-['JetBrains_Mono']">Δ2</span>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface">Delta-2</p>
+<p class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">mutation</p>
+</div>
+</div>
+<!-- Wildcard -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-xl bg-surface-container-low border border-tertiary/40 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 bg-tertiary/5 animate-pulse"></div>
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-bold text-on-surface">Wildcard</p>
+<p class="text-[9px] text-tertiary uppercase tracking-widest">anomaly</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Breeder's Reasoning -->
+<div class="surface-container rounded-xl p-8 border border-outline-variant/10 shadow-xl">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="format_quote">format_quote</span>
+<h3 class="text-lg font-['Space_Grotesk'] font-medium text-on-surface">Breeder's Reasoning</h3>
+</div>
+<div class="space-y-4">
+<blockquote class="pl-6 border-l-2 border-primary/30 py-1">
+<p class="text-sm italic text-on-surface-variant leading-relaxed">
+                                "The integration of Alpha's strict validation instructions into the latent space has provided a structural rigidity we lacked. By marrying this with Charlie's aggressive testing strategy, Generation 2 candidates show significantly reduced hallucination rates during edge-case simulation."
+                            </p>
+</blockquote>
+<div class="flex gap-4">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-[9px] font-['JetBrains_Mono'] text-primary-fixed-dim">#InstructionValidation</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-[9px] font-['JetBrains_Mono'] text-primary-fixed-dim">#TestStrategyFusion</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Stats & Logs -->
+<section class="col-span-12 lg:col-span-5 flex flex-col gap-8">
+<!-- Fitness Chart -->
+<div class="glass-panel p-6 rounded-xl">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="text-sm font-['Space_Grotesk'] font-bold text-on-surface">Fitness Progression</h3>
+<p class="text-[10px] font-['JetBrains_Mono'] text-on-surface-variant/60">Cross-generational Metric Analysis</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-[9px] uppercase tracking-widest text-on-surface-variant">Actual</span>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="w-2 h-2 rounded-full border border-dashed border-secondary"></div>
+<span class="text-[9px] uppercase tracking-widest text-on-surface-variant">Projected</span>
+</div>
+</div>
+</div>
+<!-- Abstract Chart Visual -->
+<div class="h-48 w-full flex items-end gap-1 relative pt-4">
+<!-- Y-Axis labels -->
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[8px] font-['JetBrains_Mono'] text-outline-variant/60 -translate-x-full pr-2">
+<span>1.0</span>
+<span>0.5</span>
+<span>0.0</span>
+</div>
+<!-- Bar chart elements -->
+<div class="flex-1 h-[40%] bg-surface-container-highest rounded-t-sm relative group">
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-outline-variant text-[8px] px-1.5 py-0.5 rounded">0.42</div>
+</div>
+<div class="flex-1 h-[55%] bg-surface-container-highest rounded-t-sm"></div>
+<div class="flex-1 h-[68%] bg-primary rounded-t-sm shadow-[0_-4px_12px_rgba(192,193,255,0.2)] relative">
+<div class="absolute inset-0 bg-white/10"></div>
+</div>
+<div class="flex-1 h-[82%] bg-secondary rounded-t-sm relative">
+<div class="absolute inset-0 bg-white/10"></div>
+</div>
+<!-- Projection -->
+<div class="flex-1 h-[94%] border-2 border-dashed border-secondary/40 rounded-t-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary/30 text-xs" data-icon="trending_up">trending_up</span>
+</div>
+<!-- X-Axis Labels -->
+<div class="absolute bottom-0 left-0 right-0 translate-y-full pt-2 flex justify-around text-[8px] font-['JetBrains_Mono'] text-outline-variant/60 uppercase">
+<span>Gen 0</span>
+<span>Gen 1</span>
+<span>Gen 2 (Current)</span>
+<span>Gen 3</span>
+</div>
+</div>
+</div>
+<!-- Learning Log -->
+<div class="surface-container-low rounded-xl p-6 border border-outline-variant/10">
+<h3 class="text-xs font-['JetBrains_Mono'] text-secondary uppercase tracking-[0.2em] mb-6">Learning Log: G2.Beta</h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<div class="mt-1.5 w-1 h-1 rounded-full bg-secondary"></div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+<span class="text-secondary font-medium">Imperative phrasing</span> followed 2.1x more consistently than previous baseline.
+                            </p>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1.5 w-1 h-1 rounded-full bg-secondary"></div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                Skills with <span class="text-secondary font-medium">validation scripts</span> scored 18% higher in deterministic reliability tests.
+                            </p>
+</li>
+<li class="flex items-start gap-3">
+<div class="mt-1.5 w-1 h-1 rounded-full bg-secondary"></div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                                Short descriptions triggered <span class="text-secondary font-medium">more reliably</span> across multi-turn context windows.
+                            </p>
+</li>
+</ul>
+</div>
+</section>
+<!-- Bottom Panel: Terminal Log -->
+<section class="col-span-12">
+<div class="bg-[#0a0e1a] rounded-xl overflow-hidden border border-outline-variant/20">
+<div class="flex items-center justify-between px-4 py-2 bg-surface-container-high/50 border-b border-outline-variant/10">
+<div class="flex items-center gap-2">
+<div class="flex gap-1.5">
+<div class="w-2 h-2 rounded-full bg-error/40"></div>
+<div class="w-2 h-2 rounded-full bg-secondary/40"></div>
+<div class="w-2 h-2 rounded-full bg-tertiary/40"></div>
+</div>
+<span class="ml-4 text-[10px] font-['JetBrains_Mono'] text-on-surface-variant/40 uppercase tracking-widest">Evolution Runtime Console</span>
+</div>
+<span class="text-[9px] font-['JetBrains_Mono'] text-tertiary animate-pulse">SYSTEM_ACTIVE // STABLE</span>
+</div>
+<div class="p-6 h-40 overflow-y-auto font-['JetBrains_Mono'] text-[11px] leading-relaxed">
+<div class="flex gap-4 mb-1">
+<span class="text-outline-variant">[14:22:01]</span>
+<span class="text-secondary">INF:</span>
+<span class="text-on-surface-variant">Initializing breeding sequence for cluster_A-C...</span>
+</div>
+<div class="flex gap-4 mb-1">
+<span class="text-outline-variant">[14:22:04]</span>
+<span class="text-tertiary">GEN:</span>
+<span class="text-on-surface-variant">Synthesizing Gamma via crossover (Alpha:60%, Charlie:40%)</span>
+</div>
+<div class="flex gap-4 mb-1">
+<span class="text-outline-variant">[14:22:15]</span>
+<span class="text-primary">MUT:</span>
+<span class="text-on-surface-variant">Random mutation applied to node Δ2. Seed parity verified.</span>
+</div>
+<div class="flex gap-4 mb-1">
+<span class="text-outline-variant">[14:22:30]</span>
+<span class="text-tertiary">GEN:</span>
+<span class="text-on-surface-variant">Wildcard node detected. Sparking latent feature exploration...</span>
+</div>
+<div class="flex gap-4 mb-1">
+<span class="text-outline-variant">[14:22:42]</span>
+<span class="text-secondary">INF:</span>
+<span class="text-on-surface-variant">Calculating fitness tensors for new candidates.</span>
+</div>
+<div class="flex gap-4 mt-2 animate-pulse">
+<span class="text-outline-variant">_</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- FAB Suppression Rule Followed: No FAB on Dashboard/Detail screen -->
+</body></html>

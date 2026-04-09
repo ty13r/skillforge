@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SkillForge | The Claude Skills Bible</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#6366F1",
+                        "secondary": "#22D3EE",
+                        "success": "#10B981",
+                        "background": "#0A0E1A",
+                        "surface": "#111827",
+                        "on-surface": "#dfe2f3",
+                        "outline": "rgba(255,255,255,0.08)"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "8px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "2xl": "16px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["JetBrains Mono"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .font-label { font-family: 'JetBrains Mono', monospace; }
+        .glass-card {
+            background: #111827;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .status-glow {
+            box-shadow: 0 0 8px currentColor;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary/30 min-h-screen flex flex-col">
+<!-- TopNavBar based on COMPONENTS_24 -->
+<nav class="bg-[#0f131f]/80 backdrop-blur-xl font-['Space_Grotesk'] tracking-tight fixed top-0 w-full z-50 border-b border-white/5 shadow-[0_8px_32px_0_rgba(99,102,241,0.04)]">
+<div class="flex justify-between items-center px-8 h-16 w-full">
+<div class="text-2xl font-bold text-indigo-400 font-['Space_Grotesk'] flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+            SkillForge
+        </div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-slate-400 hover:text-indigo-300 transition-colors px-3 py-1" href="#">Dashboard</a>
+<a class="text-slate-400 hover:text-indigo-300 transition-colors px-3 py-1" href="#">Registry</a>
+<a class="text-indigo-400 border-b-2 border-indigo-500 pb-1 font-medium" href="#">Bible</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform bg-primary text-white px-5 py-2 rounded-[8px] font-medium text-sm shadow-lg shadow-primary/20">
+                New Evolution
+            </button>
+<div class="flex gap-2 text-slate-400">
+<span class="material-symbols-outlined p-2 cursor-pointer hover:bg-white/5 rounded-full transition-all" data-icon="settings">settings</span>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrF07D3U_8K0EynWKVdXsa6ai-5r8m0le-nOYnS67hRkTp2m4zz_5-3gwXMJubscrmR8awWO5zOW4Qy6-SALIqlKyFGr8DVSZwFIaCeqwP2w0Axsn-R4Y2UvbsjO2jcv5qiWLYIjxQjkeRFCMqoWKAYQmvggl4jxBuleOEPTuP0e2_-of0TKOZcTOG1iQKaIZ0Edca3nN33ijvaO_QR_8zBfJgQ6W7_yT02ROKAz1VhcOkcLm7IIXdlJrsVu5mhX6rQWs7PlFV0YK9"/>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex flex-1 pt-16">
+<!-- SideNavBar based on COMPONENTS_24 -->
+<aside class="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-[#1b1f2c] font-['JetBrains_Mono'] text-[0.6875rem] uppercase tracking-widest z-40">
+<div class="flex flex-col py-6 px-4 space-y-2 relative h-full">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+</div>
+<div>
+<div class="text-lg font-bold text-[#dfe2f3] normal-case tracking-tight font-headline">The Bible</div>
+<div class="text-[10px] text-slate-500 tracking-normal normal-case">Design Patterns</div>
+</div>
+</div>
+<nav class="space-y-1">
+<div class="group">
+<button class="w-full flex items-center justify-between p-3 rounded-[8px] bg-indigo-500/10 text-indigo-400 border-r-2 border-indigo-500 transition-all">
+<span class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                            Dashboard
+                        </span>
+</button>
+<div class="pl-9 py-2 space-y-2 normal-case tracking-normal text-slate-400 text-sm">
+<a class="block text-primary font-medium" href="#">Descriptions</a>
+<a class="block hover:text-primary transition-colors" href="#">Instructions</a>
+<a class="block hover:text-primary transition-colors" href="#">Structural</a>
+</div>
+</div>
+<a class="flex items-center gap-3 p-3 rounded-[8px] text-slate-500 hover:bg-[#313442] hover:text-indigo-400 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="inventory_2">inventory_2</span>
+                    Registry
+                </a>
+<a class="flex items-center gap-3 p-3 rounded-[8px] text-slate-500 hover:bg-[#313442] hover:text-indigo-400 transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="menu_book">menu_book</span>
+                    Bible
+                </a>
+</nav>
+<div class="mt-auto pt-6 space-y-1">
+<a class="flex items-center gap-3 p-3 rounded-[8px] text-slate-500 hover:bg-[#313442] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 p-3 rounded-[8px] text-slate-500 hover:bg-[#313442] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                    Support
+                </a>
+</div>
+<!-- Separation Line -->
+<div class="bg-gradient-to-r from-transparent via-white/5 to-transparent w-[1px] h-full absolute right-0 top-0"></div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto ml-0 md:ml-64 p-8 bg-background">
+<div class="max-w-5xl mx-auto space-y-12">
+<!-- Header & Stats -->
+<header class="space-y-8">
+<div class="space-y-2">
+<h1 class="text-5xl font-headline font-bold text-on-surface tracking-tighter leading-tight">
+                        The Claude <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Skills Bible</span>
+</h1>
+<p class="text-lg text-slate-400 max-w-2xl font-light">
+                        Empirically-derived patterns for writing effective Agent Skills. Every finding discovered through evolutionary optimization.
+                    </p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-center">
+<span class="text-[0.6875rem] font-label text-slate-500 uppercase mb-1">Findings</span>
+<span class="text-3xl font-headline font-bold text-on-surface">47</span>
+</div>
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-center">
+<span class="text-[0.6875rem] font-label text-slate-500 uppercase mb-1">Confirmed Patterns</span>
+<span class="text-3xl font-headline font-bold text-success">12</span>
+</div>
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-center">
+<span class="text-[0.6875rem] font-label text-slate-500 uppercase mb-1">Anti-Patterns</span>
+<span class="text-3xl font-headline font-bold text-[#EF4444]">3</span>
+</div>
+<div class="glass-card p-6 rounded-2xl flex flex-col justify-center">
+<span class="text-[0.6875rem] font-label text-slate-500 uppercase mb-1">Evolution Runs</span>
+<span class="text-3xl font-headline font-bold text-secondary">23</span>
+</div>
+</div>
+</header>
+<!-- Pattern Card Section -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-label text-slate-400 flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        ACTIVE PATTERN: DESCRIPTION PATTERNS
+                    </h2>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-white/5 rounded-full text-[10px] font-label text-slate-300">P-DESC-001</span>
+<span class="px-3 py-1 bg-success/10 text-success border border-success/20 rounded-full text-[10px] font-label flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            Confirmed (5 runs)
+                        </span>
+</div>
+</div>
+<div class="glass-card rounded-2xl overflow-hidden border-primary/20">
+<div class="p-8 space-y-8">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+<div class="space-y-4 flex-1">
+<h3 class="text-3xl font-headline font-bold text-on-surface">Front-load within 250 characters</h3>
+<p class="text-slate-300 leading-relaxed">
+                                    Evidence summary: <span class="text-on-surface">Descriptions truncated at 250 chars in skill listing.</span> 
+                                    Keywords and intent verbs placed beyond the initial 250 characters show a <span class="italic">statistically significant drop</span> in successful activation triggers.
+                                </p>
+</div>
+<div class="glass-card bg-success/5 border-success/20 p-6 rounded-xl text-center min-w-[160px]">
+<div class="text-success text-4xl font-headline font-bold">+23%</div>
+<div class="text-[10px] font-label text-slate-400 mt-1 uppercase tracking-widest">Trigger Accuracy</div>
+<div class="mt-3 flex justify-center gap-1">
+<div class="w-2 h-2 rounded-full bg-success status-glow"></div>
+<div class="w-2 h-2 rounded-full bg-success status-glow"></div>
+<div class="w-2 h-2 rounded-full bg-success status-glow"></div>
+<div class="w-2 h-2 rounded-full bg-success/20"></div>
+<div class="w-2 h-2 rounded-full bg-success/20"></div>
+</div>
+</div>
+</div>
+<!-- Code Comparison -->
+<div class="grid md:grid-cols-2 gap-6">
+<div class="space-y-3">
+<span class="text-[10px] font-label text-red-400/80 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="cancel">cancel</span>
+                                    Inefficient (Diffuse)
+                                </span>
+<div class="bg-black/40 rounded-[8px] p-6 border border-white/5 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 text-[8px] font-label bg-red-400/10 text-red-400 rounded-bl-lg">284 CHARS</div>
+<pre class="font-label text-xs leading-relaxed text-slate-500 overflow-x-auto">"The purpose of this tool is primarily to 
+help the user manage their tasks and 
+schedules more effectively by providing 
+a comprehensive overview of all 
+upcoming events, meetings, and project 
+deadlines that are currently tracked..."</pre>
+</div>
+</div>
+<div class="space-y-3">
+<span class="text-[10px] font-label text-success/80 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                                    Optimized (Dense)
+                                </span>
+<div class="bg-black/40 rounded-[8px] p-6 border border-success/30 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 text-[8px] font-label bg-success/10 text-success rounded-bl-lg">112 CHARS</div>
+<pre class="font-label text-xs leading-relaxed text-on-surface overflow-x-auto"><span class="text-primary">"Track and sync tasks, meetings, 
+and project deadlines.</span> Returns a 
+comprehensive JSON overview of 
+all upcoming events from 
+the database."</pre>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-white/5 flex flex-wrap gap-3">
+<button class="bg-white/5 px-4 py-2 rounded-[8px] text-xs text-slate-400 hover:text-on-surface hover:bg-white/10 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+                                View Evolution Log #EV-921
+                            </button>
+<button class="bg-white/5 px-4 py-2 rounded-[8px] text-xs text-slate-400 hover:text-on-surface hover:bg-white/10 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="science">science</span>
+                                A/B Testing Metrics
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Extra Info -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-20">
+<div class="glass-card p-8 rounded-2xl col-span-1 md:col-span-2 space-y-4">
+<h4 class="text-xl font-headline font-bold text-on-surface">Why it works</h4>
+<p class="text-sm text-slate-400 leading-relaxed">
+                        Evolutionary runs (Gen 1-5) consistently optimized for "Token Priority Index." Claude models prioritize the start of the skill definition during the initial pruning phase of high-context windows. By dense-packing keywords early, you prevent "Attention Decay" in large skill libraries.
+                    </p>
+</div>
+<div class="glass-card p-8 rounded-2xl flex flex-col justify-center border-l-4 border-primary">
+<div class="text-primary mb-4">
+<span class="material-symbols-outlined text-3xl" data-icon="lightbulb">lightbulb</span>
+</div>
+<h4 class="text-lg font-headline font-bold">Architect Tip</h4>
+<p class="text-[12px] text-slate-400 mt-2 leading-relaxed">Avoid introductory fluff like "This tool is used to..." Go straight to the imperative verbs.</p>
+</div>
+</section>
+</div>
+</main>
+</div>
+<!-- Bottom Bar / Footer -->
+<footer class="bg-background border-t border-white/5 sticky bottom-0 z-50">
+<div class="max-w-[1920px] mx-auto h-12 px-8 flex items-center justify-between text-[10px] font-label uppercase tracking-widest text-slate-500">
+<div class="flex items-center gap-6">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="groups">groups</span>
+                Contributing
+            </a>
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="analytics">analytics</span>
+                Methodology
+            </a>
+</div>
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-yellow-500" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+                1.2k Stars
+            </span>
+<span class="text-slate-700">|</span>
+<span class="text-slate-600">v2.4.0-stable</span>
+</div>
+</div>
+</footer>
+</body></html>

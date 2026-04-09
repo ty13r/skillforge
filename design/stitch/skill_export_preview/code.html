@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#0f131f",
+                    "outline": "#908fa0",
+                    "on-tertiary-container": "#000703",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "primary-container": "#8083ff",
+                    "on-secondary-fixed-variant": "#004e5a",
+                    "surface-bright": "#353946",
+                    "inverse-primary": "#494bd6",
+                    "secondary-fixed-dim": "#2fd9f4",
+                    "outline-variant": "#464554",
+                    "error": "#ffb4ab",
+                    "surface": "#0f131f",
+                    "surface-container-low": "#171b28",
+                    "on-primary": "#1000a9",
+                    "inverse-on-surface": "#2c303d",
+                    "on-secondary-fixed": "#001f25",
+                    "secondary": "#5de6ff",
+                    "on-tertiary-fixed": "#002113",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#c7c4d7",
+                    "surface-variant": "#313442",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "on-error": "#690005",
+                    "on-primary-container": "#0d0096",
+                    "on-background": "#dfe2f3",
+                    "surface-container-high": "#262a37",
+                    "error-container": "#93000a",
+                    "primary": "#c0c1ff",
+                    "on-tertiary": "#003824",
+                    "tertiary-container": "#00885d",
+                    "surface-container-highest": "#313442",
+                    "secondary-container": "#00cbe6",
+                    "surface-container-lowest": "#0a0e1a",
+                    "on-secondary-container": "#00515d",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary": "#00363e",
+                    "inverse-surface": "#dfe2f3",
+                    "tertiary": "#4edea3",
+                    "primary-fixed": "#e1e0ff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "background": "#0f131f",
+                    "surface-container": "#1b1f2c",
+                    "surface-tint": "#c0c1ff",
+                    "secondary-fixed": "#a2eeff",
+                    "on-surface": "#dfe2f3",
+                    "on-primary-fixed": "#07006c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["JetBrains Mono"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .glass-panel {
+            background: rgba(27, 31, 44, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-dot {
+            box-shadow: 0 0 8px #4edea3;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#0f131f]/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full max-w-full shadow-[0_8px_32px_rgba(0,0,0,0.4)] bg-gradient-to-b from-white/5 to-transparent">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-[#c0c1ff] font-['Space_Grotesk']">SkillForge</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] transition-colors duration-200 font-['Space_Grotesk'] tracking-tight" href="#">Dashboard</a>
+<a class="text-[#c0c1ff] border-b-2 border-[#6366F1] pb-1 font-['Space_Grotesk'] tracking-tight" href="#">Registry</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] transition-colors duration-200 font-['Space_Grotesk'] tracking-tight" href="#">Bible</a>
+</div>
+</div>
+<button class="bg-gradient-to-r from-primary to-primary-container px-6 py-2 rounded-xl text-on-primary-container font-bold active:scale-95 transition-transform">
+            New Evolution
+        </button>
+</nav>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#1b1f2c] flex flex-col py-6 px-4 gap-8 z-40 hidden lg:flex">
+<div class="mt-16 flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-2 bg-[#313442] text-[#c0c1ff] rounded-xl scale-x-105 origin-left transition-transform">
+<span class="material-symbols-outlined text-sm">terminal</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Overview</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#313442]/50 transition-all rounded-xl cursor-pointer">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Evolution Logs</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#313442]/50 transition-all rounded-xl cursor-pointer">
+<span class="material-symbols-outlined text-sm">database</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Agent Assets</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#313442]/50 transition-all rounded-xl cursor-pointer">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Settings</span>
+</div>
+</div>
+<div class="mt-auto border-t border-outline-variant/10 pt-4 flex flex-col gap-1">
+<div class="px-3 py-2 flex items-center gap-3 text-slate-500 hover:bg-[#313442]/50 transition-all rounded-xl cursor-pointer">
+<span class="material-symbols-outlined text-sm">description</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Documentation</span>
+</div>
+<div class="px-3 py-2 flex items-center gap-3 text-slate-500 hover:bg-[#313442]/50 transition-all rounded-xl cursor-pointer">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="font-['JetBrains_Mono'] text-[0.6875rem]">Support</span>
+</div>
+<div class="mt-4 px-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary glow-dot"></div>
+<span class="font-['JetBrains_Mono'] text-[0.6rem] uppercase tracking-widest text-tertiary">System Status: Active</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 pt-24 pb-12 px-8 max-w-[1440px] mx-auto">
+<!-- Header -->
+<header class="mb-12">
+<div class="flex items-center gap-2 mb-2">
+<span class="font-mono text-[0.6875rem] text-primary tracking-widest uppercase bg-primary/10 px-2 py-0.5 rounded">Build ID: 0x8F2A1</span>
+<span class="font-mono text-[0.6875rem] text-outline tracking-widest uppercase border border-outline-variant/20 px-2 py-0.5 rounded">STABLE_DIFFUSION_V3</span>
+</div>
+<h1 class="font-headline text-5xl font-bold tracking-tighter text-on-surface">Export: Elixir LiveView Specialist</h1>
+</header>
+<!-- Three-Column Export Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+<!-- Col 1: Skill Directory -->
+<section class="glass-panel rounded-xl p-6 flex flex-col h-[500px]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-lg font-bold font-headline mb-1">Skill Directory</h2>
+<p class="text-xs font-mono text-outline">Compressed Binary Structure</p>
+</div>
+<span class="material-symbols-outlined text-primary">folder_zip</span>
+</div>
+<div class="flex-grow overflow-auto font-mono text-xs text-on-surface-variant/80 space-y-1">
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-yellow-500">folder</span>
+<span>elixir-liveview-specialist/</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-4 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-primary-container">description</span>
+<span class="text-on-surface">SKILL.md</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 text-[10px] text-outline">12.4kb</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-4 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-secondary">terminal</span>
+<span>scripts/</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-8 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-[#4edea3]">code</span>
+<span class="text-on-surface">validate_liveview.py</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 text-[10px] text-outline">4.1kb</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-8 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-[#4edea3]">code</span>
+<span class="text-on-surface">optimize_render.ex</span>
+<span class="ml-auto opacity-0 group-hover:opacity-100 text-[10px] text-outline">8.8kb</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-4 rounded hover:bg-surface-container-high group transition-colors">
+<span class="material-symbols-outlined text-sm text-primary-container">description</span>
+<span class="text-on-surface">MANIFEST.json</span>
+</div>
+</div>
+<button class="mt-6 w-full py-3 bg-surface-container-high border border-primary/20 rounded-xl font-headline font-bold text-primary hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Download .zip
+                </button>
+</section>
+<!-- Col 2: Agent SDK Config -->
+<section class="glass-panel rounded-xl p-6 flex flex-col h-[500px]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-lg font-bold font-headline mb-1">Agent SDK Config</h2>
+<p class="text-xs font-mono text-outline">Skill Schema Definition</p>
+</div>
+<span class="material-symbols-outlined text-secondary">integration_instructions</span>
+</div>
+<div class="flex-grow bg-surface-container-lowest rounded-xl p-4 overflow-hidden border border-outline-variant/10">
+<pre class="font-mono text-[11px] leading-relaxed text-on-surface-variant overflow-x-auto h-full scrollbar-hide"><span class="text-secondary">{</span>
+  <span class="text-primary-container">"skill_id"</span>: <span class="text-tertiary">"lv_spec_01"</span>,
+  <span class="text-primary-container">"engine"</span>: <span class="text-tertiary">"phoenix_1.7"</span>,
+  <span class="text-primary-container">"capabilities"</span>: <span class="text-secondary">[</span>
+    <span class="text-tertiary">"realtime_diffing"</span>,
+    <span class="text-tertiary">"pubsub_sync"</span>
+  <span class="text-secondary">]</span>,
+  <span class="text-primary-container">"hooks"</span>: <span class="text-secondary">{</span>
+    <span class="text-primary-container">"on_mount"</span>: <span class="text-tertiary">"verify_assigns"</span>
+  <span class="text-secondary">}</span>,
+  <span class="text-primary-container">"render_priority"</span>: <span class="text-secondary">0.85</span>,
+  <span class="text-primary-container">"telemetry"</span>: <span class="text-secondary">true</span>
+<span class="text-secondary">}</span></pre>
+</div>
+<button class="mt-6 w-full py-3 bg-surface-container-high border border-secondary/20 rounded-xl font-headline font-bold text-secondary hover:bg-secondary hover:text-on-secondary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">content_copy</span>
+                    Copy JSON
+                </button>
+</section>
+<!-- Col 3: Installation Instructions -->
+<section class="glass-panel rounded-xl p-6 flex flex-col h-[500px]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-lg font-bold font-headline mb-1">Deployment</h2>
+<p class="text-xs font-mono text-outline">Terminal Protocols</p>
+</div>
+<span class="material-symbols-outlined text-tertiary">rocket_launch</span>
+</div>
+<!-- Tabs -->
+<div class="flex gap-1 mb-4 p-1 bg-surface-container-low rounded-lg border border-outline-variant/5">
+<button class="flex-1 py-1.5 px-2 text-[10px] font-mono font-bold bg-[#313442] text-[#c0c1ff] rounded-md">Claude Code</button>
+<button class="flex-1 py-1.5 px-2 text-[10px] font-mono text-outline hover:text-on-surface transition-colors">Skills API</button>
+<button class="flex-1 py-1.5 px-2 text-[10px] font-mono text-outline hover:text-on-surface transition-colors">Agent SDK</button>
+</div>
+<div class="flex-grow space-y-4">
+<div class="space-y-2">
+<label class="text-[10px] font-mono text-outline uppercase tracking-wider">Execute Command</label>
+<div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/20 font-mono text-xs text-tertiary break-all">
+                            unzip elixir-liveview-specialist.zip -d ~/.claude/skills/
+                        </div>
+</div>
+<div class="p-4 rounded-xl border border-outline-variant/10 bg-surface-container-low/50">
+<h4 class="text-xs font-bold font-headline mb-2 flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-sm text-tertiary">verified</span>
+                            Post-Install Check
+                        </h4>
+<ul class="space-y-2">
+<li class="flex gap-2 text-[11px] text-outline">
+<span class="text-tertiary font-bold">•</span>
+                                Verify manifest hash matches.
+                            </li>
+<li class="flex gap-2 text-[11px] text-outline">
+<span class="text-tertiary font-bold">•</span>
+                                Re-index Claude skill buffer.
+                            </li>
+</ul>
+</div>
+</div>
+<div class="mt-auto pt-6">
+<div class="flex items-center justify-between text-[10px] font-mono mb-2 px-1">
+<span class="text-outline">COMPATIBILITY</span>
+<span class="text-tertiary">98.2% MATCH</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[98%] shadow-[0_0_8px_rgba(78,222,163,0.4)]"></div>
+</div>
+</div>
+</section>
+</div>
+<!-- Bottom Section: Bible Entry Preview -->
+<section class="relative overflow-hidden group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary/20 via-secondary/20 to-tertiary/20 blur opacity-25 group-hover:opacity-40 transition-opacity"></div>
+<div class="relative glass-panel rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary p-2 bg-primary/10 rounded-lg">menu_book</span>
+<h3 class="font-headline text-2xl font-bold tracking-tight">SkillForge Bible Preview</h3>
+</div>
+<div class="bg-surface-container-low/80 p-6 rounded-xl border-l-4 border-primary">
+<p class="font-mono text-sm leading-relaxed text-on-surface-variant">
+<span class="text-primary font-bold">Finding #012:</span> Skills with explicit <span class="text-secondary italic">render-order</span> instructions scored <span class="text-tertiary">31% higher</span> in cross-platform inference latency benchmarks. Recommended for all L-Class agents.
+                        </p>
+</div>
+</div>
+<div class="flex flex-col items-center md:items-end gap-4 shrink-0">
+<div class="text-right">
+<div class="text-[10px] font-mono text-outline uppercase tracking-widest mb-1">Impact Level</div>
+<div class="flex gap-1">
+<div class="h-1.5 w-6 rounded-full bg-primary"></div>
+<div class="h-1.5 w-6 rounded-full bg-primary"></div>
+<div class="h-1.5 w-6 rounded-full bg-primary"></div>
+<div class="h-1.5 w-6 rounded-full bg-surface-container-highest"></div>
+</div>
+</div>
+<button class="bg-gradient-to-r from-primary to-primary-container px-8 py-4 rounded-xl text-on-primary-container font-headline font-extrabold text-lg shadow-[0_8px_32px_rgba(99,102,241,0.2)] hover:shadow-[0_8px_48px_rgba(99,102,241,0.4)] active:scale-95 transition-all">
+                        Publish to Bible
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Background Decoration -->
+<div class="fixed top-0 right-0 -z-10 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none"></div>
+</body></html>

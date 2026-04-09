@@ -244,6 +244,7 @@ The journal is the only doc that's written for humans first and machines second.
 - [x] 2026-04-09 — Baseline git commit `e016d80`; git identity policy committed `87eacaa`
 - [x] 2026-04-09 — Journal Entry #3 (`003-overnight-run-begins.md`) + ANTHROPIC_API_KEY loader verified
 - [x] 2026-04-09 — **Wave 1 / Step 3 complete**: models serialization (`to_dict`/`from_dict` on all 5 dataclasses, `_serde.py` helper, datetime UTC fix). 10 tests pass (up from 2). Ruff clean (+ fixed pre-existing StrEnum issues in schemas.py)
+- [x] 2026-04-09 — **Wave 2 / Steps 4 + 5 complete**: async SQLite DB (init_db + 8 CRUD functions, 10 tests) + sandbox system (create/cleanup/collect + 8-rule validator, 20 tests). Schema matches SCHEMA.md exactly. Foreign keys on, path-prefix safety verified, validator enforces all Skill Authoring Constraints. 40 tests passing total.
 
 ### MVP Checklist:
 - [ ] `docs/skills-research.md` included in repo

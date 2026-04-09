@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SkillForge | New Evolution Run</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#00885d",
+                        "secondary": "#5de6ff",
+                        "on-secondary": "#00363e",
+                        "error-container": "#93000a",
+                        "surface-variant": "#313442",
+                        "on-tertiary": "#003824",
+                        "on-secondary-fixed-variant": "#004e5a",
+                        "on-secondary-fixed": "#001f25",
+                        "on-error": "#690005",
+                        "surface-dim": "#0f131f",
+                        "on-secondary-container": "#00515d",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#494bd6",
+                        "inverse-on-surface": "#2c303d",
+                        "primary-container": "#8083ff",
+                        "surface-container-low": "#171b28",
+                        "surface-container-lowest": "#0a0e1a",
+                        "on-primary-container": "#0d0096",
+                        "secondary-fixed-dim": "#2fd9f4",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-fixed": "#a2eeff",
+                        "surface": "#0f131f",
+                        "primary": "#c0c1ff",
+                        "on-primary": "#1000a9",
+                        "secondary-container": "#00cbe6",
+                        "on-tertiary-container": "#000703",
+                        "on-tertiary-fixed": "#002113",
+                        "on-surface": "#dfe2f3",
+                        "on-surface-variant": "#c7c4d7",
+                        "inverse-surface": "#dfe2f3",
+                        "outline-variant": "#464554",
+                        "surface-tint": "#c0c1ff",
+                        "surface-bright": "#353946",
+                        "surface-container": "#1b1f2c",
+                        "tertiary": "#4edea3",
+                        "outline": "#908fa0",
+                        "on-background": "#dfe2f3",
+                        "on-primary-fixed": "#07006c",
+                        "background": "#0f131f",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#262a37",
+                        "primary-fixed": "#e1e0ff",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#313442",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#005236"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-gradient {
+            background: linear-gradient(45deg, #c0c1ff 0%, #8083ff 100%);
+        }
+        .glass-panel {
+            background: rgba(49, 52, 66, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-[#0a0e1a]/80 backdrop-blur-md border-b border-white/[0.08]">
+<div class="flex justify-between items-center w-full px-8 py-3 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-[#dfe2f3] flex items-center gap-2 font-headline">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">fort</span>
+                SkillForge
+            </div>
+<nav class="hidden md:flex items-center gap-8 font-headline font-medium tracking-tight">
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] hover:bg-white/[0.05] transition-all duration-200 rounded-lg px-3 py-1" href="#">Dashboard</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] hover:bg-white/[0.05] transition-all duration-200 rounded-lg px-3 py-1" href="#">Registry</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] hover:bg-white/[0.05] transition-all duration-200 rounded-lg px-3 py-1" href="#">Bible</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">dna</button>
+<button class="bg-primary text-on-primary-container px-4 py-1.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all active:scale-[0.97]">
+                    New Evolution
+                </button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-4xl mx-auto">
+<!-- Header Section -->
+<section class="mb-12">
+<h1 class="text-5xl font-headline font-bold tracking-tighter text-on-surface mb-2">New Evolution Run</h1>
+<p class="text-on-surface-variant font-label text-sm uppercase tracking-widest opacity-70">Project Alpha // Execution Node 042</p>
+</section>
+<!-- Mode Selector Bento -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+<!-- Selected State -->
+<div class="relative p-6 rounded-xl border-2 border-primary bg-surface-container-low shadow-[0_0_20px_rgba(99,102,241,0.1)] cursor-pointer group transition-all">
+<div class="absolute top-4 right-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex flex-col gap-4">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">target</span>
+</div>
+<div>
+<h3 class="text-xl font-headline font-semibold text-on-surface">Domain Mode</h3>
+<p class="text-on-surface-variant text-sm mt-1">Execute targeted evolution within specific domain specializations.</p>
+</div>
+</div>
+</div>
+<!-- Inactive State -->
+<div class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-all">
+<div class="flex flex-col gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-3xl">psychology</span>
+</div>
+<div>
+<h3 class="text-xl font-headline font-semibold text-on-surface">Meta Mode</h3>
+<p class="text-on-surface-variant text-sm mt-1">Define abstract skill-authoring patterns and cognitive frameworks.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Input -->
+<section class="mb-8">
+<label class="block font-label text-xs font-medium text-primary mb-3 uppercase tracking-tighter">Specialization Blueprint</label>
+<div class="relative group">
+<textarea class="w-full h-48 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-on-surface font-label placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-none" placeholder="Describe the target evolution... e.g., Optimizing Elixir OTP supervision trees for Phoenix LiveView high-concurrency state management in fintech applications."></textarea>
+<div class="absolute bottom-4 right-4 flex items-center gap-2 text-xs font-label text-on-surface-variant/50">
+<span class="material-symbols-outlined text-sm">code</span>
+                    Markdown Supported
+                </div>
+</div>
+</section>
+<!-- Configuration Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30">
+<label class="block font-label text-[10px] text-on-surface-variant uppercase mb-1">Population Size</label>
+<div class="flex items-center justify-between">
+<span class="text-2xl font-headline font-bold text-on-surface">5</span>
+<div class="flex flex-col gap-1">
+<button class="material-symbols-outlined text-xs hover:text-primary">expand_less</button>
+<button class="material-symbols-outlined text-xs hover:text-primary">expand_more</button>
+</div>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30">
+<label class="block font-label text-[10px] text-on-surface-variant uppercase mb-1">Generations</label>
+<div class="flex items-center justify-between">
+<span class="text-2xl font-headline font-bold text-on-surface">3</span>
+<div class="flex flex-col gap-1">
+<button class="material-symbols-outlined text-xs hover:text-primary">expand_less</button>
+<button class="material-symbols-outlined text-xs hover:text-primary">expand_more</button>
+</div>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30">
+<label class="block font-label text-[10px] text-on-surface-variant uppercase mb-1">Budget Cap</label>
+<div class="flex items-center justify-between">
+<span class="text-2xl font-headline font-bold text-on-surface text-tertiary">$10.00</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">payments</span>
+</div>
+</div>
+</section>
+<!-- Advanced Section (Collapsed) -->
+<section class="mb-12">
+<button class="flex items-center justify-between w-full p-4 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">settings_input_component</span>
+<span class="font-headline font-medium text-on-surface">Advanced Parameters</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-label text-[10px] text-on-surface-variant/60 bg-surface-variant px-2 py-0.5 rounded uppercase">Seed, Model Selection</span>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform group-hover:translate-x-1">chevron_right</span>
+</div>
+</button>
+</section>
+</main>
+<!-- Fixed Bottom Action Bar -->
+<footer class="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t-0 py-6">
+<div class="max-w-4xl mx-auto px-6 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex flex-col">
+<span class="font-label text-[10px] uppercase text-on-surface-variant tracking-wider">Est. Compute Time</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary">schedule</span>
+<span class="font-headline font-bold text-lg text-on-surface">12 min</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[10px] uppercase text-on-surface-variant tracking-wider">Est. Compute Cost</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-tertiary">monetization_on</span>
+<span class="font-headline font-bold text-lg text-on-surface">$4.20</span>
+</div>
+</div>
+</div>
+<button class="glow-gradient px-8 py-3 rounded-xl flex items-center gap-3 group active:scale-[0.98] transition-all">
+<span class="font-headline font-bold text-on-primary tracking-tight">Start Evolution</span>
+<span class="material-symbols-outlined text-on-primary group-hover:translate-x-1 transition-transform">rocket_launch</span>
+</button>
+</div>
+</footer>
+<!-- Decorative Backdrop Elements -->
+<div class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+</body></html>

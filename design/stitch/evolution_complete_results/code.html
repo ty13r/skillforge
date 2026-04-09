@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SkillForge Arch | Evolution Complete</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#0f131f",
+                        "outline": "#908fa0",
+                        "on-tertiary-container": "#000703",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "primary-container": "#8083ff",
+                        "on-secondary-fixed-variant": "#004e5a",
+                        "surface-bright": "#353946",
+                        "inverse-primary": "#494bd6",
+                        "secondary-fixed-dim": "#2fd9f4",
+                        "outline-variant": "#464554",
+                        "error": "#ffb4ab",
+                        "surface": "#0f131f",
+                        "surface-container-low": "#171b28",
+                        "on-primary": "#1000a9",
+                        "inverse-on-surface": "#2c303d",
+                        "on-secondary-fixed": "#001f25",
+                        "secondary": "#5de6ff",
+                        "on-tertiary-fixed": "#002113",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#c7c4d7",
+                        "surface-variant": "#313442",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-error": "#690005",
+                        "on-primary-container": "#0d0096",
+                        "on-background": "#dfe2f3",
+                        "surface-container-high": "#262a37",
+                        "error-container": "#93000a",
+                        "primary": "#c0c1ff",
+                        "on-tertiary": "#003824",
+                        "tertiary-container": "#00885d",
+                        "surface-container-highest": "#313442",
+                        "secondary-container": "#00cbe6",
+                        "surface-container-lowest": "#0a0e1a",
+                        "on-secondary-container": "#00515d",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#00363e",
+                        "inverse-surface": "#dfe2f3",
+                        "tertiary": "#4edea3",
+                        "primary-fixed": "#e1e0ff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "background": "#0f131f",
+                        "surface-container": "#1b1f2c",
+                        "surface-tint": "#c0c1ff",
+                        "secondary-fixed": "#a2eeff",
+                        "on-surface": "#dfe2f3",
+                        "on-primary-fixed": "#07006c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["JetBrains Mono"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-cyan {
+            text-shadow: 0 0 15px rgba(93, 230, 255, 0.5);
+        }
+        .tonal-shift {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        }
+        .glass-panel {
+            background: rgba(49, 52, 66, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#0f131f]/80 backdrop-blur-xl flex justify-between items-center px-8 h-16 w-full max-w-full font-['Space_Grotesk'] tracking-tight shadow-[0_8px_32px_rgba(0,0,0,0.4)] bg-gradient-to-b from-white/5 to-transparent">
+<div class="text-2xl font-bold tracking-tighter text-[#c0c1ff]">SkillForge</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-[#c0c1ff] border-b-2 border-[#6366F1] pb-1 active:scale-95 transition-transform" href="#">Dashboard</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] transition-colors duration-200 active:scale-95 transition-transform" href="#">Registry</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] transition-colors duration-200 active:scale-95 transition-transform" href="#">Bible</a>
+</div>
+<button class="bg-gradient-to-r from-primary to-primary-container text-on-primary px-5 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-[0_0_20px_rgba(192,193,255,0.3)]">
+            New Evolution
+        </button>
+</nav>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#1b1f2c] flex flex-col py-6 px-4 gap-8 tonal-shift z-40 hidden xl:flex">
+<div class="mt-16 flex flex-col items-start px-2">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a professional male digital architect with focused expression and tech-inspired aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqn7qY138e0AqHAsF1jTrbC7Np9wVXzLqjJTqYycUmZeABXAX_g7LWEb1QfHY0ibTZp4pP3FE7VPSuyeNFFE1zGcGQAJ3u_WwBLhoZdJLNxzfJeTYDHvWT4ya9ggMKsGhG_ICqF5ErvKwQ9e-Coy7-fTlt8IopVHlkzznGuCvVIWPQO362wkm4QeTK1hVlOvky9AgKT8qfK7qZDnwh4G3Dfe6cUX-vWfm5hn-fo2EhtOGHtnElsPKyLqldKzS8n-MhxWR22XZONRDR"/>
+</div>
+<div>
+<p class="text-on-surface font-semibold text-sm">SkillForge Arch</p>
+<p class="text-outline text-[0.6875rem] font-['JetBrains_Mono']">Lead Architect</p>
+</div>
+</div>
+<nav class="w-full space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-[#313442] text-[#c0c1ff] rounded-xl scale-x-105 origin-left transition-transform font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">terminal</span> Overview
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#313442]/50 transition-all font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">auto_awesome</span> Evolution Logs
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#313442]/50 transition-all font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">database</span> Agent Assets
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#313442]/50 transition-all font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">settings</span> Settings
+                </a>
+</nav>
+</div>
+<div class="mt-auto px-2 space-y-4">
+<div class="p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
+<span class="text-[0.625rem] font-['JetBrains_Mono'] text-tertiary">System Status: Active</span>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-on-surface transition-all font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">description</span> Documentation
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-on-surface transition-all font-['JetBrains_Mono'] text-[0.6875rem]" href="#">
+<span class="material-symbols-outlined text-sm">help</span> Support
+                </a>
+</nav>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="xl:pl-64 pt-24 pb-12 px-8 min-h-screen">
+<div class="max-w-[1440px] mx-auto space-y-8">
+<!-- Celebration Banner -->
+<section class="relative overflow-hidden rounded-xl p-8 bg-surface-container-low border border-white/5">
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none">
+<div class="absolute inset-0 bg-gradient-to-l from-secondary/40 to-transparent"></div>
+</div>
+<div class="relative z-10 flex flex-col md:flex-row justify-between items-end md:items-center gap-6">
+<div>
+<span class="font-label text-secondary uppercase tracking-[0.2em] text-xs font-bold">Protocol Finalized</span>
+<h1 class="text-5xl font-headline font-bold tracking-tighter mt-2 text-on-surface">Evolution Complete</h1>
+<p class="text-outline mt-2 max-w-md">The agent has successfully navigated the lattice. Genetic markers indicate peak performance in functional streaming contexts.</p>
+<div class="flex gap-4 mt-6">
+<div class="bg-surface-container-high px-4 py-2 rounded-full flex items-center gap-2 border border-outline-variant/20">
+<span class="font-label text-[0.6875rem] text-outline">GEN</span>
+<span class="font-label text-[0.6875rem] text-primary">05</span>
+</div>
+<div class="bg-surface-container-high px-4 py-2 rounded-full flex items-center gap-2 border border-outline-variant/20">
+<span class="font-label text-[0.6875rem] text-outline">CHALLENGES</span>
+<span class="font-label text-[0.6875rem] text-tertiary">15 / 15 PASSED</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-7xl font-headline font-extrabold text-secondary glow-cyan tracking-tighter">0.94</div>
+<div class="text-xl font-headline text-on-surface-variant mt-1">Elixir LiveView Specialist</div>
+</div>
+</div>
+</section>
+<!-- Main Evolution Grid -->
+<div class="grid grid-cols-1 md:grid-cols-10 gap-8">
+<!-- Left: Winner Skill Preview (55%) -->
+<div class="md:col-span-6 space-y-6">
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col h-full min-h-[600px]">
+<div class="bg-surface-container-highest/50 px-6 py-3 flex items-center justify-between border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-error/40"></div>
+<div class="w-3 h-3 rounded-full bg-secondary-container/40"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary/40"></div>
+</div>
+<span class="font-label text-[0.6875rem] text-outline flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">description</span> SKILL.md
+                                </span>
+</div>
+<div class="flex gap-4">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+</button>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">expand_content</span>
+</button>
+</div>
+</div>
+<div class="p-8 flex-grow font-label text-sm leading-relaxed overflow-auto bg-[#0a0e1a]/40">
+<pre class="text-on-surface-variant"><span class="text-outline-variant">---</span>
+<span class="text-secondary">title:</span> Elixir LiveView Specialist
+<span class="text-secondary">version:</span> 1.2.0-gen5
+<span class="text-secondary">fitness:</span> 0.9412
+<span class="text-secondary">traits:</span> [concurrency, fault-tolerance, pubsub-mastery]
+<span class="text-outline-variant">---</span>
+
+<span class="text-primary-container font-bold"># Quick Start</span>
+
+To initiate the LiveView Evolution module within your Phoenix application:
+
+<span class="text-tertiary">mix</span> forge.evolve --skill elixir_liveview_specialist
+
+<span class="text-primary-container font-bold">## Core Capabilities</span>
+
+- <span class="text-secondary-fixed-dim">Real-time Diffing:</span> Optimized for low-latency state synchronization.
+- <span class="text-secondary-fixed-dim">Erlang Distribution:</span> Native clustering support for global scaling.
+- <span class="text-secondary-fixed-dim">Heex Templating:</span> Type-safe rendering with semantic awareness.
+
+<span class="text-primary-container font-bold">## Verification Hash</span>
+<span class="text-outline">SHA-256: 8f3a1b...2c9e4f</span>
+</pre>
+</div>
+</div>
+</div>
+<!-- Right: Fitness Breakdown (45%) -->
+<div class="md:col-span-4 space-y-8">
+<!-- Radar Chart Card -->
+<div class="glass-panel rounded-xl p-8">
+<h3 class="font-headline font-bold text-lg mb-6">Fitness Radar</h3>
+<div class="relative h-64 w-full flex items-center justify-center">
+<!-- Visual Radar Background Mockup -->
+<div class="absolute inset-0 flex items-center justify-center opacity-10">
+<div class="w-full h-full rounded-full border border-outline"></div>
+<div class="absolute w-2/3 h-2/3 rounded-full border border-outline"></div>
+<div class="absolute w-1/3 h-1/3 rounded-full border border-outline"></div>
+</div>
+<!-- Simplified Radar Shape -->
+<svg class="w-56 h-56 drop-shadow-[0_0_15px_rgba(93,230,255,0.4)]" viewbox="0 0 100 100">
+<polygon fill="rgba(93, 230, 255, 0.2)" points="50,10 85,35 75,85 25,85 15,35" stroke="#5de6ff" stroke-width="1.5"></polygon>
+<circle cx="50" cy="10" fill="#5de6ff" r="2"></circle>
+<circle cx="85" cy="35" fill="#5de6ff" r="2"></circle>
+<circle cx="75" cy="85" fill="#5de6ff" r="2"></circle>
+<circle cx="25" cy="85" fill="#5de6ff" r="2"></circle>
+<circle cx="15" cy="35" fill="#5de6ff" r="2"></circle>
+</svg>
+<!-- Labels -->
+<div class="absolute top-0 font-label text-[10px] text-outline">CORRECTNESS</div>
+<div class="absolute bottom-0 font-label text-[10px] text-outline">CONSISTENCY</div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 font-label text-[10px] text-outline -rotate-90">ADHERENCE</div>
+<div class="absolute right-0 top-1/2 -translate-y-1/2 font-label text-[10px] text-outline rotate-90">EFFICIENCY</div>
+</div>
+<div class="mt-8 space-y-4">
+<h4 class="font-label text-xs font-bold text-outline uppercase tracking-wider">Traits That Survived</h4>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-tertiary/10 text-tertiary border border-tertiary/20 rounded-full font-label text-[0.6875rem]">Optimized Heex</span>
+<span class="px-3 py-1 bg-tertiary/10 text-tertiary border border-tertiary/20 rounded-full font-label text-[0.6875rem]">PubSub V3</span>
+<span class="px-3 py-1 bg-tertiary/10 text-tertiary border border-tertiary/20 rounded-full font-label text-[0.6875rem]">Backpressure Logic</span>
+<span class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full font-label text-[0.6875rem]">Recursive Search</span>
+</div>
+</div>
+</div>
+<!-- Generation Line Chart -->
+<div class="glass-panel rounded-xl p-8">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline font-bold text-lg">Growth Curve</h3>
+<span class="font-label text-[0.6875rem] text-tertiary">+12.4% vs Gen 4</span>
+</div>
+<div class="h-32 flex items-end gap-2 px-2">
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[40%] transition-all hover:bg-primary/40"></div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[55%] transition-all hover:bg-primary/40"></div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[65%] transition-all hover:bg-primary/40"></div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[82%] transition-all hover:bg-primary/40"></div>
+<div class="flex-1 bg-gradient-to-t from-primary to-secondary rounded-t-lg h-[94%] shadow-[0_0_15px_rgba(99,102,241,0.3)]"></div>
+</div>
+<div class="flex justify-between mt-4 px-2 font-label text-[10px] text-outline">
+<span>GEN 1</span>
+<span>GEN 2</span>
+<span>GEN 3</span>
+<span>GEN 4</span>
+<span class="text-secondary">GEN 5</span>
+</div>
+</div>
+<!-- Action Column -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 p-4 bg-surface-container-high rounded-xl border border-outline-variant/10 hover:border-primary/50 transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">folder_zip</span>
+<span class="font-label text-[0.6875rem]">Export Skill (.zip)</span>
+</button>
+<button class="flex items-center justify-center gap-2 p-4 bg-surface-container-high rounded-xl border border-outline-variant/10 hover:border-primary/50 transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">settings_input_component</span>
+<span class="font-label text-[0.6875rem]">Export SDK (.json)</span>
+</button>
+<button class="col-span-2 flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all active:scale-95">
+<span class="material-symbols-outlined">cloud_upload</span>
+<span>Publish to Registry</span>
+</button>
+<button class="col-span-2 flex items-center justify-center gap-3 p-5 bg-surface-container-lowest text-on-surface rounded-xl border border-outline-variant/20 hover:bg-surface-container-low transition-all active:scale-95">
+<span class="material-symbols-outlined text-secondary">fork_right</span>
+<span>Fork &amp; Evolve Further</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Lineage Summary Timeline -->
+<section class="glass-panel rounded-xl p-8">
+<h3 class="font-headline font-bold text-lg mb-8 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">account_tree</span>
+                    Winning Lineage
+                </h3>
+<div class="relative flex items-center justify-between w-full px-12 py-8">
+<!-- Line -->
+<div class="absolute left-24 right-24 h-0.5 bg-surface-container-highest"></div>
+<div class="absolute left-24 w-full h-0.5 bg-gradient-to-r from-primary/50 to-secondary glow-cyan" style="width: calc(100% - 200px);"></div>
+<!-- Nodes -->
+<div class="relative z-10 flex flex-col items-center gap-3">
+<div class="w-4 h-4 rounded-full bg-outline-variant border-4 border-surface shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
+<span class="font-label text-[10px] text-outline">Gen 1 Root</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3">
+<div class="w-4 h-4 rounded-full bg-primary-fixed-dim border-4 border-surface shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
+<span class="font-label text-[10px] text-outline">Gen 2 Mutation</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3">
+<div class="w-4 h-4 rounded-full bg-primary-container border-4 border-surface shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
+<span class="font-label text-[10px] text-outline">Gen 3 Branch</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3">
+<div class="w-4 h-4 rounded-full bg-primary border-4 border-surface shadow-[0_0_10px_rgba(0,0,0,0.5)]"></div>
+<span class="font-label text-[10px] text-outline">Gen 4 Split</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-secondary border-4 border-surface shadow-[0_0_20px_#5de6ff]"></div>
+<span class="font-label text-[10px] text-secondary font-bold">Gen 5 Apex</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

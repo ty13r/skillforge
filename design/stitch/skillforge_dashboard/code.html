@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#00885d",
+                    "secondary": "#5de6ff",
+                    "on-secondary": "#00363e",
+                    "error-container": "#93000a",
+                    "surface-variant": "#313442",
+                    "on-tertiary": "#003824",
+                    "on-secondary-fixed-variant": "#004e5a",
+                    "on-secondary-fixed": "#001f25",
+                    "on-error": "#690005",
+                    "surface-dim": "#0f131f",
+                    "on-secondary-container": "#00515d",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "inverse-primary": "#494bd6",
+                    "inverse-on-surface": "#2c303d",
+                    "primary-container": "#8083ff",
+                    "surface-container-low": "#171b28",
+                    "surface-container-lowest": "#0a0e1a",
+                    "on-primary-container": "#0d0096",
+                    "secondary-fixed-dim": "#2fd9f4",
+                    "tertiary-fixed": "#6ffbbe",
+                    "secondary-fixed": "#a2eeff",
+                    "surface": "#0f131f",
+                    "primary": "#c0c1ff",
+                    "on-primary": "#1000a9",
+                    "secondary-container": "#00cbe6",
+                    "on-tertiary-container": "#000703",
+                    "on-tertiary-fixed": "#002113",
+                    "on-surface": "#dfe2f3",
+                    "on-surface-variant": "#c7c4d7",
+                    "inverse-surface": "#dfe2f3",
+                    "outline-variant": "#464554",
+                    "surface-tint": "#c0c1ff",
+                    "surface-bright": "#353946",
+                    "surface-container": "#1b1f2c",
+                    "tertiary": "#4edea3",
+                    "outline": "#908fa0",
+                    "on-background": "#dfe2f3",
+                    "on-primary-fixed": "#07006c",
+                    "background": "#0f131f",
+                    "error": "#ffb4ab",
+                    "surface-container-high": "#262a37",
+                    "primary-fixed": "#e1e0ff",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "surface-container-highest": "#313442",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#005236"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Inter"],
+                    "mono": ["JetBrains Mono"]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(49, 52, 66, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-button {
+            background: linear-gradient(45deg, #c0c1ff, #8083ff);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- TopNavBar -->
+<header class="bg-[#0a0e1a]/80 backdrop-blur-md border-b border-white/[0.08] docked full-width top-0 z-50 fixed w-full">
+<div class="flex justify-between items-center w-full px-8 py-3 max-w-screen-2xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-[#dfe2f3] flex items-center gap-2 font-['Space_Grotesk']">
+<span class="material-symbols-outlined text-[#6366F1]" data-icon="hardware">hardware</span>
+<span class="material-symbols-outlined text-[#6366F1]" data-icon="dna" style="font-variation-settings: 'FILL' 1;">genetics</span>
+                SkillForge
+            </div>
+<nav class="hidden md:flex items-center gap-8 font-['Space_Grotesk'] font-medium tracking-tight">
+<a class="text-[#c0c1ff] font-semibold border-b-2 border-[#6366F1] pb-1 transition-all duration-200" href="#">Dashboard</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] hover:bg-white/[0.05] transition-all duration-200 rounded-lg px-3 py-1" href="#">Registry</a>
+<a class="text-slate-400 font-medium hover:text-[#c0c1ff] hover:bg-white/[0.05] transition-all duration-200 rounded-lg px-3 py-1" href="#">Bible</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="bg-[#c0c1ff] text-[#0d0096] px-5 py-2 rounded-xl font-semibold active:scale-[0.97] transition-all duration-150 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="dna">genetics</span>
+                    New Evolution
+                </button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 max-w-screen-2xl mx-auto px-8">
+<!-- Hero Section -->
+<section class="relative py-20 mb-12 rounded-[2rem] overflow-hidden group">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/5"></div>
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4"></div>
+</div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between">
+<div class="max-w-2xl pl-8 md:pl-20 py-10">
+<h1 class="font-headline text-6xl font-bold tracking-tighter text-on-surface mb-6 leading-[0.95]">
+                    Evolve Agent Skills Through <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Natural Selection</span>
+</h1>
+<p class="text-lg text-on-surface-variant mb-10 leading-relaxed max-w-xl">
+                    Deploy autonomous populations into adversarial environments. Watch them compete, mutate, and survive to forge the ultimate cognitive skillsets.
+                </p>
+<button class="glow-button px-8 py-4 rounded-xl font-headline font-bold text-on-primary-container flex items-center gap-3 group active:scale-95 transition-all">
+                    Start Evolution
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="hidden lg:block relative w-1/2 h-[400px] mr-12">
+<div class="absolute inset-0 flex items-center justify-center">
+<svg class="w-full h-full opacity-80" viewbox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter id="glow">
+<fegaussianblur result="coloredBlur" stddeviation="4"></fegaussianblur>
+<femerge>
+<femergenode in="coloredBlur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+</defs>
+<g class="animate-[pulse_4s_infinite]">
+<circle cx="200" cy="200" fill="none" r="80" stroke="#6366F1" stroke-dasharray="10 20" stroke-width="1"></circle>
+<circle cx="200" cy="200" fill="none" r="120" stroke="#5de6ff" stroke-dasharray="5 15" stroke-opacity="0.3" stroke-width="1"></circle>
+</g>
+<g filter="url(#glow)">
+<circle class="animate-bounce" cx="150" cy="150" fill="#6366F1" r="4">
+<animate attributename="cy" dur="3s" repeatcount="indefinite" values="150;130;150"></animate>
+</circle>
+<circle cx="250" cy="180" fill="#5de6ff" r="3">
+<animate attributename="cy" dur="4s" repeatcount="indefinite" values="180;210;180"></animate>
+</circle>
+<circle cx="180" cy="280" fill="#6366F1" r="5">
+<animate attributename="cx" dur="5s" repeatcount="indefinite" values="180;200;180"></animate>
+</circle>
+<path d="M150 150 L250 180 L180 280 Z" fill="none" stroke="#6366F1" stroke-opacity="0.2" stroke-width="1">
+<animate attributename="stroke-opacity" dur="3s" repeatcount="indefinite" values="0.1;0.4;0.1"></animate>
+</path>
+<line stroke="#5de6ff" stroke-opacity="0.3" stroke-width="0.5" x1="200" x2="150" y1="200" y2="150"></line>
+<line stroke="#5de6ff" stroke-opacity="0.3" stroke-width="0.5" x1="200" x2="250" y1="200" y2="180"></line>
+<line stroke="#5de6ff" stroke-opacity="0.3" stroke-width="0.5" x1="200" x2="180" y1="200" y2="280"></line>
+</g>
+<path class="animate-[pulse_2s_infinite]" d="M100 200 Q 150 100, 200 200 T 300 200" fill="none" stroke="#5de6ff" stroke-opacity="0.2" stroke-width="2"></path>
+<path class="animate-[pulse_3s_infinite]" d="M100 220 Q 150 320, 200 220 T 300 220" fill="none" stroke="#6366F1" stroke-opacity="0.2" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Runs Grid -->
+<section class="mb-16">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline text-3xl font-bold tracking-tight mb-2">Recent Evolutions</h2>
+<p class="text-on-surface-variant font-mono text-[0.6875rem] uppercase tracking-widest">Active Genetic Pathways</p>
+</div>
+<button class="text-primary-fixed-dim font-medium hover:underline flex items-center gap-1">
+                    View Registry <span class="material-symbols-outlined text-sm" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="glass-card rounded-[1.5rem] p-6 flex flex-col h-full group hover:bg-white/[0.08] transition-colors">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-tertiary-container/20 rounded-xl">
+<span class="material-symbols-outlined text-tertiary" data-icon="electric_bolt">electric_bolt</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary-container/30 text-tertiary font-mono text-[0.6875rem]">
+<div class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_8px_#4edea3]"></div>
+                            Complete
+                        </div>
+</div>
+<h3 class="font-headline text-xl font-bold mb-1">Elixir LiveView Specialist</h3>
+<div class="font-mono text-[0.6875rem] text-on-surface-variant mb-6 uppercase tracking-wider">Hash: 8f2a...c91e</div>
+<div class="mt-auto space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Fitness Score</div>
+<div class="text-3xl font-headline font-bold text-tertiary flex items-center gap-1">
+                                    0.94
+                                    <span class="material-symbols-outlined text-lg" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+<div class="text-right">
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Generation</div>
+<div class="text-xl font-headline font-bold">Gen 5</div>
+</div>
+</div>
+<!-- Sparkline -->
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-tertiary/20 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-tertiary/20 w-full h-[35%] rounded-t-sm"></div>
+<div class="bg-tertiary/40 w-full h-[55%] rounded-t-sm"></div>
+<div class="bg-tertiary/60 w-full h-[75%] rounded-t-sm"></div>
+<div class="bg-tertiary w-full h-[95%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-card rounded-[1.5rem] p-6 flex flex-col h-full group hover:bg-white/[0.08] transition-colors">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-primary-container/20 rounded-xl">
+<span class="material-symbols-outlined text-primary" data-icon="monitoring">monitoring</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/30 text-primary font-mono text-[0.6875rem] animate-pulse">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#c0c1ff]"></div>
+                            Running
+                        </div>
+</div>
+<h3 class="font-headline text-xl font-bold mb-1">React performance Auditor</h3>
+<div class="font-mono text-[0.6875rem] text-on-surface-variant mb-6 uppercase tracking-wider">Hash: 4d1b...77f2</div>
+<div class="mt-auto space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Fitness Score</div>
+<div class="text-3xl font-headline font-bold text-primary flex items-center gap-1">
+                                    0.82
+                                    <span class="material-symbols-outlined text-lg" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+<div class="text-right">
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Generation</div>
+<div class="text-xl font-headline font-bold">Gen 3</div>
+</div>
+</div>
+<!-- Sparkline -->
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-primary/20 w-full h-[30%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[25%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-primary/30 w-full h-[60%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-card rounded-[1.5rem] p-6 flex flex-col h-full group hover:bg-white/[0.08] transition-colors">
+<div class="flex justify-between items-start mb-6">
+<div class="p-3 bg-error-container/20 rounded-xl">
+<span class="material-symbols-outlined text-error" data-icon="report">report</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-error-container/30 text-error font-mono text-[0.6875rem]">
+<div class="w-2 h-2 rounded-full bg-error shadow-[0_0_8px_#ffb4ab]"></div>
+                            Failed
+                        </div>
+</div>
+<h3 class="font-headline text-xl font-bold mb-1">PostgreSQL Query Optimizer</h3>
+<div class="font-mono text-[0.6875rem] text-on-surface-variant mb-6 uppercase tracking-wider">Hash: 11a9...e3b4</div>
+<div class="mt-auto space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Fitness Score</div>
+<div class="text-3xl font-headline font-bold text-error flex items-center gap-1">
+                                    0.61
+                                    <span class="material-symbols-outlined text-lg" data-icon="trending_down">trending_down</span>
+</div>
+</div>
+<div class="text-right">
+<div class="text-on-surface-variant font-mono text-[0.6875rem]">Generation</div>
+<div class="text-xl font-headline font-bold">Gen 1</div>
+</div>
+</div>
+<!-- Sparkline -->
+<div class="h-12 w-full flex items-end gap-1">
+<div class="bg-error/40 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-error/60 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-error/20 w-full h-[30%] rounded-t-sm"></div>
+<div class="bg-error/40 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-error/10 w-full h-[15%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Bar -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="surface-container rounded-2xl p-6 border-l-4 border-primary shadow-lg">
+<div class="text-on-surface-variant font-mono text-[0.6875rem] mb-1">Total Agents</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-4xl font-bold">47</span>
+<span class="text-primary font-medium">Skills Evolved</span>
+</div>
+</div>
+<div class="surface-container rounded-2xl p-6 border-l-4 border-tertiary shadow-lg">
+<div class="text-on-surface-variant font-mono text-[0.6875rem] mb-1">Selection Efficiency</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-4xl font-bold">+34%</span>
+<span class="text-tertiary font-medium">Avg Fitness Gain</span>
+</div>
+</div>
+<div class="surface-container rounded-2xl p-6 border-l-4 border-secondary shadow-lg">
+<div class="text-on-surface-variant font-mono text-[0.6875rem] mb-1">Knowledge Base</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-4xl font-bold">23</span>
+<span class="text-secondary font-medium">Bible Entries</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Background Decorative Element -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+</body></html>
