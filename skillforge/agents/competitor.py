@@ -6,9 +6,14 @@ Invokes the Claude Agent SDK ``query()`` with:
 - ``permission_mode="dontAsk"`` (never ``bypassPermissions`` — that's a trap)
 - ``allowed_tools=["Skill", "Read", "Write", "Edit", "Bash"]``
 - ``max_turns=config.MAX_TURNS``
+- A ``system_prompt`` that explicitly tells Claude to save solution files
+  to ``output/`` so the Judge pipeline's L1 deterministic layer can run
+  them against the challenge's test suite. Without this, Claude answers
+  with inline code in text responses and L1 can't score anything
+  (discovered during the first full live evolution run — every competitor
+  had ``output_files: []`` and ``tests_pass: False``, collapsing fitness).
 
 Collects the full execution trace + written files for the judging pipeline.
-Implemented in Step 6c.
 """
 
 from __future__ import annotations
@@ -56,6 +61,25 @@ def _message_to_dict(msg) -> dict:
     return result
 
 
+_COMPETITOR_SYSTEM_PROMPT = """\
+You are competing to solve a coding challenge. A Claude Agent Skill has been
+loaded from .claude/skills/evolved-skill/ — follow its instructions carefully.
+
+CRITICAL OUTPUT REQUIREMENT:
+- Save your solution file(s) to the ``output/`` directory using the Write tool.
+- The output/ directory already exists in your current working directory.
+- If the challenge specifies a file name (e.g., ``solution.py``), save to
+  ``output/solution.py``. Otherwise use a sensible name like ``output/solution.py``.
+- If the challenge has a ``challenge/`` directory with starter code or test
+  files, you may read from there but write only to output/.
+- Your work is graded by running tests against the files in output/. If you
+  only respond with inline code and do not call Write, you will score zero.
+
+Follow the Skill's workflow, use its helper scripts if it bundles any, and
+save the final result to output/.
+"""
+
+
 async def run_competitor(
     skill: SkillGenome,
     challenge: Challenge,
@@ -69,6 +93,7 @@ async def run_competitor(
         max_turns=MAX_TURNS,
         permission_mode="dontAsk",
         model=model_for("competitor"),
+        system_prompt=_COMPETITOR_SYSTEM_PROMPT,
     )
 
     trace: list[dict] = []

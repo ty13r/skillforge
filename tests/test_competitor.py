@@ -159,6 +159,11 @@ async def test_run_competitor_passes_correct_options_to_sdk(
     assert opts.cwd == str(sandbox_path)
     assert opts.max_turns == MAX_TURNS
     assert "Skill" in opts.allowed_tools
+    # System prompt must tell Claude to save output files or the L1 judge
+    # has nothing to score against (the first live run failed because of this).
+    assert opts.system_prompt is not None
+    assert "output/" in opts.system_prompt
+    assert "Write tool" in opts.system_prompt
 
 
 @pytest.mark.asyncio
