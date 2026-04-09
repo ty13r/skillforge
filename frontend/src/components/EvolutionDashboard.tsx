@@ -152,92 +152,27 @@ export default function EvolutionDashboard() {
       </section>
 
       {/* Recent evolutions — or curated seeds if the user has none yet */}
-      <section className="mt-10">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-2xl tracking-tight">
-              {runs && runs.length > 0
-                ? "Recent Evolutions"
-                : "Try a Curated Gen 0 Skill"}
-            </h2>
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              {runs && runs.length > 0
-                ? "Active Genetic Pathways"
-                : "✦ Production-ready · fork to evolve"}
-            </p>
-          </div>
-          <Link
-            to="/registry"
-            className="text-sm text-on-surface-dim transition-colors hover:text-on-surface"
-          >
-            View Registry ↗
-          </Link>
-        </div>
-
-        {runs == null ? (
-          <p className="mt-6 text-on-surface-dim">Loading runs...</p>
-        ) : runs.length === 0 ? (
-          // Empty state — show up to 6 curated seeds so users have something
-          // to click immediately instead of a blank "start your first run" box.
-          seeds == null ? (
-            <p className="mt-6 text-on-surface-dim">Loading seed library...</p>
-          ) : seeds.length === 0 ? (
-            <div className="mt-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-              <p className="text-on-surface-dim">
-                {error
-                  ? "Backend not reachable. Start the server and refresh."
-                  : "No evolutions yet — start your first run."}
+      {/* Recent Evolutions — completed user runs only */}
+      {completed.length > 0 && (
+        <section className="mt-10">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-2xl tracking-tight">
+                Recent Evolutions
+              </h2>
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                Completed Runs
               </p>
-              <div className="mt-4">
-                <Link to="/new">
-                  <PrimaryButton>Start Evolution →</PrimaryButton>
-                </Link>
-              </div>
             </div>
-          ) : (
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {seeds.slice(0, 6).map((seed) => (
-                <div
-                  key={seed.id}
-                  className="group flex flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-all hover:border-primary/40 hover:shadow-elevated"
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-primary">
-                      {seed.category}
-                    </span>
-                    <span
-                      className={`font-mono text-[0.625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[seed.difficulty]}`}
-                    >
-                      {seed.difficulty}
-                    </span>
-                  </div>
-                  <h3 className="mt-3 font-display text-lg tracking-tight group-hover:text-primary">
-                    {seed.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-3 flex-1 text-sm text-on-surface-dim">
-                    {seed.description}
-                  </p>
-                  <div className="mt-4 flex gap-2 border-t border-outline-variant pt-4">
-                    <Link
-                      to={`/runs/seed-library/skills/${seed.id}`}
-                      className="flex-1 rounded-lg bg-surface-container-low px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-mid"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      to={`/new?seed=${seed.id}`}
-                      className="flex-1 rounded-lg bg-primary/15 px-3 py-2 text-center text-xs font-medium text-primary transition-colors hover:bg-primary/25"
-                    >
-                      ⑂ Fork
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        ) : (
+            <Link
+              to="/registry"
+              className="text-sm text-on-surface-dim transition-colors hover:text-on-surface"
+            >
+              View Registry ↗
+            </Link>
+          </div>
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {runs.map((run) => (
+            {completed.map((run) => (
               <EvolutionCard
                 key={run.id}
                 id={run.id}
@@ -246,6 +181,78 @@ export default function EvolutionDashboard() {
                 bestFitness={run.best_fitness}
                 cost={run.total_cost_usd}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Curated Gen 0 Skills — always visible */}
+      <section className="mt-10">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="font-display text-2xl tracking-tight">
+              Try a Curated Gen 0 Skill
+            </h2>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+              ✦ Production-ready · fork to evolve
+            </p>
+          </div>
+          {completed.length === 0 && (
+            <Link
+              to="/registry"
+              className="text-sm text-on-surface-dim transition-colors hover:text-on-surface"
+            >
+              View Registry ↗
+            </Link>
+          )}
+        </div>
+
+        {seeds == null ? (
+          <p className="mt-6 text-on-surface-dim">Loading seed library...</p>
+        ) : seeds.length === 0 ? (
+          <div className="mt-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
+            <p className="text-on-surface-dim">
+              {error ? "Backend not reachable. Start the server and refresh." : "No seeds available."}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {seeds.slice(0, 6).map((seed) => (
+              <div
+                key={seed.id}
+                className="group flex flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-all hover:border-primary/40 hover:shadow-elevated"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-primary">
+                    {seed.category}
+                  </span>
+                  <span
+                    className={`font-mono text-[0.625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[seed.difficulty]}`}
+                  >
+                    {seed.difficulty}
+                  </span>
+                </div>
+                <h3 className="mt-3 font-display text-lg tracking-tight group-hover:text-primary">
+                  {seed.title}
+                </h3>
+                <p className="mt-2 line-clamp-3 flex-1 text-sm text-on-surface-dim">
+                  {seed.description}
+                </p>
+                <div className="mt-4 flex gap-2 border-t border-outline-variant pt-4">
+                  <Link
+                    to={`/runs/seed-library/skills/${seed.id}`}
+                    className="flex-1 rounded-lg bg-surface-container-low px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-mid"
+                  >
+                    View
+                  </Link>
+                  <Link
+                    to={`/new?seed=${seed.id}`}
+                    className="flex-1 rounded-lg bg-primary/15 px-3 py-2 text-center text-xs font-medium text-primary transition-colors hover:bg-primary/25"
+                  >
+                    ⑂ Fork
+                  </Link>
+                </div>
+              </div>
             ))}
           </div>
         )}
