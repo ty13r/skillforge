@@ -30,12 +30,16 @@ from skillforge.agents.breeder import breed, publish_findings_to_bible
 from skillforge.agents.challenge_designer import design_challenges
 from skillforge.agents.competitor import run_competitor
 from skillforge.agents.judge.pipeline import run_judging_pipeline
-from skillforge.agents.spawner import spawn_gen0
+from skillforge.agents.spawner import spawn_from_parent, spawn_gen0
 from skillforge.db.database import init_db
 from skillforge.db.queries import save_run
 from skillforge.engine.events import emit
 from skillforge.engine.sandbox import cleanup_sandbox, create_sandbox
-from skillforge.models import EvolutionRun, Generation
+from skillforge.models import EvolutionRun, Generation, SkillGenome
+
+# Module-level registry: run_id -> parent SkillGenome when the run was started
+# via fork-and-evolve (seed or upload). Looked up at gen 0 spawn time.
+PENDING_PARENTS: dict[str, SkillGenome] = {}
 
 # --- Budget tracking ---------------------------------------------------------
 # MVP: estimate cost from trace length. Each SDK turn is ~$0.02 for Sonnet 4.6
@@ -169,7 +173,11 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
             # --- Spawn or breed ---------------------------------------
             if gen_num == 0:
-                skills = await spawn_gen0(run.specialization, run.population_size)
+                seed_parent = PENDING_PARENTS.pop(run.id, None)
+                if seed_parent is not None:
+                    skills = await spawn_from_parent(seed_parent, run.population_size)
+                else:
+                    skills = await spawn_gen0(run.specialization, run.population_size)
             else:
                 assert parent_generation is not None
                 await emit(run.id, "breeding_started", generation=gen_num)

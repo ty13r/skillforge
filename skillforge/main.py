@@ -14,10 +14,15 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from skillforge.api.bible import router as bible_router
 from skillforge.api.debug import router as debug_router
 from skillforge.api.routes import router as api_router
+from skillforge.api.seeds import router as seeds_router
+from skillforge.api.spec_assistant import router as spec_assistant_router
+from skillforge.api.uploads import router as uploads_router
 from skillforge.api.websocket import router as ws_router
 from skillforge.db.database import init_db
+from skillforge.db.seed_loader import load_seeds
 
 
 @asynccontextmanager
@@ -28,6 +33,7 @@ async def lifespan(app: FastAPI):
     ``CREATE TABLE IF NOT EXISTS`` so re-running on an existing DB is safe.
     """
     await init_db()
+    await load_seeds()
     yield
     # No shutdown hook needed — aiosqlite connections are per-query.
 
@@ -42,6 +48,10 @@ app = FastAPI(
 app.include_router(api_router)
 app.include_router(ws_router)
 app.include_router(debug_router)
+app.include_router(bible_router)
+app.include_router(spec_assistant_router)
+app.include_router(seeds_router)
+app.include_router(uploads_router)
 
 
 @app.get("/api/health")

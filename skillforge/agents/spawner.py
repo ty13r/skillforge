@@ -540,3 +540,116 @@ async def breed_next_gen(
         )
 
     return valid_children2
+
+
+# ---------------------------------------------------------------------------
+# spawn_from_parent — gen 0 from an existing Skill (seed fork or upload)
+# ---------------------------------------------------------------------------
+
+async def spawn_from_parent(
+    parent: SkillGenome,
+    pop_size: int,
+) -> list[SkillGenome]:
+    """Generate a gen 0 population using an existing Skill as the seed parent.
+
+    The parent itself is carried forward as the elite (slot 0) and ``pop_size - 1``
+    diverse mutations are synthesized around it. Used by the Registry fork-and-
+    evolve flow and the upload-and-evolve flow — both just hand us an existing
+    genome to evolve forward instead of spawning from the golden template.
+
+    Args:
+        parent: The seed SkillGenome to evolve from (untouched in the output).
+        pop_size: Total population size including the elite parent.
+
+    Returns:
+        A list of ``pop_size`` SkillGenome objects at generation 0. The first
+        entry is the parent (re-id'd, elite); the rest are mutations.
+    """
+    if pop_size < 1:
+        raise ValueError(f"pop_size must be ≥ 1, got {pop_size}")
+
+    bible_patterns = _read_bible_patterns()
+
+    # The elite: clone the parent with a fresh id, retain content + traits
+    elite = SkillGenome(
+        id=str(uuid.uuid4()),
+        generation=0,
+        skill_md_content=parent.skill_md_content,
+        frontmatter=dict(parent.frontmatter),
+        supporting_files=dict(parent.supporting_files),
+        traits=list(parent.traits),
+        meta_strategy=parent.meta_strategy,
+        parent_ids=[parent.id],
+        mutations=["elite-carry"],
+        mutation_rationale="Seed parent carried forward as elite.",
+        maturity=parent.maturity or "draft",
+    )
+
+    if pop_size == 1:
+        return [elite]
+
+    num_mutants = pop_size - 1
+    system_prompt = f"""You are evolving an existing Claude Agent Skill by producing {num_mutants} diverse mutations.
+
+The parent Skill is below. Your job is to produce {num_mutants} variant Skills that preserve the parent's core capability but explore different:
+- Description phrasing + trigger expansion
+- Instruction structure (more/fewer numbered steps, different section ordering)
+- Trait emphasis (lean harder into some traits, introduce new ones)
+- Example diversity (different I/O pairs)
+
+Each mutation must still satisfy every constraint in the bible (≤250 char description, "Use when" + "NOT for" clauses, ≤500 line body, 2-3 diverse examples, valid YAML frontmatter, unique name matching `^[a-z0-9]+(-[a-z0-9]+)*$`).
+
+## Bible patterns (non-negotiable)
+
+{bible_patterns}
+
+## Parent Skill
+
+```
+{parent.skill_md_content}
+```
+
+Parent traits: {", ".join(parent.traits) if parent.traits else "(none)"}
+Parent strategy: {parent.meta_strategy}
+
+## Output
+
+Return a JSON array of exactly {num_mutants} skills. Each entry is a JSON object with fields:
+- `skill_md_content`: the full SKILL.md (YAML frontmatter + body)
+- `traits`: list of trait strings
+- `meta_strategy`: 1-2 sentences
+- `mutations`: list of mutation-type strings (e.g. ["description-expansion", "example-swap"])
+- `mutation_rationale`: why these mutations were made
+
+Do NOT modify the parent. Do NOT return fewer or more than {num_mutants} entries. Each mutation must have a UNIQUE `name` field in its frontmatter.
+"""
+
+    text = await _generate(system_prompt)
+
+    try:
+        raw = _extract_json_array(text)
+    except ValueError as exc:
+        # If the LLM refused or produced garbage, fall back to elite-only
+        # (graceful degradation — evolution can still proceed with just the parent)
+        return [elite]
+
+    mutants: list[SkillGenome] = []
+    for item in raw[:num_mutants]:
+        mutants.append(
+            SkillGenome(
+                id=str(uuid.uuid4()),
+                generation=0,
+                skill_md_content=item.get("skill_md_content", ""),
+                supporting_files=item.get("supporting_files", {}),
+                traits=item.get("traits", []),
+                meta_strategy=item.get("meta_strategy", ""),
+                parent_ids=[parent.id],
+                mutations=item.get("mutations", []),
+                mutation_rationale=item.get("mutation_rationale", ""),
+                maturity="draft",
+            )
+        )
+
+    # Drop any mutants that fail validation — keep the elite always
+    valid_mutants, _ = _validate_genomes(mutants)
+    return [elite, *valid_mutants][:pop_size]

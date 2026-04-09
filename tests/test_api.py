@@ -87,7 +87,7 @@ def test_evolve_creates_run(client):
         mock_evo.return_value = None
 
         resp = client.post(
-            "/evolve",
+            "/api/evolve",
             json={
                 "mode": "domain",
                 "specialization": "python-data-science",
@@ -113,7 +113,7 @@ def test_evolve_creates_run(client):
 
 
 def test_evolve_rejects_meta_mode_in_mvp(client):
-    resp = client.post("/evolve", json={"mode": "meta"})
+    resp = client.post("/api/evolve", json={"mode": "meta"})
     assert resp.status_code == 501
 
 
@@ -124,7 +124,7 @@ def test_evolve_rejects_meta_mode_in_mvp(client):
 
 def test_evolve_rejects_domain_mode_without_specialization(client):
     resp = client.post(
-        "/evolve",
+        "/api/evolve",
         json={"mode": "domain", "population_size": 2, "num_generations": 1, "max_budget_usd": 1.0},
     )
     assert resp.status_code == 400
@@ -137,7 +137,7 @@ def test_evolve_rejects_domain_mode_without_specialization(client):
 
 def test_get_run_returns_404_if_missing(client):
     with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=None):
-        resp = client.get("/runs/nonexistent")
+        resp = client.get("/api/runs/nonexistent")
     assert resp.status_code == 404
 
 
@@ -151,7 +151,7 @@ def test_get_run_returns_detail(client):
     run = _make_run(best_skill=skill)
 
     with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run):
-        resp = client.get(f"/runs/{run.id}")
+        resp = client.get(f"/api/runs/{run.id}")
 
     assert resp.status_code == 200
     data = resp.json()
@@ -173,7 +173,7 @@ def test_list_runs_returns_array(client):
     runs = [_make_run(run_id="run-1"), _make_run(run_id="run-2")]
 
     with patch("skillforge.api.routes.list_runs", new_callable=AsyncMock, return_value=runs):
-        resp = client.get("/runs")
+        resp = client.get("/api/runs")
 
     assert resp.status_code == 200
     data = resp.json()
@@ -196,7 +196,7 @@ def test_export_skill_md_format(client):
         patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
         patch("skillforge.api.routes.export_skill_md", return_value="fake md content"),
     ):
-        resp = client.get(f"/runs/{run.id}/export?format=skill_md")
+        resp = client.get(f"/api/runs/{run.id}/export?format=skill_md")
 
     assert resp.status_code == 200
     assert "text/markdown" in resp.headers["content-type"]
@@ -216,7 +216,7 @@ def test_export_skill_dir_format_returns_zip(client):
         patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
         patch("skillforge.api.routes.export_skill_zip", return_value=b"PK...fake zip"),
     ):
-        resp = client.get(f"/runs/{run.id}/export?format=skill_dir")
+        resp = client.get(f"/api/runs/{run.id}/export?format=skill_dir")
 
     assert resp.status_code == 200
     assert "application/zip" in resp.headers["content-type"]
@@ -230,7 +230,7 @@ def test_export_skill_dir_format_returns_zip(client):
 
 def test_export_404_on_missing_run(client):
     with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=None):
-        resp = client.get("/runs/nonexistent/export")
+        resp = client.get("/api/runs/nonexistent/export")
     assert resp.status_code == 404
 
 
@@ -243,7 +243,7 @@ def test_export_400_on_no_best_skill(client):
     run = _make_run(best_skill=None)
 
     with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run):
-        resp = client.get(f"/runs/{run.id}/export")
+        resp = client.get(f"/api/runs/{run.id}/export")
 
     assert resp.status_code == 400
 
@@ -269,7 +269,7 @@ def test_lineage_returns_nodes_and_edges(client):
         patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
         patch("skillforge.api.routes.get_lineage", new_callable=AsyncMock, return_value=fake_edges),
     ):
-        resp = client.get(f"/runs/{run.id}/lineage")
+        resp = client.get(f"/api/runs/{run.id}/lineage")
 
     assert resp.status_code == 200
     data = resp.json()

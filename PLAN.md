@@ -685,3 +685,129 @@ COMPRESS_TRACES: bool = os.getenv("SKILLFORGE_COMPRESS_TRACES", "0") == "1"
 
 The point is not to pre-optimize — it's to make the code shapes compatible with the cost-savers so we can flip them later without a rewrite.
 
+
+---
+
+## Post-MVP Work Log (2026-04-09 evening polish)
+
+### Demo Mode (public)
+
+**Goal**: let any visitor watch a realistic evolution run without spending API budget.
+
+- `skillforge/api/debug.py` — `POST /api/debug/fake-run` pushes a realistic sequence of fake events into the in-process event queue. No AI calls. Configurable via `population_size` / `num_generations` / `num_challenges` / `speed` (lower = slower = more readable for demos).
+- `EvolutionDashboard.tsx` — public **▶ Watch Live Demo** button on the hero (no dev gate). Defaults: `pop=4, gens=3, challenges=3, speed=0.5` — substantive enough to showcase all phases at a readable pace.
+- `EvolutionArena.tsx` — renders a "DEMO" chip in the header when `runId` starts with `fake-`.
+- `EvolutionResults.tsx` — graceful empty state when `/api/runs/{id}/export?format=skill_md` 404s (fake runs never persist a `best_skill`). Real runs render the full evolved SKILL.md inline.
+
+### REST API namespacing
+
+Moved all REST routes under `/api/*` (`routes.py` APIRouter gained `prefix="/api"`), so client-side routes like `/runs/:id` no longer collide with backend endpoints through the Vite proxy. Vite proxy simplified to forward only `/api` and `/ws`. All frontend `fetch` calls and test paths updated accordingly.
+
+### v1.1 screens shipped
+
+**Registry (`/registry`)** — `AgentRegistry.tsx`
+- Fetches `/api/runs`, filters to completed runs with a `best_skill`.
+- Search (spec + run-id), mode-filter tabs (auto-derived from the data), sort by fitness/cost/recent.
+- Featured top-fitness card with hero radial + fitness readout.
+- Grid of cards: specialization, mode chip, fitness, cost. Click-through to `/runs/:id`.
+- No new backend work — reuses the existing `GET /api/runs` endpoint.
+
+**Bible (`/bible`)** — `BibleBrowser.tsx` + `skillforge/api/bible.py`
+- New backend router `/api/bible/entries` reads `bible/patterns/*.md`, `bible/findings/*.md`, `bible/anti-patterns/*.md` from disk and returns them grouped by category with extracted titles (first `# H1` line).
+- Frontend: two-column layout. Left sidebar lists all entries grouped by category (Patterns / Findings / Anti-Patterns). Main panel renders the selected entry as markdown via `react-markdown`.
+- Added `bible-prose` component class in `index.css` for tight, on-brand markdown typography (display font headers, secondary-colored H2s, code chips, blockquotes, tables).
+- Auto-selects the first pattern on load so the panel is never empty.
+
+### v1.1 Backlog (captured for future work)
+
+- **AI Spec Assistant**: chat-guided specialization builder on the `/new` screen — an LLM walks the user through what kind of Skill they want to build, what the trigger pattern should be, what failure modes to avoid, then writes a well-formed specialization string into the existing textarea. Helps non-expert users prompt the system properly. Matt flagged this on 2026-04-09 with a screenshot of the current "Specialization Blueprint" textarea.
+- Filed separately because it's a meaningful UX addition, not a polish item — needs its own backend endpoint (or direct Anthropic API call from the frontend with a session token) and a multi-turn chat UI.
+
+### v1.1 components still stubs
+
+- `SkillDiffViewer.tsx` — parent-vs-child SKILL.md diff.
+- `LineageExplorer.tsx` — visual lineage graph (the `/api/runs/{id}/lineage` endpoint already returns nodes + edges; just needs a d3/reactflow renderer).
+
+### QA on this batch
+
+- `tests/test_api.py` — 14/14 passing after the `/api` namespace migration.
+- `frontend` — `npm run build` clean (1023 modules, 0 TS errors).
+- Smoke-tested `/api/bible/entries` in-process: returns 5 patterns + 6 findings + 0 anti-patterns.
+
+---
+
+## Post-MVP Work Log — Session 2 (2026-04-09 late evening)
+
+### Bible content seeded from research report
+
+A subagent extracted all empirically-validated patterns from `docs/skills-research.md` and rewrote the 5 files in `bible/patterns/`:
+
+- `descriptions.md` — 7 patterns + 3 anti-patterns (88 lines)
+- `instructions.md` — 8 patterns + 3 anti-patterns (93 lines)
+- `structural.md` — 8 patterns + 3 anti-patterns (97 lines)
+- `scripts.md` — 6 patterns + 3 anti-patterns (64 lines)
+- `progressive-disclosure.md` — 8 patterns + 3 anti-patterns (97 lines)
+
+**Format** (followed consistently): `### P-{PREFIX}-###: Title` with Finding / Evidence / How to apply / Example subsections. Prefixes: `P-DESC`, `P-INST`, `P-STRUCT`, `P-SCRIPT`, `P-DISC`. Every pattern cites a specific section of the research report and quotes metrics verbatim (250-char cap, 500-line ceiling, 72%→90% examples impact, 73% broken-refs audit, 61% Pulser audit, 34% fitness gain from step-by-step).
+
+The `/bible` page now renders real content instead of the thin 34-45 line placeholders.
+
+### Demo data cleanup (scripted narrative)
+
+Replaced all "(fake)" placeholder strings in `skillforge/api/debug.py::_drive_fake_run` with a fully scripted realistic narrative modeled after a real evolution of a pandas data-cleaning Skill:
+
+- **Specialization**: "Pandas DataFrame cleaning — handling missing values, deduplication, type coercion, and schema normalization for messy CSV ingestion"
+- **Challenge prompts** (`CHALLENGE_SCRIPT`): 4 realistic challenges covering missing values, near-duplicates, date normalization, fuzzy joins — each with correct difficulty label and specific file/column references
+- **Breeding reports** (`BREEDING_SCRIPT`): 3 per-generation reports that explicitly reference real bible patterns (pipeline composition, classification-before-action, diagnostic mutation, wildcard spawning) and include realistic lessons that tie back to `bible/findings/` entries
+- **Fitness curve** (`FITNESS_CURVE`): realistic climb 0.52 → 0.71 → 0.86 → 0.91 with matching avg
+- **Cost curve** (`COST_CURVE`): 0.42 → 0.58 → 0.67 → 0.71 per generation
+- **Trace lengths**: scale by competitor index + generation (8 + 2·idx + gen) for variance
+
+Default pacing stayed at `speed=0.5` (half-real-time), added slightly longer dwells on phase transitions so the UI can breathe.
+
+### AI Spec Assistant (new, v1.1 → shipped)
+
+**Backend**: `skillforge/api/spec_assistant.py` + route `POST /api/spec-assistant/chat`.
+
+- Uses `AsyncAnthropic` directly (same pattern as Breeder, never the Agent SDK) with a new `spec_assistant` role in `MODEL_DEFAULTS`
+- Stateless: the client sends the full `messages` list each turn; the backend responds with the next assistant message
+- **Seed turn**: when `messages` is empty, the backend returns a canned greeting without calling the API (free first turn, no latency)
+- **Completion signal**: when the assistant has enough context, it emits a fenced ```json block with `{"final_spec": "..."}`. Helpers `_extract_final_spec()` and `_strip_json_block()` parse this out via regex + `json.loads()`, then the clean message is returned separately from the final spec
+- **System prompt** enforces: imperative phrasing, explicit trigger language, at least one exclusion ("NOT for ..."), max 4 sentences per reply, one question per turn, 3-5 exchanges total
+
+**Frontend**: `SpecAssistantChat.tsx` — collapsible inline panel beneath the specialization textarea in `SpecializationInput.tsx`.
+
+- Closed by default → "✨ Help me write this with AI" button
+- Opens to a chat panel with message history, typing indicator (3 pulsing dots), input + Send
+- On `final_spec` received: calls `onSpecReady(spec)` which calls `setSpecialization(spec)` on the parent, fills the textarea, and shows a "✓ filled" badge + locks the input
+- Reset button wipes history; Hide collapses the panel
+- All styling matches the existing brand (secondary accent, font-mono labels, rounded-xl cards)
+
+### SkillDiffViewer (v1.1 → shipped)
+
+**Backend**: new endpoint `GET /api/runs/{run_id}/skills/{skill_id}` in `routes.py` — returns full SkillGenome content (skill_md_content, traits, mutations, mutation_rationale, pareto_objectives, parent_ids) for a single genome within a run. 404s if either the run or the skill is missing.
+
+**Frontend**: `SkillDiffViewer.tsx` replaces the old `return null` stub.
+
+- Route: `/runs/:runId/diff`
+- On mount: fetches `/api/runs/{runId}/lineage`, auto-selects the first non-elitism edge
+- On selection change: fetches both parent and child via the new skills endpoint in parallel
+- Uses the `diff` npm package (`diffLines`) to produce unified diff chunks
+- Renders:
+  - **Left sidebar**: list of all lineage edges, grouped by mutation type with color coding (elitism=tertiary, crossover=secondary, mutation=primary, wildcard=warning)
+  - **Main panel top**: mutation rationale + mutation tags + the edge's mutation type chip
+  - **Main panel bottom**: the diff itself — added lines tinted tertiary with `+` prefix, removed lines tinted error with `-` prefix and line-through
+- Added `⑂ View Lineage Diff` link on `EvolutionResults.tsx` so users discover it
+
+### QA
+
+- `tests/test_api.py` — 14/14 passing after adding the new `/api/runs/{run_id}/skills/{skill_id}` endpoint (no new tests yet; the existing tests exercise the route structure not content)
+- `npm run build` — clean, 1044 modules, 0 TS errors
+- Route smoke test: `/api/spec-assistant/chat` and `/api/runs/{run_id}/skills/{skill_id}` both registered in the app
+- `_extract_final_spec` / `_strip_json_block` unit-tested inline in a REPL pass
+
+### v1.1 backlog remaining
+
+- **LineageExplorer** — graph renderer (nodes = genomes, edges = parent→child) using d3 or reactflow. Backend endpoint already exists.
+- **Spec assistant tests** — unit tests for `_extract_final_spec` edge cases (nested backticks, invalid JSON, missing field) and integration test for the `POST /chat` route with mocked Anthropic client.
+- **Skill diff enrichment** — annotate diff lines with the traits they introduce/remove (the `child.traits` vs `parent.traits` set diff).

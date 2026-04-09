@@ -11,12 +11,12 @@ export default function SkillExportPreview() {
 
   useEffect(() => {
     if (!runId) return;
-    fetch(`/runs/${runId}`).then((r) => r.json()).then(setRun);
-    fetch(`/runs/${runId}/export?format=skill_md`)
+    fetch(`/api/runs/${runId}`).then((r) => r.json()).then(setRun);
+    fetch(`/api/runs/${runId}/export?format=skill_md`)
       .then((r) => r.text())
       .then(setSkillMd)
       .catch(() => undefined);
-    fetch(`/runs/${runId}/export?format=agent_sdk_config`)
+    fetch(`/api/runs/${runId}/export?format=agent_sdk_config`)
       .then((r) => r.text())
       .then(setSdkConfig)
       .catch(() => undefined);

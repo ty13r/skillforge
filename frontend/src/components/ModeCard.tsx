@@ -27,7 +27,7 @@ export default function ModeCard({
       className={
         "relative flex w-full flex-col items-start gap-2 rounded-xl p-5 text-left transition-all " +
         (selected
-          ? "bg-surface-container-high shadow-[0_0_0_1px_rgba(192,193,255,0.6)]"
+          ? "bg-surface-container-high ring-1 ring-primary/60"
           : "bg-surface-container-low hover:bg-surface-container") +
         (disabled ? " cursor-not-allowed opacity-60" : "")
       }

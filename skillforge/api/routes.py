@@ -8,6 +8,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Response
+from pydantic import BaseModel, Field
 
 from skillforge.api.schemas import (
     EvolveRequest,
@@ -18,13 +19,14 @@ from skillforge.api.schemas import (
     Mode,
     RunDetail,
 )
+from skillforge.api.uploads import clear_upload, get_upload
 from skillforge.db.database import init_db
 from skillforge.db.queries import get_lineage, get_run, list_runs, save_run
-from skillforge.engine.evolution import run_evolution
+from skillforge.engine.evolution import PENDING_PARENTS, run_evolution
 from skillforge.engine.export import export_agent_sdk_config, export_skill_md, export_skill_zip
 from skillforge.models import EvolutionRun
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 # Module-level registry: run_id -> background task
 _active_runs: dict[str, asyncio.Task] = {}
@@ -64,6 +66,102 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
     _active_runs[run.id] = task
 
     # Cleanup callback removes the task from the registry when it finishes
+    def _cleanup(t: asyncio.Task) -> None:
+        _active_runs.pop(run.id, None)
+
+    task.add_done_callback(_cleanup)
+
+    return EvolveResponse(run_id=run.id, ws_url=f"/ws/evolve/{run.id}")
+
+
+# ---------------------------------------------------------------------------
+# Fork-and-evolve: start a run from an existing Skill (registry seed or upload)
+# ---------------------------------------------------------------------------
+
+
+class EvolveFromParentRequest(BaseModel):
+    parent_source: str = Field(..., description='"registry" or "upload"')
+    parent_id: str = Field(..., description="skill_id (registry) or upload_id (upload)")
+    specialization: str | None = None
+    population_size: int = 5
+    num_generations: int = 3
+    max_budget_usd: float = 10.0
+
+
+@router.post("/evolve/from-parent", response_model=EvolveResponse)
+async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveResponse:
+    """Start a new evolution run using an existing Skill as the gen-0 parent.
+
+    Supports two parent sources:
+      - ``registry``: ``parent_id`` is a skill_id inside the seed-library run
+        (or any other run's skill). Resolved via get_run(seed-library).
+      - ``upload``: ``parent_id`` is an upload_id from POST /api/uploads/skill.
+        Resolved via the in-memory upload cache.
+
+    The parent is stashed in the ``PENDING_PARENTS`` registry keyed by the new
+    run's id. The evolution engine picks it up at gen 0 spawn time and routes
+    through ``spawner.spawn_from_parent()`` instead of ``spawn_gen0()``.
+    """
+    # Resolve the parent genome
+    if req.parent_source == "registry":
+        # Search the seed-library run first, then fall back to any run
+        parent = None
+        seed_run = await get_run("seed-library")
+        if seed_run:
+            for gen in seed_run.generations:
+                for sk in gen.skills:
+                    if sk.id == req.parent_id:
+                        parent = sk
+                        break
+                if parent:
+                    break
+        if parent is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"registry skill {req.parent_id!r} not found",
+            )
+        effective_spec = req.specialization or (
+            parent.frontmatter.get("description", "")[:200]
+            if isinstance(parent.frontmatter, dict)
+            else ""
+        )
+    elif req.parent_source == "upload":
+        parent = get_upload(req.parent_id)
+        if parent is None:
+            raise HTTPException(
+                status_code=404, detail=f"upload {req.parent_id!r} not found or expired"
+            )
+        effective_spec = req.specialization or "User-uploaded Skill (evolved)"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"parent_source must be 'registry' or 'upload', got {req.parent_source!r}",
+        )
+
+    await init_db()
+
+    run = EvolutionRun(
+        id=str(uuid.uuid4()),
+        mode="domain",
+        specialization=effective_spec,
+        population_size=req.population_size,
+        num_generations=req.num_generations,
+        max_budget_usd=req.max_budget_usd,
+        status="pending",
+        created_at=datetime.now(UTC),
+    )
+    await save_run(run)
+
+    # Stash the parent so the engine's gen-0 spawn picks it up
+    PENDING_PARENTS[run.id] = parent
+
+    # Clear the upload cache so we don't leak memory
+    if req.parent_source == "upload":
+        clear_upload(req.parent_id)
+
+    task = asyncio.create_task(run_evolution(run))
+    _active_runs[run.id] = task
+
     def _cleanup(t: asyncio.Task) -> None:
         _active_runs.pop(run.id, None)
 
@@ -179,3 +277,32 @@ async def get_run_lineage(run_id: str) -> dict:
         "nodes": [n.model_dump() for n in nodes],
         "edges": [e.model_dump() for e in edges],
     }
+
+
+@router.get("/runs/{run_id}/skills/{skill_id}")
+async def get_run_skill(run_id: str, skill_id: str) -> dict:
+    """Return the full SKILL.md + metadata for one genome in a run.
+
+    Used by the SkillDiffViewer to render parent/child side-by-side.
+    """
+    run = await get_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"run {run_id} not found")
+
+    for gen in run.generations:
+        for skill in gen.skills:
+            if skill.id == skill_id:
+                return {
+                    "id": skill.id,
+                    "generation": skill.generation,
+                    "skill_md_content": skill.skill_md_content,
+                    "traits": skill.traits,
+                    "maturity": skill.maturity,
+                    "parent_ids": skill.parent_ids,
+                    "mutations": skill.mutations,
+                    "mutation_rationale": skill.mutation_rationale,
+                    "pareto_objectives": skill.pareto_objectives,
+                }
+    raise HTTPException(
+        status_code=404, detail=f"skill {skill_id} not found in run {run_id}"
+    )

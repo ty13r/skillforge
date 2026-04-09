@@ -1,22 +1,142 @@
+/* Google Fonts — free substitutes for Anthropic Sans/Serif/Mono */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Anthropic-inspired theme tokens.
+  All color values extracted from anthropic.com + claude.com via headless
+  Chromium (--swatch--* and --bg-/--text-/--border- series). Stored as
+  space-separated RGB components so Tailwind's `<alpha-value>` trick works.
+
+  Light mode is the default. `[data-theme="dark"]` overrides for dark mode.
+  The theme attribute is set by:
+    1. An inline script in index.html (no-flash on first paint)
+    2. The useTheme() hook in React (reacts to user toggle)
+*/
+
+:root,
+[data-theme="light"] {
+  /* Brand */
+  --color-primary: 217 119 87;           /* #d97757 clay — anthropic.com */
+  --color-primary-hover: 198 97 63;      /* #c6613f accent */
+  --color-primary-container: 235 206 206; /* #ebcece coral — soft pink tint */
+
+  /* Secondary — used for the "dark solid" button bg in Anthropic's system */
+  --color-secondary: 20 20 19;           /* #141413 slate-dark */
+  --color-secondary-alt: 61 61 58;       /* #3d3d3a slate-medium */
+
+  /* Tertiary — success/completion accent */
+  --color-tertiary: 120 140 93;          /* #788c5d olive */
+
+  /* Semantic */
+  --color-warning: 212 162 127;          /* #d4a27f kraft */
+  --color-error: 223 102 102;            /* #df6666 — claude.com literal */
+
+  /* Surfaces (light) — warm ivory ramp. Each step is visibly distinct so
+     cards can separate from page bg without needing heavy shadows. */
+  --color-surface: 250 249 245;          /* #faf9f5 ivory-light (page bg) */
+  --color-surface-lowest: 255 255 255;   /* #ffffff pure white cards */
+  --color-surface-low: 244 242 234;      /* #f4f2ea subtle card tint */
+  --color-surface-mid: 240 238 230;      /* #f0eee6 ivory-medium */
+  --color-surface-high: 232 230 220;     /* #e8e6dc ivory-dark (hover) */
+  --color-surface-highest: 218 214 198;  /* stronger contrast for max elev */
+  --color-surface-bright: 255 255 255;   /* bright card */
+
+  /* Text / on-surface */
+  --color-on-surface: 20 20 19;          /* #141413 slate-dark */
+  --color-on-surface-dim: 94 93 89;      /* #5e5d59 slate-light */
+
+  /* Borders — hairline + strong variants (Anthropic's primary separator) */
+  --color-outline: 135 134 127;          /* #87867f cloud-dark (strong) */
+  --color-outline-variant: 209 207 197;  /* #d1cfc5 cloud-light (hairline) */
+}
+
+[data-theme="dark"] {
+  /* Brand — slightly warmer in dark mode */
+  --color-primary: 217 119 87;           /* #d97757 clay */
+  --color-primary-hover: 232 151 120;    /* lifted for dark */
+  --color-primary-container: 189 93 58;  /* #bd5d3a clay-deep */
+
+  /* Secondary inverts */
+  --color-secondary: 245 244 238;        /* #f5f4ee ivory */
+  --color-secondary-alt: 224 222 214;
+
+  /* Tertiary */
+  --color-tertiary: 168 196 154;         /* brighter olive for dark bg */
+
+  /* Semantic */
+  --color-warning: 212 162 127;
+  --color-error: 223 102 102;
+
+  /* Surfaces (dark) — warm near-black ramp */
+  --color-surface: 20 20 19;             /* #141413 */
+  --color-surface-lowest: 10 10 9;       /* deepest well */
+  --color-surface-low: 26 26 24;
+  --color-surface-mid: 34 34 32;
+  --color-surface-high: 42 42 40;
+  --color-surface-highest: 52 52 49;
+  --color-surface-bright: 61 61 58;
+
+  /* Text / on-surface */
+  --color-on-surface: 245 244 238;       /* #f5f4ee */
+  --color-on-surface-dim: 176 174 165;   /* #b0aea5 cloud-medium */
+
+  /* Borders — inverted */
+  --color-outline: 94 93 89;             /* #5e5d59 slate-light */
+  --color-outline-variant: 61 61 58;     /* #3d3d3a slate-medium */
+}
+
 @layer base {
   body {
     @apply bg-surface text-on-surface font-sans antialiased min-h-screen;
+    /* Smooth theme transitions so toggling doesn't feel jarring */
+    transition: background-color 200ms ease, color 200ms ease;
   }
   code, pre {
     @apply font-mono;
   }
-  /* Subtle scrollbar styling */
+  /* Subtle scrollbar styling — themed */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.06);
+    background: rgb(var(--color-on-surface) / 0.08);
     border-radius: 6px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.12);
+    background: rgb(var(--color-on-surface) / 0.16);
   }
+}
+
+@layer components {
+  .bible-prose h1 { @apply font-display text-3xl tracking-tight mt-0 mb-4; }
+  .bible-prose h2 { @apply font-display text-2xl tracking-tight mt-8 mb-3 text-primary; }
+  .bible-prose h3 { @apply font-display text-xl tracking-tight mt-6 mb-2; }
+  .bible-prose h4 { @apply font-display text-lg tracking-tight mt-4 mb-2 text-on-surface-dim; }
+  .bible-prose p { @apply my-3 leading-relaxed text-on-surface; }
+  .bible-prose ul, .bible-prose ol { @apply my-3 pl-6 space-y-1; }
+  .bible-prose ul { @apply list-disc; }
+  .bible-prose ol { @apply list-decimal; }
+  .bible-prose li { @apply text-on-surface; }
+  .bible-prose a { @apply text-primary underline; }
+  .bible-prose strong { @apply text-on-surface font-semibold; }
+  .bible-prose em { @apply italic text-on-surface-dim; }
+  .bible-prose code {
+    @apply rounded bg-surface-container-high px-1.5 py-0.5 text-xs text-primary;
+  }
+  .bible-prose pre {
+    @apply my-4 overflow-x-auto rounded-lg bg-surface-container-high p-4 text-xs;
+  }
+  .bible-prose pre code { @apply bg-transparent p-0 text-on-surface; }
+  .bible-prose blockquote {
+    @apply my-4 border-l-2 border-primary/40 pl-4 italic text-on-surface-dim;
+  }
+  .bible-prose hr { @apply my-6 border-outline-variant; }
+  .bible-prose table { @apply my-4 w-full border-collapse text-sm; }
+  .bible-prose th, .bible-prose td {
+    @apply border border-outline-variant px-3 py-2 text-left;
+  }
+  .bible-prose th { @apply bg-surface-container-low font-semibold; }
 }

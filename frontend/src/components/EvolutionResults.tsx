@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import FitnessChart from "./FitnessChart";
@@ -24,6 +24,21 @@ export default function EvolutionResults({
 
   // Phase diagram in the sidebar — at this screen everything is complete
   const phases = useMemo(() => derivePhases(sockState, 0), [sockState]);
+
+  // Fetch the SKILL.md preview for the winning skill. Fake runs have no
+  // persisted skill — in that case the endpoint 404s and we show a placeholder.
+  const [skillMd, setSkillMd] = useState<string | null>(null);
+  const [skillMdError, setSkillMdError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!runId) return;
+    fetch(`/api/runs/${runId}/export?format=skill_md`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then(setSkillMd)
+      .catch((err) => setSkillMdError(String(err)));
+  }, [runId]);
 
   // Pull objectives from the latest generation_complete or scores_published event
   const lastScores = sockState.events
@@ -82,21 +97,22 @@ export default function EvolutionResults({
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
               Best Skill — {sockState.bestSkillId?.slice(0, 8) ?? "—"}
             </p>
-            <pre className="mt-3 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-mono text-xs text-on-surface">
-              {/* SKILL.md preview would be fetched from /runs/{id}/export?format=skill_md */}
-              <a
-                href={`/runs/${runId}/export?format=skill_md`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-secondary underline"
-              >
-                View raw SKILL.md →
-              </a>
-              {"\n\n"}
-              <span className="text-on-surface-dim">
-                Click above to view the full evolved Skill.
-              </span>
-            </pre>
+            {skillMd ? (
+              <pre className="mt-3 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-mono text-xs text-on-surface">
+                {skillMd}
+              </pre>
+            ) : (
+              <div className="mt-3 flex h-[600px] flex-col items-center justify-center rounded-lg border border-dashed border-on-surface-dim/20 p-6 text-center">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  {skillMdError ? "No Skill Artifact" : "Loading SKILL.md..."}
+                </p>
+                <p className="mt-2 max-w-xs text-xs text-on-surface-dim">
+                  {skillMdError
+                    ? "This run has no persisted best_skill — likely a fake/demo run. Real evolutions render the full evolved SKILL.md here."
+                    : ""}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right column: radar + chart + actions */}
@@ -117,13 +133,13 @@ export default function EvolutionResults({
 
             <div className="space-y-3">
               <a
-                href={`/runs/${runId}/export?format=skill_dir`}
+                href={`/api/runs/${runId}/export?format=skill_dir`}
                 className="block rounded-xl bg-surface-container-low p-3 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
               >
                 ↓ Export Build (.zip)
               </a>
               <a
-                href={`/runs/${runId}/export?format=agent_sdk_config`}
+                href={`/api/runs/${runId}/export?format=agent_sdk_config`}
                 target="_blank"
                 rel="noreferrer"
                 className="block rounded-xl bg-surface-container-low p-3 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
@@ -134,6 +150,12 @@ export default function EvolutionResults({
                 <PrimaryButton className="w-full">
                   Open Export Preview →
                 </PrimaryButton>
+              </Link>
+              <Link
+                to={`/runs/${runId}/diff`}
+                className="block rounded-xl bg-surface-container-low p-3 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
+              >
+                ⑂ View Lineage Diff
               </Link>
             </div>
 

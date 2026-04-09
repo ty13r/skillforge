@@ -6,11 +6,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { useCssVar } from "../hooks/useCssVar";
+
 interface FitnessRadarProps {
   objectives: Record<string, number>;
 }
 
 export default function FitnessRadar({ objectives }: FitnessRadarProps) {
+  const primary = useCssVar("--color-primary");
+  const gridColor = useCssVar("--color-on-surface", 0.08);
+  const axisColor = useCssVar("--color-on-surface-dim");
+
   const data = Object.entries(objectives).map(([k, v]) => ({
     objective: k.replace(/_/g, " "),
     value: v,
@@ -28,16 +34,16 @@ export default function FitnessRadar({ objectives }: FitnessRadarProps) {
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data}>
-          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <PolarGrid stroke={gridColor} />
           <PolarAngleAxis
             dataKey="objective"
-            stroke="#9ba0b8"
+            stroke={axisColor}
             fontSize={10}
           />
           <Radar
             dataKey="value"
-            stroke="#c0c1ff"
-            fill="#c0c1ff"
+            stroke={primary}
+            fill={primary}
             fillOpacity={0.2}
           />
         </RadarChart>

@@ -5,19 +5,46 @@ import BreedingReport from "./BreedingReport";
 import CompetitorCard from "./CompetitorCard";
 import EvolutionResults from "./EvolutionResults";
 import FitnessChart from "./FitnessChart";
-import JudgingPipelinePill from "./JudgingPipelinePill";
 import LiveFeedLog from "./LiveFeedLog";
 import Sidebar from "./Sidebar";
 import StatusGlow from "./StatusGlow";
 import { derivePhases, useEvolutionSocket } from "../hooks/useEvolutionSocket";
 import type { RunDetail } from "../types";
 
-const JUDGING_LAYERS: { layer: string; label: string }[] = [
-  { layer: "L1", label: "Deterministic" },
-  { layer: "L2", label: "Trigger" },
-  { layer: "L3", label: "Trace" },
-  { layer: "L4", label: "Pareto" },
-  { layer: "L5", label: "Attribution" },
+// Each judging layer with a human-readable sentence describing what it's
+// actually scoring — so users don't see abstract "L1 Deterministic" but
+// "L1 — Running the Skill's scripts against verification tests."
+const JUDGING_LAYERS: { layer: string; label: string; description: string }[] = [
+  {
+    layer: "L1",
+    label: "Deterministic Checks",
+    description:
+      "Running each candidate's scripts against verification tests. Does the code compile, execute, pass assertions?",
+  },
+  {
+    layer: "L2",
+    label: "Trigger Accuracy",
+    description:
+      "Batched LLM call: given 20 realistic user queries, does the frontmatter description correctly route to this Skill? (precision + recall)",
+  },
+  {
+    layer: "L3",
+    label: "Trace Analysis",
+    description:
+      "Reading each competitor's execution trace: did the Skill actually load? Which instructions did Claude follow vs ignore?",
+  },
+  {
+    layer: "L4",
+    label: "Pareto Ranking",
+    description:
+      "Pairwise comparison across all candidates. Builds a Pareto front where multiple winners coexist on different objectives.",
+  },
+  {
+    layer: "L5",
+    label: "Trait Attribution",
+    description:
+      "Maps each instruction in the SKILL.md to a fitness contribution. Surfaces which traits drove the win and which hurt.",
+  },
 ];
 
 export default function EvolutionArena() {
@@ -31,7 +58,7 @@ export default function EvolutionArena() {
   // Fetch run detail once on mount (for population_size, num_generations)
   useEffect(() => {
     if (!runId) return;
-    fetch(`/runs/${runId}`)
+    fetch(`/api/runs/${runId}`)
       .then((r) => r.json())
       .then((d: RunDetail) => setRunDetail(d))
       .catch(() => undefined);
@@ -46,15 +73,54 @@ export default function EvolutionArena() {
     return () => clearInterval(id);
   }, [sockState.isComplete, sockState.isFailed, startTime]);
 
+  // Derive the specialization from run_started event (fallback for fake runs
+  // that aren't in the DB and won't load a runDetail).
+  const specialization = useMemo(() => {
+    if (runDetail?.specialization) return runDetail.specialization;
+    const started = sockState.events.find((e) => e.event === "run_started");
+    return (started?.specialization as string | undefined) ?? "";
+  }, [runDetail, sockState.events]);
+
+  // Collect all designed challenges with their prompts + difficulty. Keyed
+  // by challenge_id so cards can cross-reference.
+  const challenges = useMemo(() => {
+    const byId = new Map<
+      string,
+      { id: string; difficulty: string; prompt: string; index: number }
+    >();
+    let idx = 0;
+    for (const e of sockState.events) {
+      if (e.event === "challenge_designed" && e.challenge_id) {
+        const id = e.challenge_id as string;
+        if (!byId.has(id)) {
+          byId.set(id, {
+            id,
+            difficulty: (e.difficulty as string) ?? "medium",
+            prompt: (e.prompt as string) ?? "",
+            index: idx++,
+          });
+        }
+      }
+    }
+    return Array.from(byId.values());
+  }, [sockState.events]);
+
   // Expected number of (skill, challenge) competitor runs in the active gen
   const expectedCompetitors = useMemo(() => {
     const pop = runDetail?.population_size ?? 5;
-    // Number of challenges from the events; falls back to 3 (engine default)
-    const challengesDesigned = sockState.events.filter(
-      (e) => e.event === "challenge_designed",
-    ).length;
-    return pop * Math.max(challengesDesigned, 1);
-  }, [runDetail, sockState.events]);
+    return pop * Math.max(challenges.length, 1);
+  }, [runDetail, challenges.length]);
+
+  // Judging layer that's currently active, if any. We don't get granular L1-L5
+  // events, so when judging_started fires we treat L1 as running until
+  // scores_published fires (which means all 5 have completed).
+  const activeJudgingLayer = useMemo(() => {
+    const gen = sockState.generations.at(-1);
+    if (!gen) return null;
+    if (gen.status === "judging") return "L1-L5";
+    if (gen.status === "complete") return "done";
+    return null;
+  }, [sockState.generations]);
 
   // Compute phase states for the sidebar diagram
   const phases = useMemo(
@@ -87,29 +153,37 @@ export default function EvolutionArena() {
       />
 
       <div className="flex-1 px-8 py-6">
-        {/* Breadcrumbs + status */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Dashboard <span className="text-on-surface-dim">›</span>{" "}
-              Run {runId.slice(0, 8)} <span className="text-on-surface-dim">›</span>{" "}
-              Generation {sockState.currentGeneration} of{" "}
+        {/* Header — specialization is the headline, Evolution Cycle is the eyebrow */}
+        <div className="flex items-start justify-between gap-6">
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
+              Evolving · Generation {sockState.currentGeneration + 1} of{" "}
               {runDetail?.num_generations ?? "?"}
             </p>
-            <h1 className="mt-2 flex items-center gap-3 font-display text-4xl tracking-tight">
-              Evolution Cycle
-              <span className="inline-flex items-center gap-1 rounded-full bg-tertiary/15 px-3 py-1 text-xs font-medium text-tertiary">
+            <h1 className="mt-2 font-display text-3xl leading-tight tracking-tight md:text-4xl">
+              {specialization || "Evolution Cycle"}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {runId.startsWith("fake-") && (
+                <span className="rounded-full border border-primary/50 bg-primary/10 px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-primary">
+                  DEMO
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary/15 px-3 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
                 <StatusGlow variant="success" />
                 {sockState.isFailed ? "FAILED" : "RUNNING"}
               </span>
-            </h1>
+              <span className="font-mono text-[0.6875rem] text-on-surface-dim">
+                run {runId.slice(0, 8)}
+              </span>
+            </div>
           </div>
           <div className="text-right">
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Elapsed Time
+              Elapsed
             </p>
             <p className="font-display text-2xl tracking-tight">{elapsedFmt}</p>
-            <p className="mt-1 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+            <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
               Budget Used
             </p>
             <p className="font-mono text-sm text-tertiary">
@@ -131,30 +205,115 @@ export default function EvolutionArena() {
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Main column: arena + breeding + log */}
+          {/* Main column: challenges + arena + breeding + log */}
           <div className="space-y-6">
-            <div className="rounded-xl bg-surface-container-low p-5">
+            {/* Challenges Panel — what the skill is being tested against */}
+            {challenges.length > 0 && (
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-display text-xl tracking-tight">
+                      Test Gauntlet
+                    </h2>
+                    <p className="mt-0.5 text-xs text-on-surface-dim">
+                      Every candidate is scored on all {challenges.length}{" "}
+                      challenges.
+                    </p>
+                  </div>
+                  <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                    {challenges.length} challenges
+                  </span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {challenges.map((ch) => {
+                    // Is any competitor currently running this challenge?
+                    const activeOnChallenge = sockState.competitors.some(
+                      (c) => c.challengeId === ch.id && c.state !== "done",
+                    );
+                    return (
+                      <div
+                        key={ch.id}
+                        className={`rounded-lg border p-3 transition-all ${
+                          activeOnChallenge
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-outline-variant bg-surface-container-low"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+                            Challenge {ch.index + 1}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider ${
+                              ch.difficulty === "hard"
+                                ? "bg-error/10 text-error"
+                                : ch.difficulty === "medium"
+                                  ? "bg-warning/10 text-warning"
+                                  : "bg-tertiary/10 text-tertiary"
+                            }`}
+                          >
+                            {ch.difficulty}
+                          </span>
+                          {activeOnChallenge && (
+                            <span className="ml-auto font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
+                              ● live
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 text-sm leading-relaxed text-on-surface">
+                          {ch.prompt || "(no prompt available)"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Competitor Arena */}
+            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl tracking-tight">
-                  ✕ Competitor Arena
-                </h2>
+                <div>
+                  <h2 className="font-display text-xl tracking-tight">
+                    Competitor Arena
+                  </h2>
+                  <p className="mt-0.5 text-xs text-on-surface-dim">
+                    Each competitor is a variant SKILL.md being tested against
+                    the gauntlet.
+                  </p>
+                </div>
                 <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                  Active Pool: {sockState.competitors.length} agents
+                  {sockState.competitors.length} agents
                 </span>
               </div>
               <div className="mt-4 space-y-2">
                 {sockState.competitors.length === 0 ? (
-                  <p className="text-sm text-on-surface-dim">Waiting for competitors to start...</p>
+                  <p className="text-sm text-on-surface-dim">
+                    {phases.find((p) => p.id === "spawn_or_breed")?.status ===
+                    "running"
+                      ? sockState.currentGeneration === 0
+                        ? `Spawning ${runDetail?.population_size ?? 5} diverse candidates from the golden template...`
+                        : `Breeding ${runDetail?.population_size ?? 5} next-gen candidates from the Pareto front...`
+                      : "Waiting for competitors to start..."}
+                  </p>
                 ) : (
-                  sockState.competitors.map((c) => (
-                    <CompetitorCard
-                      key={`${c.competitorId}-${c.skillId}`}
-                      competitorId={c.competitorId}
-                      skillId={c.skillId}
-                      state={c.state}
-                      challengeId={c.challengeId}
-                    />
-                  ))
+                  sockState.competitors.map((c) => {
+                    // Find the challenge this competitor is solving
+                    const ch = challenges.find((x) => x.id === c.challengeId);
+                    const challengeLabel = ch
+                      ? `Challenge ${ch.index + 1}: ${ch.prompt.slice(0, 60)}${ch.prompt.length > 60 ? "…" : ""}`
+                      : undefined;
+                    return (
+                      <CompetitorCard
+                        key={`${c.competitorId}-${c.skillId}`}
+                        competitorId={c.competitorId}
+                        skillId={c.skillId}
+                        state={c.state}
+                        challengeId={c.challengeId}
+                        challengeLabel={challengeLabel}
+                      />
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -196,25 +355,61 @@ export default function EvolutionArena() {
               </div>
             </div>
 
-            <div className="rounded-xl bg-surface-container-low p-5">
+            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
               <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
                 Judging Pipeline
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {JUDGING_LAYERS.map((l) => (
-                  <JudgingPipelinePill
-                    key={l.layer}
-                    layer={l.layer}
-                    label={l.label}
-                    status={
-                      sockState.generations.at(-1)?.status === "complete"
-                        ? "complete"
-                        : sockState.generations.at(-1)?.status === "judging"
-                          ? "running"
-                          : "pending"
-                    }
-                  />
-                ))}
+              <p className="mt-1 text-xs text-on-surface-dim">
+                5 independent layers score every candidate from hard signals
+                (L1) to trait attribution (L5).
+              </p>
+              <div className="mt-3 space-y-2">
+                {JUDGING_LAYERS.map((l) => {
+                  const genStatus = sockState.generations.at(-1)?.status;
+                  const status =
+                    genStatus === "complete"
+                      ? "complete"
+                      : activeJudgingLayer === "L1-L5"
+                        ? "running"
+                        : "pending";
+                  return (
+                    <div
+                      key={l.layer}
+                      className={`rounded-lg border p-2.5 transition-colors ${
+                        status === "running"
+                          ? "border-primary/40 bg-primary/5"
+                          : status === "complete"
+                            ? "border-tertiary/30 bg-tertiary/5"
+                            : "border-outline-variant bg-surface-container-low"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-mono text-[0.625rem] font-bold uppercase tracking-wider ${
+                            status === "running"
+                              ? "text-primary"
+                              : status === "complete"
+                                ? "text-tertiary"
+                                : "text-on-surface-dim"
+                          }`}
+                        >
+                          {l.layer}
+                        </span>
+                        <span className="text-xs font-medium text-on-surface">
+                          {l.label}
+                        </span>
+                        {status === "complete" && (
+                          <span className="ml-auto text-[0.625rem] text-tertiary">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-on-surface-dim">
+                        {l.description}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

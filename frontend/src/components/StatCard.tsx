@@ -20,7 +20,7 @@ export default function StatCard({
   return (
     <div
       className={
-        "relative overflow-hidden rounded-xl bg-surface-container-low p-5 " +
+        "relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-5 " +
         "before:absolute before:left-0 before:top-0 before:h-full before:w-1 " +
         ACCENT_BORDER[accent]
       }

@@ -5,8 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <title>SKLD.run — Evolve Agent Skills</title>
+    <script>
+      // No-flash theme boot. Runs synchronously before React mounts.
+      // Reads the `skld-theme` cookie; falls back to system preference.
+      (function() {
+        try {
+          var m = document.cookie.match(/(?:^|; )skld-theme=(\w+)/);
+          var t = m ? m[1] : "system";
+          if (t === "system" || (t !== "light" && t !== "dark")) {
+            t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.dataset.theme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -100,6 +100,7 @@ MODEL_DEFAULTS: dict[str, str] = {
     "judge_comparative": DEFAULT_MODEL,
     "judge_attribution": DEFAULT_MODEL,
     "l2_trigger": DEFAULT_MODEL,
+    "spec_assistant": DEFAULT_MODEL,
 }
 
 

@@ -38,7 +38,7 @@ export default function EvolutionCard({
   return (
     <Link
       to={`/runs/${id}`}
-      className="block rounded-xl bg-surface-container-low p-5 transition-colors hover:bg-surface-container-high"
+      className="block rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-all hover:border-primary/40 hover:bg-surface-container-low hover:shadow-elevated"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

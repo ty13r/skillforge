@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 
 import PrimaryButton from "./PrimaryButton";
+import ThemeToggle from "./ThemeToggle";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   "text-sm font-medium transition-colors " +
@@ -9,7 +10,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export default function AppShell() {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-outline-variant bg-surface/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
             <span className="font-display text-xl tracking-tight">
@@ -30,9 +31,12 @@ export default function AppShell() {
             </NavLink>
           </nav>
 
-          <Link to="/new">
-            <PrimaryButton type="button">+ New Evolution</PrimaryButton>
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link to="/new">
+              <PrimaryButton type="button">+ New Evolution</PrimaryButton>
+            </Link>
+          </div>
         </div>
       </header>
 

@@ -12,6 +12,8 @@
 - **Complex fields** (lists, dicts, nested objects): serialized as JSON strings in `TEXT` columns. `json.dumps`/`json.loads` at the query layer.
 - **Foreign keys**: declared but not enforced by default in SQLite. We enable `PRAGMA foreign_keys = ON` on every connection.
 - **Indexes**: added where lineage queries or list-by-run queries are hot paths.
+- **Reserved run ids**:
+  - `seed-library` — the synthetic curated Gen 0 Skill library. Not created by a user `POST /evolve` call; instead, inserted idempotently at app startup by `skillforge/db/seed_loader.py::load_seeds()`. Holds `len(SEED_SKILLS)` SkillGenome rows in a single `generation=0` row. Mode is `"curated"`, status is `"complete"`. The Dashboard filters this run out of its list; the Registry renders it as a featured section. Hash-based reload on every boot — if `SEED_SKILLS` content hash differs from the stored one (embedded in the run's `specialization` field), the loader deletes and recreates the run.
 
 ## Tables
 
