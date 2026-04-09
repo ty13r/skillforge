@@ -245,6 +245,8 @@ The journal is the only doc that's written for humans first and machines second.
 - [x] 2026-04-09 — Journal Entry #3 (`003-overnight-run-begins.md`) + ANTHROPIC_API_KEY loader verified
 - [x] 2026-04-09 — **Wave 1 / Step 3 complete**: models serialization (`to_dict`/`from_dict` on all 5 dataclasses, `_serde.py` helper, datetime UTC fix). 10 tests pass (up from 2). Ruff clean (+ fixed pre-existing StrEnum issues in schemas.py)
 - [x] 2026-04-09 — **Wave 2 / Steps 4 + 5 complete**: async SQLite DB (init_db + 8 CRUD functions, 10 tests) + sandbox system (create/cleanup/collect + 8-rule validator, 20 tests). Schema matches SCHEMA.md exactly. Foreign keys on, path-prefix safety verified, validator enforces all Skill Authoring Constraints. 40 tests passing total.
+- [x] 2026-04-09 — Design review + `design/DIGEST.md` written. "The Precision Architect" — 8 screens covering dashboard, new evolution form, generation in progress, breeding phase, complete results, export, bible (v1.1), registry (v1.1). Committed `6a17463`.
+- [x] 2026-04-09 — **Wave 3 / Steps 6a-c + 6d L1-L5 complete**: 8 Sonnet subagents ran in parallel. Challenge Designer, Spawner (with bible patterns + validator integration), Competitor (with setting_sources=["project"] + dontAsk), and 5 judging layers (L1 deterministic subprocess, L2 batched trigger accuracy, L3 trace-based behavioral analysis, L4 pairwise+batched_rank Pareto computation, L5 novel trait attribution). 121 tests passing (up from 40). Ruff clean. All contracts honored. L4_STRATEGY dispatch verified. Every agent uses model_for(role), never hardcoded.
 
 ### MVP Checklist:
 - [ ] `docs/skills-research.md` included in repo
