@@ -97,9 +97,11 @@ Derived from `docs/skills-research.md`:
 - Live-SDK integration tests gated behind `SKILLFORGE_LIVE_TESTS=1`
 
 ## Git Policy
-- The repo is version-controlled. Commits happen **per wave** during implementation (one commit per completed wave from `PLAN.md §Development Workflow`).
+- The repo is version-controlled and remotely hosted at **https://github.com/ty13r/skillforge** (public).
+- Commits happen **per wave** during implementation (one commit per completed wave from `PLAN.md §Development Workflow`).
 - Commit messages follow conventional-commit style: `wave(N): <summary>`. E.g., `wave(1): implement SkillGenome serialization + tests`.
-- Never `git push` unless the user explicitly asks. Never force-push. Never run destructive git ops (`reset --hard`, `branch -D`, `checkout .`) without explicit approval.
+- **Push after each wave commit**: `git push origin main`. Matt authorized this on 2026-04-09 so Railway can auto-deploy from the main branch.
+- Never force-push. Never run destructive git ops (`reset --hard`, `branch -D`, `checkout .`) without explicit approval.
 - Each wave commit must ship with all QA checks passing (see PLAN.md §QA Checklist).
 - Baseline commit (before Wave 1) captures the scaffolded state as the starting point.
 - **Git identity**: no global git identity is set on this machine. Per-commit identity is passed inline via `git -c user.email="matt@skillforge.local" -c user.name="Matt (via Claude Code)" commit ...`. This honors the "never update git config" rule — nothing persists. Matt can rewrite author history later if he wants his real identity.
@@ -299,6 +301,7 @@ The journal is the only doc that's written for humans first and machines second.
 | 2026-04-09 | Wave-based development workflow: Sonnet subagents for ~80% of remaining work, Opus only for integration points (6d pipeline, 6e Breeder, Step 7 engine) | Reduce subscription spend; most work is mechanical pattern-following |
 | 2026-04-09 | Cost-saver strategy flags added to `config.py` (`L4_STRATEGY`, `BREEDER_CALL_MODE`, `COMPRESS_TRACES`) | Keep the code shape compatible with future cost savers; flip via env var, no refactor |
 | 2026-04-09 | L2 and L4 judging layers model-selected via `model_for(role)` with no hardcoded strings | Makes Haiku-for-classification a one-line env change |
+| 2026-04-09 | Pushed to public GitHub repo `ty13r/skillforge` and enabled push-after-each-wave policy | Matt is setting up Railway to auto-deploy from main branch |
 | 2026-04-09 | Formal QA checklist added to PLAN.md: per-step (1-8), per-wave (9-12), per-subagent (13-16); gated between waves | Prevents contract drift across Sonnet subagents; catches integration issues early when they're cheap to fix |
 | 2026-04-09 | `design/` directory created with README and minimum acceptance bar; Matt designing, not blocking until Wave 6 | Backend unblocks first; Step 10 frontend implementation reads `design/` as source of truth |
 | 2026-04-09 | Journaling workflow documented in `CLAUDE.md`; entries in `journal/NNN-slug.md` format matching Entry #1 | Preserves the story of how we built this for future contributors and session continuity |
