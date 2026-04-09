@@ -61,6 +61,33 @@ DEFAULT_BUDGET_USD: float = float(os.getenv("SKILLFORGE_DEFAULT_BUDGET_USD", "10
 WEBSEARCH_ENABLED: bool = os.getenv("SKILLFORGE_WEBSEARCH", "1") == "1"
 LIVE_TESTS: bool = os.getenv("SKILLFORGE_LIVE_TESTS") == "1"
 
+# --- Invite gating ------------------------------------------------------------
+# Real evolution runs require a valid invite code from this allowlist. Rotate
+# by editing the env var (on Railway: Variables → SKILLFORGE_INVITE_CODES).
+# Demo runs (/api/debug/fake-run) are NOT gated. Empty/unset disables gating
+# entirely — useful for local dev.
+#
+# Format: comma-separated, whitespace and case-insensitive.
+_raw_codes = os.getenv("SKILLFORGE_INVITE_CODES", "")
+INVITE_CODES: frozenset[str] = frozenset(
+    c.strip().upper() for c in _raw_codes.split(",") if c.strip()
+)
+# Admin token for reading /api/invites/requests — set on Railway, never commit.
+ADMIN_TOKEN: str = os.getenv("SKILLFORGE_ADMIN_TOKEN", "")
+
+
+def invite_code_valid(code: str | None) -> bool:
+    """Return True if the given code is in the allowlist.
+
+    If INVITE_CODES is empty (unset env var), gating is disabled and every
+    code — including missing ones — validates. This is the local-dev default.
+    """
+    if not INVITE_CODES:
+        return True
+    if not code:
+        return False
+    return code.strip().upper() in INVITE_CODES
+
 # --- Cost-saver strategy flags (see PLAN.md §Flexibility Hooks) ---------------
 # All default to "MVP simple" values. Flip via env var to enable cost savers.
 

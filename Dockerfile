@@ -28,7 +28,15 @@ COPY pyproject.toml uv.lock README.md ./
 COPY skillforge/ ./skillforge/
 
 # Install dependencies (production only — no dev extras).
-# `uv sync --frozen` uses the locked versions from uv.lock.
+# Reduce uv's default parallelism so the build survives Railway's memory
+# ceiling: the claude-agent-sdk wheel alone is 68 MB, and uv's default
+# parallel downloads + link step peaks over the build-container RAM limit
+# and gets OOM-killed (exit 137). `UV_CONCURRENT_*=1` serializes the work.
+ENV UV_CONCURRENT_DOWNLOADS=1
+ENV UV_CONCURRENT_INSTALLS=1
+ENV UV_COMPILE_BYTECODE=0
+ENV UV_LINK_MODE=copy
+ENV UV_NO_CACHE=1
 RUN uv sync --frozen --no-dev
 
 # Copy the rest of the project: docs (golden template + research), bible,

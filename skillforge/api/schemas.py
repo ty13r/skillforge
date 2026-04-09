@@ -31,6 +31,7 @@ class EvolveRequest(BaseModel):
     population_size: int = Field(default=DEFAULT_POP, ge=2, le=20)
     num_generations: int = Field(default=DEFAULT_GENS, ge=1, le=10)
     max_budget_usd: float = Field(default=DEFAULT_BUDGET_USD, gt=0)
+    invite_code: str | None = None
 
 
 class EvolveResponse(BaseModel):

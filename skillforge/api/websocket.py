@@ -36,7 +36,11 @@ async def evolution_events(websocket: WebSocket, run_id: str) -> None:
             await websocket.send_json(event)
 
             # Terminal events: stop streaming, clean up queue, close cleanly
-            if event.get("event") in ("evolution_complete", "run_failed"):
+            if event.get("event") in (
+                "evolution_complete",
+                "run_failed",
+                "run_cancelled",
+            ):
                 drop_queue(run_id)
                 break
     except WebSocketDisconnect:

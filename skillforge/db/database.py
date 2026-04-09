@@ -133,6 +133,17 @@ CREATE TABLE IF NOT EXISTS competition_results (
 )
 """
 
+_CREATE_INVITE_REQUESTS = """
+CREATE TABLE IF NOT EXISTS invite_requests (
+    id          TEXT PRIMARY KEY,
+    email       TEXT NOT NULL,
+    message     TEXT,
+    created_at  TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending',
+    notes       TEXT
+)
+"""
+
 _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_runs_status ON evolution_runs (status)",
     "CREATE INDEX IF NOT EXISTS idx_runs_created_at ON evolution_runs (created_at DESC)",
@@ -141,6 +152,7 @@ _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_genomes_pareto ON skill_genomes (run_id, is_pareto_optimal)",
     "CREATE INDEX IF NOT EXISTS idx_results_run_gen ON competition_results (run_id, generation)",
     "CREATE INDEX IF NOT EXISTS idx_results_challenge ON competition_results (challenge_id)",
+    "CREATE INDEX IF NOT EXISTS idx_invite_requests_created ON invite_requests (created_at DESC)",
 ]
 
 _TABLE_DDLS = [
@@ -149,6 +161,7 @@ _TABLE_DDLS = [
     _CREATE_SKILL_GENOMES,
     _CREATE_GENERATIONS,
     _CREATE_COMPETITION_RESULTS,
+    _CREATE_INVITE_REQUESTS,
 ]
 
 _DROP_ORDER = [

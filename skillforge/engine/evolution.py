@@ -307,6 +307,24 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         )
         return run
 
+    except asyncio.CancelledError:
+        # User hit "Cancel" on the arena page. Mark the run cancelled, emit
+        # a terminal event so the WebSocket consumer tears down cleanly, and
+        # persist whatever generations completed before the cancel.
+        import contextlib
+
+        run.status = "cancelled"
+        run.failure_reason = "cancelled by user"
+        run.completed_at = datetime.now(UTC)
+        with contextlib.suppress(Exception):
+            await emit(run.id, "run_cancelled", reason="cancelled by user")
+        with contextlib.suppress(Exception):
+            await _persist(run)
+        with contextlib.suppress(Exception):
+            dump_run_json(run)
+        # Don't re-raise — cancellation is a clean terminal state, not an error
+        return run
+
     except Exception as exc:  # noqa: BLE001
         import contextlib
 

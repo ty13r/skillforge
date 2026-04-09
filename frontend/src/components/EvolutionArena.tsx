@@ -178,17 +178,47 @@ export default function EvolutionArena() {
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Elapsed
-            </p>
-            <p className="font-display text-2xl tracking-tight">{elapsedFmt}</p>
-            <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Budget Used
-            </p>
-            <p className="font-mono text-sm text-tertiary">
-              ${sockState.totalCostUsd.toFixed(2)} / ${budgetCap.toFixed(2)}
-            </p>
+          <div className="flex flex-col items-end gap-3">
+            <div className="text-right">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                Elapsed
+              </p>
+              <p className="font-display text-2xl tracking-tight">{elapsedFmt}</p>
+              <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                Budget Used
+              </p>
+              <p className="font-mono text-sm text-tertiary">
+                ${sockState.totalCostUsd.toFixed(2)} / ${budgetCap.toFixed(2)}
+              </p>
+            </div>
+            {!sockState.isComplete && !sockState.isFailed && (
+              <button
+                onClick={async () => {
+                  if (
+                    !window.confirm(
+                      "Cancel this run? Any work completed so far will be saved, but no further generations will run.",
+                    )
+                  )
+                    return;
+                  try {
+                    const res = await fetch(`/api/runs/${runId}/cancel`, {
+                      method: "POST",
+                    });
+                    if (!res.ok) {
+                      const text = await res.text();
+                      alert(`Cancel failed: ${text}`);
+                    }
+                    // No further action — the WebSocket will receive
+                    // run_cancelled and the UI reacts via sockState.isFailed
+                  } catch (err) {
+                    alert(`Cancel error: ${String(err)}`);
+                  }
+                }}
+                className="rounded-lg border border-error/40 bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error/10"
+              >
+                ✕ Cancel Run
+              </button>
+            )}
           </div>
         </div>
 

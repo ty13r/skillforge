@@ -159,6 +159,26 @@ Indexes:
 
 ---
 
+### `invite_requests`
+
+Captures email submissions from the invite-request form. Matt reviews the table manually and sends codes out-of-band — submitting a row does NOT grant access. Valid codes live in the `SKILLFORGE_INVITE_CODES` env var (comma-separated allowlist), not in the DB.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID hex |
+| `email` | TEXT | NOT NULL | User-submitted email (regex-validated at API layer) |
+| `message` | TEXT | NULL | Optional "what would you use it for" message, ≤1000 chars |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+| `status` | TEXT | NOT NULL | `"pending"` \| `"approved"` \| `"rejected"` — default `"pending"` |
+| `notes` | TEXT | NULL | Free-form admin notes |
+
+Indexes:
+- `idx_invite_requests_created` on `created_at DESC`
+
+Admin read endpoint `GET /api/invites/requests` is gated by `SKILLFORGE_ADMIN_TOKEN` header (`X-Admin-Token`).
+
+---
+
 ## Foreign key relationships
 
 ```

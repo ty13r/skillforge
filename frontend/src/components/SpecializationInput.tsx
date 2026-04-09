@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import InviteGate from "./InviteGate";
 import ParameterInput from "./ParameterInput";
 import PrimaryButton from "./PrimaryButton";
 import SkillUploader from "./SkillUploader";
@@ -69,6 +70,11 @@ export default function SpecializationInput() {
   const [forkedSeed, setForkedSeed] = useState<SeedSummary | null>(null);
   const [allSeeds, setAllSeeds] = useState<SeedSummary[] | null>(null);
   const [seedCategoryFilter, setSeedCategoryFilter] = useState<string>("all");
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+
+  const handleValidated = useCallback((code: string) => {
+    setInviteCode(code);
+  }, []);
 
   // Fetch all seeds once — used by both the ?seed=<id> auto-select path
   // AND the inline picker grid when fork mode is active.
@@ -106,12 +112,13 @@ export default function SpecializationInput() {
         if (!specialization.trim()) {
           throw new Error("Specialization is required");
         }
-        const body: EvolveRequest = {
+        const body: EvolveRequest & { invite_code?: string } = {
           mode: "domain",
           specialization,
           population_size: populationSize,
           num_generations: numGenerations,
           max_budget_usd: budget,
+          invite_code: inviteCode ?? undefined,
         };
         res = await fetch("/api/evolve", {
           method: "POST",
@@ -132,6 +139,7 @@ export default function SpecializationInput() {
             population_size: populationSize,
             num_generations: numGenerations,
             max_budget_usd: budget,
+            invite_code: inviteCode ?? undefined,
           }),
         });
       } else {
@@ -149,6 +157,7 @@ export default function SpecializationInput() {
             population_size: populationSize,
             num_generations: numGenerations,
             max_budget_usd: budget,
+            invite_code: inviteCode ?? undefined,
           }),
         });
       }
@@ -164,6 +173,13 @@ export default function SpecializationInput() {
       setSubmitting(false);
     }
   };
+
+  // Invite-gated: if no code has been validated yet, render the gate instead
+  // of the form. The gate handles its own "already validated" fast-path via
+  // localStorage, so returning users with a saved code see the form directly.
+  if (inviteCode === null) {
+    return <InviteGate onValidated={handleValidated} />;
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">

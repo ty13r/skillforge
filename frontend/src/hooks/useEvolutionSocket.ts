@@ -208,6 +208,11 @@ function applyEvent(
       next.failureReason = ev.reason;
       break;
 
+    case "run_cancelled":
+      next.isFailed = true;
+      next.failureReason = "cancelled by user";
+      break;
+
     default:
       break;
   }

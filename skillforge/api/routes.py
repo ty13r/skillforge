@@ -20,6 +20,7 @@ from skillforge.api.schemas import (
     RunDetail,
 )
 from skillforge.api.uploads import clear_upload, get_upload
+from skillforge.config import invite_code_valid
 from skillforge.db.database import init_db
 from skillforge.db.queries import get_lineage, get_run, list_runs, save_run
 from skillforge.engine.evolution import PENDING_PARENTS, run_evolution
@@ -40,6 +41,13 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
     a background task that runs the evolution loop. Returns immediately —
     the client subscribes to the WebSocket to watch progress.
     """
+    # Invite gating — returns True if gating is disabled OR the code is valid
+    if not invite_code_valid(req.invite_code):
+        raise HTTPException(
+            status_code=403,
+            detail="This platform is invite-only. Enter a valid invite code or request one.",
+        )
+
     # Mode-specific validation
     if req.mode == Mode.domain and not req.specialization:
         raise HTTPException(status_code=400, detail="domain mode requires 'specialization'")
@@ -86,6 +94,7 @@ class EvolveFromParentRequest(BaseModel):
     population_size: int = 5
     num_generations: int = 3
     max_budget_usd: float = 10.0
+    invite_code: str | None = None
 
 
 @router.post("/evolve/from-parent", response_model=EvolveResponse)
@@ -102,6 +111,12 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
     run's id. The evolution engine picks it up at gen 0 spawn time and routes
     through ``spawner.spawn_from_parent()`` instead of ``spawn_gen0()``.
     """
+    if not invite_code_valid(req.invite_code):
+        raise HTTPException(
+            status_code=403,
+            detail="This platform is invite-only. Enter a valid invite code or request one.",
+        )
+
     # Resolve the parent genome
     if req.parent_source == "registry":
         # Search the seed-library run first, then fall back to any run
@@ -168,6 +183,25 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
     task.add_done_callback(_cleanup)
 
     return EvolveResponse(run_id=run.id, ws_url=f"/ws/evolve/{run.id}")
+
+
+@router.post("/runs/{run_id}/cancel")
+async def cancel_run(run_id: str) -> dict:
+    """Cancel an in-progress evolution run.
+
+    Finds the backing asyncio task in ``_active_runs``, cancels it, and
+    marks the run status as ``cancelled`` in the DB. The engine catches
+    ``CancelledError`` in its main loop, emits a ``run_cancelled`` event,
+    and persists the partial state before exiting.
+    """
+    task = _active_runs.get(run_id)
+    if task is None or task.done():
+        # Maybe already done, maybe never existed — either way nothing to cancel
+        raise HTTPException(
+            status_code=404, detail=f"no active run {run_id!r} to cancel"
+        )
+    task.cancel()
+    return {"run_id": run_id, "cancelled": True}
 
 
 @router.get("/runs/{run_id}", response_model=RunDetail)

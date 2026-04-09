@@ -81,6 +81,7 @@ export type EvolutionEventName =
   | "generation_complete"
   | "evolution_complete"
   | "run_failed"
+  | "run_cancelled"
   | "heartbeat";
 
 export interface EvolutionEvent {
