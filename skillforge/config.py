@@ -39,7 +39,15 @@ DOCS_DIR: Path = ROOT_DIR / "docs"
 BIBLE_DIR: Path = ROOT_DIR / "bible"
 GOLDEN_TEMPLATE_DIR: Path = DOCS_DIR / "golden-template"
 SANDBOX_ROOT: Path = Path(os.getenv("SKILLFORGE_SANDBOX_ROOT", "/tmp"))
-DB_PATH: Path = Path(os.getenv("SKILLFORGE_DB", str(ROOT_DIR / "skillforge.db")))
+
+# Data directory for persistent state (DB, JSON run dumps, exported skills).
+# On Railway, set SKILLFORGE_DATA_DIR=/data and mount a persistent volume there
+# so the DB and run history survive container rebuilds.
+DATA_DIR: Path = Path(os.getenv("SKILLFORGE_DATA_DIR", str(ROOT_DIR)))
+DB_PATH: Path = Path(os.getenv("SKILLFORGE_DB", str(DATA_DIR / "skillforge.db")))
+RUN_DUMPS_DIR: Path = Path(
+    os.getenv("SKILLFORGE_RUN_DUMPS", str(DATA_DIR / "run-dumps"))
+)
 
 # --- Evolution defaults -------------------------------------------------------
 

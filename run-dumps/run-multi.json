@@ -1,0 +1,602 @@
+{
+  "id": "run-multi",
+  "mode": "domain",
+  "specialization": "test",
+  "population_size": 2,
+  "num_generations": 3,
+  "challenges": [
+    {
+      "id": "ch-test-001",
+      "prompt": "Write a function.",
+      "difficulty": "easy",
+      "evaluation_criteria": {
+        "correctness": 1.0
+      },
+      "verification_method": "judge_review",
+      "setup_files": {},
+      "gold_standard_hints": ""
+    }
+  ],
+  "generations": [
+    {
+      "number": 0,
+      "skills": [
+        {
+          "id": "sk-00",
+          "generation": 0,
+          "skill_md_content": "---\nname: sk-sk-00\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        },
+        {
+          "id": "sk-01",
+          "generation": 0,
+          "skill_md_content": "---\nname: sk-sk-01\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        }
+      ],
+      "results": [
+        {
+          "skill_id": "sk-00",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        },
+        {
+          "skill_id": "sk-01",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        }
+      ],
+      "pareto_front": [
+        "sk-00",
+        "sk-01"
+      ],
+      "breeding_report": "report gen0",
+      "learning_log_entries": [
+        "lesson gen0"
+      ],
+      "best_fitness": 0.85,
+      "avg_fitness": 0.8,
+      "trait_survival": {},
+      "trait_emergence": []
+    },
+    {
+      "number": 1,
+      "skills": [
+        {
+          "id": "bred-0-0",
+          "generation": 1,
+          "skill_md_content": "---\nname: sk-bred-0\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        },
+        {
+          "id": "bred-0-1",
+          "generation": 1,
+          "skill_md_content": "---\nname: sk-bred-0\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        }
+      ],
+      "results": [
+        {
+          "skill_id": "bred-0-0",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        },
+        {
+          "skill_id": "bred-0-1",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        }
+      ],
+      "pareto_front": [
+        "bred-0-0",
+        "bred-0-1"
+      ],
+      "breeding_report": "report gen1",
+      "learning_log_entries": [
+        "lesson gen1"
+      ],
+      "best_fitness": 0.85,
+      "avg_fitness": 0.8,
+      "trait_survival": {},
+      "trait_emergence": []
+    },
+    {
+      "number": 2,
+      "skills": [
+        {
+          "id": "bred-1-0",
+          "generation": 2,
+          "skill_md_content": "---\nname: sk-bred-1\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        },
+        {
+          "id": "bred-1-1",
+          "generation": 2,
+          "skill_md_content": "---\nname: sk-bred-1\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+          "frontmatter": {},
+          "supporting_files": {},
+          "traits": [
+            "concise",
+            "structured"
+          ],
+          "meta_strategy": "",
+          "parent_ids": [],
+          "mutations": [],
+          "mutation_rationale": "",
+          "maturity": "draft",
+          "generations_survived": 0,
+          "deterministic_scores": {},
+          "trigger_precision": 0.9,
+          "trigger_recall": 0.85,
+          "behavioral_signature": [],
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "is_pareto_optimal": true,
+          "trait_attribution": {
+            "concise": 0.4,
+            "structured": 0.3
+          },
+          "trait_diagnostics": {
+            "concise": "good",
+            "structured": "good"
+          },
+          "consistency_score": null
+        }
+      ],
+      "results": [
+        {
+          "skill_id": "bred-1-0",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        },
+        {
+          "skill_id": "bred-1-1",
+          "challenge_id": "ch-test-001",
+          "output_files": {
+            "solution.py": "def f(): return 1\n"
+          },
+          "trace": [
+            {
+              "type": "AssistantMessage",
+              "content": []
+            }
+          ],
+          "compiles": false,
+          "tests_pass": null,
+          "lint_score": null,
+          "perf_metrics": {},
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "skill_was_loaded": false,
+          "instructions_followed": [],
+          "instructions_ignored": [],
+          "ignored_diagnostics": {},
+          "scripts_executed": [],
+          "behavioral_signature": [],
+          "pairwise_wins": {},
+          "pareto_objectives": {
+            "correctness": 0.85,
+            "quality": 0.75
+          },
+          "trait_contribution": {},
+          "trait_diagnostics": {},
+          "judge_reasoning": ""
+        }
+      ],
+      "pareto_front": [
+        "bred-1-0",
+        "bred-1-1"
+      ],
+      "breeding_report": "",
+      "learning_log_entries": [],
+      "best_fitness": 0.85,
+      "avg_fitness": 0.8,
+      "trait_survival": {},
+      "trait_emergence": []
+    }
+  ],
+  "learning_log": [
+    "lesson gen0",
+    "lesson gen1"
+  ],
+  "status": "complete",
+  "created_at": "2026-04-09T10:49:31.973642+00:00",
+  "completed_at": "2026-04-09T10:49:31.980918+00:00",
+  "best_skill": {
+    "id": "bred-1-0",
+    "generation": 2,
+    "skill_md_content": "---\nname: sk-bred-1\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+    "frontmatter": {},
+    "supporting_files": {},
+    "traits": [
+      "concise",
+      "structured"
+    ],
+    "meta_strategy": "",
+    "parent_ids": [],
+    "mutations": [],
+    "mutation_rationale": "",
+    "maturity": "draft",
+    "generations_survived": 0,
+    "deterministic_scores": {},
+    "trigger_precision": 0.9,
+    "trigger_recall": 0.85,
+    "behavioral_signature": [],
+    "pareto_objectives": {
+      "correctness": 0.85,
+      "quality": 0.75
+    },
+    "is_pareto_optimal": true,
+    "trait_attribution": {
+      "concise": 0.4,
+      "structured": 0.3
+    },
+    "trait_diagnostics": {
+      "concise": "good",
+      "structured": "good"
+    },
+    "consistency_score": null
+  },
+  "pareto_front": [
+    {
+      "id": "bred-1-0",
+      "generation": 2,
+      "skill_md_content": "---\nname: sk-bred-1\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+      "frontmatter": {},
+      "supporting_files": {},
+      "traits": [
+        "concise",
+        "structured"
+      ],
+      "meta_strategy": "",
+      "parent_ids": [],
+      "mutations": [],
+      "mutation_rationale": "",
+      "maturity": "draft",
+      "generations_survived": 0,
+      "deterministic_scores": {},
+      "trigger_precision": 0.9,
+      "trigger_recall": 0.85,
+      "behavioral_signature": [],
+      "pareto_objectives": {
+        "correctness": 0.85,
+        "quality": 0.75
+      },
+      "is_pareto_optimal": true,
+      "trait_attribution": {
+        "concise": 0.4,
+        "structured": 0.3
+      },
+      "trait_diagnostics": {
+        "concise": "good",
+        "structured": "good"
+      },
+      "consistency_score": null
+    },
+    {
+      "id": "bred-1-1",
+      "generation": 2,
+      "skill_md_content": "---\nname: sk-bred-1\ndescription: >-\n  Does things. Use when testing things, even if not asked. NOT for prod.\n---\n\n# Skill\n\n## Quick start\nDo the thing.\n\n## Workflow\n\n### Step 1: Read context\nDo this.\n\n### Step 2: Execute\nRun the script.\n\n## Examples\n\n**Example 1:** in:x / out:y\n**Example 2:** in:a / out:b\n",
+      "frontmatter": {},
+      "supporting_files": {},
+      "traits": [
+        "concise",
+        "structured"
+      ],
+      "meta_strategy": "",
+      "parent_ids": [],
+      "mutations": [],
+      "mutation_rationale": "",
+      "maturity": "draft",
+      "generations_survived": 0,
+      "deterministic_scores": {},
+      "trigger_precision": 0.9,
+      "trigger_recall": 0.85,
+      "behavioral_signature": [],
+      "pareto_objectives": {
+        "correctness": 0.85,
+        "quality": 0.75
+      },
+      "is_pareto_optimal": true,
+      "trait_attribution": {
+        "concise": 0.4,
+        "structured": 0.3
+      },
+      "trait_diagnostics": {
+        "concise": "good",
+        "structured": "good"
+      },
+      "consistency_score": null
+    }
+  ],
+  "total_cost_usd": 0.22500000000000003,
+  "max_budget_usd": 100.0,
+  "failure_reason": null
+}

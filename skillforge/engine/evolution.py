@@ -22,7 +22,9 @@ emits events via skillforge.engine.events; it never touches WebSockets directly.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
+from pathlib import Path
 
 from skillforge.agents.breeder import breed, publish_findings_to_bible
 from skillforge.agents.challenge_designer import design_challenges
@@ -41,6 +43,46 @@ from skillforge.models import EvolutionRun, Generation
 # for now we use a turn-count approximation plus a flat per-call surcharge.
 _COST_PER_TURN_USD = 0.02
 _COST_PER_JUDGE_CALL_USD = 0.005
+
+
+async def _run_one_competitor(
+    run_id: str,
+    generation: int,
+    competitor_idx: int,
+    skill,
+    challenge,
+):
+    """Run a single (skill, challenge) competitor end-to-end.
+
+    Extracted as a module-level function (not a closure) so that parallel
+    asyncio.gather over a list comprehension doesn't share loop variables
+    across coroutines.
+    """
+    await emit(
+        run_id,
+        "competitor_started",
+        generation=generation,
+        competitor=competitor_idx,
+        skill_id=skill.id,
+        challenge_id=challenge.id,
+    )
+    sandbox_path = create_sandbox(
+        run_id, generation, competitor_idx, skill, challenge
+    )
+    try:
+        result = await run_competitor(skill, challenge, sandbox_path)
+        await emit(
+            run_id,
+            "competitor_finished",
+            generation=generation,
+            competitor=competitor_idx,
+            skill_id=skill.id,
+            challenge_id=challenge.id,
+            trace_length=len(result.trace),
+        )
+        return result
+    finally:
+        cleanup_sandbox(sandbox_path)
 
 
 def _estimate_generation_cost(generation: Generation) -> float:
@@ -125,35 +167,23 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                     new_lessons=new_lessons,
                 )
 
-            # --- Competitor execution (sequential for MVP) ------------
-            results = []
-            for competitor_idx, skill in enumerate(skills):
-                for challenge in run.challenges:
-                    await emit(
-                        run.id,
-                        "competitor_started",
-                        generation=gen_num,
-                        competitor=competitor_idx,
-                        skill_id=skill.id,
-                        challenge_id=challenge.id,
-                    )
-                    sandbox_path = create_sandbox(
-                        run.id, gen_num, competitor_idx, skill, challenge
-                    )
-                    try:
-                        result = await run_competitor(skill, challenge, sandbox_path)
-                        results.append(result)
-                        await emit(
-                            run.id,
-                            "competitor_finished",
-                            generation=gen_num,
-                            competitor=competitor_idx,
-                            skill_id=skill.id,
-                            challenge_id=challenge.id,
-                            trace_length=len(result.trace),
-                        )
-                    finally:
-                        cleanup_sandbox(sandbox_path)
+            # --- Competitor execution (parallel) ----------------------
+            # All (skill, challenge) pairs run concurrently via asyncio.gather.
+            # At pop=5 × challenges=3, that's 15 parallel competitors — each
+            # calling the Agent SDK in its own isolated sandbox. ~10x speedup
+            # over sequential at this scale.
+            competitor_tasks = [
+                _run_one_competitor(
+                    run_id=run.id,
+                    generation=gen_num,
+                    competitor_idx=competitor_idx,
+                    skill=skill,
+                    challenge=challenge,
+                )
+                for competitor_idx, skill in enumerate(skills)
+                for challenge in run.challenges
+            ]
+            results = list(await asyncio.gather(*competitor_tasks))
 
             # --- Judging pipeline -------------------------------------
             generation = Generation(number=gen_num, skills=skills, results=results)
@@ -219,6 +249,7 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         run.status = "complete"
         run.completed_at = datetime.now(UTC)
         await _persist(run)
+        dump_run_json(run)
         await emit(
             run.id,
             "evolution_complete",
@@ -236,6 +267,8 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         await emit(run.id, "run_failed", reason=str(exc))
         with contextlib.suppress(Exception):
             await _persist(run)
+        with contextlib.suppress(Exception):
+            dump_run_json(run)
         raise
 
 
@@ -254,3 +287,27 @@ async def _persist(run: EvolutionRun) -> None:
         # DB persistence failures are non-fatal during a run — the Progress
         # Tracker event stream is the primary truth; DB is a durable backup.
         print(f"evolution: DB persistence failed: {exc}")
+
+
+def dump_run_json(run: EvolutionRun) -> Path | None:
+    """Write the full run state as a JSON file to ``RUN_DUMPS_DIR/{run_id}.json``.
+
+    This is the user-facing inspection artifact — a human-readable dump of
+    every Challenge, Generation, Skill, and CompetitionResult in the run,
+    including all traces, scores, and trait attributions. Lives alongside
+    (not instead of) the SQLite DB.
+
+    Returns the path written, or ``None`` on failure (non-fatal).
+    """
+    import json
+
+    from skillforge.config import RUN_DUMPS_DIR
+
+    try:
+        RUN_DUMPS_DIR.mkdir(parents=True, exist_ok=True)
+        path = RUN_DUMPS_DIR / f"{run.id}.json"
+        path.write_text(json.dumps(run.to_dict(), indent=2, default=str))
+        return path
+    except Exception as exc:  # noqa: BLE001
+        print(f"evolution: run JSON dump failed: {exc}")
+        return None
