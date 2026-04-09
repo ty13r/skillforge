@@ -145,7 +145,8 @@ Therefore:
    implement, e.g.: "Define a function ``solve(numbers: list) -> list``
    that returns...". The tests then call ``sol.solve([...])``.
 
-5. Preferred test pattern:
+5. Preferred test loader pattern (use this exact loader, then write
+   tests SPECIFIC TO THE SPECIALIZATION DOMAIN):
 
 ```python
 import importlib.util, sys
@@ -156,15 +157,12 @@ def load_solution():
     sys.modules["sol"] = mod
     spec.loader.exec_module(mod)
     return mod
-
-def test_basic():
-    sol = load_solution()
-    assert sol.solve([1, 2, 3, 4, 5, 6]) == [6, 12, 18]
-
-def test_empty():
-    sol = load_solution()
-    assert sol.solve([]) == []
 ```
+
+Then your tests call domain-specific functions defined by the challenge,
+e.g. `sol.refactor_component(jsx_string)`, `sol.optimize_query(sql_string)`,
+`sol.clean_dataframe(df)` — whatever the specialization actually requires.
+DO NOT default to generic algorithms like flatten/sort/cache/parse.
 
 6. You may include small data files or fixtures in ``setup_files`` if
    the challenge needs them, but the test logic must go through a
@@ -174,8 +172,17 @@ def test_empty():
 
 def _build_system_prompt(specialization: str, n: int) -> str:
     return (
-        f"You design evaluation challenges for a Claude Skill specialized in: {specialization}. "
-        f"Produce exactly {n} challenges spanning easy/medium/hard difficulty.\n\n"
+        f"## Specialization (THIS IS THE ONLY THING THAT MATTERS)\n\n"
+        f"{specialization}\n\n"
+        f"## Your job\n\n"
+        f"Design {n} evaluation challenges that DIRECTLY exercise the specialization above. "
+        f"Span easy/medium/hard difficulty.\n\n"
+        f"**CRITICAL**: Each challenge MUST be specifically about the specialization domain. "
+        f"DO NOT produce generic Python algorithm challenges (flatten, LRU cache, word frequency, "
+        f"CSV parsing, etc.) unless those directly map to the specialization. If the specialization "
+        f"is about React refactoring, your challenges must involve React component code. If it's "
+        f"about pandas cleaning, they must involve real DataFrames. If it's about SQL optimization, "
+        f"they must involve real queries. The specialization is the entire point of this evaluation.\n\n"
         f"{_FILE_CONVENTION}\n\n"
         "Return ONLY a JSON array — no prose before or after — matching this schema:\n"
         f"{_SCHEMA_DESCRIPTION}\n"

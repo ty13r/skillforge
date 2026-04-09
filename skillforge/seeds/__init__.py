@@ -946,7 +946,139 @@ Output: Scans all tags via `git tag --sort=creatordate`. Generates one section p
 """
 
 
+_PYTHON_UTILS_BODY = """
+## Quick Start
+Implement a single, well-tested Python utility function in `solution.py`.
+Read the challenge prompt carefully — it tells you the exact function name,
+signature, and expected behavior. Always define the function at module level
+so tests can import it via `sol.<function_name>`.
+
+## When to use this skill
+Use when the user asks to implement a Python function or class for a small,
+well-defined algorithmic task — list operations, string parsing, simple data
+structures (LRU cache, trie, queue), CSV/JSON transforms, frequency counting,
+or any "write a function that does X" request, even if they don't explicitly
+say "Python". NOT for full applications, web servers, ML pipelines, or
+multi-file refactors — this is for one-shot utility functions.
+
+## Workflow
+
+1. **Read the challenge prompt fully.** Identify: function/class name,
+   parameter types, return type, edge cases mentioned.
+2. **Write `solution.py` at the working directory root.** Define the
+   function/class at module level — never inside `if __name__ == "__main__"`.
+3. **Handle edge cases first.** Empty input, None, single element, very
+   large input. Return early for trivial cases.
+4. **Use stdlib only by default.** Don't import third-party packages
+   unless the prompt explicitly allows it.
+5. **Add type hints.** Even when not required, they document your contract
+   and catch obvious mistakes.
+6. **Test mentally before stopping.** Walk through 2 inputs from the prompt
+   and confirm your code returns the expected output.
+
+## Examples
+
+**Example 1 — list operation**
+- Prompt: "Implement `flatten(nested)` that takes an arbitrarily nested list
+  and returns a flat list of leaf values, in order."
+- Solution:
+  ```python
+  def flatten(nested: list) -> list:
+      result = []
+      for item in nested:
+          if isinstance(item, list):
+              result.extend(flatten(item))
+          else:
+              result.append(item)
+      return result
+  ```
+
+**Example 2 — class with state**
+- Prompt: "Implement `LRUCache(capacity)` with `get(key)` and `put(key, value)`
+  in O(1)."
+- Solution:
+  ```python
+  from collections import OrderedDict
+
+  class LRUCache:
+      def __init__(self, capacity: int) -> None:
+          self.capacity = capacity
+          self.cache: OrderedDict = OrderedDict()
+
+      def get(self, key):
+          if key not in self.cache:
+              return -1
+          self.cache.move_to_end(key)
+          return self.cache[key]
+
+      def put(self, key, value) -> None:
+          if key in self.cache:
+              self.cache.move_to_end(key)
+          self.cache[key] = value
+          if len(self.cache) > self.capacity:
+              self.cache.popitem(last=False)
+  ```
+
+**Example 3 — string parsing**
+- Prompt: "Implement `word_frequency_topk(text, k)` that returns the top-k
+  most frequent words in `text` as a list of (word, count) tuples sorted by
+  count descending then word ascending."
+- Solution:
+  ```python
+  from collections import Counter
+
+  def word_frequency_topk(text: str, k: int) -> list[tuple[str, int]]:
+      words = text.lower().split()
+      counts = Counter(words)
+      return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[:k]
+  ```
+
+## Common mistakes to avoid
+
+- Defining the function inside `if __name__ == "__main__":` — tests can't import it.
+- Hardcoding the example inputs from the prompt instead of writing a general function.
+- Returning `None` on edge cases when the prompt expects `[]` or `0`.
+- Mutating the input argument when the prompt says "return a new...".
+- Skipping type hints for `Optional` parameters.
+"""
+
+
 SEED_SKILLS: list[dict] = [
+    {
+        "id": "seed-python-utils",
+        "slug": "python-utils",
+        "title": "Python Utility Functions",
+        "category": "Code Quality",
+        "difficulty": "easy",
+        "frontmatter": {
+            "name": "python-utils",
+            "description": (
+                "Implements small Python utility functions and data-structure classes (list ops, "
+                "string parsing, LRU caches, frequency counters). Use when user asks to write a "
+                "function or class for a well-defined algorithmic task. NOT for full apps or ML."
+            ),
+            "allowed-tools": ["Read", "Write", "Bash"],
+        },
+        "skill_md_content": _build(
+            name="python-utils",
+            title="Python Utility Functions",
+            description=(
+                "Implements small Python utility functions and data-structure classes (list ops, "
+                "string parsing, LRU caches, frequency counters). Use when user asks to write a "
+                "function or class for a well-defined algorithmic task. NOT for full apps or ML."
+            ),
+            allowed_tools="Read Write Bash(python *)",
+            body=_PYTHON_UTILS_BODY,
+        ),
+        "supporting_files": {},
+        "traits": [
+            "module-level-functions",
+            "edge-case-first",
+            "stdlib-only",
+            "type-hinted",
+        ],
+        "meta_strategy": "One-shot Python utility implementation: define functions at module level, handle edge cases first, prefer stdlib, add type hints.",
+    },
     {
         "id": "seed-pandas-cleaning",
         "slug": "pandas-cleaning",

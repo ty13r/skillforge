@@ -23,11 +23,15 @@ export default function FitnessChart({ generations }: FitnessChartProps) {
   const tooltipBg = useCssVar("--color-surface-mid");
   const tooltipBorder = useCssVar("--color-outline-variant");
 
-  const data = generations.map((g) => ({
-    gen: `Gen ${g.number}`,
-    best: g.best_fitness ?? 0,
-    avg: g.avg_fitness ?? 0,
-  }));
+  // Skip generations that haven't published scores yet — otherwise the chart
+  // plots an in-flight gen at 0 and looks like a catastrophic crater.
+  const data = generations
+    .filter((g) => g.best_fitness != null && g.best_fitness > 0)
+    .map((g) => ({
+      gen: `Gen ${g.number}`,
+      best: g.best_fitness ?? 0,
+      avg: g.avg_fitness ?? 0,
+    }));
 
   if (data.length === 0) {
     return (
