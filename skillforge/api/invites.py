@@ -20,7 +20,13 @@ import aiosqlite
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
-from skillforge.config import ADMIN_TOKEN, DB_PATH, INVITE_CODES, invite_code_valid
+from skillforge.config import (
+    ADMIN_TOKEN,
+    DB_PATH,
+    GATING_DISABLED,
+    INVITE_CODES,
+    invite_code_valid,
+)
 
 router = APIRouter(prefix="/api/invites", tags=["invites"])
 
@@ -65,13 +71,15 @@ async def validate(req: ValidateRequest) -> ValidateResponse:
 
 @router.get("/status")
 async def status() -> dict:
-    """Report whether gating is enabled + how many codes were loaded.
+    """Report gating state + how many codes were loaded.
 
-    The ``codes_loaded`` count is safe to expose (no values) and useful
-    for diagnosing env-var injection issues on hosting platforms.
+    Gating is ON by default; set ``SKILLFORGE_GATING_DISABLED=1`` to disable.
+    ``codes_loaded`` is safe to expose (no values) and useful for diagnosing
+    env-var injection issues on hosting platforms.
     """
     return {
-        "gating_enabled": bool(INVITE_CODES),
+        "gating_enabled": not GATING_DISABLED,
+        "gating_disabled": GATING_DISABLED,
         "codes_loaded": len(INVITE_CODES),
     }
 

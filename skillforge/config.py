@@ -62,27 +62,42 @@ WEBSEARCH_ENABLED: bool = os.getenv("SKILLFORGE_WEBSEARCH", "1") == "1"
 LIVE_TESTS: bool = os.getenv("SKILLFORGE_LIVE_TESTS") == "1"
 
 # --- Invite gating ------------------------------------------------------------
-# Real evolution runs require a valid invite code from this allowlist. Rotate
-# by editing the env var (on Railway: Variables → SKILLFORGE_INVITE_CODES).
-# Demo runs (/api/debug/fake-run) are NOT gated. Empty/unset disables gating
-# entirely — useful for local dev.
+# Real evolution runs require a valid invite code. Gating is ON BY DEFAULT —
+# fail-closed semantics so a production deploy without env vars denies
+# everyone rather than silently allowing all traffic.
 #
-# Format: comma-separated, whitespace and case-insensitive.
+# - `SKILLFORGE_INVITE_CODES` (comma-separated) — the allowlist. Case-
+#   insensitive and whitespace-trimmed.
+# - `SKILLFORGE_GATING_DISABLED=1` — explicit escape hatch for local dev
+#   that allows any code (including missing) to pass validation.
+#
+# Demo runs (/api/debug/fake-run) are NEVER gated.
 _raw_codes = os.getenv("SKILLFORGE_INVITE_CODES", "")
 INVITE_CODES: frozenset[str] = frozenset(
     c.strip().upper() for c in _raw_codes.split(",") if c.strip()
 )
+GATING_DISABLED: bool = os.getenv("SKILLFORGE_GATING_DISABLED") == "1"
+
 # Admin token for reading /api/invites/requests — set on Railway, never commit.
 ADMIN_TOKEN: str = os.getenv("SKILLFORGE_ADMIN_TOKEN", "")
 
+# Log gating state at import so Railway logs show whether env vars landed.
+# This prints once per container boot — useful for diagnosing injection issues
+# without adding a debug endpoint that leaks the code values themselves.
+print(
+    f"skillforge.config: gating_disabled={GATING_DISABLED} "
+    f"codes_loaded={len(INVITE_CODES)} "
+    f"raw_env_len={len(_raw_codes)}"
+)
+
 
 def invite_code_valid(code: str | None) -> bool:
-    """Return True if the given code is in the allowlist.
+    """Return True if the given code is accepted.
 
-    If INVITE_CODES is empty (unset env var), gating is disabled and every
-    code — including missing ones — validates. This is the local-dev default.
+    Fail-closed by default: when no codes are configured and gating isn't
+    explicitly disabled, every code (including missing) is rejected.
     """
-    if not INVITE_CODES:
+    if GATING_DISABLED:
         return True
     if not code:
         return False
