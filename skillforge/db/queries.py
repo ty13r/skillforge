@@ -407,9 +407,6 @@ async def save_run(
     """Upsert an EvolutionRun and its entire nested tree.
 
     Saves challenges, generations (which in turn save genomes + results).
-    ``max_budget_usd`` and ``failure_reason`` are SCHEMA.md columns not yet
-    present on the EvolutionRun dataclass; we default to 10.0 / NULL until
-    Step 7 wires them through.
 
     The run row is first written with ``best_skill_id = NULL`` so that the FK
     constraint (``best_skill_id → skill_genomes.id``) is satisfied before the
@@ -441,11 +438,11 @@ async def save_run(
                 d["created_at"],
                 d["completed_at"],
                 d["total_cost_usd"],
-                10.0,  # max_budget_usd — Step 7 will wire through
+                d.get("max_budget_usd", 10.0),
                 json.dumps(d["learning_log"]),
                 json.dumps(pareto_front_ids),
-                None,  # deferred — set after genomes are saved
-                None,  # failure_reason — Step 7 will wire through
+                None,  # best_skill_id deferred — set after genomes are saved
+                d.get("failure_reason"),
             ),
         )
         await conn.commit()

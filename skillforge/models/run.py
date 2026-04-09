@@ -29,6 +29,8 @@ class EvolutionRun:
     best_skill: SkillGenome | None = None
     pareto_front: list[SkillGenome] = field(default_factory=list)
     total_cost_usd: float = 0.0
+    max_budget_usd: float = 10.0
+    failure_reason: str | None = None
 
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict, including all nested dataclasses and datetimes."""
@@ -47,6 +49,8 @@ class EvolutionRun:
             "best_skill": self.best_skill.to_dict() if self.best_skill is not None else None,
             "pareto_front": [s.to_dict() for s in self.pareto_front],
             "total_cost_usd": self.total_cost_usd,
+            "max_budget_usd": self.max_budget_usd,
+            "failure_reason": self.failure_reason,
         }
 
     @classmethod
@@ -68,4 +72,6 @@ class EvolutionRun:
             best_skill=SkillGenome.from_dict(best_skill_data) if best_skill_data is not None else None,
             pareto_front=[SkillGenome.from_dict(s) for s in data.get("pareto_front", [])],
             total_cost_usd=data.get("total_cost_usd", 0.0),
+            max_budget_usd=data.get("max_budget_usd", 10.0),
+            failure_reason=data.get("failure_reason"),
         )
