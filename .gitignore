@@ -15,6 +15,10 @@ skillforge.db-journal
 /tmp/skillforge-*
 run-dumps/
 
+# Stray artifacts from SDK debug scripts that write to cwd
+/solution.py
+/solution_template.py
+
 # Node / frontend
 node_modules/
 dist/
