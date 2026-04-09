@@ -220,15 +220,21 @@ async def _generate(prompt: str) -> str:
     """Streaming Anthropic API call. Returns the full assistant text response.
 
     The Spawner generates structured JSON output containing multiple SKILL.md
-    files. Non-streaming requests get server-disconnected around the 3-4 minute
-    mark on prompts this size (~15KB input). Streaming keeps the connection
-    alive via incremental chunks and handles long generations reliably.
+    files (up to ~5KB per skill × pop_size = 25KB+ at pop_size=5). Non-streaming
+    requests get server-disconnected around the 3-4 minute mark on prompts this
+    size. Streaming keeps the connection alive via incremental chunks and handles
+    long generations reliably.
+
+    ``max_tokens`` is set to 32000 to fit a full population of rich SKILL.md
+    files with supporting scripts. Claude Sonnet 4.6 supports up to 64K output
+    tokens in streaming mode; 32K is plenty for realistic populations while
+    keeping a sane ceiling.
     """
     client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=600.0)
     parts: list[str] = []
     async with client.messages.stream(
         model=model_for("spawner"),
-        max_tokens=8000,
+        max_tokens=32000,
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         async for text in stream.text_stream:
