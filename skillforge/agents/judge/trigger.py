@@ -56,7 +56,7 @@ async def run_l2(
         f"No explanation, no prose."
     )
 
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
     response = await client.messages.create(
         model=model_for("l2_trigger"),
         max_tokens=len(all_prompts) * 10 + 100,  # ~10 tokens per Y/N line

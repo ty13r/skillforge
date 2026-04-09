@@ -38,7 +38,7 @@ async def run_l5(result: CompetitionResult, skill: SkillGenome) -> CompetitionRe
     # Build the prompt
     prompt = _build_attribution_prompt(result, skill, traits)
 
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
     try:
         response = await client.messages.create(
             model=model_for("judge_attribution"),

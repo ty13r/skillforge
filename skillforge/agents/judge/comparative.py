@@ -108,7 +108,7 @@ async def _run_pairwise(results: list[CompetitionResult]) -> None:
             r.pairwise_wins = {c: 0 for c in _OBJECTIVES}
         return
 
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
 
     # Initialize win counts
     for r in results:
@@ -173,7 +173,7 @@ async def _run_batched_rank(results: list[CompetitionResult]) -> None:
             r.pairwise_wins = {c: 0 for c in _OBJECTIVES}
         return
 
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
     criterion = "correctness"
 
     numbered = "\n".join(

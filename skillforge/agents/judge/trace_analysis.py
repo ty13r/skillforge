@@ -222,7 +222,7 @@ async def _diagnose_ignored(
         "Respond with ONLY the JSON object — no prose."
     )
 
-    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
     try:
         response = await client.messages.create(
             model=model_for("judge_trace"),

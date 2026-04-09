@@ -406,7 +406,7 @@ async def _extract_lessons(context: str, learning_log: list[str]) -> list[str]:
     )
 
     try:
-        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
         response = await client.messages.create(
             model=model_for("breeder"),
             max_tokens=500,
@@ -445,7 +445,7 @@ async def _extract_breeding_report(
     )
 
     try:
-        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
         response = await client.messages.create(
             model=model_for("breeder"),
             max_tokens=800,
@@ -479,7 +479,7 @@ async def _extract_consolidated(
     )
 
     try:
-        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+        client = AsyncAnthropic(api_key=ANTHROPIC_API_KEY, timeout=300.0)
         response = await client.messages.create(
             model=model_for("breeder"),
             max_tokens=1200,
