@@ -462,3 +462,332 @@ async def test_breed_next_gen_includes_learning_log_in_prompt():
     assert "LOG_MARKER_XYZ" in captured_prompts[0], (
         "Learning log marker must appear in the prompt sent to Claude"
     )
+
+
+# ---------------------------------------------------------------------------
+# Breeder tests (Step 6e)
+# ---------------------------------------------------------------------------
+
+from skillforge.agents.breeder import (  # noqa: E402
+    breed,
+    compute_slots,
+    publish_findings_to_bible,
+    rank_skills,
+)
+from skillforge.models import Generation  # noqa: E402
+
+
+def _breeder_skill(
+    sk_id: str,
+    fitness: float,
+    *,
+    pareto_optimal: bool = False,
+    traits: list[str] | None = None,
+) -> SkillGenome:
+    """Helper: populated SkillGenome for Breeder tests."""
+    return SkillGenome(
+        id=sk_id,
+        generation=0,
+        skill_md_content=_valid_skill_json(name=f"skill-{sk_id[:6]}") if False else (
+            # Inline a valid minimal SKILL.md
+            "---\n"
+            f"name: skill-{sk_id[:6]}\n"
+            "description: Does things. Use when you need things done, even if not asked.\n"
+            "---\n\n"
+            "# Skill\n\n## Quick start\nDo the thing.\n\n"
+            "**Example 1:** x / y\n**Example 2:** a / b\n"
+        ),
+        traits=traits or ["concise", "structured"],
+        pareto_objectives={"correctness": fitness, "quality": fitness},
+        is_pareto_optimal=pareto_optimal,
+        trait_attribution={"concise": 0.4, "structured": 0.3},
+        trait_diagnostics={"concise": "worked", "structured": "helped"},
+    )
+
+
+def _breeder_generation(n_skills: int = 5) -> Generation:
+    """Helper: Generation with N skills at varying fitness."""
+    skills = []
+    for i in range(n_skills):
+        fitness = 0.9 - i * 0.1  # 0.9, 0.8, 0.7, ...
+        is_pareto = i < 2  # top 2 are Pareto-optimal
+        skills.append(
+            _breeder_skill(
+                f"sk-{i:02d}-{'x' * 8}",
+                fitness=fitness,
+                pareto_optimal=is_pareto,
+            )
+        )
+    return Generation(
+        number=0,
+        skills=skills,
+        results=[],
+        best_fitness=0.9,
+        avg_fitness=0.7,
+        pareto_front=[s.id for s in skills[:2]],
+    )
+
+
+# --- compute_slots -----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "pop,expected",
+    [
+        (3, {"elitism": 1, "wildcards": 1, "diagnostic": 0, "crossover": 1}),
+        (5, {"elitism": 2, "wildcards": 1, "diagnostic": 1, "crossover": 1}),
+        (10, {"elitism": 4, "wildcards": 1, "diagnostic": 2, "crossover": 3}),
+        (20, {"elitism": 8, "wildcards": 2, "diagnostic": 5, "crossover": 5}),
+    ],
+)
+def test_compute_slots_matches_plan_examples(pop, expected):
+    """The worked examples from PLAN.md §Step 6e must hold exactly."""
+    slots = compute_slots(pop)
+    assert slots == expected
+    assert sum(slots.values()) == pop
+
+
+def test_compute_slots_rejects_zero():
+    with pytest.raises(ValueError, match=">=1"):
+        compute_slots(0)
+
+
+def test_compute_slots_handles_pop_size_2():
+    slots = compute_slots(2)
+    assert sum(slots.values()) == 2
+
+
+# --- rank_skills -------------------------------------------------------------
+
+
+def test_rank_skills_pareto_optimal_first():
+    gen = _breeder_generation(n_skills=5)
+    ranked = rank_skills(gen)
+    # Top 2 should be Pareto-optimal
+    assert ranked[0].is_pareto_optimal
+    assert ranked[1].is_pareto_optimal
+    assert not ranked[2].is_pareto_optimal
+
+
+def test_rank_skills_within_group_sorted_by_fitness():
+    gen = _breeder_generation(n_skills=5)
+    ranked = rank_skills(gen)
+    # Within Pareto-optimal group, higher fitness first
+    p0 = ranked[0].pareto_objectives["correctness"]
+    p1 = ranked[1].pareto_objectives["correctness"]
+    assert p0 >= p1
+
+
+# --- breed() end-to-end ------------------------------------------------------
+
+
+async def test_breed_produces_exact_target_pop_size():
+    """Slot allocation + pad guarantee children count == target."""
+    gen = _breeder_generation(n_skills=5)
+
+    with (
+        patch("skillforge.agents.breeder.breed_next_gen") as mock_breed,
+        patch("skillforge.agents.breeder.spawn_gen0") as mock_spawn,
+        patch("skillforge.agents.breeder._extract_lessons_and_report") as mock_extract,
+    ):
+        mock_breed.return_value = [_breeder_skill(f"child-{i}-xxxxxxxx", 0.5) for i in range(3)]
+        mock_spawn.return_value = [_breeder_skill("wild-xxxxxxxx", 0.5)]
+        mock_extract.return_value = (["lesson 1"], "breeding report text")
+
+        children, lessons, report = await breed(
+            generation=gen,
+            learning_log=["old lesson"],
+            specialization="test",
+            target_pop_size=5,
+        )
+
+    assert len(children) == 5
+    assert lessons == ["lesson 1"]
+    assert "breeding report" in report
+
+
+async def test_breed_elites_carry_forward_with_bumped_metadata():
+    gen = _breeder_generation(n_skills=5)
+
+    with (
+        patch("skillforge.agents.breeder.breed_next_gen") as mock_breed,
+        patch("skillforge.agents.breeder.spawn_gen0") as mock_spawn,
+        patch("skillforge.agents.breeder._extract_lessons_and_report") as mock_extract,
+    ):
+        mock_breed.return_value = []
+        mock_spawn.return_value = []
+        mock_extract.return_value = ([], "")
+
+        children, _, _ = await breed(
+            generation=gen,
+            learning_log=[],
+            specialization="test",
+            target_pop_size=5,
+        )
+
+    # First 2 children should be elites (from Pareto-optimal top 2)
+    elite_children = [c for c in children if c.mutations == ["elitism"]]
+    assert len(elite_children) >= 2
+    for elite in elite_children:
+        assert elite.generations_survived >= 1
+
+
+async def test_breed_stamps_next_generation_number():
+    gen = _breeder_generation(n_skills=5)
+    gen.number = 4  # current gen is 4
+
+    with (
+        patch("skillforge.agents.breeder.breed_next_gen") as mock_breed,
+        patch("skillforge.agents.breeder.spawn_gen0") as mock_spawn,
+        patch("skillforge.agents.breeder._extract_lessons_and_report") as mock_extract,
+    ):
+        mock_breed.return_value = [_breeder_skill(f"child-{i}-xxxxxxxx", 0.5) for i in range(3)]
+        mock_spawn.return_value = [_breeder_skill("wild-xxxxxxxx", 0.5)]
+        mock_extract.return_value = ([], "")
+
+        children, _, _ = await breed(
+            generation=gen,
+            learning_log=[],
+            specialization="test",
+            target_pop_size=5,
+        )
+
+    # Every child should be on generation 5
+    assert all(c.generation == 5 for c in children)
+
+
+async def test_breed_handles_subagent_failures_with_padding():
+    """If spawner calls fail, pad with cloned elites to hit target_pop_size."""
+    gen = _breeder_generation(n_skills=5)
+
+    with (
+        patch(
+            "skillforge.agents.breeder.breed_next_gen",
+            side_effect=RuntimeError("boom"),
+        ),
+        patch(
+            "skillforge.agents.breeder.spawn_gen0",
+            side_effect=RuntimeError("boom"),
+        ),
+        patch("skillforge.agents.breeder._extract_lessons_and_report") as mock_extract,
+    ):
+        mock_extract.return_value = ([], "")
+
+        children, _, _ = await breed(
+            generation=gen,
+            learning_log=[],
+            specialization="test",
+            target_pop_size=5,
+        )
+
+    # Should still have exactly 5 (padded with elite clones)
+    assert len(children) == 5
+
+
+# --- publish_findings_to_bible ------------------------------------------------
+
+
+def test_publish_findings_writes_files(tmp_path, monkeypatch):
+    """Findings should land in bible/findings/ with numbered filenames."""
+    # Redirect BIBLE_DIR to a temp location
+    import skillforge.agents.breeder as breeder_mod
+
+    fake_bible = tmp_path / "bible"
+    (fake_bible / "findings").mkdir(parents=True)
+    monkeypatch.setattr(breeder_mod, "BIBLE_DIR", fake_bible)
+
+    publish_findings_to_bible(
+        new_entries=[
+            "Imperative phrasing was followed 80% more than descriptive phrasing",
+            "Skills with 3 examples outperformed skills with 2 examples by 15%",
+        ],
+        run_id="run-12345678",
+        generation=2,
+    )
+
+    files = sorted((fake_bible / "findings").glob("*.md"))
+    assert len(files) == 2
+    # Check naming convention
+    assert files[0].name.startswith("001-")
+    assert files[1].name.startswith("002-")
+    # Content should contain the finding text + metadata
+    content = files[0].read_text()
+    assert "Finding 001" in content
+    assert "run-12345678" in content
+    assert "Generation" in content
+
+
+def test_publish_findings_auto_increments_from_existing(tmp_path, monkeypatch):
+    """If findings/005-*.md exists, next finding should be 006."""
+    import skillforge.agents.breeder as breeder_mod
+
+    fake_bible = tmp_path / "bible"
+    findings = fake_bible / "findings"
+    findings.mkdir(parents=True)
+    (findings / "003-existing.md").write_text("pre-existing")
+    (findings / "005-existing.md").write_text("pre-existing")
+    monkeypatch.setattr(breeder_mod, "BIBLE_DIR", fake_bible)
+
+    publish_findings_to_bible(
+        new_entries=["New lesson"],
+        run_id="run-x",
+        generation=1,
+    )
+
+    files = sorted(findings.glob("*.md"))
+    # Should be: 003-existing, 005-existing, 006-new-lesson
+    names = [f.name for f in files]
+    assert any(n.startswith("006-") for n in names)
+
+
+def test_publish_findings_skips_error_placeholders(tmp_path, monkeypatch):
+    """Entries starting with '(' (error placeholders) are skipped."""
+    import skillforge.agents.breeder as breeder_mod
+
+    fake_bible = tmp_path / "bible"
+    (fake_bible / "findings").mkdir(parents=True)
+    monkeypatch.setattr(breeder_mod, "BIBLE_DIR", fake_bible)
+
+    publish_findings_to_bible(
+        new_entries=[
+            "(lesson extraction failed: boom)",
+            "A real finding worth publishing",
+        ],
+        run_id="run-x",
+        generation=1,
+    )
+
+    files = list((fake_bible / "findings").glob("*.md"))
+    assert len(files) == 1  # only the real finding
+
+
+def test_publish_findings_appends_to_evolution_log(tmp_path, monkeypatch):
+    import skillforge.agents.breeder as breeder_mod
+
+    fake_bible = tmp_path / "bible"
+    (fake_bible / "findings").mkdir(parents=True)
+    log_path = fake_bible / "evolution-log.md"
+    log_path.write_text("# Evolution Log\n\n")
+    monkeypatch.setattr(breeder_mod, "BIBLE_DIR", fake_bible)
+
+    publish_findings_to_bible(
+        new_entries=["Lesson A"],
+        run_id="run-abcdef01",
+        generation=3,
+    )
+
+    content = log_path.read_text()
+    assert "run-abcdef01"[:8] in content or "abcdef01" in content
+    assert "gen 3" in content
+
+
+def test_publish_findings_handles_empty_list(tmp_path, monkeypatch):
+    import skillforge.agents.breeder as breeder_mod
+
+    fake_bible = tmp_path / "bible"
+    (fake_bible / "findings").mkdir(parents=True)
+    monkeypatch.setattr(breeder_mod, "BIBLE_DIR", fake_bible)
+
+    # Should not raise or write anything
+    publish_findings_to_bible(new_entries=[], run_id="run-x", generation=0)
+    assert list((fake_bible / "findings").glob("*.md")) == []
