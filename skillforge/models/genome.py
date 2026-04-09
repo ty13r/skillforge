@@ -55,10 +55,54 @@ class SkillGenome:
     consistency_score: float | None = None
 
     def to_dict(self) -> dict:
-        """Serialize to a JSON-safe dict. Implemented in Step 4."""
-        raise NotImplementedError
+        """Serialize to a JSON-safe dict."""
+        return {
+            "id": self.id,
+            "generation": self.generation,
+            "skill_md_content": self.skill_md_content,
+            "frontmatter": self.frontmatter,
+            "supporting_files": self.supporting_files,
+            "traits": self.traits,
+            "meta_strategy": self.meta_strategy,
+            "parent_ids": self.parent_ids,
+            "mutations": self.mutations,
+            "mutation_rationale": self.mutation_rationale,
+            "maturity": self.maturity,
+            "generations_survived": self.generations_survived,
+            "deterministic_scores": self.deterministic_scores,
+            "trigger_precision": self.trigger_precision,
+            "trigger_recall": self.trigger_recall,
+            "behavioral_signature": self.behavioral_signature,
+            "pareto_objectives": self.pareto_objectives,
+            "is_pareto_optimal": self.is_pareto_optimal,
+            "trait_attribution": self.trait_attribution,
+            "trait_diagnostics": self.trait_diagnostics,
+            "consistency_score": self.consistency_score,
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> SkillGenome:
-        """Rehydrate from a dict. Implemented in Step 4."""
-        raise NotImplementedError
+        """Rehydrate from a dict."""
+        return cls(
+            id=data["id"],
+            generation=data["generation"],
+            skill_md_content=data["skill_md_content"],
+            frontmatter=data.get("frontmatter", {}),
+            supporting_files=data.get("supporting_files", {}),
+            traits=data.get("traits", []),
+            meta_strategy=data.get("meta_strategy", ""),
+            parent_ids=data.get("parent_ids", []),
+            mutations=data.get("mutations", []),
+            mutation_rationale=data.get("mutation_rationale", ""),
+            maturity=data.get("maturity", "draft"),
+            generations_survived=data.get("generations_survived", 0),
+            deterministic_scores=data.get("deterministic_scores", {}),
+            trigger_precision=data.get("trigger_precision", 0.0),
+            trigger_recall=data.get("trigger_recall", 0.0),
+            behavioral_signature=data.get("behavioral_signature", []),
+            pareto_objectives=data.get("pareto_objectives", {}),
+            is_pareto_optimal=data.get("is_pareto_optimal", False),
+            trait_attribution=data.get("trait_attribution", {}),
+            trait_diagnostics=data.get("trait_diagnostics", {}),
+            consistency_score=data.get("consistency_score"),
+        )

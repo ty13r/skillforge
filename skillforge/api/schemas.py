@@ -6,19 +6,19 @@ exist only to validate API I/O. Implemented fully in Step 8.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 from skillforge.config import DEFAULT_BUDGET_USD, DEFAULT_GENS, DEFAULT_POP
 
 
-class Mode(str, Enum):
+class Mode(StrEnum):
     domain = "domain"
     meta = "meta"
 
 
-class ExportFormat(str, Enum):
+class ExportFormat(StrEnum):
     skill_dir = "skill_dir"
     skill_md = "skill_md"
     agent_sdk_config = "agent_sdk_config"

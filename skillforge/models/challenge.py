@@ -22,10 +22,26 @@ class Challenge:
     gold_standard_hints: str = ""
 
     def to_dict(self) -> dict:
-        """Serialize. Implemented in Step 4."""
-        raise NotImplementedError
+        """Serialize to a JSON-safe dict."""
+        return {
+            "id": self.id,
+            "prompt": self.prompt,
+            "difficulty": self.difficulty,
+            "evaluation_criteria": self.evaluation_criteria,
+            "verification_method": self.verification_method,
+            "setup_files": self.setup_files,
+            "gold_standard_hints": self.gold_standard_hints,
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> Challenge:
-        """Rehydrate. Implemented in Step 4."""
-        raise NotImplementedError
+        """Rehydrate from a dict."""
+        return cls(
+            id=data["id"],
+            prompt=data["prompt"],
+            difficulty=data["difficulty"],
+            evaluation_criteria=data.get("evaluation_criteria", {}),
+            verification_method=data.get("verification_method", "judge_review"),
+            setup_files=data.get("setup_files", {}),
+            gold_standard_hints=data.get("gold_standard_hints", ""),
+        )

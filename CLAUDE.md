@@ -241,6 +241,9 @@ The journal is the only doc that's written for humans first and machines second.
 - [x] 2026-04-09 — Cost-saver strategy flags live in `config.py` (`L4_STRATEGY`, `BREEDER_CALL_MODE`, `COMPRESS_TRACES`)
 - [x] 2026-04-09 — `design/` directory created with README; awaiting Matt's wireframes
 - [x] 2026-04-09 — Journal Entry #2 written (`journal/002-scaffolding-and-plan.md`); journaling instructions added to CLAUDE.md
+- [x] 2026-04-09 — Baseline git commit `e016d80`; git identity policy committed `87eacaa`
+- [x] 2026-04-09 — Journal Entry #3 (`003-overnight-run-begins.md`) + ANTHROPIC_API_KEY loader verified
+- [x] 2026-04-09 — **Wave 1 / Step 3 complete**: models serialization (`to_dict`/`from_dict` on all 5 dataclasses, `_serde.py` helper, datetime UTC fix). 10 tests pass (up from 2). Ruff clean (+ fixed pre-existing StrEnum issues in schemas.py)
 
 ### MVP Checklist:
 - [ ] `docs/skills-research.md` included in repo
