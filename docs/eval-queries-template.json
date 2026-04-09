@@ -1,0 +1,15 @@
+{
+  "should_trigger": [
+    "{realistic prompt using exact user language #1}",
+    "{realistic prompt using exact user language #2}",
+    "{prompt with synonym/adjacent concept}",
+    "{edge case that should still trigger}",
+    "{vague request that should trigger}"
+  ],
+  "should_not_trigger": [
+    "{near-miss sharing keywords but needing different skill}",
+    "{near-miss with overlapping domain}",
+    "{simple request Claude handles natively}",
+    "{request for adjacent but excluded capability}"
+  ]
+}
