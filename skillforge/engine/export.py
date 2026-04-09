@@ -1,26 +1,140 @@
-"""Export the evolved Skill as a zip, Agent SDK config, or raw SKILL.md.
-
-Real implementations land in Step 9.
-"""
+"""Export the evolved Skill as a zip, Agent SDK config, or raw SKILL.md."""
 
 from __future__ import annotations
 
+import io
+import zipfile
+from datetime import UTC, datetime
+
+from skillforge.config import MAX_TURNS, model_for
+from skillforge.engine.sandbox import validate_skill_structure
 from skillforge.models import SkillGenome
+
+
+def export_skill_md(genome: SkillGenome) -> str:
+    """Return the raw SKILL.md text for the genome."""
+    return genome.skill_md_content
+
+
+def export_agent_sdk_config(genome: SkillGenome) -> dict:
+    """Produce a ClaudeAgentOptions-style JSON config derived from the Skill.
+
+    The Agent SDK config bundles the Skill content as a system prompt plus
+    the metadata needed to reconstruct the evolved skill outside SkillForge.
+    """
+    aggregate_fitness = (
+        sum(genome.pareto_objectives.values()) / len(genome.pareto_objectives)
+        if genome.pareto_objectives
+        else 0.0
+    )
+    return {
+        "system_prompt": genome.skill_md_content,
+        "model": model_for("competitor"),
+        "allowed_tools": ["Skill", "Read", "Write", "Edit", "Bash"],
+        "max_turns": MAX_TURNS,
+        "permission_mode": "dontAsk",
+        "metadata": {
+            "evolved_by": "SkillForge",
+            "skill_id": genome.id,
+            "generation": genome.generation,
+            "maturity": genome.maturity,
+            "generations_survived": genome.generations_survived,
+            "fitness": round(aggregate_fitness, 4),
+            "pareto_objectives": genome.pareto_objectives,
+            "is_pareto_optimal": genome.is_pareto_optimal,
+            "lineage": genome.parent_ids,
+            "traits": genome.traits,
+            "trait_attribution": genome.trait_attribution,
+            "exported_at": datetime.now(UTC).isoformat(),
+        },
+    }
 
 
 def export_skill_zip(genome: SkillGenome) -> bytes:
     """Package the genome as an installable Skill directory zip.
 
-    Includes SKILL.md, supporting files, and a META.md with lineage + fitness.
+    Layout inside the zip:
+        evolved-skill/
+        ├── SKILL.md
+        ├── META.md             # SkillForge metadata
+        └── {supporting_files}  # scripts/, references/, assets/
+
+    Validates the genome before packaging — raises ValueError if the skill
+    fails authoring constraints (we should never ship a broken skill).
     """
-    raise NotImplementedError
+    violations = validate_skill_structure(genome)
+    if violations:
+        raise ValueError(
+            f"refusing to export invalid skill {genome.id}: {violations}"
+        )
+
+    # Use the skill name from frontmatter as the directory name; fall back to id
+    skill_name = genome.frontmatter.get("name") if genome.frontmatter else None
+    if not skill_name:
+        # Try parsing from skill_md_content YAML
+        import yaml
+
+        try:
+            _, fm_block, _ = genome.skill_md_content.split("---", 2)
+            fm = yaml.safe_load(fm_block) or {}
+            skill_name = fm.get("name", genome.id[:8])
+        except (ValueError, yaml.YAMLError):
+            skill_name = genome.id[:8]
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        # Write SKILL.md
+        zf.writestr(f"{skill_name}/SKILL.md", genome.skill_md_content)
+
+        # Write META.md
+        zf.writestr(f"{skill_name}/META.md", _generate_meta_md(genome))
+
+        # Write supporting files
+        for rel_path, content in genome.supporting_files.items():
+            zf.writestr(f"{skill_name}/{rel_path}", content)
+
+    return buffer.getvalue()
 
 
-def export_agent_sdk_config(genome: SkillGenome) -> dict:
-    """Produce a ``ClaudeAgentOptions``-style JSON config derived from the Skill."""
-    raise NotImplementedError
+def _generate_meta_md(genome: SkillGenome) -> str:
+    """Render SkillForge-specific metadata as a Markdown sidecar."""
+    aggregate_fitness = (
+        sum(genome.pareto_objectives.values()) / len(genome.pareto_objectives)
+        if genome.pareto_objectives
+        else 0.0
+    )
+    pareto_str = (
+        "\n".join(f"- {k}: {v:.3f}" for k, v in genome.pareto_objectives.items())
+        if genome.pareto_objectives
+        else "(none)"
+    )
+    traits_str = ", ".join(genome.traits) if genome.traits else "(none)"
+    parents_str = ", ".join(genome.parent_ids) if genome.parent_ids else "(gen 0)"
+    return f"""# SkillForge Metadata
 
+**Skill ID**: `{genome.id}`
+**Generation**: {genome.generation}
+**Maturity**: {genome.maturity}
+**Generations Survived**: {genome.generations_survived}
+**Aggregate Fitness**: {aggregate_fitness:.4f}
+**Pareto-Optimal**: {genome.is_pareto_optimal}
 
-def export_skill_md(genome: SkillGenome) -> str:
-    """Return the raw SKILL.md text for the genome."""
-    raise NotImplementedError
+## Pareto Objectives
+{pareto_str}
+
+## Traits
+{traits_str}
+
+## Lineage
+Parent IDs: {parents_str}
+
+## Mutation Rationale
+{genome.mutation_rationale or '(none — gen 0 spawn)'}
+
+## Exported
+{datetime.now(UTC).isoformat()}
+
+---
+
+*Generated by SkillForge — https://github.com/ty13r/skillforge*
+"""
