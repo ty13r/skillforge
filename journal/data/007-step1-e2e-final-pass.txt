@@ -1,0 +1,59 @@
+skillforge.config: gating_disabled=False codes_loaded=0 raw_env_len=0
+============================================================
+SkillForge v1.2 Phase 1 — Managed Agents end-to-end smoke
+============================================================
+  COMPETITOR_BACKEND     = managed
+  COMPETITOR_CONCURRENCY = 5
+  MANAGED_AGENTS_SKILL_MODE = upload
+  COMPETITOR_ADVISOR     = False
+  competitor model       = claude-sonnet-4-6
+
+=== Run finished in 640.2s ===
+  status:               complete
+  failure_reason:       None
+  generations:          1
+  challenges:           3
+  total_cost_usd:       $1.6950
+  best_skill_id:        95d84a6b-56fd-4ed5-a356-b93cc5d5a3bc
+
+=== Per-competitor cost_breakdown ===
+  competitors in gen 0: 6
+  [0] skill=95d84a6b ch=76c5ca4a backend=managed in=90 out=870 runtime=0.0082h executor_in_usd=0.0358 executor_out_usd=0.0131 runtime_usd=0.000659 compiles=True tests=False output_files=['challenge/test_solution.py', 'output/solution.py']
+  [1] skill=95d84a6b ch=1091db6f backend=managed in=89 out=1745 runtime=0.0136h executor_in_usd=0.0436 executor_out_usd=0.0262 runtime_usd=0.001090 compiles=True tests=False output_files=['challenge/test_solution.py', 'output/solution.py']
+  [2] skill=95d84a6b ch=c7495740 backend=managed in=89 out=1391 runtime=0.0133h executor_in_usd=0.0418 executor_out_usd=0.0209 runtime_usd=0.001068 compiles=True tests=False output_files=['challenge/test_solution.py', 'challenge/rubric.txt', 'output/solution.py']
+  [3] skill=8b53b4aa ch=76c5ca4a backend=managed in=91 out=1373 runtime=0.0181h executor_in_usd=0.0502 executor_out_usd=0.0206 runtime_usd=0.001450 compiles=True tests=False output_files=['challenge/test_solution.py', 'output/solution.py']
+  [4] skill=8b53b4aa ch=1091db6f backend=managed in=90 out=1913 runtime=0.0202h executor_in_usd=0.0508 executor_out_usd=0.0287 runtime_usd=0.001620 compiles=True tests=False output_files=['challenge/test_solution.py', 'output/solution.py']
+  [5] skill=8b53b4aa ch=c7495740 backend=managed in=90 out=1630 runtime=0.0116h executor_in_usd=0.0305 executor_out_usd=0.0244 runtime_usd=0.000929 compiles=True tests=False output_files=['challenge/test_solution.py', 'challenge/rubric.txt', 'output/solution.py']
+
+=== L3 trace inspection (first competitor) ===
+  trace length: 11
+  skill_was_loaded: True
+  behavioral_signature: ['Skill', 'Read', 'Bash', 'Write', 'Bash']
+  scripts_executed: []
+  instructions_followed: 3
+  instructions_ignored: 16
+
+=== leaked_skills table ===
+  empty (cleanup succeeded for all skills)
+
+=== Verdict ===
+  smoke PASSED
+  wall time:    640.2s
+  total cost:   $1.6950
+
+=== Full cost_breakdown[0] (JSON) ===
+{
+  "executor_input_usd": 0.035785,
+  "executor_output_usd": 0.01305,
+  "advisor_input_usd": 0.0,
+  "advisor_output_usd": 0.0,
+  "session_runtime_usd": 0.000659,
+  "input_tokens": 90,
+  "output_tokens": 870,
+  "cache_creation_input_tokens": 7356,
+  "cache_read_input_tokens": 26433,
+  "n_model_requests": 5,
+  "session_runtime_hours": 0.008235,
+  "backend": "managed",
+  "advisor_enabled": false
+}
