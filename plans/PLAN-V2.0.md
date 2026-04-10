@@ -49,13 +49,47 @@ Within each wave, backend and frontend work are independent when possible. Acros
 - `skillforge/models/variant.py` — `Variant` + `VariantEvolution` dataclasses
   - Variant: id, family_id, dimension, tier, genome_id, fitness_score, is_active, evolution_id, created_at
   - VariantEvolution: id, family_id, dimension, tier, parent_run_id, population_size, num_generations, status, winner_variant_id, foundation_genome_id, challenge_id, created_at, completed_at
-- `.claude/skills/taxonomist/` — full golden-template skill package
-  - SKILL.md, scripts/classify.py, scripts/validate.sh, references/taxonomy-guide.md
-- `.claude/skills/scientist/` — full golden-template skill package
-- `.claude/skills/spawner/` — full golden-template skill package
-- `.claude/skills/breeder/` — full golden-template skill package
-- `.claude/skills/reviewer/` — full golden-template skill package
-- `.claude/skills/engineer/` — full golden-template skill package
+- `.claude/skills/reviewer/` — **owns measurement**. The canonical metrics authority.
+  - SKILL.md — instructions for running L1-L5 evaluation, interpreting scores, weighting quantitative vs qualitative, scoping evaluation to variant dimensions
+  - `scripts/code_metrics.py` — AST-based analysis: cyclomatic complexity, max function length, max nesting depth, function count, import count. Parses Python (later JS/TS). Returns JSON.
+  - `scripts/validate.sh` — validates that score.py output + code_metrics.py output conform to expected schema
+  - `references/metrics-catalog.md` — **the canonical metrics catalog**. Every metric, how it's calculated, scoring thresholds, interpretation guidelines. Covers: execution metrics (time, turns, tokens, cost), output metrics (compiles, test pass rate, coverage, lint), code quality proxies (complexity, length, nesting), derived metrics (efficiency, speed-quality, compliance, tool precision). Other agent skills reference this document.
+  - `references/scoring-rubric-spec.md` — how evaluation criteria JSON is structured, what fields are required, how weights work, how quantitative and qualitative scores combine
+
+- `.claude/skills/scientist/` — designs experiments and evaluation criteria
+  - SKILL.md — instructions for designing focused challenges per variant dimension, creating machine-readable evaluation rubrics, validating that each dimension is independently testable
+  - `scripts/validate_rubric.py` — validates that an evaluation criteria JSON has required fields, weights sum to 1.0, metrics reference the catalog
+  - `scripts/validate.sh` — validates challenge + rubric pair
+  - `references/metrics-catalog.md` — symlink or copy of reviewer's catalog. Scientist must know what's measurable to design good rubrics.
+  - `references/challenge-design-guide.md` — principles for focused challenge design: one dimension per challenge, measurable success criteria, deterministic scoring preferred, example rubrics per domain type
+
+- `.claude/skills/breeder/` — reads metrics to decide mutations
+  - SKILL.md — instructions for reflective mutation from execution traces and fitness breakdowns, mapping weak metrics to mutation strategies, multi-parent crossover, elitism, learning log maintenance
+  - `scripts/analyze_fitness.py` — parses a variant's fitness breakdown and identifies the weakest dimension + recommended mutation focus
+  - `scripts/validate.sh` — validates mutation output structure
+  - `references/metrics-to-mutations.md` — mapping of metric patterns to mutation strategies. E.g.: high cyclomatic complexity → simplify control flow; low test pass rate → focus on correctness; low instruction compliance → strengthen/clarify instructions; high token usage → reduce verbosity
+  - `references/mutation-patterns.md` — catalog of proven mutation strategies from bible findings
+
+- `.claude/skills/engineer/` — assembles variants, measures assembly quality
+  - SKILL.md — instructions for foundation-skeleton + trait-merge assembly, conflict resolution (higher fitness wins), integration testing, refinement passes, validate_skill_structure
+  - `scripts/check_conflicts.py` — detects potential conflicts between variant supporting_files (duplicate script names, contradictory instructions, overlapping sections)
+  - `scripts/validate.sh` — validates assembled skill package
+  - `references/assembly-metrics.md` — synergy ratio calculation, integration pass rate thresholds, conflict resolution rules, when to trigger refinement pass
+  - `references/merge-patterns.md` — patterns for weaving capability instructions into foundation H2/H3 structure, deconflicting scripts, combining frontmatter descriptions
+
+- `.claude/skills/taxonomist/` — classifies domains, decomposes into variants
+  - SKILL.md — instructions for classification (Domain → Focus → Language), decomposition (identify foundation + capability dimensions), checking existing taxonomy before creating new entries, recommending variant reuse
+  - `scripts/classify.py` — lightweight classification helper (string matching against existing taxonomy slugs, similarity scoring)
+  - `scripts/validate.sh` — validates classification output structure
+  - `references/taxonomy-guide.md` — the hierarchy definition, current domains/focuses/languages, rules for when to create new entries vs reuse existing, decomposition heuristics (fewer than 2 independent dimensions → monolithic)
+  - `references/historical-metrics.md` — template for historical performance data per taxonomy node (populated over time as runs complete)
+
+- `.claude/skills/spawner/` — creates initial variant populations
+  - SKILL.md — instructions for creating diverse initial populations per variant dimension, structuring mini-SKILL.md packages for measurability, injecting foundation context for capability variants, ensuring golden-template compliance
+  - `scripts/validate_variant.py` — validates a spawned variant is a complete mini-package (has frontmatter, focused body, own scripts if needed)
+  - `scripts/validate.sh` — validates spawner output
+  - `references/metrics-awareness.md` — lightweight summary of what metrics will be measured so spawned variants are structured for measurability (e.g., produce testable output, include validate.sh, keep code parseable for AST analysis)
+  - `references/golden-template-spec.md` — the structural requirements for a valid skill package
 - `tests/test_models_v2.py` — serialization round-trips for all new dataclasses
 
 **Modify:**
