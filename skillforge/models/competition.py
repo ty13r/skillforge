@@ -45,6 +45,21 @@ class CompetitionResult:
     trait_diagnostics: dict[str, str] = field(default_factory=dict)
     judge_reasoning: str = ""
 
+    # Cost breakdown — populated by the Managed Agents backend with real
+    # token usage + session-runtime cost. The SDK backend leaves this empty
+    # and the engine falls back to the trace-length heuristic. Schema (all
+    # USD unless noted):
+    #   - executor_input_usd / executor_output_usd: tokens charged at the
+    #     executor model's rate
+    #   - advisor_input_usd / advisor_output_usd: forward-compat, zero in
+    #     Phase 1 (Advisor Strategy is descoped — see PLAN-V1.2 §Step 0)
+    #   - session_runtime_usd: hours × $0.08
+    #   - input_tokens / output_tokens / cache_*_input_tokens: raw counts
+    #   - n_model_requests, session_runtime_hours: diagnostics
+    #   - backend: "sdk" | "managed" so analytics can tell which path ran
+    #   - advisor_enabled: bool
+    cost_breakdown: dict[str, float | int | str | bool] = field(default_factory=dict)
+
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict."""
         return {
@@ -69,6 +84,7 @@ class CompetitionResult:
             "trait_contribution": self.trait_contribution,
             "trait_diagnostics": self.trait_diagnostics,
             "judge_reasoning": self.judge_reasoning,
+            "cost_breakdown": self.cost_breakdown,
         }
 
     @classmethod
@@ -96,4 +112,5 @@ class CompetitionResult:
             trait_contribution=data.get("trait_contribution", {}),
             trait_diagnostics=data.get("trait_diagnostics", {}),
             judge_reasoning=data.get("judge_reasoning", ""),
+            cost_breakdown=data.get("cost_breakdown", {}),
         )

@@ -9,7 +9,12 @@ from unittest.mock import patch
 import pytest
 
 import skillforge.engine.sandbox as sandbox_mod
-from skillforge.agents.competitor import _message_to_dict, run_competitor
+
+# After PLAN-V1.2 Phase 1 the SDK competitor implementation moved to
+# competitor_sdk.py. The top-level competitor.py is now a dispatcher that
+# routes between sdk/managed backends. Import from competitor_sdk directly
+# so these tests stay focused on the SDK path regardless of COMPETITOR_BACKEND.
+from skillforge.agents.competitor_sdk import _message_to_dict, run_competitor
 from skillforge.config import MAX_TURNS
 from skillforge.engine.sandbox import create_sandbox
 from skillforge.models import Challenge, SkillGenome
@@ -123,7 +128,7 @@ async def test_run_competitor_collects_trace_and_output(
     output_file = sandbox_path / "output" / "solution.py"
     output_file.write_text("print('hello world')")
 
-    with patch("skillforge.agents.competitor.query") as mock_query:
+    with patch("skillforge.agents.competitor_sdk.query") as mock_query:
         mock_query.return_value = _fake_query_from(
             ["Starting task.", "Working on it.", "Done!"]
         )
@@ -150,7 +155,7 @@ async def test_run_competitor_passes_correct_options_to_sdk(
         captured_options["options"] = options
         return _fake_query_from([])
 
-    with patch("skillforge.agents.competitor.query", side_effect=_capturing_query):
+    with patch("skillforge.agents.competitor_sdk.query", side_effect=_capturing_query):
         await run_competitor(skill, _MINIMAL_CHALLENGE, sandbox_path)
 
     opts = captured_options["options"]
@@ -180,7 +185,7 @@ async def test_run_competitor_never_uses_bypass_permissions(
         captured_options["options"] = options
         return _fake_query_from([])
 
-    with patch("skillforge.agents.competitor.query", side_effect=_capturing_query):
+    with patch("skillforge.agents.competitor_sdk.query", side_effect=_capturing_query):
         await run_competitor(skill, _MINIMAL_CHALLENGE, sandbox_path)
 
     opts = captured_options["options"]
@@ -199,7 +204,7 @@ async def test_run_competitor_handles_timeout(
         raise TimeoutError()
         yield  # make it an async generator (unreachable)
 
-    with patch("skillforge.agents.competitor.query", side_effect=_hanging_query):
+    with patch("skillforge.agents.competitor_sdk.query", side_effect=_hanging_query):
         result = await run_competitor(skill, _MINIMAL_CHALLENGE, sandbox_path)
 
     assert "timeout" in result.judge_reasoning.lower()
@@ -220,7 +225,7 @@ async def test_run_competitor_handles_sdk_error(
         raise RuntimeError("boom")
         yield  # make it an async generator (unreachable)
 
-    with patch("skillforge.agents.competitor.query", side_effect=_failing_query):
+    with patch("skillforge.agents.competitor_sdk.query", side_effect=_failing_query):
         result = await run_competitor(skill, _MINIMAL_CHALLENGE, sandbox_path)
 
     assert "boom" in result.judge_reasoning or "sdk error" in result.judge_reasoning.lower()

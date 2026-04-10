@@ -24,8 +24,8 @@ import re
 from datetime import UTC, datetime
 
 from anthropic import AsyncAnthropic
-from skillforge.agents._llm import stream_text
 
+from skillforge.agents._llm import stream_text
 from skillforge.agents.spawner import breed_next_gen, spawn_gen0
 from skillforge.config import (
     ANTHROPIC_API_KEY,

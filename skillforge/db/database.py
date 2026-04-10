@@ -144,6 +144,20 @@ CREATE TABLE IF NOT EXISTS invite_requests (
 )
 """
 
+# Bookkeeping for best-effort skill teardown failures from the Managed Agents
+# backend. Cleanup must NEVER block the evolution loop, so the Phase 1
+# competitor schedules teardown as a detached task; failures land here for
+# a batch sweeper to retry. See PLAN-V1.2 architectural decision #7.
+_CREATE_LEAKED_SKILLS = """
+CREATE TABLE IF NOT EXISTS leaked_skills (
+    id          TEXT PRIMARY KEY,
+    skill_id    TEXT NOT NULL,
+    run_id      TEXT,
+    created_at  TEXT NOT NULL,
+    error       TEXT
+)
+"""
+
 _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_runs_status ON evolution_runs (status)",
     "CREATE INDEX IF NOT EXISTS idx_runs_created_at ON evolution_runs (created_at DESC)",
@@ -153,6 +167,7 @@ _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_results_run_gen ON competition_results (run_id, generation)",
     "CREATE INDEX IF NOT EXISTS idx_results_challenge ON competition_results (challenge_id)",
     "CREATE INDEX IF NOT EXISTS idx_invite_requests_created ON invite_requests (created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_leaked_skills_created ON leaked_skills (created_at DESC)",
 ]
 
 _TABLE_DDLS = [
@@ -162,6 +177,7 @@ _TABLE_DDLS = [
     _CREATE_GENERATIONS,
     _CREATE_COMPETITION_RESULTS,
     _CREATE_INVITE_REQUESTS,
+    _CREATE_LEAKED_SKILLS,
 ]
 
 _DROP_ORDER = [

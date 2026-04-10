@@ -118,16 +118,55 @@ BREEDER_CALL_MODE: str = os.getenv("SKILLFORGE_BREEDER_CALL_MODE", "separate")  
 # debugging in MVP; on for production runs where DB size matters.
 COMPRESS_TRACES: bool = os.getenv("SKILLFORGE_COMPRESS_TRACES", "0") == "1"
 
-# Maximum number of parallel Competitor runs. Each Competitor invokes the
-# Claude Agent SDK's query(), which spawns a local `claude` CLI subprocess.
-# The SDK hits a "Command failed with exit code 1" concurrency bug when
-# multiple subprocesses run in the same Python process (file/pipe/auth
-# contention). Default 1 = sequential = safe.
+# --- Competitor backend selection (PLAN-V1.2 Phase 1) -------------------------
+# Selects which competitor implementation runs the Skill × Challenge match:
 #
-# A future migration to Anthropic's Managed Agents API would run competitors
-# in isolated cloud containers (no local subprocess bug) and let this flag
-# be raised to pop_size × challenges for ~10x speedup. Until then: 1.
-COMPETITOR_CONCURRENCY: int = int(os.getenv("SKILLFORGE_COMPETITOR_CONCURRENCY", "1"))
+#   - "sdk"     → competitor_sdk.py — local subprocess via claude_agent_sdk.
+#                  Default for Phase 1 so existing tests + deploys are
+#                  unchanged. Concurrency MUST stay at 1 (subprocess race).
+#   - "managed" → competitor_managed.py — Anthropic Managed Agents (cloud
+#                  containers). No subprocess race; concurrency safely
+#                  raised to 5+. Selected at Phase 2 via env var, no
+#                  code push required.
+COMPETITOR_BACKEND: str = os.getenv("SKILLFORGE_COMPETITOR_BACKEND", "sdk")
+
+# Skill upload mode for the managed backend:
+#   - "upload" → POST /v1/skills then attach to the agent (default; gives
+#                L3 the skill_was_loaded signal). Step 0 confirmed
+#                30 serial + 10 parallel uploads work with no rate limits.
+#   - "inline" → bake the SKILL.md content into the user.message text
+#                (escape hatch if upload rate-limits ever bite). Loses the
+#                skill_was_loaded signal but everything else still works.
+MANAGED_AGENTS_SKILL_MODE: str = os.getenv("SKILLFORGE_MANAGED_AGENTS_SKILL_MODE", "upload")
+
+# Anthropic Managed Agents bills $0.08 per session-hour, metered only while
+# the session status is `running` (idle/rescheduled/terminated don't count).
+# Mirrors the constant in skillforge.agents.managed_agents — duplicated here
+# so the engine can budget without importing the wrapper. A bump requires
+# a plan edit (PLAN-V1.2 §Risk smoke-check).
+MANAGED_AGENTS_SESSION_RUNTIME_USD_PER_HOUR: float = 0.08
+
+# Advisor Strategy (advisor_20260301) — DESCOPED FROM PHASE 1.
+# Step 0 confirmed the tool type is not yet supported in anthropic SDK 0.92
+# or our beta access. Phase 1 ships without the advisor; this flag exists
+# as a forward-compatible no-op so wiring (cost_breakdown.advisor_*,
+# competitor_advisor model role) is ready when the tool lands. Default off
+# until that day.
+COMPETITOR_ADVISOR: bool = os.getenv("SKILLFORGE_COMPETITOR_ADVISOR", "off") == "on"
+COMPETITOR_ADVISOR_MAX_USES: int = int(
+    os.getenv("SKILLFORGE_COMPETITOR_ADVISOR_MAX_USES", "3")
+)
+
+# Maximum number of parallel Competitor runs. The SDK backend MUST stay at 1
+# because of the subprocess concurrency race (multiple `claude` CLI
+# subprocesses in the same Python process collide on file/pipe/auth state).
+# The Managed Agents backend has no local subprocess and can safely lift this
+# to 5+ — defaults to 5 when COMPETITOR_BACKEND=managed unless explicitly
+# overridden. Override always wins via SKILLFORGE_COMPETITOR_CONCURRENCY.
+_concurrency_default = "5" if COMPETITOR_BACKEND == "managed" else "1"
+COMPETITOR_CONCURRENCY: int = int(
+    os.getenv("SKILLFORGE_COMPETITOR_CONCURRENCY", _concurrency_default)
+)
 
 # --- Models -------------------------------------------------------------------
 
@@ -137,6 +176,11 @@ MODEL_DEFAULTS: dict[str, str] = {
     "challenge_designer": DEFAULT_MODEL,
     "spawner": DEFAULT_MODEL,
     "competitor": DEFAULT_MODEL,
+    # Forward-compat: advisor model role for the Advisor Strategy. Default
+    # is Opus 4.6 per the published BrowseComp / SWE-bench numbers, but
+    # advisor is descoped from Phase 1 so this is a no-op until the SDK
+    # adds support. Override via SKILLFORGE_MODEL_COMPETITOR_ADVISOR.
+    "competitor_advisor": "claude-opus-4-6",
     "breeder": DEFAULT_MODEL,
     "judge_trace": DEFAULT_MODEL,
     "judge_comparative": DEFAULT_MODEL,

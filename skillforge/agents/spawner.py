@@ -628,7 +628,7 @@ Do NOT modify the parent. Do NOT return fewer or more than {num_mutants} entries
 
     try:
         raw = _extract_json_array(text)
-    except ValueError as exc:
+    except ValueError:
         # If the LLM refused or produced garbage, fall back to elite-only
         # (graceful degradation — evolution can still proceed with just the parent)
         return [elite]

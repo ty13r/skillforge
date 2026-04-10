@@ -574,6 +574,82 @@ async def get_lineage(
     return edges
 
 
+async def log_leaked_skill(
+    *,
+    skill_id: str,
+    run_id: str | None,
+    error: str | None,
+    db_path: Path | None = None,
+) -> None:
+    """Record a Managed Agents skill that failed to tear down.
+
+    Best-effort: any DB error is swallowed (cleanup must NEVER block the
+    evolution loop). The leaked_skills table is read by a future batch
+    sweeper that retries deletion. PLAN-V1.2 architectural decision #7.
+    """
+    import uuid
+    from datetime import UTC, datetime
+
+    try:
+        async with _connect(db_path) as conn:
+            await conn.execute(
+                """
+                INSERT INTO leaked_skills (id, skill_id, run_id, created_at, error)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    str(uuid.uuid4()),
+                    skill_id,
+                    run_id,
+                    datetime.now(UTC).isoformat(),
+                    error,
+                ),
+            )
+            await conn.commit()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def list_leaked_skills(
+    *,
+    limit: int = 100,
+    db_path: Path | None = None,
+) -> list[dict]:
+    """Return up to ``limit`` recent leaked skill records as dicts.
+
+    Used by the future batch cleanup job + by tests that verify the
+    Managed Agents teardown path logs failures correctly.
+    """
+    async with _connect(db_path) as conn:
+        cursor = await conn.execute(
+            """
+            SELECT id, skill_id, run_id, created_at, error
+            FROM leaked_skills
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        rows = await cursor.fetchall()
+        await cursor.close()
+
+    return [dict(r) for r in rows]
+
+
+async def delete_leaked_skill(
+    *,
+    leaked_id: str,
+    db_path: Path | None = None,
+) -> None:
+    """Remove a leaked-skill record after a successful retry."""
+    async with _connect(db_path) as conn:
+        await conn.execute(
+            "DELETE FROM leaked_skills WHERE id = ?",
+            (leaked_id,),
+        )
+        await conn.commit()
+
+
 __all__ = [
     "save_run",
     "get_run",
@@ -583,4 +659,7 @@ __all__ = [
     "save_challenge",
     "save_result",
     "get_lineage",
+    "log_leaked_skill",
+    "list_leaked_skills",
+    "delete_leaked_skill",
 ]

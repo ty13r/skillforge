@@ -31,6 +31,7 @@ from skillforge.agents.challenge_designer import design_challenges
 from skillforge.agents.competitor import run_competitor
 from skillforge.agents.judge.pipeline import run_judging_pipeline
 from skillforge.agents.spawner import spawn_from_parent, spawn_gen0
+from skillforge.config import COMPETITOR_BACKEND
 from skillforge.db.database import init_db
 from skillforge.db.queries import save_run
 from skillforge.engine.events import emit
@@ -57,6 +58,7 @@ async def _gated_competitor(
     competitor_idx: int,
     skill,
     challenge,
+    env_id: str | None = None,
 ):
     """Wrap _run_one_competitor in a semaphore acquire/release.
 
@@ -64,6 +66,9 @@ async def _gated_competitor(
     enclosing loop, so ruff's B023 doesn't flag loop-variable capture and
     the behavior is deterministic even if the engine is refactored to
     interleave generations in the future.
+
+    ``env_id`` is the per-run Managed Agents environment id (only set
+    when ``COMPETITOR_BACKEND == "managed"``); ignored by the SDK path.
     """
     async with semaphore:
         return await _run_one_competitor(
@@ -72,6 +77,7 @@ async def _gated_competitor(
             competitor_idx=competitor_idx,
             skill=skill,
             challenge=challenge,
+            env_id=env_id,
         )
 
 
@@ -81,12 +87,19 @@ async def _run_one_competitor(
     competitor_idx: int,
     skill,
     challenge,
+    env_id: str | None = None,
 ):
     """Run a single (skill, challenge) competitor end-to-end.
 
     Extracted as a module-level function (not a closure) so that parallel
     asyncio.gather over a list comprehension doesn't share loop variables
     across coroutines.
+
+    Branches on ``COMPETITOR_BACKEND``:
+      - "sdk":     creates a local sandbox dir, runs the SDK competitor,
+                   cleans up the sandbox.
+      - "managed": passes the per-run Managed Agents ``env_id`` (no
+                   sandbox needed — the cloud container is the sandbox).
     """
     await emit(
         run_id,
@@ -96,6 +109,25 @@ async def _run_one_competitor(
         skill_id=skill.id,
         challenge_id=challenge.id,
     )
+
+    if COMPETITOR_BACKEND == "managed":
+        if env_id is None:
+            raise RuntimeError(
+                "managed backend requires a per-run env_id, got None"
+            )
+        result = await run_competitor(skill, challenge, env_id)
+        await emit(
+            run_id,
+            "competitor_finished",
+            generation=generation,
+            competitor=competitor_idx,
+            skill_id=skill.id,
+            challenge_id=challenge.id,
+            trace_length=len(result.trace),
+        )
+        return result
+
+    # SDK path (default)
     sandbox_path = create_sandbox(
         run_id, generation, competitor_idx, skill, challenge
     )
@@ -152,6 +184,33 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
     await emit(run.id, "run_started", specialization=run.specialization)
 
+    # --- Managed Agents environment (one per run, shared across competitors) -
+    # Created up-front when COMPETITOR_BACKEND=managed and torn down in the
+    # finally clause. The id is threaded through _gated_competitor → run_competitor
+    # so every session in this run uses the same cloud container.
+    env_id: str | None = None
+    managed_client = None
+    if COMPETITOR_BACKEND == "managed":
+        from skillforge.agents import managed_agents
+
+        try:
+            managed_client = managed_agents.make_client()
+            env_id = await managed_agents.create_environment(
+                managed_client, run_id=run.id
+            )
+            await emit(
+                run.id,
+                "managed_environment_ready",
+                environment_id=env_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"evolution: failed to create managed environment: {exc}")
+            run.status = "failed"
+            run.failure_reason = f"managed environment creation failed: {exc}"
+            await emit(run.id, "run_failed", reason="env_create_failed")
+            await _persist(run)
+            return run
+
     try:
         # --- Phase 1: design challenges -----------------------------------
         await emit(run.id, "challenge_design_started")
@@ -206,15 +265,16 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
             # total number of concurrent competitors is gated by a semaphore
             # with size config.COMPETITOR_CONCURRENCY.
             #
-            # Default = 1 (sequential) because the Claude Agent SDK's query()
-            # wraps a local `claude` CLI subprocess, and N>1 causes subprocess
-            # file/pipe/auth contention producing "Command failed with exit
-            # code 1" on every competitor (reproduced during the first
-            # parallel live validation run).
+            # SDK backend default = 1 (sequential) because the Claude Agent
+            # SDK's query() wraps a local `claude` CLI subprocess, and N>1
+            # causes subprocess file/pipe/auth contention producing "Command
+            # failed with exit code 1" on every competitor.
             #
-            # Raising this above 1 is only safe after migrating the Competitor
-            # to Anthropic Managed Agents (cloud containers, no local
-            # subprocess). Deferred to v1.1.
+            # Managed Agents backend default = 5 — sessions run in isolated
+            # cloud containers with no shared local state, so concurrency
+            # is effectively free (parallelism doesn't increase session-hour
+            # billing). Both defaults are overridable via
+            # SKILLFORGE_COMPETITOR_CONCURRENCY.
             from skillforge.config import COMPETITOR_CONCURRENCY
 
             semaphore = asyncio.Semaphore(COMPETITOR_CONCURRENCY)
@@ -227,6 +287,7 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                     competitor_idx=competitor_idx,
                     skill=skill,
                     challenge=challenge,
+                    env_id=env_id,
                 )
                 for competitor_idx, skill in enumerate(skills)
                 for challenge in run.challenges
@@ -336,6 +397,19 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         with contextlib.suppress(Exception):
             dump_run_json(run)
         raise
+
+    finally:
+        # Tear down the per-run Managed Agents environment + close the
+        # shared client. Best-effort: never raise from cleanup.
+        if env_id is not None and managed_client is not None:
+            import contextlib as _contextlib
+
+            from skillforge.agents import managed_agents as _ma
+
+            with _contextlib.suppress(Exception):
+                await _ma.archive_environment(managed_client, env_id)
+            with _contextlib.suppress(Exception):
+                await managed_client.close()
 
 
 # --- Persistence helper ------------------------------------------------------

@@ -32,7 +32,6 @@ from skillforge.engine.evolution import PENDING_PARENTS
 from skillforge.main import app
 from skillforge.models import EvolutionRun, Generation, SkillGenome
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

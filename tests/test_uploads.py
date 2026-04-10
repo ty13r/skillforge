@@ -36,7 +36,6 @@ from skillforge.api import uploads as uploads_module
 from skillforge.engine.evolution import PENDING_PARENTS
 from skillforge.main import app
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

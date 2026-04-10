@@ -179,6 +179,25 @@ Admin read endpoint `GET /api/invites/requests` is gated by `SKILLFORGE_ADMIN_TO
 
 ---
 
+### `leaked_skills`
+
+Bookkeeping for Managed Agents skills that failed best-effort teardown. Per PLAN-V1.2 architectural decision #7, the Phase 1 competitor schedules skill cleanup as a detached `asyncio.create_task()` so cleanup never blocks the evolution loop. Failures land here for a future batch sweeper to retry.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID hex of the leak record (NOT the skill_id) |
+| `skill_id` | TEXT | NOT NULL | The Anthropic skill_id that failed to delete |
+| `run_id` | TEXT | NULL | Evolution run that created the skill (for backtracing) |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC of when the leak was logged |
+| `error` | TEXT | NULL | Error message from the failed teardown call |
+
+Indexes:
+- `idx_leaked_skills_created` on `created_at DESC`
+
+No foreign keys — this table is intentionally standalone so a leaked record survives even if the originating run is later deleted. The Anthropic built-in skills (xlsx/pptx/pdf/docx, `source="anthropic"`) are NEVER inserted here because the wrapper's `archive_skill` guard refuses to even attempt deletion.
+
+---
+
 ## Foreign key relationships
 
 ```

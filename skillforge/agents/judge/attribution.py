@@ -14,8 +14,8 @@ import json
 import re
 
 from anthropic import AsyncAnthropic
-from skillforge.agents._llm import stream_text
 
+from skillforge.agents._llm import stream_text
 from skillforge.config import ANTHROPIC_API_KEY, model_for
 from skillforge.models import CompetitionResult, SkillGenome
 
