@@ -445,6 +445,78 @@ Risk smoke-check resolved the big ones (see the top-of-file summary). Remaining:
 
 ---
 
+## Carried over from PLAN-V1.1 (backfill work)
+
+PLAN-V1.1 shipped all four features end-to-end (seed library, upload existing skill, Anthropic palette, theme toggle — see the 2026-04-09 entries in `plans/PROGRESS.md`). Three testing-strategy items from PLAN-V1.1 and one one-off QA sweep never landed, so they're captured here to keep them from falling through the cracks during the v1.2 port.
+
+**Priority**: backfill work, not blockers for the Managed Agents port. Can ship as a standalone commit **before** Phase 1, or interleaved with Phase 1's test additions — whichever keeps the diff clean. The `test_config.py` tripwire specified in §File-by-file changes is orthogonal to these and still lands as part of Phase 1.
+
+**Architectural note**: PLAN-V1.1 §1.5 specified a `seed_skill_id` column on `evolution_runs`; the shipped implementation replaced that with an in-memory `PENDING_PARENTS` dict in `skillforge/api/routes.py` + `skillforge/agents/spawner.py::spawn_from_parent()`. This was a deliberate divergence (documented in the 2026-04-09 PROGRESS.md entries), not a gap — tests should target the shipped behavior, not the original plan.
+
+### 1. `tests/test_seeds.py` (new file)
+
+**Source**: PLAN-V1.1 §1.5 file list + §Testing strategy §1.
+
+**What to cover**:
+- `seed_loader.load_seeds()` idempotency — running it twice on the same DB is a no-op (hash comparison short-circuits).
+- `seed_loader.load_seeds()` refresh — bumping the `SEED_SKILLS` content hash triggers a re-insert of the synthetic `seed-library` run without duplicating rows.
+- `spawner.spawn_from_parent(parent, pop_size)` — returns `pop_size` genomes with the parent carried through as elite slot 0 and the rest as diverse mutations. Every returned genome passes `validate_skill_structure()`.
+- Fork-from-seed integration (mocked LLM): load the seed library, POST `/api/evolve/from-parent` with `parent_source="registry"`, assert the new run has the seed's content as gen 0 and the `PENDING_PARENTS` entry is resolved + cleaned up.
+- 404 on an unknown seed id.
+
+**Verification**: `uv run pytest tests/test_seeds.py -v` passes; mocks cover the full fork flow without hitting the real Anthropic API.
+
+### 2. `tests/test_uploads.py` (new file)
+
+**Source**: PLAN-V1.1 §2.5 file list + §Testing strategy §2.
+
+**What to cover**:
+- Happy path — single `.md` upload → parses frontmatter, returns valid `upload_id` + `validation.ok=true`.
+- Happy path — `.zip` with `SKILL.md` at root → valid.
+- Happy path — `.zip` with `SKILL.md` one directory deep → valid.
+- Size cap: `.md` file >1 MB → rejected with a clear error.
+- Size cap: `.zip` unpacked >5 MB → rejected.
+- File cap: `.zip` with >100 entries → rejected.
+- Zip bomb: compression ratio >20:1 → rejected without OOM (test runs under a strict memory budget).
+- Path traversal: `.zip` with a `..` entry → rejected.
+- Path traversal: `.zip` with an absolute path entry → rejected.
+- Extension allowlist: `.zip` containing a disallowed extension (e.g. `.exe`) → rejected.
+- Structural validation failure (`validate_skill_structure()` violations) → errors surface to the client in the response payload.
+- Upload → evolve integration: upload a valid skill, POST `/api/evolve/from-parent` with `parent_source="upload"`, assert the run starts and the `PENDING_PARENTS` entry is consumed.
+
+**Verification**: `uv run pytest tests/test_uploads.py -v` passes; each case has its own test function so failures point to the exact rule that broke.
+
+### 3. `frontend/src/hooks/useTheme.test.ts` (new file)
+
+**Source**: PLAN-V1.1 §Testing strategy §4.
+
+**What to cover**:
+- On mount: reads `skld-theme` cookie → falls back to `"system"` if missing → resolves via `matchMedia('(prefers-color-scheme: dark)')`.
+- `setTheme("dark")` writes the cookie with 1-year expiry and sets `document.documentElement.dataset.theme = "dark"`.
+- `setTheme("system")` removes the explicit theme and re-subscribes to `matchMedia`.
+- Media-query change event flips the resolved theme when the state is `"system"`.
+- Cookie round-trip: reloading the hook picks up the persisted value.
+
+**Verification**: `cd frontend && npm run test useTheme` passes under the existing vitest 2.1.9 harness (same setup used for `derivePhases.test.ts`). This is the second vitest file in the repo — the harness is already in place; no new dev-dep work required.
+
+### 4. Grep sweep: no hardcoded hex values outside the token system
+
+**Source**: PLAN-V1.1 §Testing strategy §3. A one-off verification step to confirm the palette migration left no hex literals in component source. Run once, record the result in the next journal entry, then forget.
+
+**Command**:
+```bash
+rg '#[0-9a-fA-F]{3,8}\b' frontend/src \
+  --glob '!*.css' \
+  --glob '!*.config.*' \
+  --type-add 'tsx:*.tsx' --type ts --type tsx
+```
+
+**Expected outcome**: zero matches in `.ts`/`.tsx` component source. Legitimate hex values should live only in `frontend/src/index.css` (CSS variable definitions) and `frontend/tailwind.config.js` (the Tailwind token map referencing those variables).
+
+**If matches exist**: refactor each to a Tailwind token class (`bg-primary`, `text-on-surface`, etc.) or a `rgb(var(--color-xxx) / <alpha-value>)` reference. File a short journal note with the finding so it doesn't regress on the next palette pass.
+
+---
+
 ## Out of scope
 
 - **Meta mode** (v1.1) — untouched.

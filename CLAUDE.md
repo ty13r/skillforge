@@ -232,10 +232,10 @@ The journal is the only doc that's written for humans first and machines second.
 ## Plans & Progress
 
 All planning and progress documents live in `plans/`:
-- `plans/PLAN.md` — file-by-file execution plan for Steps 3–11 (MVP)
-- `plans/PLAN-V1.1.md` — v1.1 enhancements
-- `plans/PLAN-V1.2.md` — Managed Agents port
-- `plans/PROGRESS.md` — completed work log, MVP checklist, decisions log
+- **`plans/PLAN-V1.2.md`** — **active plan**: Managed Agents port + Advisor Strategy + carried-over PLAN-V1.1 test backfill. This is the source of truth for "what to build next" until we decide otherwise.
+- `plans/PROGRESS.md` — completed work log, MVP checklist, decisions log.
+- `plans/archived/PLAN.md` — original file-by-file execution plan for Steps 3–11 (MVP). Shipped; kept for historical reference.
+- `plans/archived/PLAN-V1.1.md` — v1.1 enhancements plan (seed library, uploads, Anthropic palette, theme toggle). Shipped; kept for historical reference. The four remaining test/QA backfill items were carried over to PLAN-V1.2 §"Carried over from PLAN-V1.1".
 
 ### Task Execution Workflow (REQUIRED)
 

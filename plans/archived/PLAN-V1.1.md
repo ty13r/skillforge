@@ -6,6 +6,25 @@
 
 ---
 
+## Post-ship audit (2026-04-09)
+
+All four features shipped end-to-end — see `plans/PROGRESS.md` entries from 2026-04-09 for §1 Curated Seed Library, §2 Upload Existing Skill, §3 Anthropic Design System, §4 Theme Toggle.
+
+**Divergences from the plan as written** (deliberate, documented):
+- §1.5 file list specified a `seed_skill_id` column on `evolution_runs`. Shipped implementation uses an in-memory `PENDING_PARENTS` dict (`skillforge/api/routes.py` + `skillforge/agents/spawner.py::spawn_from_parent()`) instead. Same fork-from-parent UX, no schema change. SCHEMA.md just added `seed-library` to the reserved run ids.
+- §2 temp upload storage specified `/tmp/skillforge-uploads/<uuid>/`. Shipped implementation keeps uploads in-memory only — the uploaded SKILL.md content flows directly from `POST /api/uploads/skill` into `PENDING_PARENTS` and then into the gen-0 skill genome once the evolution run starts. No disk involvement.
+- §1 landed 16 curated seeds instead of the planned 15. The 16th ("Python Utility Functions") was added later in the same session as a workaround for the Challenge Designer's code-bias anchoring — see `journal/006-lockdown-deploy-crucible-and-the-managed-agents-pivot.md` §Phase 4.
+
+**Carried over to PLAN-V1.2** (PLAN-V1.2 §"Carried over from PLAN-V1.1"):
+- `tests/test_seeds.py` — unit tests for seed loader idempotency, `spawn_from_parent`, fork-from-seed integration (from §1.5 file list + §Testing strategy §1).
+- `tests/test_uploads.py` — unit tests for upload validation, zip bomb detection, path traversal rejection, upload → evolve integration (from §2.5 file list + §Testing strategy §2).
+- `frontend/src/hooks/useTheme.test.ts` — unit test for the theme hook (from §Testing strategy §4).
+- Grep sweep for hardcoded hex values in `frontend/src/**/*.tsx` (from §Testing strategy §3) — one-off QA verification step.
+
+The four items above are backfill work, not blockers. The main v1.1 scope is complete; this file is kept as a locked reference.
+
+---
+
 ## Re-scope summary
 
 The original plan treated "seed library" (curated specialization strings on `/new`) and "upload existing skill" (user-provided SKILL.md) as two separate features. Matt re-scoped them into a single unified concept:
