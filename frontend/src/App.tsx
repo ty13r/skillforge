@@ -9,6 +9,7 @@ import SeedDetailView from "./components/SeedDetailView";
 import SkillDiffViewer from "./components/SkillDiffViewer";
 import SkillExportPreview from "./components/SkillExportPreview";
 import SpecializationInput from "./components/SpecializationInput";
+import TaxonomyBrowser from "./components/TaxonomyBrowser";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: "runs/:runId/diff", element: <SkillDiffViewer /> },
       { path: "runs/:runId/skills/:skillId", element: <SeedDetailView /> },
       { path: "registry", element: <AgentRegistry /> },
+      { path: "taxonomy", element: <TaxonomyBrowser /> },
       { path: "bible", element: <BibleBrowser /> },
     ],
   },

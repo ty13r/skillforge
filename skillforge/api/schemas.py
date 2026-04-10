@@ -72,3 +72,44 @@ class LineageEdge(BaseModel):
     parent_id: str
     child_id: str
     mutation_type: str  # elitism | crossover | mutation | wildcard
+
+
+# ---------------------------------------------------------------------------
+# v2.0 taxonomy + families + variants
+# ---------------------------------------------------------------------------
+
+
+class TaxonomyNodeResponse(BaseModel):
+    id: str
+    level: str  # domain | focus | language
+    slug: str
+    label: str
+    parent_id: str | None = None
+    description: str = ""
+    created_at: str | None = None
+
+
+class SkillFamilyResponse(BaseModel):
+    id: str
+    slug: str
+    label: str
+    specialization: str
+    domain_id: str | None = None
+    focus_id: str | None = None
+    language_id: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    decomposition_strategy: str = "molecular"
+    best_assembly_id: str | None = None
+    created_at: str | None = None
+
+
+class VariantResponse(BaseModel):
+    id: str
+    family_id: str
+    dimension: str
+    tier: str  # foundation | capability
+    genome_id: str
+    fitness_score: float = 0.0
+    is_active: bool = False
+    evolution_id: str | None = None
+    created_at: str | None = None

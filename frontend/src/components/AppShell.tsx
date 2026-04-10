@@ -26,6 +26,9 @@ export default function AppShell() {
             <NavLink to="/registry" className={navLinkClass}>
               Registry
             </NavLink>
+            <NavLink to="/taxonomy" className={navLinkClass}>
+              Taxonomy
+            </NavLink>
             <NavLink to="/bible" className={navLinkClass}>
               Bible
             </NavLink>

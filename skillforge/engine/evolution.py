@@ -23,10 +23,9 @@ emits events via skillforge.engine.events; it never touches WebSockets directly.
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
-
-import logging
 
 from skillforge.agents.breeder import breed, publish_findings_to_bible
 from skillforge.agents.challenge_designer import design_challenges
@@ -401,8 +400,9 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         # Auto-save best skill as candidate seed for potential promotion
         if run.best_skill:
             try:
-                from skillforge.db.queries import save_candidate_seed
                 import uuid as _uuid
+
+                from skillforge.db.queries import save_candidate_seed
                 best = run.best_skill
                 fitness = (
                     sum(best.pareto_objectives.values()) / max(1, len(best.pareto_objectives))
@@ -433,6 +433,19 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
             total_cost_usd=run.total_cost_usd,
             generations_completed=len(run.generations),
         )
+
+        # Fire-and-forget post-run report generation. Never let a report
+        # failure block the pipeline; the log line is the only signal.
+        import contextlib as _report_contextlib
+
+        from skillforge.engine.report import generate_run_report
+
+        async def _build_report() -> None:
+            with _report_contextlib.suppress(Exception):
+                await generate_run_report(run.id)
+
+        asyncio.create_task(_build_report())
+
         return run
 
     except asyncio.CancelledError:

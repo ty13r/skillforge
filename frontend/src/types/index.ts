@@ -167,3 +167,58 @@ export interface PhaseState {
   status: PhaseStatus;
   detail?: string; // sub-progress like "8 of 15 competitors" or "L3 trace analysis"
 }
+
+// --- v2.0 taxonomy + families + variants ----------------------------------
+
+export type TaxonomyLevel = "domain" | "focus" | "language";
+
+export interface TaxonomyNode {
+  id: string;
+  level: TaxonomyLevel;
+  slug: string;
+  label: string;
+  parent_id: string | null;
+  description: string;
+  created_at?: string | null;
+}
+
+export type DecompositionStrategy = "atomic" | "molecular";
+
+export interface SkillFamily {
+  id: string;
+  slug: string;
+  label: string;
+  specialization: string;
+  domain_id: string | null;
+  focus_id: string | null;
+  language_id: string | null;
+  tags: string[];
+  decomposition_strategy: DecompositionStrategy;
+  best_assembly_id: string | null;
+  created_at?: string | null;
+}
+
+export type VariantTier = "foundation" | "capability";
+
+export interface Variant {
+  id: string;
+  family_id: string;
+  dimension: string;
+  tier: VariantTier;
+  genome_id: string;
+  fitness_score: number;
+  is_active: boolean;
+  evolution_id: string | null;
+  created_at?: string | null;
+}
+
+export interface TaxonomyNodeDetail {
+  node: TaxonomyNode;
+  children: TaxonomyNode[];
+}
+
+export interface FamilyDetail {
+  family: SkillFamily;
+  variant_count: number;
+  active_variants: Variant[];
+}

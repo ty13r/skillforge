@@ -2,14 +2,28 @@
 
 from skillforge.db.database import DB_PATH, get_connection, init_db, reset_db
 from skillforge.db.queries import (
+    get_active_variants,
+    get_family,
+    get_family_by_slug,
     get_lineage,
     get_run,
+    get_taxonomy_node,
+    get_taxonomy_node_by_slug,
+    get_taxonomy_tree,
+    get_variant_evolution,
+    get_variant_evolutions_for_run,
+    get_variants_for_family,
+    list_families,
     list_runs,
     save_challenge,
     save_generation,
     save_genome,
     save_result,
     save_run,
+    save_skill_family,
+    save_taxonomy_node,
+    save_variant,
+    save_variant_evolution,
 )
 
 __all__ = [
@@ -25,4 +39,19 @@ __all__ = [
     "save_challenge",
     "save_result",
     "get_lineage",
+    # v2.0
+    "save_taxonomy_node",
+    "get_taxonomy_node",
+    "get_taxonomy_node_by_slug",
+    "get_taxonomy_tree",
+    "save_skill_family",
+    "get_family",
+    "get_family_by_slug",
+    "list_families",
+    "save_variant",
+    "get_variants_for_family",
+    "get_active_variants",
+    "save_variant_evolution",
+    "get_variant_evolution",
+    "get_variant_evolutions_for_run",
 ]
