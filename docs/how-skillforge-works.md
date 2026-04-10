@@ -1,12 +1,14 @@
-# How SkillForge Works
+# How SKLD Works
+
+**SKLD** — **S**kill **K**inetics through **L**ayered **D**arwinism
 
 ## What It Is
 
-SkillForge is an evolutionary breeding platform for AI agent skills. It takes a description of what you want an AI agent to be good at — "write pytest unit tests" or "review pull requests for security issues" — and breeds a population of competing skill packages through tournament selection until the best one emerges.
+SKLD is an evolutionary breeding platform for AI agent skills. It takes a description of what you want an AI agent to be good at — "write pytest unit tests" or "review pull requests for security issues" — and breeds a population of competing skill packages through tournament selection until the best one emerges.
 
 A "skill" in this context is a structured instruction set that tells Claude (Anthropic's AI) how to behave when it encounters a specific type of task. Think of it as a specialized playbook: when a user says "write tests for this code," the skill tells Claude exactly how to approach it — which patterns to use, what scripts to run, what references to consult, what mistakes to avoid.
 
-SkillForge doesn't write these skills by hand. It evolves them.
+SKLD doesn't write these skills by hand. It evolves them.
 
 ## The Problem It Solves
 
@@ -155,7 +157,7 @@ These skills are evolvable by the very platform they power.
 
 ```
 ┌─────────────────────────────────────────────┐
-│              SkillForge Pipeline             │
+│              SKLD Pipeline             │
 │                                              │
 │  Taxonomist ─→ Scientist ─→ Spawner         │
 │       │                        │             │
@@ -197,11 +199,11 @@ Winning variants are reusable. A great mock strategy evolved for pytest might wo
 
 ### For AI capabilities
 
-The recursive self-improvement loop means the platform gets better at making things better. Each generation of agent skills produces a more capable pipeline, which produces better agent skills, which produces an even more capable pipeline. The ceiling is wherever the underlying model's capabilities plateau — but within that ceiling, SkillForge finds the optimal configuration automatically.
+The recursive self-improvement loop means the platform gets better at making things better. Each generation of agent skills produces a more capable pipeline, which produces better agent skills, which produces an even more capable pipeline. The ceiling is wherever the underlying model's capabilities plateau — but within that ceiling, SKLD finds the optimal configuration automatically.
 
 ### The broader question
 
-SkillForge is an experiment in whether evolutionary pressure, applied systematically to AI instruction sets, can produce capabilities that exceed what human prompt engineers can design. Early results suggest yes — the tournament selection process discovers strategies that humans wouldn't think to try, and the multi-layer fitness evaluation catches failure modes that humans wouldn't notice.
+SKLD is an experiment in whether evolutionary pressure, applied systematically to AI instruction sets, can produce capabilities that exceed what human prompt engineers can design. Early results suggest yes — the tournament selection process discovers strategies that humans wouldn't think to try, and the multi-layer fitness evaluation catches failure modes that humans wouldn't notice.
 
 The atomic variant architecture in v2.0 pushes this further by making evolution more precise, cheaper, and composable. And the recursive self-improvement loop means the system's ability to evolve skills is itself subject to evolution.
 
@@ -209,4 +211,4 @@ We're building a machine that builds better machines that build better machines.
 
 ---
 
-*SkillForge is open source at [github.com/ty13r/skillforge](https://github.com/ty13r/skillforge).*
+*SKLD is open source at [github.com/ty13r/skillforge](https://github.com/ty13r/skillforge).*
