@@ -1,6 +1,24 @@
-# SkillForge Backlog
+# SKLD Backlog
 
 Items carried over from PLAN-V1.2. These are not blockers for v2.0 but remain valuable work. Items may be absorbed into v2.0 phases where they overlap with the new architecture.
+
+---
+
+## Rebrand: SkillForge → SKLD
+
+Rename all references to "SkillForge" throughout the repo to "SKLD" (Skill Kinetics through Layered Darwinism).
+
+**Scope:**
+- Python package: `skillforge/` → `skld/` (module rename, all imports)
+- Config references: `SKILLFORGE_*` env vars → `SKLD_*`
+- Database: `skillforge.db` → `skld.db`
+- Docker/Railway: image name, service name
+- Frontend: any "SkillForge" text in UI components
+- Docs: CLAUDE.md, SCHEMA.md, SPEC files, journal entries (headers only, don't rewrite history)
+- pyproject.toml: package name
+- GitHub repo: coordinate with Matt (ty13r/skillforge → ty13r/skld)
+
+**Risk:** Breaking change for Railway deploy, env vars, imports. Do as a single atomic commit with a find-and-replace sweep + manual verification. Old env var names should be supported as fallbacks for one release cycle.
 
 ---
 
