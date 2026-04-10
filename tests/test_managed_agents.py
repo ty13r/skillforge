@@ -65,12 +65,17 @@ def _model_request_end(*, input_tokens: int, output_tokens: int, cache_creation_
 # ---------------------------------------------------------------------------
 
 
+# NOTE: extract_written_files NORMALIZES paths to relative form
+# (strips leading slashes) — see test_normalize_output_path. Tests below
+# use absolute path inputs and assert the relative-path outputs.
+
+
 def test_extract_written_files_write_tool_happy_path():
     events = [
         _tool_use_write("/output/solution.py", "print('hi')\n"),
     ]
     out = managed_agents.extract_written_files(events)
-    assert out == {"/output/solution.py": "print('hi')\n"}
+    assert out == {"output/solution.py": "print('hi')\n"}
 
 
 def test_extract_written_files_last_write_wins():
@@ -79,7 +84,7 @@ def test_extract_written_files_last_write_wins():
         _tool_use_write("/output/solution.py", "second version"),
     ]
     out = managed_agents.extract_written_files(events)
-    assert out == {"/output/solution.py": "second version"}
+    assert out == {"output/solution.py": "second version"}
 
 
 def test_extract_written_files_multiple_distinct_files():
@@ -90,38 +95,38 @@ def test_extract_written_files_multiple_distinct_files():
     ]
     out = managed_agents.extract_written_files(events)
     assert out == {
-        "/output/a.py": "a",
-        "/output/b.py": "b",
-        "/output/c.txt": "c",
+        "output/a.py": "a",
+        "output/b.py": "b",
+        "output/c.txt": "c",
     }
 
 
 def test_extract_written_files_bash_heredoc_cat():
     cmd = "cat > /output/solution.py <<EOF\nprint('hello')\nprint('world')\nEOF"
     out = managed_agents.extract_written_files([_tool_use_bash(cmd)])
-    assert "/output/solution.py" in out
-    assert "print('hello')" in out["/output/solution.py"]
-    assert "print('world')" in out["/output/solution.py"]
+    assert "output/solution.py" in out
+    assert "print('hello')" in out["output/solution.py"]
+    assert "print('world')" in out["output/solution.py"]
 
 
 def test_extract_written_files_bash_heredoc_quoted_delimiter():
     cmd = "cat > /tmp/x.txt <<'END'\nliteral $var no expansion\nEND"
     out = managed_agents.extract_written_files([_tool_use_bash(cmd)])
-    assert "/tmp/x.txt" in out
-    assert "literal $var no expansion" in out["/tmp/x.txt"]
+    assert "tmp/x.txt" in out
+    assert "literal $var no expansion" in out["tmp/x.txt"]
 
 
 def test_extract_written_files_bash_tee_heredoc():
     cmd = "tee /tmp/y.py <<EOF\nfoo = 1\nEOF"
     out = managed_agents.extract_written_files([_tool_use_bash(cmd)])
-    assert "/tmp/y.py" in out
-    assert "foo = 1" in out["/tmp/y.py"]
+    assert "tmp/y.py" in out
+    assert "foo = 1" in out["tmp/y.py"]
 
 
 def test_extract_written_files_bash_echo_redirect():
     cmd = 'echo "hello" > /tmp/greet.txt'
     out = managed_agents.extract_written_files([_tool_use_bash(cmd)])
-    assert out.get("/tmp/greet.txt") == "hello"
+    assert out.get("tmp/greet.txt") == "hello"
 
 
 def test_extract_written_files_mixed_write_and_bash():
@@ -130,8 +135,8 @@ def test_extract_written_files_mixed_write_and_bash():
         _tool_use_bash("cat > /output/notes.md <<EOF\nfrom bash heredoc\nEOF"),
     ]
     out = managed_agents.extract_written_files(events)
-    assert out["/output/solution.py"] == "from write tool"
-    assert "from bash heredoc" in out["/output/notes.md"]
+    assert out["output/solution.py"] == "from write tool"
+    assert "from bash heredoc" in out["output/notes.md"]
 
 
 def test_extract_written_files_ignores_non_tool_use_events():
@@ -143,7 +148,7 @@ def test_extract_written_files_ignores_non_tool_use_events():
         _ev("session.status_idle", processed_at="2026-04-10T01:01:00Z"),
     ]
     out = managed_agents.extract_written_files(events)
-    assert out == {"/output/solution.py": "real write"}
+    assert out == {"output/solution.py": "real write"}
 
 
 def test_extract_written_files_ignores_unknown_tool_names():
@@ -309,27 +314,141 @@ def test_session_was_skill_loaded_false_when_no_tool_use():
 
 
 @pytest.mark.asyncio
-async def test_upload_skill_uses_top_level_folder_path():
-    """The Skills API rejects bare 'SKILL.md' filenames — must be under a folder."""
+async def test_create_competitor_agent_skill_link_uses_custom_type():
+    """Skill references must use type='custom', not 'skill'.
+
+    Empirical finding from the Phase 1 end-to-end smoke: passing
+    type='skill' returns ``400 skills[0].type: "skill" is not a valid
+    value; expected one of "anthropic", "custom"``.
+    """
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.id = "agent_test_id"
+    mock_client.beta.agents.create = AsyncMock(return_value=mock_response)
+
+    await managed_agents.create_competitor_agent(
+        mock_client,
+        name="test-agent",
+        model="claude-sonnet-4-6",
+        system_prompt="prompt",
+        skill_id="skill_xyz",
+    )
+
+    call_kwargs = mock_client.beta.agents.create.call_args.kwargs
+    skills = call_kwargs.get("skills")
+    # The CustomSkillParams shape: {"skill_id": str, "type": "custom"}
+    # NOT {"id": str} — that returns 400 "Extra inputs not permitted".
+    assert skills == [{"skill_id": "skill_xyz", "type": "custom"}]
+
+
+@pytest.mark.asyncio
+async def test_create_competitor_agent_no_skill_when_skill_id_none():
+    """When no skill_id is provided, the agent.create call omits the skills field."""
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.id = "agent_no_skill"
+    mock_client.beta.agents.create = AsyncMock(return_value=mock_response)
+
+    await managed_agents.create_competitor_agent(
+        mock_client,
+        name="test-agent",
+        model="claude-sonnet-4-6",
+        system_prompt="prompt",
+        skill_id=None,
+    )
+
+    call_kwargs = mock_client.beta.agents.create.call_args.kwargs
+    assert "skills" not in call_kwargs
+
+
+@pytest.mark.asyncio
+async def test_upload_skill_folder_name_matches_frontmatter_name():
+    """The folder name MUST match the SKILL.md `name:` field per the live API.
+
+    Empirical finding from the Phase 1 end-to-end smoke: the API rejects
+    uploads where the folder name and frontmatter name diverge:
+    ``400 The folder name 'sf-...' must match the skill name '...' in SKILL.md``.
+
+    The wrapper extracts the real name from the SKILL.md and uses THAT
+    as the folder name, ignoring the ``name`` argument (which is still
+    used as ``display_title``).
+    """
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.id = "skill_test_123"
     mock_client.beta.skills.create = AsyncMock(return_value=mock_response)
 
+    skill_md = "---\nname: real-skill-name\ndescription: x\n---\n# X"
     result = await managed_agents.upload_skill(
-        mock_client, name="my-skill", skill_md="---\nname: x\n---\n# X"
+        mock_client, name="some-display-title", skill_md=skill_md
     )
 
     assert result == "skill_test_123"
-    mock_client.beta.skills.create.assert_called_once()
     call_kwargs = mock_client.beta.skills.create.call_args.kwargs
     files = call_kwargs["files"]
-    assert len(files) == 1
     filename, content, ctype = files[0]
-    assert filename == "my-skill/SKILL.md"
-    assert content == b"---\nname: x\n---\n# X"
+    assert filename == "real-skill-name/SKILL.md"
+    assert call_kwargs["display_title"] == "some-display-title"
     assert ctype == "text/markdown"
     assert call_kwargs["betas"] == [managed_agents.SKILLS_BETA]
+
+
+@pytest.mark.asyncio
+async def test_upload_skill_falls_back_to_arg_name_when_frontmatter_missing():
+    """If SKILL.md has no parseable name, use the ``name`` arg as the folder."""
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.id = "skill_fallback_999"
+    mock_client.beta.skills.create = AsyncMock(return_value=mock_response)
+
+    skill_md = "no frontmatter at all, just prose"
+    await managed_agents.upload_skill(
+        mock_client, name="fallback-name", skill_md=skill_md
+    )
+    files = mock_client.beta.skills.create.call_args.kwargs["files"]
+    assert files[0][0] == "fallback-name/SKILL.md"
+
+
+def test_extract_skill_name_from_md_happy_path():
+    md = "---\nname: my-skill\ndescription: x\n---\n# Body"
+    assert managed_agents._extract_skill_name_from_md(md) == "my-skill"
+
+
+def test_extract_skill_name_from_md_returns_none_when_missing():
+    assert managed_agents._extract_skill_name_from_md("no frontmatter") is None
+    assert managed_agents._extract_skill_name_from_md("---\ndescription: x\n---\n# x") is None
+    assert managed_agents._extract_skill_name_from_md("---\nname: x") is None  # no closing ---
+
+
+def test_normalize_output_path_strips_leading_slash():
+    """Cloud sandbox uses absolute paths; L1 needs them relative.
+
+    Empirical finding from the Phase 1 end-to-end smoke: writing to
+    ``/output/solution.py`` made L1 try to mkdir /output on the local
+    FS and crash with a read-only filesystem error.
+    """
+    assert managed_agents._normalize_output_path("/output/solution.py") == "output/solution.py"
+    assert managed_agents._normalize_output_path("///deeply/nested") == "deeply/nested"
+    assert managed_agents._normalize_output_path("output/solution.py") == "output/solution.py"
+    assert managed_agents._normalize_output_path("./output/x.py") == "output/x.py"
+    assert managed_agents._normalize_output_path("  ./out/y  ") == "out/y"
+
+
+def test_extract_written_files_normalizes_absolute_write_paths():
+    """The write tool's absolute file_path becomes a relative key in output_files."""
+    events = [_tool_use_write("/output/solution.py", "code")]
+    out = managed_agents.extract_written_files(events)
+    assert "/output/solution.py" not in out
+    assert "output/solution.py" in out
+    assert out["output/solution.py"] == "code"
+
+
+def test_extract_written_files_normalizes_absolute_bash_heredoc_paths():
+    """Bash heredoc writing to an absolute path also gets normalized."""
+    cmd = "cat > /output/solution.py <<EOF\ncode\nEOF"
+    out = managed_agents.extract_written_files([_tool_use_bash(cmd)])
+    assert "output/solution.py" in out
+    assert "/output/solution.py" not in out
 
 
 # ---------------------------------------------------------------------------

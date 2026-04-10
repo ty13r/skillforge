@@ -356,12 +356,23 @@ async def run_competitor(
         inline_skill_md: str | None = None
         if MANAGED_AGENTS_SKILL_MODE == "upload":
             try:
-                # Use a deterministic-but-unique skill name. Managed Agents
-                # versions are immutable so the second upload of the same
-                # name creates a new skill (different id).
-                skill_name = f"sf-{skill.id[:24]}"
+                # Each (skill, challenge) pair uploads its own copy so the
+                # display_title is unique. Re-uploading the same skill across
+                # competitors returns:
+                # ``400 Skill cannot reuse an existing display_title: ...``
+                # (per the live e2e smoke). The folder name inside the upload
+                # still has to match the SKILL.md frontmatter `name:` field —
+                # the wrapper handles that — but the display_title is free
+                # form. Including the challenge id keeps each upload distinct.
+                #
+                # An optimization for v1.3: cache uploaded skill_id at the
+                # run level keyed by skill.id so we upload once per skill and
+                # reuse across challenges. Phase 1 keeps the per-pair upload
+                # for simplicity (uploads are free + fast — Step 0 measured
+                # ~2s parallel, ~4s serial).
+                display_title = f"sf-{skill.id[:8]}-{challenge.id[:8]}"
                 skill_id = await managed_agents.upload_skill(
-                    client, name=skill_name, skill_md=skill.skill_md_content
+                    client, name=display_title, skill_md=skill.skill_md_content
                 )
                 skill_attached = True
             except Exception as exc:  # noqa: BLE001

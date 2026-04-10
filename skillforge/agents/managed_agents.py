@@ -135,17 +135,27 @@ async def upload_skill(
 ) -> str:
     """Upload a SKILL.md as a versioned org-level custom skill.
 
-    Per Step 0 findings, the file must live inside a top-level folder named
-    after the skill — passing a bare ``SKILL.md`` filename returns 400.
+    Two empirical constraints from Step 0:
+
+      1. The file must live inside a top-level folder — passing a bare
+         ``SKILL.md`` filename returns ``400 SKILL.md file must be exactly
+         in the top-level folder.``
+      2. **The folder name must MATCH the ``name:`` field in the SKILL.md
+         frontmatter** — surfaced during the live end-to-end smoke. The
+         ``name`` argument to this function is therefore IGNORED for the
+         folder/upload — we always extract the actual frontmatter name and
+         use that. The ``name`` arg is still used as the ``display_title``
+         (which can be anything human-readable).
 
     Returns the new ``skill_id``. The caller is responsible for archiving it
     via :func:`archive_skill` after the session completes.
     """
+    folder = _extract_skill_name_from_md(skill_md) or name
     resp = await client.beta.skills.create(
         display_title=name,
         files=[
             (
-                f"{name}/SKILL.md",
+                f"{folder}/SKILL.md",
                 skill_md.encode("utf-8"),
                 "text/markdown",
             )
@@ -153,6 +163,29 @@ async def upload_skill(
         betas=[SKILLS_BETA],
     )
     return resp.id
+
+
+_SKILL_NAME_RE = re.compile(r"^name:\s*(?P<name>[^\s\n]+)\s*$", re.MULTILINE)
+
+
+def _extract_skill_name_from_md(skill_md: str) -> str | None:
+    """Pull the ``name`` field out of a SKILL.md's YAML frontmatter.
+
+    Robust to variations in YAML formatting — uses a simple regex against
+    the raw text instead of parsing YAML, because the API's matching is
+    string-literal so we want exactly what's in the file. Returns None
+    if no name field is found.
+    """
+    if not skill_md.startswith("---"):
+        return None
+    try:
+        _, fm_block, _ = skill_md.split("---", 2)
+    except ValueError:
+        return None
+    match = _SKILL_NAME_RE.search(fm_block)
+    if not match:
+        return None
+    return match.group("name").strip()
 
 
 async def archive_skill(client: AsyncAnthropic, skill_id: str) -> None:
@@ -254,7 +287,12 @@ async def create_competitor_agent(
         "betas": [MANAGED_AGENTS_BETA],
     }
     if skill_id is not None:
-        kwargs["skills"] = [{"id": skill_id, "type": "skill"}]
+        # BetaManagedAgentsCustomSkillParams shape:
+        # {"skill_id": str, "type": "custom", "version": Optional[str]}
+        # Empirical errors during the e2e smoke caught two prior shape
+        # mistakes: type="skill" (must be "custom"), id=... (must be
+        # skill_id=...). Both surfaced as 400 invalid_request_error.
+        kwargs["skills"] = [{"skill_id": skill_id, "type": "custom"}]
     resp = await client.beta.agents.create(**kwargs)
     return resp.id
 
@@ -389,6 +427,14 @@ def extract_written_files(events: list[dict]) -> dict[str, str]:
          and the command may use shell expansion that we can't safely
          eval.
 
+    All paths are normalized to RELATIVE form: leading slashes are
+    stripped (the agent typically writes to absolute paths inside its
+    cloud sandbox, but L1's deterministic runner consumes relative
+    paths under a temp dir). The smoke test caught this — writing to
+    ``/output/solution.py`` in the cloud became ``Path('/') / '/output'``
+    on the local FS and crashed L1's mkdir with a read-only filesystem
+    error.
+
     Later writes to the same path overwrite earlier ones (last-write-wins).
     Files written via the ``edit`` tool are NOT captured here — that
     tool produces a patch event, not a content event. v1.3 follow-up.
@@ -407,16 +453,30 @@ def extract_written_files(events: list[dict]) -> dict[str, str]:
             path = inp.get("file_path")
             content = inp.get("content")
             if isinstance(path, str) and isinstance(content, str):
-                out[path] = content
+                out[_normalize_output_path(path)] = content
 
         elif name == "bash":
             cmd = inp.get("command")
             if not isinstance(cmd, str):
                 continue
             for path, content in _parse_bash_writes(cmd):
-                out[path] = content
+                out[_normalize_output_path(path)] = content
 
     return out
+
+
+def _normalize_output_path(path: str) -> str:
+    """Strip leading slashes so the path is relative for L1 consumption.
+
+    Also collapses ``./`` prefixes and any leading whitespace. The result
+    is always safe to pass to ``Path(tmp_dir) / normalized_path`` without
+    accidentally jumping out of the temp dir via an absolute path or a
+    parent traversal.
+    """
+    p = path.strip().lstrip("/")
+    while p.startswith("./"):
+        p = p[2:]
+    return p
 
 
 _HEREDOC_RE = re.compile(
