@@ -57,6 +57,7 @@ from skillforge.api.invites import router as invites_router
 from skillforge.api.routes import router as api_router
 from skillforge.api.seeds import router as seeds_router
 from skillforge.api.spec_assistant import router as spec_assistant_router
+from skillforge.api.taxonomy import router as taxonomy_router
 from skillforge.api.uploads import router as uploads_router
 from skillforge.api.websocket import router as ws_router
 from skillforge.db.database import init_db
@@ -109,6 +110,7 @@ app.include_router(seeds_router)
 app.include_router(uploads_router)
 app.include_router(invites_router)
 app.include_router(candidates_router)
+app.include_router(taxonomy_router)
 
 
 @app.get("/api/health")
