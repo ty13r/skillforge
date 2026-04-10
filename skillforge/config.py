@@ -146,6 +146,25 @@ MANAGED_AGENTS_SKILL_MODE: str = os.getenv("SKILLFORGE_MANAGED_AGENTS_SKILL_MODE
 # a plan edit (PLAN-V1.2 §Risk smoke-check).
 MANAGED_AGENTS_SESSION_RUNTIME_USD_PER_HOUR: float = 0.08
 
+# Per-model token pricing (USD per million tokens). Anthropic published rates
+# as of 2026-04-09. A bump requires a plan edit. The model name keys here
+# are NOT model selections — they're a lookup table indexed by whatever model
+# the per-role config has resolved to. Cross-cutting contract #2 ("no
+# hardcoded model strings outside config.py") puts this table in this file.
+MODEL_PRICE_PER_MTOK_INPUT: dict[str, float] = {
+    "claude-sonnet-4-6": 3.0,
+    "claude-haiku-4-5-20251001": 1.0,
+    "claude-opus-4-6": 5.0,
+}
+MODEL_PRICE_PER_MTOK_OUTPUT: dict[str, float] = {
+    "claude-sonnet-4-6": 15.0,
+    "claude-haiku-4-5-20251001": 5.0,
+    "claude-opus-4-6": 25.0,
+}
+# Cache creation tokens are billed at base input × 1.25; cache reads at × 0.1.
+MODEL_CACHE_CREATE_MULTIPLIER: float = 1.25
+MODEL_CACHE_READ_MULTIPLIER: float = 0.1
+
 # Advisor Strategy (advisor_20260301) — DESCOPED FROM PHASE 1.
 # Step 0 confirmed the tool type is not yet supported in anthropic SDK 0.92
 # or our beta access. Phase 1 ships without the advisor; this flag exists

@@ -32,6 +32,10 @@ from skillforge.config import (
     COMPETITOR_ADVISOR,
     MANAGED_AGENTS_SKILL_MODE,
     MAX_TURNS,
+    MODEL_CACHE_CREATE_MULTIPLIER,
+    MODEL_CACHE_READ_MULTIPLIER,
+    MODEL_PRICE_PER_MTOK_INPUT,
+    MODEL_PRICE_PER_MTOK_OUTPUT,
     model_for,
 )
 from skillforge.models import Challenge, CompetitionResult, SkillGenome
@@ -76,26 +80,6 @@ solution to ``output/solution.py``.
 """
 
 
-# ---------------------------------------------------------------------------
-# Token-pricing table (USD per million tokens). Mirrors Anthropic's published
-# Managed Agents pricing as of 2026-04-09. A bump requires a plan edit.
-# ---------------------------------------------------------------------------
-
-_PRICE_PER_MTOK_INPUT = {
-    "claude-sonnet-4-6": 3.0,
-    "claude-haiku-4-5-20251001": 1.0,
-    "claude-opus-4-6": 5.0,
-}
-_PRICE_PER_MTOK_OUTPUT = {
-    "claude-sonnet-4-6": 15.0,
-    "claude-haiku-4-5-20251001": 5.0,
-    "claude-opus-4-6": 25.0,
-}
-# Cache creation = base input × 1.25, cache read = base input × 0.1
-_PRICE_PER_MTOK_CACHE_CREATE_MULT = 1.25
-_PRICE_PER_MTOK_CACHE_READ_MULT = 0.1
-
-
 def _model_token_cost(
     *,
     model: str,
@@ -106,16 +90,21 @@ def _model_token_cost(
 ) -> tuple[float, float]:
     """Return ``(executor_input_usd, executor_output_usd)`` for one model.
 
-    Cache creation/read are folded into the input bucket because they're
-    just discounted variants of input tokens. The cost_breakdown surfaces
-    them separately for diagnostics; this function just returns the two
-    aggregates the engine cares about.
+    Pricing tables live in ``skillforge.config`` (cross-cutting contract #2:
+    no hardcoded model strings outside config.py). Cache creation/read are
+    folded into the input bucket because they're just discounted variants
+    of input tokens. The cost_breakdown surfaces them separately for
+    diagnostics; this function returns the two aggregates the engine cares about.
     """
-    in_rate = _PRICE_PER_MTOK_INPUT.get(model, 3.0)  # default to Sonnet
-    out_rate = _PRICE_PER_MTOK_OUTPUT.get(model, 15.0)
+    in_rate = MODEL_PRICE_PER_MTOK_INPUT.get(model, 3.0)  # default to Sonnet
+    out_rate = MODEL_PRICE_PER_MTOK_OUTPUT.get(model, 15.0)
     base_input_usd = (input_tokens / 1_000_000) * in_rate
-    cache_create_usd = (cache_creation_input / 1_000_000) * in_rate * _PRICE_PER_MTOK_CACHE_CREATE_MULT
-    cache_read_usd = (cache_read_input / 1_000_000) * in_rate * _PRICE_PER_MTOK_CACHE_READ_MULT
+    cache_create_usd = (
+        (cache_creation_input / 1_000_000) * in_rate * MODEL_CACHE_CREATE_MULTIPLIER
+    )
+    cache_read_usd = (
+        (cache_read_input / 1_000_000) * in_rate * MODEL_CACHE_READ_MULTIPLIER
+    )
     output_usd = (output_tokens / 1_000_000) * out_rate
     return (base_input_usd + cache_create_usd + cache_read_usd, output_usd)
 
