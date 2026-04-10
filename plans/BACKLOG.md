@@ -117,6 +117,83 @@ Needs a decision on acceptable trade-off before any public "run with your own ke
 
 ---
 
+## Research Paper: Evolutionary Optimization of LLM Agent Skills
+
+**Status**: Collecting data. Draft when v2.0 atomic evolution has results.
+
+### Working title
+
+"SKLD: Atomic Variant Evolution for LLM Agent Skill Optimization"
+
+### Core contributions
+
+1. **Structured skill evolution** — multi-layer fitness evaluation (deterministic, trigger accuracy, trace analysis, comparative, trait attribution) applied to complete skill packages (instructions + scripts + references), not just prompt text
+2. **Atomic variant decomposition** — breaking skills into independently-evolvable variants (foundation + capabilities) with trait-based assembly, reducing evolution cost and improving convergence
+3. **Recursive self-improvement** — evolving the pipeline's own agent skills using the pipeline itself, with measurable generation-over-generation improvement
+4. **Empirical comparison** — monolithic vs atomic evolution on identical domains, with ablation studies across Reviewer layers, learning log, and decomposition strategies
+
+### Related work to cite
+
+- GEPA (Generative Evolution of Prompts and Architectures) — Pareto-efficient selection, reflective mutation
+- Artemis — joint optimization of interdependent components
+- Imbue — learning log, preventing rediscovered failures
+- EvoPrompt / PromptBreeder — evolutionary prompt optimization (but for raw prompts, not structured skill packages)
+- DSPy — programmatic prompt optimization (different approach, complementary)
+- OpenELM — evolutionary LLM agents
+- Constitutional AI — self-improvement through AI feedback (adjacent)
+
+### Data to collect (starting now)
+
+All of this is already persisted or can be with minor additions:
+
+| Data | Source | Status |
+|------|--------|--------|
+| Full event streams per run | `run_events` table | Already collecting |
+| Per-generation fitness curves | `generations` table (best_fitness, avg_fitness) | Already collecting |
+| Trait survival/emergence | `generations` table (trait_survival, trait_emergence) | Already collecting |
+| Cost breakdowns per run | `evolution_runs.total_cost_usd` + cost_update events | Already collecting |
+| Learning log per run | `evolution_runs.learning_log` | Already collecting |
+| Bible findings | `bible/findings/*.md` | Already collecting |
+| Pairwise comparison matrices | `competition_results.pairwise_wins` | Already collecting |
+| Trait attribution scores | `skill_genomes.trait_attribution` | Already collecting |
+| **v2.0 additions needed:** | | |
+| Per-variant fitness over generations | `variants` table + `variant_evolutions` | Planned (Phase 3) |
+| Assembly quality vs sum-of-parts | Engineer integration test results | Planned (Phase 4) |
+| Cross-family variant reuse success rate | Taxonomist recommendations + outcomes | Planned (Phase 5) |
+| RSI meta-loop metrics | Pipeline speed/cost/fitness before/after self-evolution | Planned (backlog) |
+| Human baseline comparison | Human-authored skills vs evolved skills on same challenges | Need to design |
+
+### Experiments to run
+
+1. **v1.x vs v2.0 head-to-head**: same 5 domains, same budget, compare output fitness + cost + time
+2. **Ablation: Reviewer layers**: remove L2 (trigger), L3 (trace), L5 (attribution) individually, measure fitness degradation
+3. **Ablation: learning log**: with vs without accumulated lessons across generations
+4. **Ablation: decomposition**: atomic vs monolithic on skills the Taxonomist classifies as "atomic-ready"
+5. **RSI loop**: evolve pipeline agent skills, measure pipeline output quality before/after N self-improvement cycles
+6. **Human vs evolved**: 3 experienced prompt engineers write skills for 5 domains, compare against evolved skills on identical challenges with blind judging
+7. **Variant reuse**: take a proven mock-strategy variant from Domain A, inject into Domain B without re-evolution, measure fitness vs evolving from scratch
+
+### Paper structure (rough)
+
+1. Introduction — the skill authoring problem, why evolution
+2. Background — Claude Agent Skills, related work
+3. System architecture — taxonomy, agents, Reviewer pipeline, evolution loop
+4. Atomic variant evolution — decomposition, focused selection, assembly
+5. Recursive self-improvement — the meta-loop
+6. Experiments + results
+7. Discussion — limitations, implications, future work
+8. Conclusion
+
+### What to do now
+
+- Keep collecting data (already happening via existing persistence)
+- Document every surprising finding in journal entries (already doing this)
+- When v2.0 Phase 4 ships: run the head-to-head experiments
+- When RSI meta-loop is operational: run self-improvement experiments
+- Draft paper after 2-3 rounds of experimental results
+
+---
+
 ## Rich Variant Cards (Remaining Polish)
 
 Most of this shipped in the QA session. Remaining items:
