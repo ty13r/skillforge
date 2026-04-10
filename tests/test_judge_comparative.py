@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -42,19 +42,6 @@ def _make_result(
         compiles=compiles,
         output_files=output_files or {"solution.py": "def f(): pass"},
     )
-
-
-def _make_mock_client(response_text: str = "A") -> MagicMock:
-    """Build a mock AsyncAnthropic client returning a fixed text response."""
-    mock_content = MagicMock()
-    mock_content.text = response_text
-
-    mock_response = MagicMock()
-    mock_response.content = [mock_content]
-
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(return_value=mock_response)
-    return mock_client
 
 
 # ---------------------------------------------------------------------------
@@ -192,9 +179,11 @@ async def test_run_l4_pairwise_strategy(monkeypatch: pytest.MonkeyPatch) -> None
     r3 = _make_result(skill_id="s3")
     results = [r1, r2, r3]
 
-    mock_client = _make_mock_client("A")
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        return_value="A",
+    ):
         await run_l4(results)
 
     # With 3 results and always picking A: s1 beats s2, s1 beats s3 → 2 wins
@@ -218,9 +207,11 @@ async def test_run_l4_batched_rank_strategy(monkeypatch: pytest.MonkeyPatch) -> 
     r3 = _make_result(skill_id="s3")
     results = [r1, r2, r3]
 
-    mock_client = _make_mock_client("[2, 1, 3]")
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        return_value="[2, 1, 3]",
+    ):
         await run_l4(results)
 
     # Ranking [2, 1, 3]: candidate 2 (r2) is best → wins=2
@@ -246,9 +237,11 @@ async def test_run_l4_batched_rank_handles_malformed_response(
     r2 = _make_result(skill_id="s2")
     results = [r1, r2]
 
-    mock_client = _make_mock_client("garbage text without a valid array")
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        return_value="garbage text without a valid array",
+    ):
         output = await run_l4(results)  # must not crash
 
     assert r1.pairwise_wins["correctness"] == 0
@@ -268,10 +261,11 @@ async def test_run_l4_pairwise_handles_api_error(monkeypatch: pytest.MonkeyPatch
     r1 = _make_result(skill_id="s1")
     r2 = _make_result(skill_id="s2")
 
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(side_effect=RuntimeError("API down"))
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("API down"),
+    ):
         output = await run_l4([r1, r2])  # must not crash
 
     # Both ties → 0 wins each
@@ -294,9 +288,11 @@ async def test_run_l4_populates_pareto_objectives_on_each_result(
     r1 = _make_result(skill_id="s1")
     r2 = _make_result(skill_id="s2")
 
-    mock_client = _make_mock_client("A")
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        return_value="A",
+    ):
         await run_l4([r1, r2])
 
     expected_keys = {
@@ -325,13 +321,14 @@ async def test_run_l4_uses_configured_model(monkeypatch: pytest.MonkeyPatch) -> 
     r1 = _make_result(skill_id="s1")
     r2 = _make_result(skill_id="s2")
 
-    mock_client = _make_mock_client("A")
-
-    with patch("skillforge.agents.judge.comparative.AsyncAnthropic", return_value=mock_client):
+    with patch(
+        "skillforge.agents.judge.comparative.stream_text",
+        new_callable=AsyncMock,
+        return_value="A",
+    ) as mock_stream:
         await run_l4([r1, r2])
 
-    # Verify the model used in the API call matches the sentinel
-    call_kwargs = mock_client.messages.create.call_args
-    assert call_kwargs.kwargs.get("model") == sentinel_model or (
-        call_kwargs.args and call_kwargs.args[0] == sentinel_model
-    ) or call_kwargs.kwargs.get("model") == sentinel_model
+    # Verify the model used in the stream_text call matches the sentinel
+    mock_stream.assert_called()
+    call_kwargs = mock_stream.call_args.kwargs
+    assert call_kwargs.get("model") == sentinel_model

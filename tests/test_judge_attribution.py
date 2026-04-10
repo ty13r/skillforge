@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -30,26 +30,6 @@ def _make_skill(**kwargs) -> SkillGenome:
     return SkillGenome(**defaults)
 
 
-def _mock_api_response(text: str) -> MagicMock:
-    """Build a mock AsyncAnthropic client that returns ``text``."""
-    block = MagicMock()
-    block.text = text
-
-    response = MagicMock()
-    response.content = [block]
-
-    create_mock = AsyncMock(return_value=response)
-
-    messages_mock = MagicMock()
-    messages_mock.create = create_mock
-
-    client_mock = MagicMock()
-    client_mock.messages = messages_mock
-
-    client_class = MagicMock(return_value=client_mock)
-    return client_class
-
-
 def _valid_json_response(traits: list[str], contributions: dict | None = None, diagnostics: dict | None = None) -> str:
     contrib = contributions or {t: 0.3 for t in traits}
     diag = diagnostics or {t: "traced to successful outcome" for t in traits}
@@ -71,10 +51,11 @@ async def test_run_l5_populates_contribution_and_diagnostics():
     skill = _make_skill(traits=traits)
     result = _make_result()
 
-    response_text = _valid_json_response(traits)
-    client_class = _mock_api_response(response_text)
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=_valid_json_response(traits),
+    ):
         out = await run_l5(result, skill)
 
     assert "imperative-phrasing" in out.trait_contribution
@@ -97,10 +78,11 @@ async def test_run_l5_uses_skill_traits_when_present():
         instructions_ignored=["another thing"],
     )
 
-    response_text = _valid_json_response(traits)
-    client_class = _mock_api_response(response_text)
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=_valid_json_response(traits),
+    ):
         out = await run_l5(result, skill)
 
     assert set(out.trait_contribution.keys()) == set(traits)
@@ -122,10 +104,11 @@ async def test_run_l5_falls_back_to_l3_instructions_when_no_traits():
     )
 
     traits = ["step A", "step B"]
-    response_text = _valid_json_response(traits)
-    client_class = _mock_api_response(response_text)
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=_valid_json_response(traits),
+    ):
         out = await run_l5(result, skill)
 
     assert "step A" in out.trait_contribution
@@ -142,13 +125,14 @@ async def test_run_l5_empty_traits_and_instructions_returns_early():
     skill = _make_skill(traits=[])
     result = _make_result()  # instructions_followed/ignored default to []
 
-    client_class = MagicMock()
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+    ) as mock_stream:
         out = await run_l5(result, skill)
 
     # No API call was made
-    client_class.assert_not_called()
+    mock_stream.assert_not_called()
     assert out.trait_contribution == {}
     assert out.trait_diagnostics == {}
     assert "no traits" in out.judge_reasoning
@@ -170,9 +154,12 @@ async def test_run_l5_clamps_contribution_to_valid_range():
         "trait_diagnostics": {"x": "good", "y": "bad"},
         "summary": "clamped",
     })
-    client_class = _mock_api_response(response_text)
 
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=response_text,
+    ):
         out = await run_l5(result, skill)
 
     assert out.trait_contribution["x"] == 1.0
@@ -190,9 +177,11 @@ async def test_run_l5_handles_malformed_json_gracefully():
     skill = _make_skill(traits=traits)
     result = _make_result()
 
-    client_class = _mock_api_response("this is not json at all!!!")
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value="this is not json at all!!!",
+    ):
         out = await run_l5(result, skill)
 
     # No crash; dicts populated with defaults
@@ -222,9 +211,12 @@ async def test_run_l5_handles_missing_trait_in_response():
         "trait_diagnostics": {"alpha": "good", "beta": "neutral"},
         "summary": "partial",
     })
-    client_class = _mock_api_response(response_text)
 
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=response_text,
+    ):
         out = await run_l5(result, skill)
 
     assert out.trait_contribution["gamma"] == 0.0
@@ -237,18 +229,15 @@ async def test_run_l5_handles_missing_trait_in_response():
 
 @pytest.mark.asyncio
 async def test_run_l5_handles_api_error():
-    """API raises an exception → empty dicts, error in judge_reasoning, no crash."""
+    """stream_text raises an exception → empty dicts, error in judge_reasoning, no crash."""
     skill = _make_skill(traits=["some-trait"])
     result = _make_result()
 
-    create_mock = AsyncMock(side_effect=RuntimeError("network failure"))
-    messages_mock = MagicMock()
-    messages_mock.create = create_mock
-    client_mock = MagicMock()
-    client_mock.messages = messages_mock
-    client_class = MagicMock(return_value=client_mock)
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("network failure"),
+    ):
         out = await run_l5(result, skill)
 
     assert out.trait_contribution == {}
@@ -272,9 +261,12 @@ async def test_run_l5_handles_non_float_contribution_values():
         "trait_diagnostics": {"x": "worked well"},
         "summary": "ok",
     })
-    client_class = _mock_api_response(response_text)
 
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        new_callable=AsyncMock,
+        return_value=response_text,
+    ):
         out = await run_l5(result, skill)
 
     assert out.trait_contribution["x"] == 0.0
@@ -286,36 +278,29 @@ async def test_run_l5_handles_non_float_contribution_values():
 
 @pytest.mark.asyncio
 async def test_run_l5_uses_configured_model():
-    """The model passed to messages.create matches model_for('judge_attribution')."""
+    """The model passed to stream_text matches model_for('judge_attribution')."""
     traits = ["x"]
     skill = _make_skill(traits=traits)
     result = _make_result()
 
-    response_text = _valid_json_response(traits)
-
-    block = MagicMock()
-    block.text = response_text
-    api_response = MagicMock()
-    api_response.content = [block]
-
-    create_mock = AsyncMock(return_value=api_response)
-    messages_mock = MagicMock()
-    messages_mock.create = create_mock
-    client_mock = MagicMock()
-    client_mock.messages = messages_mock
-    client_class = MagicMock(return_value=client_mock)
-
     sentinel_model = "sentinel-model-for-test"
 
     with (
-        patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class),
-        patch("skillforge.agents.judge.attribution.model_for", return_value=sentinel_model),
+        patch(
+            "skillforge.agents.judge.attribution.stream_text",
+            new_callable=AsyncMock,
+            return_value=_valid_json_response(traits),
+        ) as mock_stream,
+        patch(
+            "skillforge.agents.judge.attribution.model_for",
+            return_value=sentinel_model,
+        ),
     ):
         await run_l5(result, skill)
 
-    create_mock.assert_called_once()
-    call_kwargs = create_mock.call_args
-    assert call_kwargs.kwargs.get("model") == sentinel_model or call_kwargs.args[0] == sentinel_model or create_mock.call_args[1].get("model") == sentinel_model
+    mock_stream.assert_called_once()
+    call_kwargs = mock_stream.call_args.kwargs
+    assert call_kwargs.get("model") == sentinel_model
 
 
 # ---------------------------------------------------------------------------
@@ -329,28 +314,17 @@ async def test_run_l5_includes_trace_summary_in_prompt():
     skill = _make_skill(traits=traits)
     result = _make_result(trace=[{"role": "user", "content": "hello from trace XYZ"}])
 
-    response_text = _valid_json_response(traits)
-
     captured_prompts: list[str] = []
 
-    block = MagicMock()
-    block.text = response_text
-    api_response = MagicMock()
-    api_response.content = [block]
-
-    async def capture_create(**kwargs):
-        messages = kwargs.get("messages", [])
+    async def capture(_client, *, messages, **_kwargs):
         for m in messages:
             captured_prompts.append(m.get("content", ""))
-        return api_response
+        return _valid_json_response(traits)
 
-    messages_mock = MagicMock()
-    messages_mock.create = capture_create
-    client_mock = MagicMock()
-    client_mock.messages = messages_mock
-    client_class = MagicMock(return_value=client_mock)
-
-    with patch("skillforge.agents.judge.attribution.AsyncAnthropic", client_class):
+    with patch(
+        "skillforge.agents.judge.attribution.stream_text",
+        side_effect=capture,
+    ):
         await run_l5(result, skill)
 
     combined = "\n".join(captured_prompts)

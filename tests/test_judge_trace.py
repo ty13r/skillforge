@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -40,14 +40,6 @@ description: Use when testing.
 
 def _tool_use_block(name: str, input_data: dict | None = None) -> dict:
     return {"type": "tool_use", "name": name, "input": input_data or {}}
-
-
-def _mock_anthropic_response(text: str) -> MagicMock:
-    block = MagicMock()
-    block.text = text
-    response = MagicMock()
-    response.content = [block]
-    return response
 
 
 # ---------------------------------------------------------------------------
@@ -151,16 +143,10 @@ def test_classify_instruction_adherence_ignored():
 # Integration tests — run_l3 with mocked LLM
 # ---------------------------------------------------------------------------
 
-@patch("skillforge.agents.judge.trace_analysis.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l3_full_pipeline_mocked_llm(mock_anthropic_cls):
+async def test_run_l3_full_pipeline_mocked_llm():
     """Happy path: Skill loaded, Bash script executed, 2 instructions (1 followed, 1 ignored)."""
     diagnosis_json = '{"1": "not relevant to this challenge"}'
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response(diagnosis_json)
-    )
-    mock_anthropic_cls.return_value = mock_client
 
     body = """## Workflow
 
@@ -176,7 +162,13 @@ async def test_run_l3_full_pipeline_mocked_llm(mock_anthropic_cls):
         {"role": "assistant", "content": "Run the validation script now."},
     ]
     result = _make_result(trace=trace)
-    out = await run_l3(result, skill)
+
+    with patch(
+        "skillforge.agents.judge.trace_analysis.stream_text",
+        new_callable=AsyncMock,
+        return_value=diagnosis_json,
+    ):
+        out = await run_l3(result, skill)
 
     assert out.skill_was_loaded is True
     assert "scripts/validate.sh" in out.scripts_executed
@@ -188,14 +180,9 @@ async def test_run_l3_full_pipeline_mocked_llm(mock_anthropic_cls):
     assert isinstance(out.ignored_diagnostics, dict)
 
 
-@patch("skillforge.agents.judge.trace_analysis.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l3_skips_llm_when_no_ignored(mock_anthropic_cls):
+async def test_run_l3_skips_llm_when_no_ignored():
     """When all instructions are followed, the LLM should NOT be called."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock()
-    mock_anthropic_cls.return_value = mock_client
-
     # Instruction: "Run the validation script"
     # Trace contains "validation" — heuristic should classify as followed
     body = "- Run the validation script\n"
@@ -204,28 +191,32 @@ async def test_run_l3_skips_llm_when_no_ignored(mock_anthropic_cls):
         {"role": "assistant", "content": "Run the validation script now for validation purposes."},
     ]
     result = _make_result(trace=trace)
-    out = await run_l3(result, skill)
+
+    with patch(
+        "skillforge.agents.judge.trace_analysis.stream_text",
+        new_callable=AsyncMock,
+    ) as mock_stream:
+        out = await run_l3(result, skill)
 
     assert out.ignored_diagnostics == {}
-    mock_client.messages.create.assert_not_called()
+    mock_stream.assert_not_called()
 
 
-@patch("skillforge.agents.judge.trace_analysis.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l3_handles_malformed_diagnosis_response(mock_anthropic_cls):
+async def test_run_l3_handles_malformed_diagnosis_response():
     """Garbage LLM response should produce 'diagnosis unparseable' entries, no crash."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("I cannot provide JSON right now.")
-    )
-    mock_anthropic_cls.return_value = mock_client
-
     body = "- Use the xyzzyx_zorp_gizmo helper\n"
     skill = _make_skill(body)
     # Trace has nothing matching "xyzzyx_zorp_gizmo" — guaranteed ignored
     trace = [{"role": "assistant", "content": "Just reading files."}]
     result = _make_result(trace=trace)
-    out = await run_l3(result, skill)
+
+    with patch(
+        "skillforge.agents.judge.trace_analysis.stream_text",
+        new_callable=AsyncMock,
+        return_value="I cannot provide JSON right now.",
+    ):
+        out = await run_l3(result, skill)
 
     # Should not crash; diagnostics should exist
     assert isinstance(out.ignored_diagnostics, dict)
@@ -233,17 +224,18 @@ async def test_run_l3_handles_malformed_diagnosis_response(mock_anthropic_cls):
         assert "diagnosis unparseable" in val
 
 
-@patch("skillforge.agents.judge.trace_analysis.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_diagnose_ignored_handles_llm_error(mock_anthropic_cls):
-    """LLM raising an exception should produce 'diagnosis error' strings, no crash."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(side_effect=RuntimeError("network failure"))
-    mock_anthropic_cls.return_value = mock_client
-
+async def test_diagnose_ignored_handles_llm_error():
+    """stream_text raising an exception should produce 'diagnosis error' strings, no crash."""
     ignored = ["Use the xyzzyx_zorp_gizmo helper", "Check the frobnitz cache"]
     trace: list[dict] = []
-    result = await _diagnose_ignored(ignored, trace, "---\nname: s\n---\nbody")
+
+    with patch(
+        "skillforge.agents.judge.trace_analysis.stream_text",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("network failure"),
+    ):
+        result = await _diagnose_ignored(ignored, trace, "---\nname: s\n---\nbody")
 
     assert isinstance(result, dict)
     for ins in ignored:

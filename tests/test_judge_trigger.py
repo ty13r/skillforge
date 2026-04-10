@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -28,74 +28,57 @@ Do the thing.
     return SkillGenome(id="s1", generation=0, skill_md_content=md)
 
 
-def _mock_anthropic_response(text: str):
-    """Build a fake Anthropic response object with .content[0].text"""
-    block = MagicMock()
-    block.text = text
-    response = MagicMock()
-    response.content = [block]
-    return response
-
-
-@patch("skillforge.agents.judge.trigger.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l2_perfect_precision_and_recall(mock_anthropic_cls):
+async def test_run_l2_perfect_precision_and_recall():
     """Model predicts correctly: both triggers fire, both non-triggers don't."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("1. Y\n2. Y\n3. N\n4. N")
-    )
-    mock_anthropic_cls.return_value = mock_client
-
-    skill = _make_skill()
-    precision, recall = await run_l2(
-        skill,
-        should_trigger=["do the thing", "run the test"],
-        should_not_trigger=["unrelated query", "something else"],
-    )
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+        return_value="1. Y\n2. Y\n3. N\n4. N",
+    ):
+        skill = _make_skill()
+        precision, recall = await run_l2(
+            skill,
+            should_trigger=["do the thing", "run the test"],
+            should_not_trigger=["unrelated query", "something else"],
+        )
 
     assert precision == 1.0
     assert recall == 1.0
 
 
-@patch("skillforge.agents.judge.trigger.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l2_zero_recall_all_missed(mock_anthropic_cls):
+async def test_run_l2_zero_recall_all_missed():
     """Model says N for every prompt — triggers are all missed."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("1. N\n2. N\n3. N\n4. N")
-    )
-    mock_anthropic_cls.return_value = mock_client
-
-    skill = _make_skill()
-    precision, recall = await run_l2(
-        skill,
-        should_trigger=["do the thing", "run the test"],
-        should_not_trigger=["unrelated query", "something else"],
-    )
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+        return_value="1. N\n2. N\n3. N\n4. N",
+    ):
+        skill = _make_skill()
+        precision, recall = await run_l2(
+            skill,
+            should_trigger=["do the thing", "run the test"],
+            should_not_trigger=["unrelated query", "something else"],
+        )
 
     assert recall == 0.0
 
 
-@patch("skillforge.agents.judge.trigger.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l2_handles_zero_precision(mock_anthropic_cls):
+async def test_run_l2_handles_zero_precision():
     """All should_not_trigger prompts are falsely predicted Y — precision degrades."""
-    # should_trigger: 1 prompt (idx 0), should_not_trigger: 2 prompts (idx 1, 2)
-    # Model says Y for the non-trigger ones too → FP = 2, TP = 1
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("1. Y\n2. Y\n3. Y")
-    )
-    mock_anthropic_cls.return_value = mock_client
-
-    skill = _make_skill()
-    precision, recall = await run_l2(
-        skill,
-        should_trigger=["do the thing"],
-        should_not_trigger=["unrelated query", "something else"],
-    )
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+        return_value="1. Y\n2. Y\n3. Y",
+    ):
+        skill = _make_skill()
+        precision, recall = await run_l2(
+            skill,
+            should_trigger=["do the thing"],
+            should_not_trigger=["unrelated query", "something else"],
+        )
 
     # TP=1, FP=2 → precision = 1/3 < 1.0
     assert precision < 1.0
@@ -104,30 +87,31 @@ async def test_run_l2_handles_zero_precision(mock_anthropic_cls):
 @pytest.mark.asyncio
 async def test_run_l2_empty_queries_returns_zero_zero():
     """Empty query lists return (0.0, 0.0) without calling the API."""
-    with patch("skillforge.agents.judge.trigger.AsyncAnthropic") as mock_anthropic_cls:
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+    ) as mock_stream:
         skill = _make_skill()
         precision, recall = await run_l2(skill, should_trigger=[], should_not_trigger=[])
 
         assert (precision, recall) == (0.0, 0.0)
-        mock_anthropic_cls.assert_not_called()
+        mock_stream.assert_not_called()
 
 
-@patch("skillforge.agents.judge.trigger.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l2_handles_malformed_response(mock_anthropic_cls):
+async def test_run_l2_handles_malformed_response():
     """API returns random text with no Y/N — defaults to all N, recall=0. No crash."""
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("I cannot determine the answer to this.")
-    )
-    mock_anthropic_cls.return_value = mock_client
-
-    skill = _make_skill()
-    precision, recall = await run_l2(
-        skill,
-        should_trigger=["do the thing", "run the test"],
-        should_not_trigger=["unrelated query"],
-    )
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+        return_value="I cannot determine the answer to this.",
+    ):
+        skill = _make_skill()
+        precision, recall = await run_l2(
+            skill,
+            should_trigger=["do the thing", "run the test"],
+            should_not_trigger=["unrelated query"],
+        )
 
     assert recall == 0.0
 
@@ -138,7 +122,10 @@ async def test_run_l2_handles_missing_description():
     md = "No frontmatter here at all — just body text."
     skill = SkillGenome(id="s2", generation=0, skill_md_content=md)
 
-    with patch("skillforge.agents.judge.trigger.AsyncAnthropic") as mock_anthropic_cls:
+    with patch(
+        "skillforge.agents.judge.trigger.stream_text",
+        new_callable=AsyncMock,
+    ) as mock_stream:
         precision, recall = await run_l2(
             skill,
             should_trigger=["do the thing"],
@@ -146,7 +133,7 @@ async def test_run_l2_handles_missing_description():
         )
 
         assert (precision, recall) == (0.0, 0.0)
-        mock_anthropic_cls.assert_not_called()
+        mock_stream.assert_not_called()
 
 
 def test_extract_description_pulls_from_frontmatter():
@@ -197,18 +184,22 @@ def test_parse_yn_response_defaults_missing_to_n():
     assert result[4] == "N"
 
 
-@patch("skillforge.agents.judge.trigger.AsyncAnthropic")
 @pytest.mark.asyncio
-async def test_run_l2_uses_configured_model(mock_anthropic_cls):
-    """The model passed to the API call matches the return value of model_for."""
+async def test_run_l2_uses_configured_model():
+    """The model passed to stream_text matches the return value of model_for."""
     sentinel_model = "claude-sentinel-model-9999"
-    mock_client = MagicMock()
-    mock_client.messages.create = AsyncMock(
-        return_value=_mock_anthropic_response("1. Y\n2. N")
-    )
-    mock_anthropic_cls.return_value = mock_client
 
-    with patch("skillforge.agents.judge.trigger.model_for", return_value=sentinel_model) as mock_model_for:
+    with (
+        patch(
+            "skillforge.agents.judge.trigger.stream_text",
+            new_callable=AsyncMock,
+            return_value="1. Y\n2. N",
+        ) as mock_stream,
+        patch(
+            "skillforge.agents.judge.trigger.model_for",
+            return_value=sentinel_model,
+        ) as mock_model_for,
+    ):
         skill = _make_skill()
         await run_l2(
             skill,
@@ -217,10 +208,9 @@ async def test_run_l2_uses_configured_model(mock_anthropic_cls):
         )
 
         mock_model_for.assert_called_once_with("l2_trigger")
-        call_kwargs = mock_client.messages.create.call_args
-        assert call_kwargs.kwargs.get("model") == sentinel_model or call_kwargs.args[0] == sentinel_model or (
-            "model" in call_kwargs.kwargs and call_kwargs.kwargs["model"] == sentinel_model
-        )
+        mock_stream.assert_called_once()
+        call_kwargs = mock_stream.call_args.kwargs
+        assert call_kwargs.get("model") == sentinel_model
 
 
 def test_run_l2_never_hardcodes_model():
