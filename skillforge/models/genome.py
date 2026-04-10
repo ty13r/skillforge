@@ -54,6 +54,9 @@ class SkillGenome:
     # L6: Consistency (v1.1)
     consistency_score: float | None = None
 
+    # v2.0: the Variant this genome belongs to (None for molecular-mode skills)
+    variant_id: str | None = None
+
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict."""
         return {
@@ -78,6 +81,7 @@ class SkillGenome:
             "trait_attribution": self.trait_attribution,
             "trait_diagnostics": self.trait_diagnostics,
             "consistency_score": self.consistency_score,
+            "variant_id": self.variant_id,
         }
 
     @classmethod
@@ -105,4 +109,5 @@ class SkillGenome:
             trait_attribution=data.get("trait_attribution", {}),
             trait_diagnostics=data.get("trait_diagnostics", {}),
             consistency_score=data.get("consistency_score"),
+            variant_id=data.get("variant_id"),
         )

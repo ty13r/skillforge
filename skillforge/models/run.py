@@ -32,6 +32,10 @@ class EvolutionRun:
     max_budget_usd: float = 10.0
     failure_reason: str | None = None
 
+    # v2.0: taxonomy + evolution mode
+    family_id: str | None = None
+    evolution_mode: str = "molecular"  # molecular | atomic
+
     def to_dict(self) -> dict:
         """Serialize to a JSON-safe dict, including all nested dataclasses and datetimes."""
         return {
@@ -51,6 +55,8 @@ class EvolutionRun:
             "total_cost_usd": self.total_cost_usd,
             "max_budget_usd": self.max_budget_usd,
             "failure_reason": self.failure_reason,
+            "family_id": self.family_id,
+            "evolution_mode": self.evolution_mode,
         }
 
     @classmethod
@@ -74,4 +80,6 @@ class EvolutionRun:
             total_cost_usd=data.get("total_cost_usd", 0.0),
             max_budget_usd=data.get("max_budget_usd", 10.0),
             failure_reason=data.get("failure_reason"),
+            family_id=data.get("family_id"),
+            evolution_mode=data.get("evolution_mode", "molecular"),
         )
