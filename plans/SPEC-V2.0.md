@@ -154,9 +154,45 @@ The v1.x L1-L5 pipeline evaluates whole skills across all dimensions at once. Fo
 - **L4 (Comparative)**: within-dimension only — compare mock strategies against each other, not against fixture strategies
 - **L5 (Trait attribution)**: simplified — the variant IS the trait, so attribution equals the variant's overall score
 
+### Quantitative metrics (deterministic, no LLM needed)
+
+Every variant run automatically collects these hard metrics:
+
+**Execution metrics** (measured by the Competitor harness):
+- `execution_time_s` — wall clock seconds to complete the challenge
+- `turn_count` — Agent SDK conversation turns used
+- `tool_calls` — total Read/Write/Bash/etc calls
+- `token_input` + `token_output` — tokens consumed
+- `cost_usd` — API cost for this competitor run
+
+**Output metrics** (measured by `score.py` or deterministic analysis):
+- `code_compiles` — boolean, does the output parse/run?
+- `tests_pass_rate` — proportion of generated tests that pass (testing variants)
+- `coverage_delta` — test coverage improvement (testing variants, via coverage.py)
+- `lint_score` — ruff/eslint violation count on generated code
+- `output_file_count` — did it produce the expected files?
+- `validate_sh_exit` — does the domain validator pass?
+
+**Code quality proxy metrics** (AST analysis, deterministic):
+- `cyclomatic_complexity` — average per function
+- `max_function_length` — longest function in lines
+- `max_nesting_depth` — deepest indentation level
+- `function_count` — how many functions/methods produced
+- `import_count` — dependency footprint
+
+**Derived metrics** (calculated from the above):
+- `efficiency` = fitness / token_usage (quality per dollar)
+- `speed_quality` = fitness / execution_time (is faster also worse?)
+- `instruction_compliance` = instructions_followed / total_instructions (from L3 trace)
+- `tool_precision` = useful_tool_calls / total_tool_calls (is it flailing?)
+
 ### Per-dimension evaluation criteria
 
-Each variant dimension gets a machine-readable scoring rubric (JSON) designed by the Scientist alongside the focused challenge. The rubric specifies quantitative metrics (weighted, measured by `score.py`) and qualitative criteria (evaluated by the Reviewer's LLM layers).
+Each variant dimension gets a machine-readable scoring rubric (JSON) designed by the Scientist alongside the focused challenge. The rubric specifies:
+- **Quantitative metrics** (weighted, measured by `score.py` + AST analysis) — deterministic, reproducible
+- **Qualitative criteria** (evaluated by the Reviewer's LLM layers) — only for what can't be measured deterministically
+
+Both score types are reported separately in the run report so the research paper can analyze which matters more.
 
 Foundation variants additionally measure extensibility — can capability variants plug into this foundation cleanly?
 
