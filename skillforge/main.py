@@ -5,6 +5,11 @@ the built frontend SPA from ``frontend/dist``. The static mount is conditional
 so the backend works in both deployments (with frontend) and dev (without).
 """
 
+# ruff: noqa: E402
+# Logging must be configured before any ``skillforge.*`` imports so structured
+# logging is in place for any import-time warnings. This intentionally puts the
+# application imports below the logging setup block.
+
 from __future__ import annotations
 
 import json as _json
@@ -57,6 +62,7 @@ from skillforge.api.websocket import router as ws_router
 from skillforge.db.database import init_db
 from skillforge.db.queries import mark_zombie_runs
 from skillforge.db.seed_loader import load_seeds
+from skillforge.db.taxonomy_seeds import load_taxonomy
 
 logger = logging.getLogger("skillforge")
 
@@ -70,6 +76,16 @@ async def lifespan(app: FastAPI):
     """
     await init_db()
     await load_seeds()
+    try:
+        taxonomy_diag = await load_taxonomy()
+        logger.info(
+            "Taxonomy bootstrapped: %d nodes, %d families created, %d reused",
+            taxonomy_diag.get("nodes_total", 0),
+            taxonomy_diag.get("families_created", 0),
+            taxonomy_diag.get("families_reused", 0),
+        )
+    except Exception as exc:  # pragma: no cover - boot-time resiliency
+        logger.exception("Taxonomy bootstrap failed: %s", exc)
     zombie_count = await mark_zombie_runs()
     if zombie_count:
         logger.warning("Marked %d zombie run(s) as failed on startup", zombie_count)
