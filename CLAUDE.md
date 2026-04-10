@@ -1,11 +1,13 @@
-# SkillForge
+# SKLD — Skill Kinetics through Layered Darwinism
 
 ## What is this?
-An evolutionary breeding platform for Claude Agent Skills. Two modes:
-- **Domain mode**: Users define a specialization, we evolve a population of
-  SKILL.md files through tournament selection, export the winner.
-- **Meta mode**: Evolves universal Skill-authoring patterns that make any
-  Skill better. Tests generalization across multiple random domains. (v1.1)
+An evolutionary breeding platform for Claude Agent Skills. Decomposes skills into focused, independently-evolvable **atomic variants**, evolves each under targeted selection pressure, then assembles the best variants into a composite skill.
+
+**Full overview**: `docs/how-skld-works.md`
+
+## Current Status
+- **v1.x** (shipped): Monolithic skill evolution — works end-to-end, deployed on Railway
+- **v2.0** (active development): Atomic variant evolution — `plans/PLAN-V2.0.md` is the active plan, start at **Wave 1-1**
 
 ## Tech
 - Python 3.12+, FastAPI, Claude Agent SDK, SQLite (aiosqlite), WebSockets
@@ -14,30 +16,46 @@ An evolutionary breeding platform for Claude Agent Skills. Two modes:
 - Deploy target: Railway (Docker)
 
 ## Architecture
-Multi-agent orchestration with insights from GEPA, Artemis, and Imbue.
 
-Agent roles:
-1. Challenge Designer — generates evaluation tasks from the specialization (WebSearch enabled)
-2. Spawner — creates diverse initial Skill populations (gen 0) or breeds next gen
-3. Competitor — Agent SDK `query()` with candidate Skill loaded via `setting_sources=["project"]`
-4. Judging Pipeline (6 layers):
-   - L1: Deterministic (compile, tests, lint, perf — no LLM, dispatch on `verification_method`)
-   - L2: Trigger Accuracy (batched single-call precision/recall on frontmatter description)
-   - L3: Trace-Based Behavioral Analysis (did Skill load? instructions followed?)
-   - L4: Comparative + Pareto Selection (pairwise ranking, multi-objective front)
-   - L5: Trait Attribution (instruction → fitness mapping with diagnostics)
-   - L6: Consistency (repeated runs, variance check — v1.1)
-5. Breeder — reflective mutation (reads traces, not just scores), multi-parent
-   crossover, joint component mutation, persistent learning log, publishes to `bible/findings/`
+### Taxonomy
+```
+Domain → Focus → Language → Skill (family) → Variant (atomic unit)
+```
 
-Core loop: `skillforge/engine/evolution.py`
+### Agent Roster (v2.0)
+| Agent | Role |
+|-------|------|
+| **Taxonomist** | Classifies domains, decomposes into variant dimensions, recommends reuse. Checks existing taxonomy before creating new entries. |
+| **Scientist** | Designs focused experiments (challenges) per variant dimension with machine-readable evaluation rubrics. |
+| **Spawner** | Creates initial variant populations (narrower scope per dimension). |
+| **Competitor** | Runs a variant against a focused challenge via Agent SDK. |
+| **Reviewer** | Evaluates variant fitness — L1 (deterministic + code quality metrics), L3 (trace), L4 (comparative), L5 (trait attribution). Owns the metrics catalog. |
+| **Breeder** | Refines variants over generations through selective mutation. Works within a single dimension (horizontal). |
+| **Engineer** | Assembles winning variants into composite skill. Foundation skeleton + trait merge. Runs integration test + refinement (vertical). |
+
+### Two-Tier Variant Model
+- **Foundation variants**: structural decisions (fixture strategy, project conventions). Evolved first.
+- **Capability variants**: focused modules (mock strategy, assertion patterns). Evolved in context of winning foundation.
+
+### Evolution Modes
+- **Molecular** (v1.x): evolve entire SKILL.md as monolith. 5 pop × 3 gen × 3 challenges = 45 runs.
+- **Atomic** (v2.0): decompose → evolve per dimension (2 pop × 2 gen × 1 challenge each) → assemble. ~16 runs + assembly.
+- **Auto**: Taxonomist decides based on skill complexity. Simple skills → molecular. Complex skills → atomic.
+
+### Agent Skills (Recursive Self-Improvement)
+Each pipeline agent has its own Claude Agent Skill in `.claude/skills/`. The platform can evolve these skills using itself — a recursive self-improvement loop.
+
+Core loop: `skillforge/engine/evolution.py` (molecular) + `skillforge/engine/variant_evolution.py` (atomic, v2.0)
 
 ## Key Reference Documents
-- `docs/skills-research.md` — the definitive technical reference for Claude Agent Skills. READ FIRST.
+- `docs/how-skld-works.md` — **start here**: full system overview for first-time readers.
+- `plans/SPEC-V2.0.md` — v2.0 architecture spec (taxonomy, agents, variants, evaluation, data model).
+- `plans/PLAN-V2.0.md` — v2.0 implementation plan (5 phases, 15 waves, file-by-file).
+- `docs/skills-research.md` — the definitive technical reference for Claude Agent Skills.
 - `docs/golden-template.md` — canonical gen 0 structure. Spawner uses this as its seed.
 - `docs/golden-template/` — actual template files the Spawner copies and mutates.
 - `bible/` — the Claude Skills Bible. Breeder publishes findings after each generation.
-  Spawner reads `bible/patterns/*.md` at spawn time to incorporate proven patterns.
+- `SCHEMA.md` — database schema source of truth.
 
 ## Key Techniques (from prior art)
 - Reflective mutation via execution traces, not random (GEPA's ASI concept)
@@ -184,7 +202,7 @@ Examples:
 Every entry follows the template established by Entry #1:
 
 ```markdown
-# SkillForge — Project Journal
+# SKLD — Project Journal
 
 ## Entry #N: {Short Title}
 
@@ -254,10 +272,13 @@ The journal is the only doc that's written for humans first and machines second.
 ## Plans & Progress
 
 All planning and progress documents live in `plans/`:
-- **`plans/PLAN-V1.2.md`** — **active plan**: Managed Agents port + Advisor Strategy + carried-over PLAN-V1.1 test backfill. This is the source of truth for "what to build next" until we decide otherwise.
+- **`plans/PLAN-V2.0.md`** — **active plan**: Atomic variant evolution. 5 phases, 15 waves. Start at Wave 1-1.
+- **`plans/SPEC-V2.0.md`** — finalized spec: taxonomy, agent roster, variant architecture, evaluation strategy, data model.
+- `plans/BACKLOG.md` — carried-over items from v1.2 + research paper framework + SKLD rebrand.
 - `plans/PROGRESS.md` — completed work log, MVP checklist, decisions log.
-- `plans/archived/PLAN.md` — original file-by-file execution plan for Steps 3–11 (MVP). Shipped; kept for historical reference.
-- `plans/archived/PLAN-V1.1.md` — v1.1 enhancements plan (seed library, uploads, Anthropic palette, theme toggle). Shipped; kept for historical reference. The four remaining test/QA backfill items were carried over to PLAN-V1.2 §"Carried over from PLAN-V1.1".
+- `plans/PLAN-V1.2.md` — v1.2 plan (Managed Agents port). Shipped via PR #1.
+- `plans/archived/PLAN.md` — original MVP plan (Steps 3-11). Shipped.
+- `plans/archived/PLAN-V1.1.md` — v1.1 plan (seeds, uploads, palette, theme). Shipped.
 
 ### Task Execution Workflow (REQUIRED)
 
