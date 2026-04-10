@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS evolution_runs (
     pareto_front_ids TEXT NOT NULL,
     best_skill_id   TEXT,
     failure_reason  TEXT,
+    family_id       TEXT,
+    evolution_mode  TEXT NOT NULL DEFAULT 'molecular',
     FOREIGN KEY (best_skill_id) REFERENCES skill_genomes(id)
 )
 """
@@ -81,6 +83,7 @@ CREATE TABLE IF NOT EXISTS skill_genomes (
     trait_attribution     TEXT NOT NULL,
     trait_diagnostics     TEXT NOT NULL,
     consistency_score     REAL,
+    variant_id            TEXT,
     FOREIGN KEY (run_id) REFERENCES evolution_runs(id) ON DELETE CASCADE
 )
 """
@@ -189,6 +192,85 @@ CREATE TABLE IF NOT EXISTS candidate_seeds (
 )
 """
 
+# ---------------------------------------------------------------------------
+# v2.0 tables — taxonomy, families, variants, variant evolutions
+# ---------------------------------------------------------------------------
+
+_CREATE_TAXONOMY_NODES = """
+CREATE TABLE IF NOT EXISTS taxonomy_nodes (
+    id          TEXT PRIMARY KEY,
+    level       TEXT NOT NULL,
+    slug        TEXT NOT NULL,
+    label       TEXT NOT NULL,
+    parent_id   TEXT,
+    description TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL,
+    FOREIGN KEY (parent_id) REFERENCES taxonomy_nodes(id) ON DELETE CASCADE,
+    UNIQUE (level, slug, parent_id)
+)
+"""
+
+_CREATE_SKILL_FAMILIES = """
+CREATE TABLE IF NOT EXISTS skill_families (
+    id                     TEXT PRIMARY KEY,
+    slug                   TEXT NOT NULL UNIQUE,
+    label                  TEXT NOT NULL,
+    specialization         TEXT NOT NULL,
+    domain_id              TEXT,
+    focus_id               TEXT,
+    language_id            TEXT,
+    tags                   TEXT NOT NULL DEFAULT '[]',
+    decomposition_strategy TEXT NOT NULL DEFAULT 'molecular',
+    best_assembly_id       TEXT,
+    created_at             TEXT NOT NULL,
+    FOREIGN KEY (domain_id)   REFERENCES taxonomy_nodes(id) ON DELETE SET NULL,
+    FOREIGN KEY (focus_id)    REFERENCES taxonomy_nodes(id) ON DELETE SET NULL,
+    FOREIGN KEY (language_id) REFERENCES taxonomy_nodes(id) ON DELETE SET NULL
+)
+"""
+
+_CREATE_VARIANTS = """
+CREATE TABLE IF NOT EXISTS variants (
+    id            TEXT PRIMARY KEY,
+    family_id     TEXT NOT NULL,
+    dimension     TEXT NOT NULL,
+    tier          TEXT NOT NULL,
+    genome_id     TEXT NOT NULL,
+    fitness_score REAL NOT NULL DEFAULT 0.0,
+    is_active     INTEGER NOT NULL DEFAULT 0,
+    evolution_id  TEXT,
+    created_at    TEXT NOT NULL,
+    FOREIGN KEY (family_id)    REFERENCES skill_families(id)      ON DELETE CASCADE,
+    FOREIGN KEY (genome_id)    REFERENCES skill_genomes(id)       ON DELETE CASCADE,
+    FOREIGN KEY (evolution_id) REFERENCES variant_evolutions(id)  ON DELETE SET NULL
+)
+"""
+
+# Note: no ``FOREIGN KEY winner_variant_id REFERENCES variants(id)`` because
+# variants.evolution_id already points here and SQLite dislikes circular FKs
+# on CREATE. The relationship is enforced at the query layer.
+_CREATE_VARIANT_EVOLUTIONS = """
+CREATE TABLE IF NOT EXISTS variant_evolutions (
+    id                   TEXT PRIMARY KEY,
+    family_id            TEXT NOT NULL,
+    dimension            TEXT NOT NULL,
+    tier                 TEXT NOT NULL,
+    parent_run_id        TEXT NOT NULL,
+    population_size      INTEGER NOT NULL DEFAULT 2,
+    num_generations      INTEGER NOT NULL DEFAULT 2,
+    status               TEXT NOT NULL DEFAULT 'pending',
+    winner_variant_id    TEXT,
+    foundation_genome_id TEXT,
+    challenge_id         TEXT,
+    created_at           TEXT NOT NULL,
+    completed_at         TEXT,
+    FOREIGN KEY (family_id)            REFERENCES skill_families(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_run_id)        REFERENCES evolution_runs(id) ON DELETE CASCADE,
+    FOREIGN KEY (foundation_genome_id) REFERENCES skill_genomes(id)  ON DELETE SET NULL,
+    FOREIGN KEY (challenge_id)         REFERENCES challenges(id)     ON DELETE SET NULL
+)
+"""
+
 _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_runs_status ON evolution_runs (status)",
     "CREATE INDEX IF NOT EXISTS idx_runs_created_at ON evolution_runs (created_at DESC)",
@@ -201,6 +283,25 @@ _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_leaked_skills_created ON leaked_skills (created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_run_events_run_id ON run_events (run_id, id)",
     "CREATE INDEX IF NOT EXISTS idx_candidate_seeds_status ON candidate_seeds (status, created_at DESC)",
+    # v2.0 indexes
+    "CREATE INDEX IF NOT EXISTS idx_taxonomy_nodes_level_slug ON taxonomy_nodes (level, slug)",
+    "CREATE INDEX IF NOT EXISTS idx_taxonomy_nodes_parent ON taxonomy_nodes (parent_id)",
+    # Partial unique index enforces "one domain row per (level, slug)" because
+    # the table-level UNIQUE(level, slug, parent_id) constraint does not catch
+    # root rows — SQLite treats NULL parent_id values as distinct.
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_taxonomy_nodes_root_unique "
+    "ON taxonomy_nodes (level, slug) WHERE parent_id IS NULL",
+    "CREATE INDEX IF NOT EXISTS idx_skill_families_slug ON skill_families (slug)",
+    "CREATE INDEX IF NOT EXISTS idx_skill_families_domain ON skill_families (domain_id)",
+    "CREATE INDEX IF NOT EXISTS idx_skill_families_focus ON skill_families (focus_id)",
+    "CREATE INDEX IF NOT EXISTS idx_skill_families_language ON skill_families (language_id)",
+    "CREATE INDEX IF NOT EXISTS idx_variants_family_dim ON variants (family_id, dimension)",
+    "CREATE INDEX IF NOT EXISTS idx_variants_family_active ON variants (family_id, is_active)",
+    "CREATE INDEX IF NOT EXISTS idx_variants_genome ON variants (genome_id)",
+    "CREATE INDEX IF NOT EXISTS idx_variant_evolutions_family ON variant_evolutions (family_id, dimension)",
+    "CREATE INDEX IF NOT EXISTS idx_variant_evolutions_parent_run ON variant_evolutions (parent_run_id)",
+    "CREATE INDEX IF NOT EXISTS idx_runs_family ON evolution_runs (family_id)",
+    "CREATE INDEX IF NOT EXISTS idx_genomes_variant ON skill_genomes (variant_id)",
 ]
 
 _TABLE_DDLS = [
@@ -213,9 +314,22 @@ _TABLE_DDLS = [
     _CREATE_LEAKED_SKILLS,
     _CREATE_RUN_EVENTS,
     _CREATE_CANDIDATE_SEEDS,
+    # v2.0 — taxonomy must precede skill_families (FK); skill_families must
+    # precede variants + variant_evolutions; variant_evolutions is referenced
+    # by variants.evolution_id so it must come first.
+    _CREATE_TAXONOMY_NODES,
+    _CREATE_SKILL_FAMILIES,
+    _CREATE_VARIANT_EVOLUTIONS,
+    _CREATE_VARIANTS,
 ]
 
 _DROP_ORDER = [
+    # v2.0 — drop leaves first
+    "variants",
+    "variant_evolutions",
+    "skill_families",
+    "taxonomy_nodes",
+    # v1.x
     "competition_results",
     "generations",
     "skill_genomes",
@@ -223,18 +337,50 @@ _DROP_ORDER = [
     "evolution_runs",
 ]
 
+# ---------------------------------------------------------------------------
+# Migrations — additive, idempotent. Each entry describes a column we want to
+# ADD to an existing table. Guarded by a ``PRAGMA table_info()`` probe, so
+# running init_db twice is a no-op and upgrading an older DB doesn't lose data.
+# ---------------------------------------------------------------------------
+
+# (table_name, column_name, column_sql_fragment)
+_ADDITIVE_COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
+    ("evolution_runs", "family_id", "TEXT"),
+    ("evolution_runs", "evolution_mode", "TEXT NOT NULL DEFAULT 'molecular'"),
+    ("skill_genomes", "variant_id", "TEXT"),
+]
+
+
+async def _apply_additive_migrations(conn: aiosqlite.Connection) -> None:
+    """Add missing columns to existing tables without touching data.
+
+    Uses ``PRAGMA table_info`` to detect which columns already exist. On a
+    freshly-created database the v2.0 columns already come from the CREATE
+    TABLE DDL above, so this function is a no-op. On an upgrade from a
+    pre-v2.0 database, the columns are added via ``ALTER TABLE``.
+    """
+    for table, column, column_sql in _ADDITIVE_COLUMN_MIGRATIONS:
+        # Check whether the column already exists on this table.
+        async with conn.execute(f"PRAGMA table_info({table})") as cur:
+            existing = {row[1] async for row in cur}  # row[1] is column name
+        if column in existing:
+            continue
+        await conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_sql}")
+
 
 async def init_db(db_path: Path | None = None) -> None:
     """Create tables and indexes if they don't exist.
 
     Opens a fresh connection to ``db_path`` (defaults to ``config.DB_PATH``),
-    enables foreign keys, runs all DDL, commits, and closes.
+    enables foreign keys, runs all DDL, applies additive column migrations
+    for v2.0, creates indexes, commits, and closes.
     """
     path = db_path if db_path is not None else DB_PATH
     async with aiosqlite.connect(path) as conn:
         await conn.execute("PRAGMA foreign_keys = ON")
         for ddl in _TABLE_DDLS:
             await conn.execute(ddl)
+        await _apply_additive_migrations(conn)
         for idx in _INDEXES:
             await conn.execute(idx)
         await conn.commit()

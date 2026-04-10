@@ -37,10 +37,13 @@ The top-level run record. One row per `POST /evolve` invocation.
 | `pareto_front_ids` | TEXT | NOT NULL | JSON array of `skill_genomes.id`. Final Pareto front |
 | `best_skill_id` | TEXT | NULL | FK → `skill_genomes.id`. Single "winner" for export |
 | `failure_reason` | TEXT | NULL | Populated when status=failed |
+| `family_id` | TEXT | NULL | **v2.0**. FK → `skill_families.id`. Set by the Taxonomist at run submission time; NULL for pre-v2.0 runs and molecular-mode runs without classification |
+| `evolution_mode` | TEXT | NOT NULL | **v2.0**. `"molecular"` \| `"atomic"`. Default `"molecular"` — everything existing stays backward-compatible |
 
 Indexes:
 - `idx_runs_status` on `status` (for listing active/recent runs)
 - `idx_runs_created_at` on `created_at DESC`
+- `idx_runs_family` on `family_id` — **v2.0**, for listing runs per family
 
 ---
 
@@ -92,10 +95,12 @@ A single candidate Skill's full DNA + layered fitness. One row per skill per gen
 | `trait_attribution` | TEXT | NOT NULL | L5: JSON dict `{trait: contribution}` |
 | `trait_diagnostics` | TEXT | NOT NULL | L5: JSON dict `{trait: explanation}` |
 | `consistency_score` | REAL | NULL | L6 (v1.1). NULL for MVP |
+| `variant_id` | TEXT | NULL | **v2.0**. FK-ish → `variants.id`. Set when a genome is the backing content of a variant in atomic evolution; NULL for molecular-mode genomes. Not a hard FK because genomes can pre-date variant rows within a single transaction |
 
 Indexes:
 - `idx_genomes_run_gen` on `(run_id, generation)` — the hot path for "get all skills for this generation"
 - `idx_genomes_pareto` on `(run_id, is_pareto_optimal)` — for Pareto front queries
+- `idx_genomes_variant` on `variant_id` — **v2.0**, for reverse lookup from genome to owning variant
 
 **Lineage note**: `parent_ids` stays as a JSON column rather than a normalized join table. Lineage queries are infrequent (one `GET /runs/{id}/lineage` per completed run), so the simplicity of JSON outweighs query speed. If lineage becomes a hot path, we can add a `lineage_edges(parent_id, child_id)` table later without migrating the genome table.
 
@@ -229,6 +234,105 @@ No FK constraints — candidates may reference runs/skills that are later cleane
 
 ---
 
+### `taxonomy_nodes` (v2.0)
+
+The hierarchy that classifies skills: `domain → focus → language`. Populated at boot from the 16 Gen 0 seeds (Wave 1-3) and extended at runtime by the Taxonomist agent (Wave 2-1) when no existing node fits a new specialization.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `level` | TEXT | NOT NULL | `"domain"` \| `"focus"` \| `"language"` |
+| `slug` | TEXT | NOT NULL | kebab-case slug, unique within `(level, parent_id)` |
+| `label` | TEXT | NOT NULL | Human-readable display label |
+| `parent_id` | TEXT | NULL | FK → `taxonomy_nodes.id`. `NULL` for `level="domain"` rows. A `focus` row points at a `domain`; a `language` row points at a `focus`. Self-FK with `ON DELETE CASCADE` |
+| `description` | TEXT | NOT NULL | Free-form description; default `''` |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+
+Unique constraint: `(level, slug, parent_id)` so the same slug can exist at different levels or under different parents but never as a true duplicate.
+
+Indexes:
+- `idx_taxonomy_nodes_level_slug` on `(level, slug)`
+- `idx_taxonomy_nodes_parent` on `parent_id`
+
+---
+
+### `skill_families` (v2.0)
+
+A named lineage that groups variants sharing a specialization. One family per Taxonomist classification. The winning assembled composite is referenced by `best_assembly_id`.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `slug` | TEXT | NOT NULL UNIQUE | Kebab-case, globally unique family slug |
+| `label` | TEXT | NOT NULL | Display label |
+| `specialization` | TEXT | NOT NULL | The specialization text the Taxonomist classified |
+| `domain_id` | TEXT | NULL | FK → `taxonomy_nodes.id` with `ON DELETE SET NULL` |
+| `focus_id` | TEXT | NULL | FK → `taxonomy_nodes.id` with `ON DELETE SET NULL` |
+| `language_id` | TEXT | NULL | FK → `taxonomy_nodes.id` with `ON DELETE SET NULL` |
+| `tags` | TEXT | NOT NULL | JSON array of strings. Default `'[]'` |
+| `decomposition_strategy` | TEXT | NOT NULL | `"atomic"` \| `"molecular"`. Default `"molecular"`. Set by the Taxonomist during classification |
+| `best_assembly_id` | TEXT | NULL | `skill_genomes.id` of the current winning composite. No hard FK to avoid FK ordering headaches at insert time |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+
+Indexes:
+- `idx_skill_families_slug` on `slug`
+- `idx_skill_families_domain` on `domain_id`
+- `idx_skill_families_focus` on `focus_id`
+- `idx_skill_families_language` on `language_id`
+
+---
+
+### `variants` (v2.0)
+
+A single evolved variant within a family's dimension. The atomic unit of v2.0 evolution. One row per variant per dimension; the winning variant per `(family_id, dimension)` has `is_active=1`.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `family_id` | TEXT | NOT NULL | FK → `skill_families.id` `ON DELETE CASCADE` |
+| `dimension` | TEXT | NOT NULL | The dimension slug this variant targets (e.g., `"mock-strategy"`) |
+| `tier` | TEXT | NOT NULL | `"foundation"` \| `"capability"` |
+| `genome_id` | TEXT | NOT NULL | FK → `skill_genomes.id` `ON DELETE CASCADE`. The underlying SkillGenome for this variant |
+| `fitness_score` | REAL | NOT NULL | Default 0.0. Aggregate fitness from the Reviewer |
+| `is_active` | INTEGER | NOT NULL | 0/1. Default 0. Exactly one variant per `(family_id, dimension)` should have this set |
+| `evolution_id` | TEXT | NULL | FK → `variant_evolutions.id` `ON DELETE SET NULL`. The mini-evolution run that produced this variant |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+
+Indexes:
+- `idx_variants_family_dim` on `(family_id, dimension)` — primary lookup
+- `idx_variants_family_active` on `(family_id, is_active)` — "get the winning variants for this family"
+- `idx_variants_genome` on `genome_id` — reverse lookup
+
+---
+
+### `variant_evolutions` (v2.0)
+
+A mini-evolution run targeting one dimension of a family. Multiple rows per parent `evolution_runs` row — one per dimension that was atomically evolved.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `family_id` | TEXT | NOT NULL | FK → `skill_families.id` `ON DELETE CASCADE` |
+| `dimension` | TEXT | NOT NULL | Dimension slug |
+| `tier` | TEXT | NOT NULL | `"foundation"` \| `"capability"` |
+| `parent_run_id` | TEXT | NOT NULL | FK → `evolution_runs.id` `ON DELETE CASCADE`. The top-level run that scheduled this mini-evolution |
+| `population_size` | INTEGER | NOT NULL | Default 2 |
+| `num_generations` | INTEGER | NOT NULL | Default 2 |
+| `status` | TEXT | NOT NULL | `"pending"` \| `"running"` \| `"complete"` \| `"failed"` |
+| `winner_variant_id` | TEXT | NULL | `variants.id` of the winning variant. No hard FK (circular with `variants.evolution_id`); enforced at the query layer |
+| `foundation_genome_id` | TEXT | NULL | For capability tier: the winning foundation genome used as grounding context. FK → `skill_genomes.id` `ON DELETE SET NULL` |
+| `challenge_id` | TEXT | NULL | FK → `challenges.id` `ON DELETE SET NULL`. The focused challenge the Scientist designed for this dimension |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+| `completed_at` | TEXT | NULL | ISO-8601 UTC. Set on terminal status |
+
+Indexes:
+- `idx_variant_evolutions_family` on `(family_id, dimension)`
+- `idx_variant_evolutions_parent_run` on `parent_run_id`
+
+**Circular-FK note**: `variants.evolution_id` references `variant_evolutions.id`, and `variant_evolutions.winner_variant_id` conceptually references `variants.id`. SQLite dislikes declaring both hard FKs because of insert ordering. We declare only `variants.evolution_id` as a hard FK and validate `winner_variant_id` at the query layer. CREATE order is: `variant_evolutions` then `variants`, so the forward FK always resolves.
+
+---
+
 ### `run_events`
 
 Persisted event stream for post-mortem debugging. Every WebSocket event is also written here via fire-and-forget task.
@@ -251,10 +355,23 @@ Indexes:
 ```
 evolution_runs (1) ──┬──< (N) challenges
                      ├──< (N) skill_genomes ──< (N) competition_results (challenge_id)
-                     └──< (N) generations
+                     ├──< (N) generations
+                     ├──< (N) variant_evolutions       (v2.0)
+                     └── family_id ──> skill_families  (v2.0)
+
+skill_families (1) ──┬──< (N) variants
+                     └──< (N) variant_evolutions
+
+taxonomy_nodes (self) ──< (N) taxonomy_nodes (parent_id)
+taxonomy_nodes       <── skill_families.domain_id / focus_id / language_id (SET NULL)
+
+variants.genome_id   ──> skill_genomes (CASCADE)
+variants.evolution_id ──> variant_evolutions (SET NULL)
+variant_evolutions.foundation_genome_id ──> skill_genomes (SET NULL)
+variant_evolutions.challenge_id         ──> challenges    (SET NULL)
 ```
 
-All foreign keys are `ON DELETE CASCADE`. Deleting a run removes everything it owns.
+All v1.x foreign keys are `ON DELETE CASCADE` so deleting a run removes everything it owns. v2.0 foreign keys use `SET NULL` for "soft" relationships (taxonomy nodes, foundation genomes, winning variants) so deleting a taxonomy node or genome doesn't cascade-delete otherwise-healthy families or variant evolutions.
 
 ## Trace size concerns
 
@@ -271,4 +388,17 @@ All foreign keys are `ON DELETE CASCADE`. Deleting a run removes everything it o
 
 ## Migrations
 
-MVP has no migration system. Schema changes during development require deleting `skillforge.db`. If the schema changes after first deploy, we add a lightweight version column to a new `meta(key, value)` table and hand-write migrations.
+**v2.0 migration (Wave 1-2)** introduced an additive, idempotent column-migration hook inside `init_db()`. On every boot the init routine:
+
+1. Runs `CREATE TABLE IF NOT EXISTS` for every table in dependency order (v1.x and v2.0).
+2. Walks a `_ADDITIVE_COLUMN_MIGRATIONS` list — `(table, column, column_sql)` triples — and for each entry:
+   - Probes `PRAGMA table_info(<table>)` for the column.
+   - If the column is missing, runs `ALTER TABLE <table> ADD COLUMN <column> <column_sql>`.
+   - If present, it's a no-op.
+3. Creates indexes.
+
+This means upgrading a pre-v2.0 database is zero-touch: restart the server, and the missing `family_id`, `evolution_mode`, and `variant_id` columns are added without data loss. Fresh installs already get the columns from the CREATE TABLE DDL, so the ALTER is a no-op there.
+
+Future schema changes should follow the same pattern: add columns via the additive list, never drop or rename columns without a migration script. For structural changes (new tables) just add a new `_CREATE_…` DDL in dependency order and a `DROP` entry at the head of `_DROP_ORDER`.
+
+If we ever need destructive migrations (drop column, change type), we'll add a lightweight version column to a new `meta(key, value)` table and hand-write migrations.
