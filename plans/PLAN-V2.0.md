@@ -83,10 +83,11 @@ Within each wave, backend and frontend work are independent when possible. Acros
 
 **Create:**
 - `skillforge/db/taxonomy_seeds.py` — idempotent loader (same pattern as seed_loader.py)
-  - On first boot (empty taxonomy): run Taxonomist agent against each of the 16 seeds' specialization strings → Taxonomist creates domains, focuses, languages, and classifies each seed into a family
+  - On first boot (empty taxonomy): run a lightweight `_bootstrap_classify()` against each of the 16 seeds' specialization strings, one at a time. Each call reads the current taxonomy_nodes from DB first, so previously-created nodes are reused (not duplicated). The classifier creates domains, focuses, languages, and classifies each seed into a family.
   - On subsequent boots: hash-based skip (same as seed content hash)
-  - If new seeds are added: hash changes → Taxonomist re-runs for unclassified seeds only
-  - This means Wave 1-3 depends on the Taxonomist skill from Wave 1-1 (the `.claude/skills/taxonomist/` package) but NOT the full Taxonomist agent from Wave 2-1. Instead, use a lightweight `_bootstrap_classify()` function with a simpler prompt that only classifies (no decomposition). The full Taxonomist agent in Phase 2 replaces this with richer output.
+  - If new seeds are added: hash changes → classifier re-runs for unclassified seeds only, reading existing taxonomy from DB each time
+  - `_bootstrap_classify()` is a simpler prompt than the full Taxonomist agent (classification only, no decomposition or reuse recommendations). The full Taxonomist in Phase 2 replaces this at runtime with richer output, but the bootstrap function remains for startup seeding.
+  - **Critical**: every classify call must read `taxonomy_nodes` + `skill_families` from DB before deciding — this is how the Taxonomist avoids creating duplicate entries
   - Fallback: if no API key available (local dev without key), load a hardcoded default taxonomy so the app still boots
 
 **Modify:**
@@ -138,7 +139,7 @@ Within each wave, backend and frontend work are independent when possible. Acros
 
 **Modify:**
 - `skillforge/api/schemas.py` — add `evolution_mode: str | None = None` to EvolveRequest (defaults to auto-detect)
-- `skillforge/api/routes.py` — before spawning evolution task, call Taxonomist. Store family_id + evolution_mode on EvolutionRun. If mode is auto, Taxonomist decides.
+- `skillforge/api/routes.py` — before spawning evolution task: (1) query `get_taxonomy_tree()` and `list_families()` from DB, (2) pass both to Taxonomist along with the specialization, (3) store returned family_id + evolution_mode on EvolutionRun. If mode is auto, Taxonomist decides. If Taxonomist creates new taxonomy_nodes or families, they are persisted to DB before the evolution starts.
 - `skillforge/engine/events.py` — add new event types: taxonomy_classified, decomposition_complete, variant_evolution_started, variant_evolution_complete, assembly_started, assembly_complete, integration_test_started, integration_test_complete
 - `skillforge/engine/evolution.py` — after challenge design, check `run.evolution_mode`. If "molecular", proceed as v1.x. If "atomic", delegate to variant_evolution (Phase 3). For now, "atomic" falls back to molecular with a log warning.
 - `skillforge/config.py` — add model roles: "taxonomist" → Sonnet, "scientist" → same as challenge_designer, "engineer" → Sonnet
