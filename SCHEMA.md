@@ -198,6 +198,54 @@ No foreign keys — this table is intentionally standalone so a leaked record su
 
 ---
 
+### `candidate_seeds`
+
+AI-generated skill packages and evolution winners flagged for potential promotion to the curated seed library. Auto-populated by two sources: (1) the `POST /api/spec-assistant/generate-skill` endpoint saves every successful generation, and (2) the evolution engine saves the best_skill from every completed run.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `source` | TEXT | NOT NULL | `"generated"` (AI spec assistant) \| `"evolved"` (evolution winner) |
+| `source_run_id` | TEXT | NULL | FK → `evolution_runs.id`. Set for `"evolved"` source |
+| `source_skill_id` | TEXT | NULL | FK → `skill_genomes.id`. Set for `"evolved"` source |
+| `title` | TEXT | NOT NULL | Skill display name |
+| `specialization` | TEXT | NOT NULL | The domain specialization string |
+| `category` | TEXT | NOT NULL | Default `"uncategorized"`. Set during review |
+| `skill_md_content` | TEXT | NOT NULL | Full SKILL.md content |
+| `supporting_files` | TEXT | NOT NULL | JSON dict `{path: content}`. Default `"{}"` |
+| `traits` | TEXT | NOT NULL | JSON array of strings. Default `"[]"` |
+| `fitness_score` | REAL | NULL | Aggregate fitness from evolution (NULL for generated) |
+| `status` | TEXT | NOT NULL | `"pending"` \| `"approved"` \| `"rejected"` \| `"promoted"`. Default `"pending"` |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+| `promoted_at` | TEXT | NULL | ISO-8601 UTC. Set when status transitions to `"promoted"` |
+| `notes` | TEXT | NULL | Admin review notes |
+
+Indexes:
+- `idx_candidate_seeds_status` on `(status, created_at DESC)` — for listing pending candidates
+
+No FK constraints — candidates may reference runs/skills that are later cleaned up. The `skill_md_content` is a snapshot at the time of saving.
+
+**Promotion workflow**: `pending` → admin reviews → `approved` (queued for inclusion) → `promoted` (added to SEED_SKILLS at next deploy/restart). Alternatively, `pending` → `rejected` (with notes explaining why).
+
+---
+
+### `run_events`
+
+Persisted event stream for post-mortem debugging. Every WebSocket event is also written here via fire-and-forget task.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | INTEGER | PK | AUTOINCREMENT |
+| `run_id` | TEXT | NOT NULL | FK → `evolution_runs.id` |
+| `event_type` | TEXT | NOT NULL | Event type string |
+| `payload` | TEXT | NOT NULL | JSON event payload |
+| `timestamp` | TEXT | NOT NULL | ISO-8601 UTC |
+
+Indexes:
+- `idx_run_events_run_id` on `(run_id, id)`
+
+---
+
 ## Foreign key relationships
 
 ```

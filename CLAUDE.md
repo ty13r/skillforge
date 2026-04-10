@@ -89,6 +89,28 @@ Derived from `docs/skills-research.md`:
 **Structural:**
 - Name regex: `^[a-z0-9]+(-[a-z0-9]+)*$`, matches directory name exactly
 
+## Gen 0 Seed Quality Standard (non-negotiable for new seeds)
+
+Every Gen 0 seed skill MUST be a full golden-template package, not just a SKILL.md blob.
+
+**Minimum required files (4):**
+- `SKILL.md` — frontmatter + body per golden template (Quick Start, When to use, Workflow with `${CLAUDE_SKILL_DIR}` paths, 2-3 Examples, Common mistakes)
+- `scripts/validate.sh` — real bash validation (exit 0/1 with diagnostic output, not a stub)
+- `scripts/main_helper.py` — real Python logic (parser, formatter, validator, generator — does actual deterministic work)
+- `references/guide.md` — domain reference document Claude reads on demand
+
+**Domain-specific files (required where applicable):**
+- `test_fixtures/` — sample input files for the domain (e.g., `Dockerfile.example`, `sample.html`, source files to test against). Immutable across variants.
+- `assets/` — templates, configs, static resources (e.g., `.tf` templates, `.yml` workflow templates, `.sql` migration templates)
+- `references/` — additional reference docs beyond `guide.md` (e.g., `checklist.md`, `patterns.md`, `cheatsheet.md`, `test-patterns.md`)
+
+**Quality bar:**
+- Scripts must be functional — `python scripts/main_helper.py` and `bash scripts/validate.sh` should run without error on appropriate input
+- Reference docs must be substantive (50-200 lines of real content, not placeholders)
+- Test fixtures must contain realistic domain-specific content with known issues/patterns to work with
+- Every `${CLAUDE_SKILL_DIR}/` path referenced in SKILL.md must resolve to an actual file in `supporting_files`
+- File diversity: skills should NOT all have the same 4 files — add domain-appropriate extras
+
 ## Constraints
 - Competitors: max 15 turns per challenge
 - `max_budget_usd` caps total API spend per evolution run

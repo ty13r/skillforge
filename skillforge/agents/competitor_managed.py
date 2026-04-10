@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import Any
 
 from skillforge.agents import managed_agents
@@ -41,6 +42,33 @@ from skillforge.config import (
 from skillforge.models import Challenge, CompetitionResult, SkillGenome
 
 logger = logging.getLogger(__name__)
+
+
+def _log_task_failure(task: asyncio.Task) -> None:
+    """Log errors from fire-and-forget cleanup tasks."""
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc:
+        logger.error("cleanup task failed: %s", exc)
+
+
+async def _cleanup_skill_or_log_leak(
+    client: Any,
+    skill_id: str,
+    run_id: str | None,
+) -> None:
+    """Try to archive a skill; on failure, record it as a leaked skill."""
+    try:
+        await managed_agents.archive_skill(client, skill_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("skill %s leaked (run %s): %s", skill_id, run_id, exc)
+        try:
+            from skillforge.db.queries import log_leaked_skill
+
+            await log_leaked_skill(skill_id=skill_id, run_id=run_id, error=str(exc))
+        except Exception:  # noqa: BLE001
+            pass  # best-effort
 
 
 # ---------------------------------------------------------------------------
@@ -314,6 +342,9 @@ async def run_competitor(
     challenge: Challenge,
     env_id: str,
     *,
+    run_id: str | None = None,
+    generation: int = 0,
+    competitor_idx: int = 0,
     client: Any | None = None,
 ) -> CompetitionResult:
     """Run one Skill against one Challenge inside a Managed Agents session.
@@ -324,8 +355,9 @@ async def run_competitor(
     ``managed_agents.create_environment()`` and reuses its id for every
     competitor in that run.
 
-    Cleanup is best-effort and runs in detached tasks. ``leaked_skills``
-    bookkeeping is the engine's job, not this function's.
+    Cleanup is best-effort and runs in detached tasks with done-callbacks
+    that log failures. Skill cleanup records leaked_skills rows on failure
+    so the batch sweeper can retry deletion later.
     """
     own_client = client is None
     if client is None:
@@ -359,7 +391,7 @@ async def run_competitor(
                 # reuse across challenges. Phase 1 keeps the per-pair upload
                 # for simplicity (uploads are free + fast — Step 0 measured
                 # ~2s parallel, ~4s serial).
-                display_title = f"sf-{skill.id[:8]}-{challenge.id[:8]}"
+                display_title = f"sf-{skill.id[:8]}-{challenge.id[:8]}-{int(time.time())}"
                 skill_id = await managed_agents.upload_skill(
                     client, name=display_title, skill_md=skill.skill_md_content
                 )
@@ -398,12 +430,38 @@ async def run_competitor(
         # often beat this comfortably; the cap exists so a runaway agent
         # can't burn through budget.
         events: list[dict] = []
+        turn_count = 0
         deadline = 300.0 + 30.0 * MAX_TURNS  # extra slack per turn
         try:
             async for ev in managed_agents.iter_session_events(
                 client, session_id, deadline_seconds=deadline, poll_interval=2.0
             ):
                 events.append(ev)
+                ev_type = ev.get("type", "")
+                # Emit progress on tool_use events (each is one "turn")
+                if ev_type == "agent.tool_use" and run_id:
+                    turn_count += 1
+                    tool_name = ""
+                    # Extract tool name from the event content
+                    content = ev.get("content", [])
+                    if isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict) and block.get("type") == "tool_use":
+                                tool_name = block.get("name", "")
+                                break
+                    elif isinstance(content, dict):
+                        tool_name = content.get("name", "")
+                    # Also check top-level name field
+                    if not tool_name:
+                        tool_name = ev.get("name", "")
+                    from skillforge.engine.events import emit as _emit
+                    await _emit(
+                        run_id, "competitor_progress",
+                        generation=generation, competitor=competitor_idx,
+                        skill_id=skill.id, challenge_id=challenge.id,
+                        turn=turn_count,
+                        tool_name=tool_name,
+                    )
         except Exception as exc:  # noqa: BLE001
             judge_reasoning_parts.append(f"event polling error: {exc}")
 
@@ -451,19 +509,23 @@ async def run_competitor(
 
     finally:
         # Schedule cleanup as DETACHED tasks so they never block the
-        # evolution loop. The engine's leaked_skills bookkeeping is
-        # responsible for catching anything that fails here.
+        # evolution loop. Done callbacks log failures; skill cleanup
+        # additionally records leaked_skills rows for batch sweeping.
         if session_id:
-            asyncio.create_task(managed_agents.archive_session(client, session_id))
+            t = asyncio.create_task(managed_agents.archive_session(client, session_id))
+            t.add_done_callback(_log_task_failure)
         if agent_id:
-            asyncio.create_task(managed_agents.archive_agent(client, agent_id))
+            t = asyncio.create_task(managed_agents.archive_agent(client, agent_id))
+            t.add_done_callback(_log_task_failure)
         if skill_id:
-            # archive_skill_safe doesn't raise — engine wraps with leak
-            # bookkeeping at the integration point (task #8).
-            asyncio.create_task(managed_agents.archive_skill_safe(client, skill_id))
+            t = asyncio.create_task(
+                _cleanup_skill_or_log_leak(client, skill_id, run_id)
+            )
+            t.add_done_callback(_log_task_failure)
         # If WE created the client, close it (best-effort).
         if own_client:
-            asyncio.create_task(client.close())
+            t = asyncio.create_task(client.close())
+            t.add_done_callback(_log_task_failure)
 
     return CompetitionResult(
         skill_id=skill.id,

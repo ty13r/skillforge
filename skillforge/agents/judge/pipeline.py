@@ -59,6 +59,7 @@ def _eval_queries_for(skill: SkillGenome) -> tuple[list[str], list[str]]:
 async def run_judging_pipeline(
     generation: Generation,
     challenges: list[Challenge],
+    run_id: str | None = None,
 ) -> Generation:
     """Execute all judging layers in order; return the enriched generation.
 
@@ -86,6 +87,10 @@ async def run_judging_pipeline(
             continue
         await run_l1(result, challenge)
 
+    if run_id:
+        from skillforge.engine.events import emit
+        await emit(run_id, "judging_layer_complete", layer=1, generation=generation.number)
+
     # ---- L2: trigger accuracy (one batched call per unique skill) -----------
     # L2 is per-skill, not per-result. Compute once and stamp the same
     # (precision, recall) on every result for that skill.
@@ -104,6 +109,10 @@ async def run_judging_pipeline(
         result.trigger_precision = precision
         result.trigger_recall = recall
 
+    if run_id:
+        from skillforge.engine.events import emit
+        await emit(run_id, "judging_layer_complete", layer=2, generation=generation.number)
+
     # ---- L3: trace analysis --------------------------------------------------
     for result in generation.results:
         skill = skill_by_id.get(result.skill_id)
@@ -111,9 +120,17 @@ async def run_judging_pipeline(
             continue
         await run_l3(result, skill)
 
+    if run_id:
+        from skillforge.engine.events import emit
+        await emit(run_id, "judging_layer_complete", layer=3, generation=generation.number)
+
     # ---- L4: comparative + Pareto (operates on the full result set) ---------
     l4_output = await run_l4(generation.results)
     pareto_optimal_result_ids = set(l4_output.get("pareto_optimal_ids", []))
+
+    if run_id:
+        from skillforge.engine.events import emit
+        await emit(run_id, "judging_layer_complete", layer=4, generation=generation.number)
 
     # ---- L5: trait attribution ----------------------------------------------
     for result in generation.results:
@@ -121,6 +138,10 @@ async def run_judging_pipeline(
         if skill is None:
             continue
         await run_l5(result, skill)
+
+    if run_id:
+        from skillforge.engine.events import emit
+        await emit(run_id, "judging_layer_complete", layer=5, generation=generation.number)
 
     # ---- Aggregate per-skill fitness onto each SkillGenome ------------------
     # A skill may compete against multiple challenges; aggregate across them.

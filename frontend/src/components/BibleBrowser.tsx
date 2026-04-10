@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface BibleEntry {
   slug: string;
@@ -129,7 +130,7 @@ export default function BibleBrowser() {
                 {selected.filename}
               </p>
               <article className="bible-prose mt-4 max-w-none text-on-surface">
-                <ReactMarkdown>{selected.body}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>
               </article>
             </>
           ) : (

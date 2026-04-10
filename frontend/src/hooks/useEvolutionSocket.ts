@@ -28,6 +28,8 @@ export interface EvolutionSocketState {
   finishedCompetitors: number;
   /** Last "tick" timestamp from any non-heartbeat event — used for stale detection */
   lastEventAt: number;
+  /** Which judging layer (1-5) most recently completed; 0 = none yet */
+  currentJudgingLayer: number;
 }
 
 const INITIAL_STATE: EvolutionSocketState = {
@@ -42,6 +44,7 @@ const INITIAL_STATE: EvolutionSocketState = {
   expectedCompetitors: 0,
   finishedCompetitors: 0,
   lastEventAt: 0,
+  currentJudgingLayer: 0,
 };
 
 /**
@@ -118,7 +121,7 @@ export function useEvolutionSocket(runId: string | null): EvolutionSocketState {
 // Reducer-style state update from incoming events
 // ----------------------------------------------------------------------------
 
-function applyEvent(
+export function applyEvent(
   state: EvolutionSocketState,
   ev: EvolutionEvent,
 ): EvolutionSocketState {
@@ -128,6 +131,7 @@ function applyEvent(
   switch (ev.event) {
     case "generation_started":
       next.currentGeneration = ev.generation ?? next.currentGeneration;
+      next.currentJudgingLayer = 0;
       next.generations = upsertGeneration(next.generations, {
         number: ev.generation ?? 0,
         status: "running",
@@ -144,6 +148,22 @@ function applyEvent(
         skillId: ev.skill_id ?? "",
         challengeId: ev.challenge_id,
         state: "writing",
+        mutations: ev.mutations,
+        traits: ev.traits,
+        metaStrategy: ev.meta_strategy,
+        mutationRationale: ev.mutation_rationale,
+        skillMdContent: ev.skill_md_content,
+      });
+      break;
+
+    case "competitor_progress":
+      next.competitors = upsertCompetitor(next.competitors, {
+        competitorId: ev.competitor ?? 0,
+        skillId: ev.skill_id ?? "",
+        challengeId: ev.challenge_id,
+        state: "writing",
+        turn: ev.turn,
+        lastTool: ev.tool_name,
       });
       break;
 
@@ -164,6 +184,10 @@ function applyEvent(
       });
       break;
 
+    case "judging_layer_complete":
+      next.currentJudgingLayer = (ev.layer as number) ?? next.currentJudgingLayer;
+      break;
+
     case "scores_published":
       next.generations = upsertGeneration(next.generations, {
         number: ev.generation ?? next.currentGeneration,
@@ -175,7 +199,11 @@ function applyEvent(
       break;
 
     case "cost_update":
-      next.totalCostUsd = ev.total_cost_usd ?? next.totalCostUsd;
+      if (ev.incremental) {
+        next.totalCostUsd += (ev.total_cost_usd as number) ?? 0;
+      } else {
+        next.totalCostUsd = ev.total_cost_usd ?? next.totalCostUsd;
+      }
       break;
 
     case "breeding_started":
@@ -251,7 +279,7 @@ export function derivePhases(
   const labels: Record<PhaseState["id"], string> = {
     design_challenges: "Design Challenges",
     spawn_or_breed: state.currentGeneration === 0 ? "Spawn Population" : "Breed Next Gen",
-    compete: "Run Competitors",
+    compete: "Run Variants",
     judge: "Judge L1-L5",
     score_select: "Score & Select",
     finalize: "Finalize",
@@ -382,12 +410,20 @@ function upsertCompetitor(
   const idx = list.findIndex(
     (c) =>
       c.competitorId === patch.competitorId &&
-      c.skillId === patch.skillId,
+      c.skillId === patch.skillId &&
+      c.challengeId === patch.challengeId,
   );
+  // Strip undefined values from patch so spread doesn't overwrite existing data
+  const cleanPatch: Partial<CompetitorView> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) {
+      (cleanPatch as Record<string, unknown>)[k] = v;
+    }
+  }
   if (idx === -1) {
-    return [...list, patch];
+    return [...list, { ...patch }];
   }
   const next = [...list];
-  next[idx] = { ...next[idx], ...patch };
+  next[idx] = { ...next[idx], ...cleanPatch };
   return next;
 }

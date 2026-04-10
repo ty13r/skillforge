@@ -26,6 +26,8 @@ import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
+import logging
+
 from skillforge.agents.breeder import breed, publish_findings_to_bible
 from skillforge.agents.challenge_designer import design_challenges
 from skillforge.agents.competitor import run_competitor
@@ -37,6 +39,8 @@ from skillforge.db.queries import save_run
 from skillforge.engine.events import emit
 from skillforge.engine.sandbox import cleanup_sandbox, create_sandbox
 from skillforge.models import EvolutionRun, Generation, SkillGenome
+
+logger = logging.getLogger("skillforge.engine")
 
 # Module-level registry: run_id -> parent SkillGenome when the run was started
 # via fork-and-evolve (seed or upload). Looked up at gen 0 spawn time.
@@ -108,6 +112,12 @@ async def _run_one_competitor(
         competitor=competitor_idx,
         skill_id=skill.id,
         challenge_id=challenge.id,
+        # Skill identity for the frontend
+        mutations=skill.mutations,
+        traits=skill.traits,
+        meta_strategy=skill.meta_strategy or "",
+        mutation_rationale=skill.mutation_rationale or "",
+        skill_md_content=skill.skill_md_content,
     )
 
     if COMPETITOR_BACKEND == "managed":
@@ -115,7 +125,12 @@ async def _run_one_competitor(
             raise RuntimeError(
                 "managed backend requires a per-run env_id, got None"
             )
-        result = await run_competitor(skill, challenge, env_id)
+        result = await run_competitor(skill, challenge, env_id, run_id=run_id, generation=generation, competitor_idx=competitor_idx)
+        # Extract real cost from the managed backend's cost_breakdown
+        competitor_cost = sum(
+            v for k, v in result.cost_breakdown.items()
+            if k.endswith("_usd") and isinstance(v, (int, float))
+        ) if result.cost_breakdown else 0.0
         await emit(
             run_id,
             "competitor_finished",
@@ -124,7 +139,10 @@ async def _run_one_competitor(
             skill_id=skill.id,
             challenge_id=challenge.id,
             trace_length=len(result.trace),
+            competitor_cost_usd=round(competitor_cost, 4),
         )
+        if competitor_cost > 0:
+            await emit(run_id, "cost_update", total_cost_usd=round(competitor_cost, 4), incremental=True)
         return result
 
     # SDK path (default)
@@ -148,14 +166,26 @@ async def _run_one_competitor(
 
 
 def _estimate_generation_cost(generation: Generation) -> float:
-    """Rough USD estimate for a completed generation's API spend."""
-    turn_cost = sum(len(r.trace) for r in generation.results) * _COST_PER_TURN_USD
-    # L2 (1/skill) + L3 (1/result diagnosis) + L4 (1 global) + L5 (1/result)
+    """USD cost for a completed generation.
+
+    Prefers real cost_breakdown data from managed agents results.
+    Falls back to heuristic for SDK results that lack cost data.
+    """
+    total = 0.0
+    for r in generation.results:
+        cb = r.cost_breakdown
+        if cb and any(k.endswith("_usd") for k in cb):
+            # Real cost data from managed agents
+            total += sum(v for k, v in cb.items() if k.endswith("_usd") and isinstance(v, (int, float)))
+        else:
+            # Heuristic fallback for SDK backend
+            total += len(r.trace) * _COST_PER_TURN_USD
+    # Judge layer cost estimate (LLM calls, not tracked per-result)
     n_skills = len(generation.skills)
     n_results = len(generation.results)
     judge_calls = n_skills + n_results + 1 + n_results
-    judge_cost = judge_calls * _COST_PER_JUDGE_CALL_USD
-    return turn_cost + judge_cost
+    total += judge_calls * _COST_PER_JUDGE_CALL_USD
+    return total
 
 
 # --- Main entry point --------------------------------------------------------
@@ -172,15 +202,14 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
     """
     run.status = "running"
     run.created_at = run.created_at or datetime.now(UTC)
+    logger.info("run=%s starting: spec=%s pop=%d gens=%d backend=%s",
+                run.id[:8], run.specialization[:60], run.population_size,
+                run.num_generations, COMPETITOR_BACKEND)
 
-    # Ensure DB schema exists. init_db is idempotent (CREATE TABLE IF NOT EXISTS).
-    # Makes the engine self-contained regardless of caller — tests don't call
-    # init_db; the FastAPI lifespan handler does in production but calling it
-    # again here is a no-op.
     try:
         await init_db()
     except Exception as exc:  # noqa: BLE001
-        print(f"evolution: init_db failed: {exc}")
+        logger.warning("run=%s init_db failed: %s", run.id[:8], exc)
 
     await emit(run.id, "run_started", specialization=run.specialization)
 
@@ -194,17 +223,19 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         from skillforge.agents import managed_agents
 
         try:
+            logger.info("run=%s creating managed environment...", run.id[:8])
             managed_client = managed_agents.make_client()
             env_id = await managed_agents.create_environment(
                 managed_client, run_id=run.id
             )
+            logger.info("run=%s managed environment ready: %s", run.id[:8], env_id)
             await emit(
                 run.id,
                 "managed_environment_ready",
                 environment_id=env_id,
             )
         except Exception as exc:  # noqa: BLE001
-            print(f"evolution: failed to create managed environment: {exc}")
+            logger.error("run=%s managed environment creation failed: %s", run.id[:8], exc)
             run.status = "failed"
             run.failure_reason = f"managed environment creation failed: {exc}"
             await emit(run.id, "run_failed", reason="env_create_failed")
@@ -213,8 +244,10 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
     try:
         # --- Phase 1: design challenges -----------------------------------
+        logger.info("run=%s designing challenges...", run.id[:8])
         await emit(run.id, "challenge_design_started")
         run.challenges = await design_challenges(run.specialization, n=3)
+        logger.info("run=%s %d challenges designed", run.id[:8], len(run.challenges))
         for ch in run.challenges:
             await emit(
                 run.id,
@@ -292,12 +325,17 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                 for competitor_idx, skill in enumerate(skills)
                 for challenge in run.challenges
             ]
+            logger.info("run=%s gen=%d gathering %d competitor tasks (concurrency=%d)...",
+                        run.id[:8], gen_num, len(competitor_tasks), COMPETITOR_CONCURRENCY)
             results = list(await asyncio.gather(*competitor_tasks))
+            logger.info("run=%s gen=%d all %d competitors finished",
+                        run.id[:8], gen_num, len(results))
 
             # --- Judging pipeline -------------------------------------
             generation = Generation(number=gen_num, skills=skills, results=results)
+            logger.info("run=%s gen=%d starting judging pipeline...", run.id[:8], gen_num)
             await emit(run.id, "judging_started", generation=gen_num)
-            generation = await run_judging_pipeline(generation, run.challenges)
+            generation = await run_judging_pipeline(generation, run.challenges, run_id=run.id)
             await emit(
                 run.id,
                 "scores_published",
@@ -359,6 +397,35 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         run.completed_at = datetime.now(UTC)
         await _persist(run)
         dump_run_json(run)
+
+        # Auto-save best skill as candidate seed for potential promotion
+        if run.best_skill:
+            try:
+                from skillforge.db.queries import save_candidate_seed
+                import uuid as _uuid
+                best = run.best_skill
+                fitness = (
+                    sum(best.pareto_objectives.values()) / max(1, len(best.pareto_objectives))
+                    if best.pareto_objectives else None
+                )
+                # Extract name from frontmatter
+                title = best.frontmatter.get("name", run.specialization[:60]) if isinstance(best.frontmatter, dict) else run.specialization[:60]
+                await save_candidate_seed(
+                    id=str(_uuid.uuid4()),
+                    source="evolved",
+                    title=title,
+                    specialization=run.specialization,
+                    skill_md_content=best.skill_md_content,
+                    supporting_files=best.supporting_files or {},
+                    traits=best.traits or [],
+                    fitness_score=fitness,
+                    source_run_id=run.id,
+                    source_skill_id=best.id,
+                )
+                logger.info("run=%s auto-saved best skill as candidate seed", run.id[:8])
+            except Exception as e:
+                logger.warning("run=%s failed to save candidate seed: %s", run.id[:8], e)
+
         await emit(
             run.id,
             "evolution_complete",
@@ -426,7 +493,7 @@ async def _persist(run: EvolutionRun) -> None:
     except Exception as exc:  # noqa: BLE001
         # DB persistence failures are non-fatal during a run — the Progress
         # Tracker event stream is the primary truth; DB is a durable backup.
-        print(f"evolution: DB persistence failed: {exc}")
+        logger.error("run=%s DB persistence failed: %s", run.id[:8], exc)
 
 
 def dump_run_json(run: EvolutionRun) -> Path | None:
@@ -449,5 +516,5 @@ def dump_run_json(run: EvolutionRun) -> Path | None:
         path.write_text(json.dumps(run.to_dict(), indent=2, default=str))
         return path
     except Exception as exc:  # noqa: BLE001
-        print(f"evolution: run JSON dump failed: {exc}")
+        logger.error("run=%s JSON dump failed: %s", run.id[:8], exc)
         return None

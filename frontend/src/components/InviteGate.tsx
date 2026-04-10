@@ -192,7 +192,7 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
               }}
               placeholder="e.g. ALPHA-M7F2"
               autoFocus
-              className="mt-2 w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 font-mono text-sm uppercase text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
+              className="mt-2 w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
             />
             {codeError && (
               <p className="mt-2 text-xs text-error">{codeError}</p>

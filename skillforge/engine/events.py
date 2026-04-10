@@ -16,7 +16,11 @@ Event types (documented on each emit site):
 from __future__ import annotations
 
 import asyncio
+import logging
+from datetime import UTC, datetime
 from typing import Any
+
+logger = logging.getLogger("skillforge.events")
 
 # Module-level registry: run_id -> queue
 _QUEUES: dict[str, asyncio.Queue[dict[str, Any]]] = {}
@@ -38,6 +42,23 @@ def drop_queue(run_id: str) -> None:
     _QUEUES.pop(run_id, None)
 
 
+async def _persist_event(run_id: str, event_type: str, payload: dict[str, Any]) -> None:
+    """Best-effort write of an event to the run_events table."""
+    try:
+        import json as _json
+
+        from skillforge.db.queries import _connect
+
+        async with _connect() as conn:
+            await conn.execute(
+                "INSERT INTO run_events (run_id, event_type, payload, timestamp) VALUES (?, ?, ?, ?)",
+                (run_id, event_type, _json.dumps(payload, default=str), payload.get("timestamp", "")),
+            )
+            await conn.commit()
+    except Exception:
+        pass  # best-effort, never block the engine
+
+
 async def emit(run_id: str, event: str, **kwargs: Any) -> None:
     """Convenience helper: put an event dict on the run's queue.
 
@@ -45,8 +66,10 @@ async def emit(run_id: str, event: str, **kwargs: Any) -> None:
         await emit(run_id, "generation_started", generation=0, population_size=5)
     """
     queue = get_queue(run_id)
-    payload = {"event": event, **kwargs}
+    payload = {"event": event, "timestamp": datetime.now(UTC).isoformat(), **kwargs}
+    logger.debug("run=%s event=%s %s", run_id[:8], event, {k: v for k, v in kwargs.items() if k != "report"})
     await queue.put(payload)
+    asyncio.create_task(_persist_event(run_id, event, payload))
 
 
 def clear_all() -> None:

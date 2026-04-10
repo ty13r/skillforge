@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Domain helper for {SKILL_NAME}.
+
+Performs deterministic operations that would otherwise consume context tokens.
+Run from SKILL.md via: python ${CLAUDE_SKILL_DIR}/scripts/main_helper.py [args]
+
+TODO: Implement domain-specific logic:
+- Parsing input files
+- Generating structured output
+- Running analysis/validation
+- Transforming data formats
+"""
+
+import argparse
+import json
+import sys
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="{SKILL_DESCRIPTION}")
+    # TODO: Add domain-specific arguments
+    # parser.add_argument("input", help="Input file or directory")
+    # parser.add_argument("--format", default="json", help="Output format")
+    args = parser.parse_args()
+
+    # TODO: Implement domain-specific logic
+    result = {
+        "status": "ok",
+        "message": "Replace this with real domain logic",
+    }
+
+    json.dump(result, sys.stdout, indent=2)
+    print()
+
+
+if __name__ == "__main__":
+    main()

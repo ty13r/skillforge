@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import CodeViewer from "./CodeViewer";
+import FileTree from "./FileTree";
 
 interface SkillDetail {
   id: string;
   generation: number;
   skill_md_content: string;
+  supporting_files?: Record<string, string>;
   traits: string[];
   maturity: string;
   parent_ids: string[];
@@ -18,6 +22,7 @@ export default function SeedDetailView() {
   const { runId, skillId } = useParams<{ runId: string; skillId: string }>();
   const [skill, setSkill] = useState<SkillDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string>("SKILL.md");
 
   useEffect(() => {
     if (!runId || !skillId) return;
@@ -29,6 +34,23 @@ export default function SeedDetailView() {
       .then(setSkill)
       .catch((err) => setError(String(err)));
   }, [runId, skillId]);
+
+  const files = useMemo(() => {
+    if (!skill) return [];
+    const list = [
+      { path: "SKILL.md", content: skill.skill_md_content || "" },
+    ];
+    if (skill.supporting_files) {
+      for (const [path, content] of Object.entries(skill.supporting_files)) {
+        list.push({ path, content: content as string });
+      }
+    }
+    return list;
+  }, [skill]);
+
+  const selectedContent = useMemo(() => {
+    return files.find((f) => f.path === selectedFile)?.content ?? "";
+  }, [files, selectedFile]);
 
   if (error) {
     return (
@@ -43,7 +65,7 @@ export default function SeedDetailView() {
   if (!skill) {
     return (
       <div className="mx-auto max-w-[1400px] px-6 py-10">
-        <p className="text-on-surface-dim">Loading skill…</p>
+        <p className="text-on-surface-dim">Loading skill...</p>
       </div>
     );
   }
@@ -62,6 +84,8 @@ export default function SeedDetailView() {
   const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
   const descMatch = frontmatter.match(/description:\s*>-\n((?:\s+.*\n?)+)/);
 
+  const hasMultipleFiles = files.length > 1;
+
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
       {/* Header */}
@@ -71,11 +95,16 @@ export default function SeedDetailView() {
             to="/registry"
             className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim hover:text-on-surface"
           >
-            ← Registry
+            &larr; Registry
           </Link>
-          <h1 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight">
-            {nameMatch?.[1] ?? skill.id}
-          </h1>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h1 className="font-display text-4xl leading-[1.05] tracking-tight">
+              {nameMatch?.[1] ?? skill.id}
+            </h1>
+            <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+              {files.length} {files.length === 1 ? "FILE" : "FILES"}
+            </span>
+          </div>
           <p className="mt-2 max-w-3xl text-sm text-on-surface-dim">
             {descMatch?.[1].trim().replace(/\s+/g, " ") ?? ""}
           </p>
@@ -84,15 +113,48 @@ export default function SeedDetailView() {
           to={`/new?seed=${skill.id}`}
           className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-surface-container-lowest transition-colors hover:bg-primary/90"
         >
-          ⑂ Fork &amp; Evolve
+          &#9794; Fork &amp; Evolve
         </Link>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
-        {/* Main SKILL.md */}
+        {/* Main content area with optional file tree */}
         <article className="min-w-0 rounded-xl border border-outline-variant bg-surface-container-lowest p-8">
-          <div className="bible-prose">
-            <ReactMarkdown>{bodyOnly}</ReactMarkdown>
+          <div className={hasMultipleFiles ? "flex gap-4" : ""}>
+            {/* File tree sidebar (only when there are supporting files) */}
+            {hasMultipleFiles && (
+              <div className="w-52 shrink-0 border-r border-outline-variant pr-4">
+                <p className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim mb-3">
+                  Skill Package
+                </p>
+                <FileTree
+                  files={files.map((f) => f.path)}
+                  selected={selectedFile}
+                  onSelect={setSelectedFile}
+                />
+              </div>
+            )}
+
+            {/* Content viewer */}
+            <div className="flex-1 min-w-0">
+              {hasMultipleFiles && (
+                <p className="mb-3 font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+                  {selectedFile}
+                </p>
+              )}
+
+              {selectedFile === "SKILL.md" ? (
+                <div className="bible-prose">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyOnly}</ReactMarkdown>
+                </div>
+              ) : selectedFile.endsWith(".md") ? (
+                <div className="bible-prose">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedContent}</ReactMarkdown>
+                </div>
+              ) : (
+                <CodeViewer code={selectedContent} filePath={selectedFile} />
+              )}
+            </div>
           </div>
         </article>
 
@@ -134,7 +196,7 @@ export default function SeedDetailView() {
                 href={`/api/runs/${runId}/export?format=skill_dir`}
                 className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
-                ↓ Download .zip
+                &darr; Download .zip
               </a>
               <a
                 href={`/api/runs/${runId}/export?format=skill_md`}
@@ -142,7 +204,7 @@ export default function SeedDetailView() {
                 rel="noreferrer"
                 className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
-                ↓ Download SKILL.md
+                &darr; Download SKILL.md
               </a>
               <a
                 href={`/api/runs/${runId}/export?format=agent_sdk_config`}
@@ -150,7 +212,7 @@ export default function SeedDetailView() {
                 rel="noreferrer"
                 className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
-                ↓ Agent SDK Config
+                &darr; Agent SDK Config
               </a>
             </div>
           </div>

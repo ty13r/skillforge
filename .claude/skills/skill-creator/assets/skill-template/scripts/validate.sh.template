@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# validate.sh — Validate output for {SKILL_NAME}
+# Usage: bash validate.sh [output_file_or_dir]
+#
+# Exit 0 on pass, non-zero with diagnostic messages on failure.
+
+errors=0
+
+# TODO: Add domain-specific validation checks
+# Example checks:
+# - File format validation
+# - Schema compliance
+# - Required fields present
+# - Output structure correct
+
+if [[ $errors -gt 0 ]]; then
+    echo "FAIL: $errors validation error(s) found"
+    exit 1
+fi
+
+echo "PASS: All validation checks passed"
+exit 0

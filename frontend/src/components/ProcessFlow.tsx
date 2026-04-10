@@ -42,7 +42,7 @@ export default function ProcessFlow({
         <p className="mt-1 text-sm text-on-surface">
           Generation{" "}
           <span className="font-display text-base text-primary">
-            {currentGeneration}
+            {currentGeneration + 1}
           </span>
           {totalGenerations != null && (
             <span className="text-on-surface-dim"> / {totalGenerations}</span>

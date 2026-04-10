@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from skillforge.engine.events import drop_queue, get_queue
 
+logger = logging.getLogger("skillforge.ws")
 router = APIRouter()
 
 
@@ -20,16 +22,14 @@ async def evolution_events(websocket: WebSocket, run_id: str) -> None:
     Cleans up the queue after the terminal event is sent.
     """
     await websocket.accept()
+    logger.info("ws run=%s connected", run_id[:8])
     queue = get_queue(run_id)
 
     try:
         while True:
             try:
-                # 60s timeout per receive — keeps the connection alive but
-                # doesn't hang forever if the engine crashes silently
                 event = await asyncio.wait_for(queue.get(), timeout=60.0)
             except TimeoutError:
-                # Heartbeat to detect dead connections
                 await websocket.send_json({"event": "heartbeat"})
                 continue
 
@@ -41,12 +41,13 @@ async def evolution_events(websocket: WebSocket, run_id: str) -> None:
                 "run_failed",
                 "run_cancelled",
             ):
+                logger.info("ws run=%s terminal event: %s", run_id[:8], event.get("event"))
                 drop_queue(run_id)
                 break
     except WebSocketDisconnect:
-        # Client disconnected — leave the queue alone (engine continues)
+        logger.info("ws run=%s client disconnected", run_id[:8])
         return
-    except Exception:
-        # Any other error: best-effort close
+    except Exception as exc:
+        logger.error("ws run=%s error: %s", run_id[:8], exc)
         with contextlib.suppress(Exception):
             await websocket.close(code=1011)

@@ -30,7 +30,7 @@ def _load_env_file(path: Path) -> None:
         key, _, value = line.partition("=")
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        if key and key not in os.environ:
+        if key and not os.environ.get(key):
             os.environ[key] = value
 
 
@@ -82,13 +82,7 @@ GATING_DISABLED: bool = os.getenv("SKILLFORGE_GATING_DISABLED") == "1"
 ADMIN_TOKEN: str = os.getenv("SKILLFORGE_ADMIN_TOKEN", "")
 
 # Log gating state at import so Railway logs show whether env vars landed.
-# This prints once per container boot — useful for diagnosing injection issues
-# without adding a debug endpoint that leaks the code values themselves.
-print(
-    f"skillforge.config: gating_disabled={GATING_DISABLED} "
-    f"codes_loaded={len(INVITE_CODES)} "
-    f"raw_env_len={len(_raw_codes)}"
-)
+# Startup diagnostic moved to end of file (after all constants are defined).
 
 
 def invite_code_valid(code: str | None) -> bool:
@@ -224,3 +218,11 @@ def model_for(role: str) -> str:
 # --- API keys / external -------------------------------------------------------
 
 ANTHROPIC_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
+
+# --- Startup diagnostic (all constants now defined) ---------------------------
+import logging as _logging
+_logging.getLogger("skillforge.config").info(
+    "gating_disabled=%s codes_loaded=%d backend=%s api_key=%s",
+    GATING_DISABLED, len(INVITE_CODES), COMPETITOR_BACKEND,
+    "set" if ANTHROPIC_API_KEY else "NOT SET",
+)

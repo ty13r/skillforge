@@ -588,6 +588,367 @@ There is **no undoable destructive step** until Phase 3 deletes the SDK path. Th
 
 ---
 
+## Backlog: Full Skill Packages & Seed Overhaul
+
+**Status**: 🟡 TODO — work after QA pass is clean.
+
+### Problem
+
+The 16 curated Gen 0 seeds are **SKILL.md-only text blobs** with empty `supporting_files: {}`. The golden template (`docs/golden-template.md`) defines a complete skill as a directory with `scripts/`, `references/`, and `assets/` — but no seed actually follows this structure. The UI has no way to browse the full skill package. The result: seeds look like blobs of random text, not real production skills, and the evolution pipeline never exercises scripts or references.
+
+### Work items
+
+#### 1. Deep research: curate 15 high-value skill domains
+
+Send an Opus agent to research the web for the most valuable Claude Code skill targets. Criteria the agent should evaluate:
+
+- **Real-world demand**: skills developers actually need daily (not toys)
+- **Deterministic validation possible**: the skill domain allows writing `scripts/validate.sh` or `scripts/test_*.py` that can objectively verify output (not just vibes)
+- **Script leverage**: meaningful work can be offloaded to `scripts/` (parsers, linters, formatters, code generators) saving context and improving reliability
+- **Reference depth**: the domain benefits from `references/` files (style guides, API specs, checklists) that Claude reads on demand
+- **Differentiation from generic prompting**: a structured skill with scripts + references materially outperforms a bare system prompt
+- **Diversity across categories**: cover code quality, data eng, web dev, devops, security, documentation, testing, and at least 2 novel categories not in the current set
+- **Difficulty spread**: mix of easy / medium / hard seeds
+
+The agent should return a ranked list of 15 skill domains with a 2-3 sentence justification per entry explaining why it meets the criteria. This replaces the current 16 seeds entirely.
+
+#### 2. Build full skill packages from the golden template
+
+For each of the 15 curated skills, produce a complete directory:
+
+```
+{skill-name}/
+├── SKILL.md              # Frontmatter + body per golden template
+├── scripts/
+│   ├── main_helper.py    # Real deterministic logic (not a stub)
+│   └── validate.sh       # Real validation (exit 0/1 with diagnostics)
+├── references/
+│   ├── guide.md          # Domain reference loaded on demand via ${CLAUDE_SKILL_DIR}
+│   └── examples.md       # Extended examples beyond the 2-3 inline ones
+└── assets/               # Templates, configs, or static resources if applicable
+```
+
+Non-negotiable constraints:
+- SKILL.md body references `${CLAUDE_SKILL_DIR}/scripts/` and `${CLAUDE_SKILL_DIR}/references/` — these paths must resolve
+- `scripts/validate.sh` must be executable and produce meaningful pass/fail output
+- `scripts/main_helper.py` (or equivalent) must do real work — not a stub
+- Description stays under 250 chars, body under 500 lines
+- 2-3 diverse I/O examples per SKILL.md
+
+#### 3. Pipeline integration: all skill content used in evolution
+
+Ensure every file in the skill package participates in the evolution lifecycle:
+
+- **Spawner**: copies the full directory (not just SKILL.md) into the competitor sandbox. Mutates SKILL.md body AND scripts/references when creating population variants.
+- **Competitor**: runs with the full skill directory at `.claude/skills/evolved-skill/`. Scripts and references are available at `${CLAUDE_SKILL_DIR}/`.
+- **L1 Deterministic Judge**: runs `scripts/validate.sh` as part of scoring. Script exit code + output feeds into fitness.
+- **L3 Trace Analysis**: checks whether the competitor actually read references and ran scripts (not just SKILL.md instructions).
+- **L5 Trait Attribution**: maps script/reference usage to fitness contribution.
+- **Breeder**: reads the full directory diff (not just SKILL.md diff) when deciding mutations. Can evolve scripts and references, not just instructions.
+
+#### 4. UI: browsable skill package viewer
+
+Add a skill package viewer to the frontend so users can browse the full contents before forking:
+
+- File tree sidebar showing all files in the skill directory
+- Syntax-highlighted content viewer (markdown for .md, python for .py, bash for .sh)
+- Accessible from: seed picker (fork mode), registry, and evolution results page
+- The "Forking from" panel shows the title + category/difficulty chips (not the raw frontmatter description — already fixed in this session)
+- Specialization override starts empty when forking (not pre-filled with description — already fixed in this session)
+
+#### 5. AI-assisted skill creation ("From Scratch" mode)
+
+When a user chooses "From Scratch", the existing `SpecAssistantChat` should be upgraded to:
+
+1. **Conversational spec gathering**: ask the user what they want the skill to do, what tools it needs, what validation looks like, what references would help
+2. **Build a structured prompt** from the conversation: domain, triggers, exclusions, workflow steps, validation criteria, reference needs
+3. **Generate a full skill package** from the golden template: SKILL.md + scripts + references + assets — not just a specialization string
+4. **Preview the generated package** in the skill viewer (item 4) before the user commits to evolving it
+5. The generated package becomes the gen 0 seed for the evolution run
+
+### Dependencies
+
+- Items 1-2 can run in parallel with ongoing QA work
+- Item 3 requires items 1-2 complete (seeds must exist as full packages first)
+- Item 4 is frontend-only, can start as soon as the API contract is defined
+- Item 5 depends on items 3-4
+
+### Not in scope (yet)
+
+- Evolving the golden template itself (meta-evolution of the template structure)
+- Community-contributed seeds (marketplace model)
+- Version control / diff view of skill evolution across generations
+
+---
+
+## Backlog: Rich Skill Variant Cards in the Arena
+
+**Status**: 🟡 TODO
+
+### Problem
+
+The Competitor Arena cards are opaque. Users see "Competitor B — WRITING CODE... — SKILL C046E4E1" with no insight into what's happening. They can't tell which challenge a variant is solving, how variants differ from each other, or what progress is being made.
+
+### Rename: Competitor → Skill Variant
+
+Throughout the UI (and ideally the codebase), rename "Competitor" to "Skill Variant". This better communicates what's actually happening — multiple variants of a skill being tested, not abstract competitors.
+
+Affected surfaces:
+- Arena cards ("Competitor B" → "Variant B" or use the skill name)
+- Sidebar phases ("Run Competitors" → "Run Skill Variants")
+- Arena header ("Competitor Arena" → "Skill Variant Arena" or just "Arena")
+- Live Feed Log event labels
+- Backend event names can stay as-is (breaking API change not worth it)
+
+### Control / elite labeling
+
+The spawner already carries the parent seed forward as slot 0 with `mutations=["elite-carry"]`. The UI must surface this:
+- Variant A should be labeled **"Variant A (Control)"** or **"Original"** so users know it's the unmodified seed
+- Visually distinguish it (different border, badge, or icon) from the mutated variants
+- This is critical for users to evaluate whether evolution actually improved on the original
+
+### Known card dedup bug (QA finding)
+
+The arena deduplicates competitor cards by `(competitorId, skillId)`. With N challenges per skill, each skill runs N times but only shows ONE card — the last event wins. This causes:
+- Competitor A (the control) appears to be missing from the arena
+- Duplicate "COMPETITOR_STARTED" entries in the live feed log
+- Card state can show stale info from a different challenge run
+
+Fix: the card key should include `challengeId`, or cards should show a per-challenge breakdown within each skill variant.
+
+### Rich card content
+
+Each Skill Variant card should show:
+
+1. **Skill identity**: the variant's name from frontmatter + a one-line summary of how it differs from the parent/other variants (e.g. "edge-case-first approach, stdlib-only")
+2. **Control badge**: if this is the elite carry (slot 0), show "(Control)" badge
+3. **Per-challenge runs**: show each challenge as a sub-row within the card (e.g. "Challenge 1: LRU Cache — DONE ✓" / "Challenge 2: CSV Parser — WRITING CODE...")
+4. **Live progress**: turn counter ("Turn 4 / 15"), elapsed time per variant
+5. **Streaming trace**: real-time output snippets — what the agent is writing, which tools it's calling. Scrollable, auto-follows, collapsible.
+6. **Outcome summary**: on completion, show pass/fail, key metrics, output preview
+
+### Skill package modal
+
+A "View Skill" button on each variant card that opens a modal showing the full skill package:
+- File tree sidebar (SKILL.md, scripts/, references/)
+- Syntax-highlighted content viewer
+- Diff view against the parent skill (highlight what this variant changed)
+- Reusable component — same viewer from the "Browsable skill package viewer" backlog item
+
+### Data requirements
+
+The backend already emits `competitor_started` and `competitor_finished` events. New data needed:
+- Skill frontmatter summary in `competitor_started` event (name, description, key traits)
+- Streaming progress events (turn count, tool calls, partial output) — new event type `competitor_progress`
+- Full skill content accessible via REST (`/api/runs/{id}/skills/{skill_id}` already exists)
+- Diff data: what changed from the parent skill
+
+---
+
+## Backlog: Recalibrate Cost & Time Estimates
+
+**Status**: 🟡 TODO — blocked until we have real data from the Managed Agents backend.
+
+The "Start Evolution" form shows estimated compute time, cost, and competitor run counts (`SpecializationInput.tsx` lines 393-468). These are hardcoded constants calibrated against the old SDK backend with sequential execution:
+
+```
+MIN_PER_COMPETITOR_RUN = 0.95
+USD_PER_COMPETITOR_RUN = 0.11
+SETUP_MIN = 5
+BREEDING_MIN_PER_GEN = 2
+SETUP_USD = 1.0
+BREEDING_USD_PER_GEN = 0.5
+```
+
+These numbers will be wrong once the Managed Agents backend is live:
+- **Time**: parallel competitor runs (concurrency=5) will dramatically reduce wall-clock time
+- **Cost**: Managed Agents adds $0.08/session-hour runtime overhead; token pricing may differ with Haiku vs Sonnet A/B test results; advisor strategy adds per-query cost
+- **Run shape**: challenge count, population size defaults, and breeding rounds may change
+
+**Action**: after ≥3 real Managed Agents runs on prod, extract actual per-run metrics (wall-clock time, total cost, per-competitor cost) and recalibrate the constants. Consider making them dynamic — fetched from backend based on the selected backend + model config rather than hardcoded in the frontend.
+
+---
+
+## Backlog: Streaming Progress for Long LLM Calls
+
+**Status**: 🟡 TODO
+
+### Problem
+
+The challenge designer, spawner, and breeder each make a single long LLM call (30-80+ seconds) during which zero events are emitted. The frontend shows "Waiting for events from the engine..." with no indication anything is happening. A minute of silence is unacceptable — users think the engine is broken.
+
+### Solution: Stream and emit incrementally
+
+Instead of waiting for the full LLM response and emitting all events at once, stream the response and emit each parsed item as it arrives:
+
+1. **Challenge Designer** — currently returns all 3 challenges in one shot. Stream the response and emit `challenge_designed` as each challenge is parsed from the JSON stream. User sees challenges appear one by one over ~30s instead of all 3 after 60s of silence.
+
+2. **Spawner** — generates all skill variants in one call. Stream and emit `skill_spawned` (new event) as each variant is parsed. User sees the population building up in real-time.
+
+3. **Breeder** — generates mutations + breeding report. Stream and emit partial breeding report + each mutation as parsed.
+
+### Implementation notes
+
+- All three agents already use `stream_text()` from `skillforge/agents/_llm.py` — the streaming infrastructure exists
+- The challenge is parsing incremental JSON from a partial stream (each challenge is a complete JSON object within a larger array)
+- A simpler approach: emit a `phase_progress` event every ~10s from the engine's event loop while the LLM call is in-flight, as a stopgap until full streaming parsing is implemented
+
+### Affected files
+- `skillforge/agents/challenge_designer.py`
+- `skillforge/agents/spawner.py`
+- `skillforge/agents/breeder.py`
+- `skillforge/engine/evolution.py` (emit sites)
+- `frontend/src/hooks/useEvolutionSocket.ts` (new event types)
+
+---
+
+## Open Questions
+
+### BYOK (Bring Your Own Key) — how to let users pay for their own runs
+
+**Status**: 🔴 UNRESOLVED — none of the options feel right yet.
+
+**Problem**: Users need to supply an Anthropic API key to pay for evolution runs. We don't want to be responsible for safeguarding other people's keys, and users need to feel safe.
+
+**Options explored (none accepted)**:
+
+1. **Ephemeral in-memory key** — user pastes key, backend holds it only for the run duration, never persists. Repo is public so users can verify. Risk: users still have to trust the running server instance; one logging mistake or dependency compromise leaks keys.
+
+2. **Anthropic OAuth / delegated access** — user authorizes SkillForge to spend from their account without sharing the raw key. Revocable, scoped, no secret exchange. Status: unclear if Anthropic offers this. Would be ideal.
+
+3. **Client-side proxy** — user's browser holds the key and proxies API calls. Not feasible for a 30-60 minute multi-agent pipeline with 45+ API calls.
+
+4. **Self-hosted mode** — user runs their own SkillForge instance, key never leaves their machine. Solves the trust problem entirely but kills the hosted product.
+
+**What we need to decide**: which trade-off is acceptable, or whether there's a mechanism we haven't considered yet. This blocks any public-facing "run with your own key" feature.
+
+---
+
+## Architecture: Domain-Specific Test Environments
+
+**Status**: 🟡 DESIGN — foundational change that affects challenge design, competitor sandboxing, and L1 scoring.
+
+### Problem
+
+The judging pipeline is generic — it runs the same L1-L5 layers regardless of domain. But a git commit message skill and a Terraform module skill need completely different evaluation environments. Currently:
+- L1 (deterministic checks) only works well for Python utility functions
+- The competitor sandbox is a bare temp directory — no domain-specific fixtures
+- Challenge designer invents criteria from scratch each time instead of reading a rubric
+- Fitness comparisons across variants are only meaningful if they face identical environments
+
+### Core principle
+
+The test environment is a property of the **domain**, not the individual skill or challenge. Every variant in the "React Component Refactoring" domain should face the same messy `UserDashboard.tsx`. The variants differ in *how they approach the problem*, not *what problem they face*.
+
+### Proposed skill package structure
+
+Extends the golden template with test fixtures and evaluation criteria:
+
+```
+{skill-name}/
+├── SKILL.md
+├── scripts/
+│   ├── setup_env.sh        # Prepares the standardized test workspace
+│   ├── validate.sh          # Domain-specific output validation
+│   ├── score.py             # Produces quantifiable metrics (JSON)
+│   └── main_helper.py       # Deterministic domain logic
+├── references/
+│   └── guide.md
+├── test_fixtures/           # Immutable inputs — same for every variant
+│   ├── input_file_1.ext     # Domain-specific sample inputs
+│   ├── input_file_2.ext
+│   └── config.ext           # Configuration files
+├── evaluation/
+│   ├── criteria.json        # Machine-readable scoring rubric
+│   └── expected_outputs/    # Reference solutions for diff-based scoring
+└── assets/
+    └── templates/           # Domain templates referenced by the skill
+```
+
+### Key components
+
+**`test_fixtures/`** — Copied into the competitor sandbox at the start of every run. Never modified by the skill itself. Identical across all variants and generations within a run. Examples:
+- React skill: 600-line god component, package.json, tsconfig.json
+- Git commit skill: a git repo with staged changes (setup_env.sh creates it)
+- Dockerfile skill: a multi-stage Dockerfile with known anti-patterns
+- Terraform skill: a module directory with .tf files
+
+**`evaluation/criteria.json`** — Machine-readable scoring rubric the challenge designer reads instead of inventing criteria:
+```json
+{
+  "quantitative": [
+    {"metric": "line_reduction_pct", "weight": 0.3, "threshold": 0.2, "direction": "higher_better"},
+    {"metric": "tests_pass", "weight": 0.4, "type": "boolean"},
+    {"metric": "component_count", "weight": 0.15, "threshold": 3, "direction": "higher_better"},
+    {"metric": "max_prop_depth", "weight": 0.15, "threshold": 2, "direction": "lower_better"}
+  ],
+  "qualitative": [
+    "Preserves existing behavior (public API unchanged)",
+    "Each extracted component has a single responsibility",
+    "No premature optimization (useMemo/useCallback without profiling)"
+  ]
+}
+```
+
+**`scripts/score.py`** — Takes competitor output and produces JSON metrics:
+```json
+{"line_reduction": 0.85, "tests_pass": true, "component_count": 5, "prop_depth_max": 1}
+```
+L1 runs this instead of generic "does it compile." Scores feed into L4 (Pareto ranking) as real objectives.
+
+**`scripts/setup_env.sh`** — Prepares the sandbox before the competitor runs:
+- Copies test_fixtures into the working directory
+- Installs domain-specific tools (npm for React, terraform for IaC)
+- Creates any dynamic fixtures (git repos with commits, databases with schema)
+
+### Pipeline changes required
+
+1. **Challenge Designer** — reads `evaluation/criteria.json` from the seed to generate domain-appropriate challenges. Challenges reference test_fixtures by path.
+
+2. **Competitor Sandbox** — `create_sandbox()` runs `setup_env.sh` after copying the skill directory. Test fixtures are available at known paths in the sandbox.
+
+3. **L1 Deterministic Judge** — runs `scripts/score.py` against competitor output instead of generic compile/test checks. Score output is structured JSON that feeds into fitness calculation.
+
+4. **L4 Comparative Judge** — uses quantitative metrics from `score.py` as Pareto objectives instead of LLM-estimated scores.
+
+5. **Spawner/Breeder** — when mutating, preserves test_fixtures and evaluation criteria (these are domain constants, not evolvable content). Only SKILL.md, scripts/main_helper.py, and references are mutation targets.
+
+### Consistency guarantees
+
+- **Within a generation**: all variants face identical test_fixtures (copied once at gen start)
+- **Across generations**: test_fixtures come from the seed package and never change
+- **Across runs**: same seed → same fixtures → comparable fitness scores
+- **Reproducibility**: `setup_env.sh` is deterministic (pinned versions, no network calls during setup)
+
+### Per-domain quantifiable metrics (examples)
+
+| Domain | Quantitative Metrics | How Measured |
+|--------|---------------------|--------------|
+| Git commit | format compliance, subject length, body structure | regex parser in score.py |
+| Code review | issues found vs planted (precision/recall) | diff against known-bugs list |
+| Unit tests | coverage delta, pass rate, mutation score | pytest + coverage.py + mutmut |
+| React refactoring | line reduction, component count, prop depth | AST analysis in score.py |
+| Dockerfile | image size, layer count, security scan | docker build + trivy |
+| Terraform | plan validity, resource count, variable typing | terraform validate + plan |
+| API docs | symbol coverage, format compliance | AST extraction + schema check |
+
+### Implementation phases
+
+1. **Phase A**: Add `test_fixtures/` and `evaluation/criteria.json` to the 15 new seed packages
+2. **Phase B**: Update `create_sandbox()` to run `setup_env.sh` and copy test_fixtures
+3. **Phase C**: Update L1 to run `scripts/score.py` and parse JSON output
+4. **Phase D**: Update challenge designer to read criteria.json
+5. **Phase E**: Update L4 to use score.py metrics as Pareto objectives
+
+### Not in scope
+
+- Dynamic fixture generation (fixtures that change per challenge within a domain)
+- Network-dependent setup (all fixtures must be offline-capable)
+- Language-specific test runners beyond what score.py orchestrates
+- Cross-domain fitness comparison (fitness is only meaningful within a domain)
+
+---
+
 ## Review checklist
 
 All items resolved — see the Locked decisions block at the top of the file. Plan is ready to execute starting with the Step 0 smoke test.

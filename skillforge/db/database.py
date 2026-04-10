@@ -158,6 +158,37 @@ CREATE TABLE IF NOT EXISTS leaked_skills (
 )
 """
 
+_CREATE_RUN_EVENTS = """
+CREATE TABLE IF NOT EXISTS run_events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id      TEXT NOT NULL,
+    event_type  TEXT NOT NULL,
+    payload     TEXT NOT NULL,
+    timestamp   TEXT NOT NULL,
+    FOREIGN KEY (run_id) REFERENCES evolution_runs (id) ON DELETE CASCADE
+)
+"""
+
+_CREATE_CANDIDATE_SEEDS = """
+CREATE TABLE IF NOT EXISTS candidate_seeds (
+    id              TEXT PRIMARY KEY,
+    source          TEXT NOT NULL,
+    source_run_id   TEXT,
+    source_skill_id TEXT,
+    title           TEXT NOT NULL,
+    specialization  TEXT NOT NULL,
+    category        TEXT NOT NULL DEFAULT 'uncategorized',
+    skill_md_content TEXT NOT NULL,
+    supporting_files TEXT NOT NULL DEFAULT '{}',
+    traits          TEXT NOT NULL DEFAULT '[]',
+    fitness_score   REAL,
+    status          TEXT NOT NULL DEFAULT 'pending',
+    created_at      TEXT NOT NULL,
+    promoted_at     TEXT,
+    notes           TEXT
+)
+"""
+
 _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_runs_status ON evolution_runs (status)",
     "CREATE INDEX IF NOT EXISTS idx_runs_created_at ON evolution_runs (created_at DESC)",
@@ -168,6 +199,8 @@ _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_results_challenge ON competition_results (challenge_id)",
     "CREATE INDEX IF NOT EXISTS idx_invite_requests_created ON invite_requests (created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_leaked_skills_created ON leaked_skills (created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_run_events_run_id ON run_events (run_id, id)",
+    "CREATE INDEX IF NOT EXISTS idx_candidate_seeds_status ON candidate_seeds (status, created_at DESC)",
 ]
 
 _TABLE_DDLS = [
@@ -178,6 +211,8 @@ _TABLE_DDLS = [
     _CREATE_COMPETITION_RESULTS,
     _CREATE_INVITE_REQUESTS,
     _CREATE_LEAKED_SKILLS,
+    _CREATE_RUN_EVENTS,
+    _CREATE_CANDIDATE_SEEDS,
 ]
 
 _DROP_ORDER = [
