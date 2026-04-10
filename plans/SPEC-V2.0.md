@@ -142,6 +142,40 @@ Conflict resolution: higher-fitness variant wins on overlap. The Engineer's LLM 
 
 ---
 
+## Variant Evaluation
+
+### How variant review differs from monolithic review
+
+The v1.x L1-L5 pipeline evaluates whole skills across all dimensions at once. For atomic variants, evaluation is narrower and more precise:
+
+- **L1 (Deterministic)**: replaced by per-dimension `score.py` that produces quantifiable metrics specific to what the variant does (isolation score for mock-strategy, coverage for edge-case-generation, etc.)
+- **L2 (Trigger accuracy)**: skipped — variants don't have triggers, the composite does
+- **L3 (Trace analysis)**: scoped to the variant's dimension — did it use its own scripts? Did it stay in scope?
+- **L4 (Comparative)**: within-dimension only — compare mock strategies against each other, not against fixture strategies
+- **L5 (Trait attribution)**: simplified — the variant IS the trait, so attribution equals the variant's overall score
+
+### Per-dimension evaluation criteria
+
+Each variant dimension gets a machine-readable scoring rubric (JSON) designed by the Scientist alongside the focused challenge. The rubric specifies quantitative metrics (weighted, measured by `score.py`) and qualitative criteria (evaluated by the Reviewer's LLM layers).
+
+Foundation variants additionally measure extensibility — can capability variants plug into this foundation cleanly?
+
+### Assembly evaluation
+
+After the Engineer assembles the composite, a separate evaluation measures:
+- **Integration pass rate**: does the composite solve challenges spanning multiple dimensions?
+- **Synergy ratio**: composite fitness / best individual variant fitness. >1.0 means synergy, <1.0 means interference.
+- **Structural validity**: passes `validate_skill_structure`
+
+### Controlled testing guarantees
+
+1. Same challenge per dimension — designed once, used for all variants in that dimension
+2. Same foundation context — all capability variants tested with identical scaffolding
+3. Deterministic scoring where possible — `score.py` produces JSON metrics, no LLM judgment on quantifiable dimensions
+4. Immutable test fixtures within a run — same variant + same challenge + same foundation = same environment
+
+---
+
 ## Atomic Evolution Flow
 
 ### Molecular (v1.x — unchanged)

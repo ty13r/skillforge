@@ -1,7 +1,7 @@
 # PLAN v2.0 — Atomic Variant Evolution
 
 **Source of truth**: `plans/SPEC-V2.0.md`  
-**Phases**: 5 phases, 14 waves. Each wave = one commit.  
+**Phases**: 5 phases, 15 waves. Each wave = one commit.  
 **Estimated total**: ~3-4 sessions  
 
 ---
@@ -119,6 +119,52 @@ Within each wave, backend and frontend work are independent when possible. Acros
 - `frontend/src/App.tsx` — add `/taxonomy` route (optional, or integrate into Registry)
 - `frontend/src/components/Sidebar.tsx` — add Taxonomy nav item
 
+### Wave 1-5: Post-Run Report Generator
+
+**Goal**: After every evolution run, generate a single structured report artifact that captures everything about the run in one place. This feeds the research paper and lets any future model ingest a complete run without querying 6+ tables.
+
+**Create:**
+- `skillforge/engine/report.py`
+  - `async def generate_run_report(run_id: str) -> dict`
+  - Queries all relevant tables and assembles a complete report:
+    ```
+    report/
+    ├── metadata (run_id, mode, specialization, cost, duration, evolution_mode, family)
+    ├── taxonomy (domain, focus, language — if classified)
+    ├── challenges[] (prompt, difficulty, criteria, verification_method)
+    ├── generations[]
+    │   ├── fitness_curve (best, avg, delta from previous)
+    │   ├── trait_survival + emergence
+    │   ├── learning_log_entries (new lessons this gen)
+    │   ├── pareto_front (skill IDs + their objectives)
+    │   └── skills[]
+    │       ├── id, maturity, is_pareto_optimal
+    │       ├── fitness_breakdown (L1-L5 scores)
+    │       ├── trait_attribution (which traits → which scores)
+    │       ├── mutations + parent_ids + rationale
+    │       ├── competition_results[] (per challenge: pass/fail, metrics, trace summary)
+    │       └── skill_md_preview (first 30 lines, not full content — keep report <1MB)
+    ├── variant_evolutions[] (v2.0: per-dimension winner, fitness, challenge)
+    ├── assembly_report (v2.0: Engineer's merge decisions, integration test result)
+    ├── bible_findings[] (new patterns published during this run)
+    ├── learning_log (full accumulated lessons)
+    └── summary
+        ├── best_skill_id + aggregate_fitness
+        ├── total_cost_usd + cost_per_generation
+        ├── wall_clock_duration
+        ├── key_discoveries (top 3 learning log entries by novelty)
+        └── evolution_mode + dimensions_evolved (v2.0)
+    ```
+  - Saves to `data/reports/{run_id}.json`
+  - Also saves a human-readable markdown version to `data/reports/{run_id}.md`
+
+**Modify:**
+- `skillforge/engine/evolution.py` — call `generate_run_report(run.id)` as the last step after `evolution_complete` event, fire-and-forget (report failure never blocks the pipeline)
+- `skillforge/api/routes.py` — add `GET /api/runs/{run_id}/report` endpoint that returns the JSON report (or 404 if not yet generated)
+
+**Create:**
+- `tests/test_report.py` — verify report structure, verify all sections populated from mock data, verify <1MB size constraint
+
 ---
 
 ## Phase 2: Taxonomist Agent
@@ -148,6 +194,92 @@ Within each wave, backend and frontend work are independent when possible. Acros
 - `frontend/src/components/SpecializationInput.tsx` — add "Evolution Mode" selector in parameters section: Auto (default) / Atomic / Classic. Auto means Taxonomist decides.
 - `frontend/src/types/index.ts` — add new event types to discriminated union
 - `frontend/src/hooks/useEvolutionSocket.ts` — handle new event types
+
+---
+
+## Variant Evaluation Strategy
+
+The v1.x L1-L5 Reviewer pipeline was designed for monolithic skills. Atomic variants need a different approach — more focused, more measurable, and controlled for consistency.
+
+### What changes for variant evaluation
+
+| Layer | v1.x (monolithic) | v2.0 (variant) |
+|-------|-------------------|----------------|
+| L1: Deterministic | Generic compile/test/lint | **Per-dimension `score.py`** — quantifiable metrics specific to what the variant does |
+| L2: Trigger accuracy | Precision/recall on description | **Skipped** — variants don't have triggers, the composite does |
+| L3: Trace analysis | Did the skill load? Instructions followed? | **Scoped** — did the variant use its own scripts/references? Did it stay in scope? |
+| L4: Comparative | Pairwise across all dimensions | **Within-dimension only** — compare fixture strategies against each other, not against mock strategies |
+| L5: Trait attribution | Which instruction → fitness | **Simplified** — the variant IS the trait, so attribution is the variant's overall score |
+
+### Per-dimension evaluation criteria
+
+The Scientist designs a focused challenge per dimension AND a scoring rubric. The rubric is machine-readable JSON (same as the Domain-Specific Test Environments architecture from the backlog):
+
+```json
+{
+  "dimension": "mock-strategy",
+  "quantitative": [
+    {"metric": "isolation_score", "weight": 0.4, "description": "Are external deps fully isolated?"},
+    {"metric": "mock_realism", "weight": 0.3, "description": "Do mocks behave like real deps?"},
+    {"metric": "setup_brevity", "weight": 0.15, "description": "Lines of mock setup code"},
+    {"metric": "teardown_clean", "weight": 0.15, "description": "Are mocks properly cleaned up?"}
+  ],
+  "qualitative": [
+    "Mocks should be maintainable — no brittle implementation detail coupling",
+    "Should work with both sync and async code"
+  ]
+}
+```
+
+For foundation variants, add extensibility metrics:
+```json
+{
+  "dimension": "foundation",
+  "quantitative": [
+    {"metric": "code_runs", "weight": 0.3, "type": "boolean"},
+    {"metric": "internal_consistency", "weight": 0.25, "description": "All parts follow same patterns"},
+    {"metric": "extensibility", "weight": 0.25, "description": "Can capability variants plug in easily?"},
+    {"metric": "clarity", "weight": 0.2, "description": "Readability and maintainability"}
+  ]
+}
+```
+
+### Controlled testing guarantees
+
+1. **Same challenge per dimension**: every variant in the "mock-strategy" dimension faces the identical challenge. The Scientist designs it once.
+2. **Same foundation context**: all capability variants receive the same winning foundation. They're tested with identical scaffolding.
+3. **Deterministic scoring where possible**: `scripts/score.py` produces JSON metrics that feed directly into fitness. No LLM judgment on quantifiable dimensions.
+4. **Qualitative scoring via Reviewer**: only the qualitative criteria go through L4/L5 LLM evaluation. This is a smaller, more focused LLM call than v1.x.
+5. **Reproducibility**: test fixtures are immutable within a run. Same variant + same challenge + same foundation = same environment every time.
+
+### Assembly evaluation
+
+After the Engineer assembles the composite, a separate evaluation checks:
+
+| Metric | What it measures | How |
+|--------|-----------------|-----|
+| Integration pass rate | Does the composite solve challenges that span multiple dimensions? | Run 1-2 broad challenges (v1.x style) against the assembly |
+| Synergy ratio | composite fitness / best individual variant fitness | >1.0 = synergy, <1.0 = interference |
+| Conflict count | How many merge conflicts did the Engineer resolve? | Counted during assembly |
+| validate_skill_structure | Does the composite meet all structural requirements? | Existing validator |
+
+### Metrics that matter for the research paper
+
+| Metric | Why it matters |
+|--------|---------------|
+| Per-dimension convergence rate | How fast do variants improve? Faster = atomic evolution is working |
+| Fitness per dollar | Cost efficiency of atomic vs monolithic |
+| Synergy ratio | Does assembly produce more than the sum of parts? |
+| Variant reusability score | Does a variant from family A work in family B without re-evolution? |
+| Human preference (blind) | Would a developer choose the evolved skill over a hand-written one? |
+| Ablation impact | How much does removing one Reviewer layer degrade results? |
+
+### Implementation
+
+- The Scientist outputs both a Challenge AND an evaluation criteria JSON per dimension (Wave 3-2)
+- `scripts/score.py` per variant is generated by the Spawner as part of the mini-SKILL.md package (Wave 3-3)
+- The Reviewer runs `score.py` for L1, skips L2, scopes L3/L4/L5 to the dimension (Wave 3-1, variant_evolution.py)
+- Assembly evaluation runs after the Engineer (Wave 4-2, assembly.py)
 
 ---
 
