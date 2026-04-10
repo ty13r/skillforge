@@ -15,7 +15,22 @@ Same as v1.x: wave-based commits, tests passing after each wave, push after each
 2. `cd frontend && npx tsc --noEmit` — clean
 3. `uv run ruff check skillforge/ tests/` — clean
 4. New code has type hints
-5. PROGRESS.md updated
+5. `plans/PROGRESS.md` updated with dated completion entry
+6. `SCHEMA.md` updated if any DB changes in this wave
+7. `CLAUDE.md` updated if architecture context changed
+
+### QA Gate (per phase)
+After each phase completes, before starting the next:
+1. End-to-end integration test verifying the phase's milestone
+2. Manual browser QA of any frontend changes
+3. Journal entry documenting the phase's work
+
+### Parallelization Strategy
+Within each wave, backend and frontend work are independent when possible. Across waves, the following can run in parallel (non-overlapping files):
+- Wave 1-1: agent skills (6 packages, subagent) ‖ dataclasses (main thread)
+- Wave 1-4: backend API ‖ frontend components
+- Wave 3-2 ‖ Wave 3-3: Scientist + Spawner updates touch different files
+- Phase 5 frontend can start once Phase 4 API endpoints exist (before Phase 4 is fully polished)
 
 ---
 
@@ -154,29 +169,33 @@ Same as v1.x: wave-based commits, tests passing after each wave, push after each
   - Reuses existing run_evolution loop internally with smaller params (pop=2, gen=2, challenges=1)
   - Emits variant_evolution_started/complete events per dimension
   - Concurrency limited by VARIANT_CONCURRENCY config
+- `tests/test_variant_evolution.py` — mock LLM, verify: orchestration order (foundation before capabilities), event sequence, VariantEvolution records created, concurrency limit respected
 
 **Modify:**
 - `skillforge/engine/evolution.py` — at the top of `run_evolution`, if `run.evolution_mode == "atomic"`, delegate to `variant_evolution.run_variant_evolution()` and return its result
 
-### Wave 3-2: Scientist (Focused Challenge Generation)
+### Wave 3-2: Scientist (Focused Challenge Generation) ‖ Wave 3-3: Spawner Variant Scope
 
-**Modify:**
+*These two waves touch non-overlapping files and can run in parallel.*
+
+**Wave 3-2 — Modify:**
 - `skillforge/agents/challenge_designer.py` — add:
   - `async def design_variant_challenge(specialization: str, dimension: dict) -> Challenge`
   - Generates a single narrow challenge targeting one variant dimension
   - Reuses existing `_generate` + JSON extraction patterns
-
-**Modify:**
 - `skillforge/config.py` — add `"scientist"` as alias for challenge_designer model
+- `tests/test_challenge_designer.py` — add test for `design_variant_challenge` (mock LLM, verify single focused challenge output)
 
-### Wave 3-3: Spawner Variant Scope
-
-**Modify:**
+**Wave 3-3 — Modify:**
 - `skillforge/agents/spawner.py` — add:
   - `async def spawn_variant_gen0(specialization: str, dimension: dict, foundation_genome: SkillGenome | None, pop_size: int = 2) -> list[SkillGenome]`
   - Creates focused mini-SKILL.md packages per dimension
   - For capability variants, winning foundation provided as context
   - Prompt instructs: "Create a skill focused ONLY on {dimension.name}. This variant will be assembled with other variants later."
+- `tests/test_spawner.py` — add test for `spawn_variant_gen0` (mock LLM, verify focused output, verify foundation context injected for capability tier)
+
+**Phase 3 QA Gate:**
+- `tests/test_atomic_evolution_e2e.py` — full atomic pipeline with mocked LLM: Taxonomist classifies → Scientist designs focused challenges → foundation variants evolve → capabilities evolve in context → stub assembly returns foundation. Verify complete event sequence (taxonomy_classified → decomposition_complete → variant_evolution_started × N → variant_evolution_complete × N → assembly_started → assembly_complete). 30s timeout.
 
 ---
 
@@ -206,14 +225,19 @@ Same as v1.x: wave-based commits, tests passing after each wave, push after each
 - `skillforge/engine/assembly.py`
   - `async def assemble_skill(run: EvolutionRun, family: SkillFamily, foundation: Variant, capabilities: list[Variant]) -> SkillGenome`
   - Flow: call Engineer → integration test (single challenge via Competitor + Reviewer L1-L3) → if fails, one refinement pass → save assembled genome → update family.best_assembly_id → save variants with is_active=1
+- `tests/test_assembly.py` — mock Engineer + Competitor + Reviewer, verify: assembly flow completes, integration test triggers, refinement on failure, family.best_assembly_id updated
 
 **Modify:**
 - `skillforge/engine/variant_evolution.py` — replace the assembly stub with real `assemble_skill()` call. Emit assembly_started/complete events.
+
+**Phase 4 QA Gate:**
+- `tests/test_atomic_evolution_e2e.py` — extend Phase 3 e2e test to include real assembly. Full pipeline: Taxonomist → Scientist → variant evolutions → Engineer assembly → integration test. Verify assembled SkillGenome passes `validate_skill_structure`.
 
 ### Wave 4-3: Assembly API + Arena Integration
 
 **Modify:**
 - `skillforge/api/taxonomy.py` — add `GET /api/families/{family_id}/assembly` (returns current best assembly)
+- `SCHEMA.md` — ensure variant_evolutions and any Phase 3-4 schema additions are documented
 
 **Modify (frontend):**
 - `frontend/src/components/EvolutionArena.tsx` — for atomic-mode runs, show per-dimension progress cards instead of per-competitor cards. Show assembly phase after variant evolutions complete.
@@ -263,12 +287,30 @@ Same as v1.x: wave-based commits, tests passing after each wave, push after each
 - Existing evolution.py loop unchanged — it IS the inner loop for variant mini-evolutions
 - All existing tests pass without modification
 - Each phase is independently deployable
+- `POST /api/evolve/from-parent` works with atomic mode: fork seed → Taxonomist classifies → atomic evolution
 
 ### New event types (engine/events.py)
 - taxonomy_classified, decomposition_complete
 - variant_evolution_started, variant_evolution_complete
 - assembly_started, assembly_complete
 - integration_test_started, integration_test_complete
+
+### Documentation updates (every wave that changes them)
+- **SCHEMA.md** — updated whenever DB tables/columns change (Waves 1-2, 4-3 at minimum, any wave that alters schema)
+- **CLAUDE.md** — updated after Phase 1 (add v2.0 architecture context, taxonomy, agent roster) and after Phase 3 (atomic evolution flow)
+- **PROGRESS.md** — updated after every wave (per QA checklist)
+- **Journal entries** — one per phase completion
+
+### Existing API updates
+- `GET /api/seeds` — add taxonomy fields (domain, focus, language, family_id) to seed responses (Wave 1-4)
+- `GET /api/runs` — add evolution_mode + family_id to run list responses (Wave 2-2)
+- `GET /api/runs/{id}` — add variant_evolutions summary for atomic runs (Wave 4-3)
+
+### Taxonomy sync strategy
+- Initial taxonomy seeded in Wave 1-3 (hardcoded, idempotent)
+- Taxonomist can create new taxonomy_nodes at runtime when classifying runs (Wave 2-1)
+- New nodes require justification (logged) and are auto-persisted to DB
+- Seed reclassification: if taxonomy changes, `taxonomy_seeds.py` re-runs on next startup and updates family assignments
 
 ---
 
