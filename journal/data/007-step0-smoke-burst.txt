@@ -1,0 +1,163 @@
+Traceback (most recent call last):
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 271, in __aiter__
+    async for part in self._httpcore_stream:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 407, in __aiter__
+    raise exc from None
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/connection_pool.py", line 403, in __aiter__
+    async for part in self._stream:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 342, in __aiter__
+    raise exc
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 334, in __aiter__
+    async for chunk in self._connection._receive_response_body(**kwargs):
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 203, in _receive_response_body
+    event = await self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_async/http11.py", line 213, in _receive_event
+    with map_exceptions({h11.RemoteProtocolError: RemoteProtocolError}):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mjdecour/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.RemoteProtocolError: peer closed connection without sending complete message body (incomplete chunked read)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/mjdecour/apps/skillforge/scripts/smoke_skill_upload.py", line 291, in probe_session_event_shape
+    async for ev in stream:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/anthropic/_streaming.py", line 191, in __aiter__
+    async for item in self._iterator:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/anthropic/_streaming.py", line 205, in __stream__
+    async for sse in iterator:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/anthropic/_streaming.py", line 195, in _iter_events
+    async for sse in self._decoder.aiter_bytes(self.response.aiter_bytes()):
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/anthropic/_streaming.py", line 342, in aiter_bytes
+    async for chunk in self._aiter_chunks(iterator):
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/anthropic/_streaming.py", line 353, in _aiter_chunks
+    async for chunk in iterator:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_models.py", line 997, in aiter_bytes
+    async for raw_bytes in self.aiter_raw():
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_models.py", line 1055, in aiter_raw
+    async for raw_stream_bytes in self.stream:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_client.py", line 176, in __aiter__
+    async for chunk in self._stream:
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 270, in __aiter__
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mjdecour/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/mjdecour/apps/skillforge/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.RemoteProtocolError: peer closed connection without sending complete message body (incomplete chunked read)
+skillforge.config: gating_disabled=False codes_loaded=0 raw_env_len=0
+============================================================
+SkillForge v1.2 Step 0 smoke test
+============================================================
+  managed-agents beta: managed-agents-2026-04-01
+  skills beta:         skills-2025-10-02
+  advisor beta:        advisor-2026-03-01
+
+=== Probe 1: serial 20 skill uploads ===
+  [ 0] OK  4.21s skill_01Khb9kCFxpaqd9Zg1vxSH8k
+  [ 1] OK  3.19s skill_01BB6QJS7qTbCPjZ2VyTvzxM
+  [ 2] OK  2.12s skill_01GLmFMcuGYFy2C5ADvSpFvK
+  [ 3] OK  1.10s skill_01VBDqPgHiraKAGpJWYwvGyR
+  [ 4] OK  1.12s skill_01HjMwKHwVvFi3w3C6NgG8DM
+  [ 5] OK  3.45s skill_01S99tcuw5rKMo5jzy7zdvXz
+  [ 6] OK  1.13s skill_01KrbeMSBA2sDxd73aEriYdQ
+  [ 7] OK 19.90s skill_01WJxghZc5bGSv3aExQsENmH
+  [ 8] OK  1.59s skill_01YYmRk1kwawMBZbxLzkbYJa
+  [ 9] OK  2.52s skill_01RXwmvDbcS4wRjJRK5CeS6D
+  [10] OK 23.52s skill_01X3ZGnaXv6AwjEfz2tKyB3Z
+  [11] OK  5.11s skill_012kFF1oZrVmhpEJaBaMChhH
+  [12] OK  3.00s skill_01NAFiFKtgqYFhf25BPmHQqp
+  [13] OK  1.10s skill_018g9hSmRrCqyZjUHdCLFTe6
+  [14] OK  1.18s skill_013UDRmrPF8VKLUveaPM1wj6
+  [15] OK  1.18s skill_01XN8PWYSm9DraMTNrK7q2ca
+  [16] OK  3.63s skill_01HicQ9XsoJo3Z7g46fQn1A9
+  [17] OK  1.07s skill_01JmbQ6BdK6QjWcoU5TKo4BD
+  [18] OK  1.14s skill_01MRQMYz9SygZjkd5rvKmDyn
+  [19] OK  1.10s skill_01GtgEdunJFP2MmEXJHNRmfF
+  total: 20/20 ok, 0 failed in 82.4s
+
+=== Probe 2: parallel 10 skill uploads ===
+  total: 10/10 ok, 0 failed in 1.9s
+  [ 0] OK  1.04s skill_011okj1bAahZboe7cCsJSC7f
+  [ 1] OK  1.72s skill_012HvnXRRREMLMn8q2i4oPeJ
+  [ 2] OK  1.83s skill_01XNB7Rsd5Jxnqc9KdKzf6ZZ
+  [ 3] OK  1.75s skill_01HL3ZK9jwZUHYqdHpFndsYL
+  [ 4] OK  1.59s skill_015BCRgmK1kgPJRypGZpSaH9
+  [ 5] OK  1.79s skill_01HKtUoSiWEauiuWMQsxdCjd
+  [ 6] OK  1.92s skill_01LNvxRbYBvjNwK97w7CqznN
+  [ 7] OK  1.66s skill_01KBdVTpxmszEbTGJfjYu5Wz
+  [ 8] OK  1.63s skill_01U3G8mYLw57DsYMkMQAYgef
+  [ 9] OK  1.58s skill_0165Z59wXcvw8XLwevXhJMTm
+
+=== Probe 3: session event shape ===
+  environment: env_017BSW7a1UY5cezxiWaUWUSS
+  agent: agent_011CZuBy38idMJa8Vgzg92a8
+  session: sesn_011CZuBy4RMeqpC85X4pnwz9
+  ERROR: peer closed connection without sending complete message body (incomplete chunked read)
+  session archived: sesn_011CZuBy4RMeqpC85X4pnwz9
+  agent archived: agent_011CZuBy38idMJa8Vgzg92a8
+  environment archived: env_017BSW7a1UY5cezxiWaUWUSS
+
+=== Probe 4: advisor_20260301 tool ===
+  advisor unavailable: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Failed to parse request: tools[1].type: "advisor_20260301" is not a valid value; expected one of agent_toolset_20260401, custom, mcp_toolset'}, 'request_id': 'req_011CZuC4LjGXHJPWPeCB4348'}
+
+=== Cleanup: deleting 30 skills ===
+  OK   skill_01Khb9kCFxpaqd9Zg1vxSH8k
+  OK   skill_01BB6QJS7qTbCPjZ2VyTvzxM
+  OK   skill_01GLmFMcuGYFy2C5ADvSpFvK
+  OK   skill_01VBDqPgHiraKAGpJWYwvGyR
+  OK   skill_01HjMwKHwVvFi3w3C6NgG8DM
+  OK   skill_01S99tcuw5rKMo5jzy7zdvXz
+  OK   skill_01KrbeMSBA2sDxd73aEriYdQ
+  OK   skill_01WJxghZc5bGSv3aExQsENmH
+  OK   skill_01YYmRk1kwawMBZbxLzkbYJa
+  OK   skill_01RXwmvDbcS4wRjJRK5CeS6D
+  OK   skill_01X3ZGnaXv6AwjEfz2tKyB3Z
+  OK   skill_012kFF1oZrVmhpEJaBaMChhH
+  OK   skill_01NAFiFKtgqYFhf25BPmHQqp
+  OK   skill_018g9hSmRrCqyZjUHdCLFTe6
+  OK   skill_013UDRmrPF8VKLUveaPM1wj6
+  OK   skill_01XN8PWYSm9DraMTNrK7q2ca
+  OK   skill_01HicQ9XsoJo3Z7g46fQn1A9
+  OK   skill_01JmbQ6BdK6QjWcoU5TKo4BD
+  OK   skill_01MRQMYz9SygZjkd5rvKmDyn
+  OK   skill_01GtgEdunJFP2MmEXJHNRmfF
+  OK   skill_011okj1bAahZboe7cCsJSC7f
+  OK   skill_012HvnXRRREMLMn8q2i4oPeJ
+  OK   skill_01XNB7Rsd5Jxnqc9KdKzf6ZZ
+  OK   skill_01HL3ZK9jwZUHYqdHpFndsYL
+  OK   skill_015BCRgmK1kgPJRypGZpSaH9
+  OK   skill_01HKtUoSiWEauiuWMQsxdCjd
+  OK   skill_01LNvxRbYBvjNwK97w7CqznN
+  OK   skill_01KBdVTpxmszEbTGJfjYu5Wz
+  OK   skill_01U3G8mYLw57DsYMkMQAYgef
+  OK   skill_0165Z59wXcvw8XLwevXhJMTm
+  all skills deleted cleanly
+
+=== Sweep: residual smoke skills in org ===
+  none
+
+============================================================
+Findings (JSON-ish summary):
+============================================================
+{
+  "session_probe": {
+    "agent_id": "agent_011CZuBy38idMJa8Vgzg92a8",
+    "session_id": "sesn_011CZuBy4RMeqpC85X4pnwz9",
+    "environment_id": "env_017BSW7a1UY5cezxiWaUWUSS",
+    "events_observed": [],
+    "error": "RemoteProtocolError: peer closed connection without sending complete message body (incomplete chunked read)"
+  },
+  "advisor_probe": {
+    "agent_id": null,
+    "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Failed to parse request: tools[1].type: \"advisor_20260301\" is not a valid value; expected one of agent_toolset_20260401, custom, mcp_toolset'}, 'request_id': 'req_011CZuC4LjGXHJPWPeCB4348'}",
+    "available": false
+  }
+}

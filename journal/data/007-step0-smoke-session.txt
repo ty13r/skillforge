@@ -1,0 +1,78 @@
+skillforge.config: gating_disabled=False codes_loaded=0 raw_env_len=0
+============================================================
+SkillForge v1.2 Step 0 smoke test
+============================================================
+  managed-agents beta: managed-agents-2026-04-01
+  skills beta:         skills-2025-10-02
+  advisor beta:        advisor-2026-03-01
+skipping: uploads
+
+=== Probe 3: session event shape (events.list polling) ===
+  environment: env_017ZD3DVqooDcjreumMaEDd9
+  agent: agent_011CZuCQEBg6S1gXagRaPmmP
+  session: sesn_011CZuCQFSpvwqgcFbf8yZDS
+  user.message sent — polling events.list...
+  poll: 1 events this poll, 1 total, types so far: ['user.message']
+  poll: 3 events this poll, 4 total, types so far: ['session.status_running', 'span.model_request_start', 'user.message']
+  poll: 3 events this poll, 7 total, types so far: ['session.status_running', 'span.model_request_start', 'user.message']
+  poll: 6 events this poll, 13 total, types so far: ['agent.thinking', 'agent.tool_use', 'session.status_running', 'span.model_request_end', 'span.model_request_start', 'user.message']
+  poll: 6 events this poll, 19 total, types so far: ['agent.thinking', 'agent.tool_use', 'session.status_running', 'span.model_request_end', 'span.model_request_start', 'user.message']
+  poll: 11 events this poll, 30 total, types so far: ['agent.message', 'agent.thinking', 'agent.tool_result', 'agent.tool_use', 'session.status_idle', 'session.status_running', 'span.model_request_end', 'span.model_request_start', 'user.message']
+  bash sample: keys=['command'], cmd[:200]=head -c 10240 /dev/zero | tr '\0' 'x' > /tmp/probe.txt && wc -c /tmp/probe.txt
+  token_usage sample: {'cache_creation_input_tokens': 5236, 'cache_read_input_tokens': 0, 'input_tokens': 10, 'output_tokens': 507, 'speed': None}
+  token totals: in=36 out=1575 cache_create=16241 cache_read=5236 requests=4
+  session archived: sesn_011CZuCQFSpvwqgcFbf8yZDS
+  agent archived: agent_011CZuCQEBg6S1gXagRaPmmP
+  environment archived: env_017ZD3DVqooDcjreumMaEDd9
+
+=== Probe 4: advisor_20260301 tool ===
+  advisor unavailable: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Failed to parse request: tools[1].type: "advisor_20260301" is not a valid value; expected one of agent_toolset_20260401, custom, mcp_toolset'}, 'request_id': 'req_011CZuCRGMgSRkZ1J2GnBDWM'}
+
+============================================================
+Findings (JSON-ish summary):
+============================================================
+{
+  "session_probe": {
+    "agent_id": "agent_011CZuCQEBg6S1gXagRaPmmP",
+    "session_id": "sesn_011CZuCQFSpvwqgcFbf8yZDS",
+    "environment_id": "env_017ZD3DVqooDcjreumMaEDd9",
+    "events_observed": [
+      "agent.message",
+      "agent.thinking",
+      "agent.tool_result",
+      "agent.tool_use",
+      "session.status_idle",
+      "session.status_running",
+      "span.model_request_end",
+      "span.model_request_start",
+      "user.message"
+    ],
+    "n_events": 30,
+    "running_at": "2026-04-10 01:09:04.754000+00:00",
+    "idle_at": "2026-04-10 01:09:15.830000+00:00",
+    "session_runtime_seconds": 11.076,
+    "bash_command_sample": "head -c 10240 /dev/zero | tr '\\0' 'x' > /tmp/probe.txt && wc -c /tmp/probe.txt",
+    "bash_input_keys": [
+      "command"
+    ],
+    "token_usage_sample": {
+      "cache_creation_input_tokens": 5236,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 10,
+      "output_tokens": 507,
+      "speed": null
+    },
+    "token_totals": {
+      "input": 36,
+      "output": 1575,
+      "cache_creation_input": 16241,
+      "cache_read_input": 5236,
+      "n_model_requests": 4
+    }
+  },
+  "advisor_probe": {
+    "agent_id": null,
+    "error": "BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Failed to parse request: tools[1].type: \"advisor_20260301\" is not a valid value; expected one of agent_toolset_20260401, custom, mcp_toolset'}, 'request_id': 'req_011CZuCRGMgSRkZ1J2GnBDWM'}",
+    "available": false
+  }
+}

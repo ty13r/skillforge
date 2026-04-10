@@ -28,6 +28,51 @@ Three risks raised, all verified via doc review. Findings drove the three plan a
 
 ---
 
+## Step 0 empirical findings (2026-04-09 evening)
+
+The Step 0 smoke test ran end-to-end against the live Anthropic API. Script: `scripts/smoke_skill_upload.py`. Raw output: `journal/data/007-step0-smoke-{burst,session}.txt`. Key findings — these **override** several assumptions in the rest of this plan; corrections are listed inline below the summary.
+
+**Skill upload (Probe 1+2)** — 🟢 green:
+- **20/20 serial uploads** in 82.4s (avg ~4s per call, two outliers at 19.9s and 23.5s, no 429s)
+- **10/10 parallel uploads** in 1.9s (~5x faster than serial)
+- Rate limits do not gate Phase 1; default `SKILLFORGE_MANAGED_AGENTS_SKILL_MODE=upload` is safe.
+- **Skill file path format**: must be `<top-level-folder>/SKILL.md`. A bare `SKILL.md` filename returns `400 SKILL.md file must be exactly in the top-level folder.`
+- **3-step delete dance is required**. The SDK's `beta.skills.delete()` does NOT auto-delete versions. Confirmed dance:
+  1. `await client.beta.skills.versions.list(skill_id)` → paginator yielding version objects with a `version` (string) field
+  2. `await client.beta.skills.versions.delete(version=ver_str, skill_id=skill_id)` for each
+  3. `await client.beta.skills.delete(skill_id)`
+- All 30 uploaded test skills cleaned up with zero leaks via this dance.
+
+**Session lifecycle + event shape (Probe 3)** — 🟢 green:
+- `beta.sessions.events.stream()` is **unusable** for Managed Agents. The SDK routes it through the Anthropic Messages API SSE decoder which only recognizes `message_start`, `content_block_delta`, etc. — every Managed Agents event type is filtered out and the connection drops with `httpx.RemoteProtocolError: incomplete chunked read`. **Use `beta.sessions.events.list(session_id, order='asc')` polling instead** — it returns structured `BetaManagedAgentsSessionEvent` objects directly. Poll cadence: every 2s until `session.status_idle` event observed, with a deadline.
+- Confirmed event types (9 distinct, all flow through `events.list`): `user.message`, `session.status_running`, `span.model_request_start`, `agent.thinking`, `span.model_request_end`, `agent.tool_use`, `agent.tool_result`, `agent.message`, `session.status_idle`.
+- **Token usage path** confirmed: `event.model_usage.input_tokens` / `.output_tokens` / `.cache_creation_input_tokens` / `.cache_read_input_tokens`. Sample from probe: `{cache_creation_input_tokens: 5236, cache_read_input_tokens: 0, input_tokens: 10, output_tokens: 507}`. Iterate `span.model_request_end` events and sum.
+- **Session runtime** = `(idle.processed_at - running.processed_at).total_seconds() / 3600 × $0.08`. Sample probe ran 11.076s = ~$0.000246. Confirms the 2.4% overhead estimate is conservative.
+- **`session.status_idle.stop_reason`** is a discriminated union: `EndTurn | RequiresAction | RetriesExhausted`. Engine should treat anything other than `EndTurn` as a failure.
+
+**Tool inventory + write tool input shape (Probe 3 + supplemental write probe)** — 🟢 green with one important rename:
+- The `agent_toolset_20260401` exposes these tools (per `BetaManagedAgentsAgentToolConfig.name`): `bash`, `edit`, `read`, **`write`** (NOT `write_file`), `glob`, `grep`, `web_fetch`, `web_search`.
+- **`write` tool input shape**: `{"file_path": str, "content": str}`. Both keys present. `content` carries the FULL payload (not a preview) — verified by reading back a 39-byte file and seeing it intact in the `agent.tool_use.input` event.
+- **`bash` tool input shape**: `{"command": str}` only. File-write content from bash heredocs/redirects is NOT broken out — must be reconstructed by parsing the command string OR by reading `/tmp/probe.txt` back via a follow-up `bash` turn.
+- Probe 3 saw Haiku choose `bash` for the file-write task; the supplemental probe explicitly asked for `write` and Haiku complied.
+
+**Advisor Strategy (Probe 4)** — 🔴 red, **must descope**:
+- `advisor_20260301` tool type is **NOT supported** in `anthropic` SDK 0.92.0 — the Tool union only contains `BetaManagedAgentsAgentToolset20260401Params`, `BetaManagedAgentsMCPToolsetParams`, `BetaManagedAgentsCustomToolParams`.
+- API also rejects it: `400 Failed to parse request: tools[1].type: "advisor_20260301" is not a valid value; expected one of agent_toolset_20260401, custom, mcp_toolset`. Tested with both `managed-agents-2026-04-01` alone and combined with `advisor-2026-03-01`.
+- **Phase 1 must ship without the advisor.** Architectural decision #9 (Advisor Strategy integration) is descoped from Phase 1 → backlogged for v1.3+ when SDK + API support lands. The `competitor_advisor` model role and the cost-breakdown advisor token fields stay in `config.py` as no-ops so the wiring is ready when the tool becomes available.
+- All references in this plan to `advisor_20260301`, the Phase 2 A/B matrix's `advisor=on` cells, and the conditional Haiku-default flip (which assumed Advisor Strategy parity) are nullified. **Default executor stays Sonnet 4.6** for Phase 1 — that's a known-working configuration. Haiku-solo experiments can still be A/B tested in Phase 2 via env var.
+
+**Cost spent on Step 0**: well under $0.20 (30 skill uploads were free; the two session probes used Haiku, ~$0.03 each in tokens, ~$0.001 in session runtime).
+
+**Plan corrections downstream**:
+- §Architecture changes / new flow item 2 — replace `write_file` with `write`. Replace `_extract_written_files()` strategy: scan `agent.tool_use` events for `name=='write'` (extract `input.file_path` + `input.content`), then for `name=='bash'` (parse heredoc/redirect patterns OR follow up with a `cat` turn).
+- §Architecture decision #9 — descope Advisor Strategy from Phase 1. Keep `competitor_advisor` role + `cost_breakdown.advisor_*` fields as forward-compatible no-ops.
+- §File-by-file changes / `competitor_managed.py` — use `events.list` polling, NOT `events.stream`. Pin a deadline (e.g., 300s) and poll every 2s until `session.status_idle`.
+- §File-by-file changes / `managed_agents.py::archive_skill` — implement the 3-step dance (versions.list → versions.delete → skills.delete). Filter out `source == "anthropic"` to never touch built-in skills.
+- §Verification §11 — drop the A/B matrix runs B and D (Haiku+advisor, Sonnet+advisor). Phase 2 still runs A vs C (Haiku-solo vs Sonnet-solo) for the cost/quality comparison.
+
+---
+
 ## Context
 
 SkillForge's Competitor agent is the one place still using `claude-agent-sdk` (the local-subprocess SDK). Every other agent (Challenge Designer, Spawner, Breeder, Judge L2-L5) was already ported to `AsyncAnthropic` direct calls during Wave 5. The Competitor stayed on the SDK because it's the only agent that needs agentic tool-use (Read/Write/Bash) inside an isolated sandbox with the evolved Skill loaded via `setting_sources=["project"]`.
