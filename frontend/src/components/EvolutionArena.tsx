@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import BreedingReport from "./BreedingReport";
-import CompetitorCard from "./CompetitorCard";
 import EvolutionResults from "./EvolutionResults";
 import FitnessChart from "./FitnessChart";
 import LiveFeedLog from "./LiveFeedLog";
 import Sidebar from "./Sidebar";
+import SkillVariantCard from "./SkillVariantCard";
 import StatusGlow from "./StatusGlow";
 import { derivePhases, useEvolutionSocket } from "../hooks/useEvolutionSocket";
-import type { RunDetail } from "../types";
+import type { CompetitorView, RunDetail } from "../types";
 
 // Each judging layer with a human-readable sentence describing what it's
 // actually scoring — so users don't see abstract "L1 Deterministic" but
@@ -51,11 +51,12 @@ export default function EvolutionArena() {
   const { runId } = useParams<{ runId: string }>();
   const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [isStale, setIsStale] = useState(false);
   const startTime = useState(() => Date.now())[0];
 
-  const sockState = useEvolutionSocket(runId ?? null);
-
-  // Fetch run detail once on mount (for population_size, num_generations)
+  // Fetch run detail once on mount (for population_size, num_generations).
+  // This resolves before the WebSocket connects so we can skip the socket
+  // entirely for already-finished runs (avoids ECONNRESET noise).
   useEffect(() => {
     if (!runId) return;
     fetch(`/api/runs/${runId}`)
@@ -64,14 +65,34 @@ export default function EvolutionArena() {
       .catch(() => undefined);
   }, [runId]);
 
+  const runAlreadyDone =
+    runDetail?.status === "complete" || runDetail?.status === "failed";
+
+  // Only open the WebSocket for runs that are still active
+  const sockState = useEvolutionSocket(
+    runAlreadyDone ? null : (runId ?? null),
+  );
+
+  // Treat a persisted "complete" or "failed" status the same as the
+  // corresponding WebSocket flags so the timer stops and the Cancel button
+  // hides when revisiting a finished run.
+  const isComplete = sockState.isComplete || runDetail?.status === "complete";
+  const isFailed = sockState.isFailed || runDetail?.status === "failed";
+
   // Tick elapsed timer
   useEffect(() => {
-    if (sockState.isComplete || sockState.isFailed) return;
+    if (isComplete || isFailed) return;
     const id = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000));
+      // Stale detection: no events for 90+ seconds
+      if (sockState.lastEventAt > 0 && Date.now() - sockState.lastEventAt > 90_000) {
+        setIsStale(true);
+      } else {
+        setIsStale(false);
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, [sockState.isComplete, sockState.isFailed, startTime]);
+  }, [isComplete, isFailed, startTime, sockState.lastEventAt]);
 
   // Derive the specialization from run_started event (fallback for fake runs
   // that aren't in the DB and won't load a runDetail).
@@ -111,15 +132,30 @@ export default function EvolutionArena() {
     return pop * Math.max(challenges.length, 1);
   }, [runDetail, challenges.length]);
 
-  // Judging layer that's currently active, if any. We don't get granular L1-L5
-  // events, so when judging_started fires we treat L1 as running until
-  // scores_published fires (which means all 5 have completed).
-  const activeJudgingLayer = useMemo(() => {
+  // Group competitors by skillId for the variant card layout
+  const variantGroups = useMemo(() => {
+    const groups = new Map<string, { competitorId: number; competitors: CompetitorView[] }>();
+    for (const c of sockState.competitors) {
+      const existing = groups.get(c.skillId);
+      if (existing) {
+        existing.competitors.push(c);
+      } else {
+        groups.set(c.skillId, { competitorId: c.competitorId, competitors: [c] });
+      }
+    }
+    return Array.from(groups.entries()).map(([skillId, data], idx) => ({
+      variantIndex: idx,
+      skillId,
+      competitorId: data.competitorId,
+      competitors: data.competitors,
+    }));
+  }, [sockState.competitors]);
+
+  // Judging layer that's currently active, if any. Now driven by granular
+  // judging_layer_complete events via sockState.currentJudgingLayer (1-5).
+  const isJudging = useMemo(() => {
     const gen = sockState.generations.at(-1);
-    if (!gen) return null;
-    if (gen.status === "judging") return "L1-L5";
-    if (gen.status === "complete") return "done";
-    return null;
+    return gen?.status === "judging";
   }, [sockState.generations]);
 
   // Compute phase states for the sidebar diagram
@@ -131,7 +167,7 @@ export default function EvolutionArena() {
   if (!runId) return null;
 
   // If complete, render the results screen
-  if (sockState.isComplete) {
+  if (isComplete) {
     return <EvolutionResults runId={runId} sockState={sockState} runDetail={runDetail} />;
   }
 
@@ -171,7 +207,7 @@ export default function EvolutionArena() {
               )}
               <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary/15 px-3 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
                 <StatusGlow variant="success" />
-                {sockState.isFailed ? "FAILED" : "RUNNING"}
+                {isFailed ? "FAILED" : "RUNNING"}
               </span>
               <span className="font-mono text-[0.6875rem] text-on-surface-dim">
                 run {runId.slice(0, 8)}
@@ -191,7 +227,7 @@ export default function EvolutionArena() {
                 ${sockState.totalCostUsd.toFixed(2)} / ${budgetCap.toFixed(2)}
               </p>
             </div>
-            {!sockState.isComplete && !sockState.isFailed && (
+            {!isComplete && !isFailed && (
               <button
                 onClick={async () => {
                   if (
@@ -223,15 +259,46 @@ export default function EvolutionArena() {
         </div>
 
         {/* Connection status banner */}
-        {sockState.status === "closed" && !sockState.isComplete && !sockState.isFailed && (
+        {sockState.status === "closed" && !isComplete && !isFailed && (
           <div className="mt-4 rounded-xl bg-warning/10 p-3 text-sm text-warning">
             Connection lost. Reconnecting...
           </div>
         )}
-        {sockState.isFailed && (
+        {isFailed && (
           <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">
             Run failed: {sockState.failureReason ?? "(no reason)"}
           </div>
+        )}
+        {isStale && !isComplete && !isFailed && (
+          <div className="mt-4 rounded-xl bg-warning/10 p-3 text-sm text-warning">
+            No progress events for 90+ seconds — the engine may be stalled. Check backend logs or try cancelling the run.
+          </div>
+        )}
+        {(isFailed || isStale) && (
+          <button
+            onClick={() => {
+              const info = [
+                `Run ID: ${runId}`,
+                `Status: ${isFailed ? "failed" : "stale"}`,
+                `Elapsed: ${elapsedFmt}`,
+                `Generation: ${sockState.currentGeneration}`,
+                `Events received: ${sockState.events.length}`,
+                `Last event: ${sockState.events.at(-1)?.event ?? "none"}`,
+                `WebSocket: ${sockState.status}`,
+                `Budget: $${sockState.totalCostUsd.toFixed(2)}`,
+                `Failure reason: ${sockState.failureReason ?? "n/a"}`,
+                `Timestamp: ${new Date().toISOString()}`,
+                `URL: ${window.location.href}`,
+              ].join("\n");
+              navigator.clipboard.writeText(info).then(
+                () => alert("Debug info copied to clipboard"),
+                () => alert("Failed to copy — check browser permissions"),
+              );
+            }}
+            className="mt-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface-dim transition-colors hover:bg-surface-container-low"
+          >
+            Copy Debug Info
+          </button>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
@@ -300,50 +367,45 @@ export default function EvolutionArena() {
               </div>
             )}
 
-            {/* Competitor Arena */}
+            {/* Skill Variant Arena */}
             <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-display text-xl tracking-tight">
-                    Competitor Arena
+                    Skill Variant Arena
                   </h2>
                   <p className="mt-0.5 text-xs text-on-surface-dim">
-                    Each competitor is a variant SKILL.md being tested against
+                    Each variant is a candidate SKILL.md being tested against
                     the gauntlet.
                   </p>
                 </div>
                 <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                  {sockState.competitors.length} agents
+                  {variantGroups.length > 0
+                    ? `${variantGroups.length} variants \u00d7 ${challenges.length} challenges`
+                    : "0 variants"}
                 </span>
               </div>
               <div className="mt-4 space-y-2">
-                {sockState.competitors.length === 0 ? (
+                {variantGroups.length === 0 ? (
                   <p className="text-sm text-on-surface-dim">
                     {phases.find((p) => p.id === "spawn_or_breed")?.status ===
                     "running"
                       ? sockState.currentGeneration === 0
-                        ? `Spawning ${runDetail?.population_size ?? 5} diverse candidates from the golden template...`
-                        : `Breeding ${runDetail?.population_size ?? 5} next-gen candidates from the Pareto front...`
-                      : "Waiting for competitors to start..."}
+                        ? `Spawning ${runDetail?.population_size ?? 5} skill variants from the golden template...`
+                        : `Breeding ${runDetail?.population_size ?? 5} next-gen skill variants from the Pareto front...`
+                      : "Waiting for variants to start..."}
                   </p>
                 ) : (
-                  sockState.competitors.map((c) => {
-                    // Find the challenge this competitor is solving
-                    const ch = challenges.find((x) => x.id === c.challengeId);
-                    const challengeLabel = ch
-                      ? `Challenge ${ch.index + 1}: ${ch.prompt.slice(0, 60)}${ch.prompt.length > 60 ? "…" : ""}`
-                      : undefined;
-                    return (
-                      <CompetitorCard
-                        key={`${c.competitorId}-${c.skillId}`}
-                        competitorId={c.competitorId}
-                        skillId={c.skillId}
-                        state={c.state}
-                        challengeId={c.challengeId}
-                        challengeLabel={challengeLabel}
-                      />
-                    );
-                  })
+                  variantGroups.map((g) => (
+                    <SkillVariantCard
+                      key={g.skillId}
+                      variantIndex={g.variantIndex}
+                      skillId={g.skillId}
+                      isControl={g.competitorId === 0}
+                      competitors={g.competitors}
+                      challenges={challenges}
+                    />
+                  ))
                 )}
               </div>
             </div>
@@ -396,12 +458,17 @@ export default function EvolutionArena() {
               <div className="mt-3 space-y-2">
                 {JUDGING_LAYERS.map((l) => {
                   const genStatus = sockState.generations.at(-1)?.status;
+                  // Extract the numeric layer index (1-5) from the layer string "L1"-"L5"
+                  const layerNum = parseInt(l.layer.slice(1), 10);
+                  const completedLayer = sockState.currentJudgingLayer;
                   const status =
                     genStatus === "complete"
                       ? "complete"
-                      : activeJudgingLayer === "L1-L5"
-                        ? "running"
-                        : "pending";
+                      : isJudging && layerNum <= completedLayer
+                        ? "complete"
+                        : isJudging && layerNum === completedLayer + 1
+                          ? "running"
+                          : "pending";
                   return (
                     <div
                       key={l.layer}

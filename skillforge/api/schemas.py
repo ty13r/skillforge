@@ -56,6 +56,7 @@ class RunDetail(BaseModel):
     population_size: int
     num_generations: int
     total_cost_usd: float
+    best_fitness: float | None = None
     best_skill_id: str | None = None
 
 

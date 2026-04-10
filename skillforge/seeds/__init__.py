@@ -1043,7 +1043,10 @@ multi-file refactors — this is for one-shot utility functions.
 """
 
 
-SEED_SKILLS: list[dict] = [
+# Legacy seeds preserved as _LEGACY_SEEDS for reference; active seeds come
+# from the batch modules which include full supporting_files (scripts,
+# references) per the golden template.
+_LEGACY_SEEDS: list[dict] = [
     {
         "id": "seed-python-utils",
         "slug": "python-utils",
@@ -1579,6 +1582,13 @@ SEED_SKILLS: list[dict] = [
         "meta_strategy": "Classify commits by conventional-commit type between two tags, rewrite subjects into user-facing prose, and prepend to the existing changelog (never overwrite).",
     },
 ]
+
+# --- Active seeds: full golden-template packages with scripts + references ---
+from skillforge.seeds.batch1 import BATCH1_SEEDS
+from skillforge.seeds.batch2 import BATCH2_SEEDS
+from skillforge.seeds.batch3 import BATCH3_SEEDS
+
+SEED_SKILLS: list[dict] = BATCH1_SEEDS + BATCH2_SEEDS + BATCH3_SEEDS
 
 
 __all__ = ["SEED_SKILLS"]

@@ -133,7 +133,7 @@ def patch_engine_dependencies(tmp_path, monkeypatch):
     async def fake_run_competitor(skill, challenge, sandbox_path):
         return _make_result(skill.id, challenge.id)
 
-    async def fake_run_judging_pipeline(generation, challenges):
+    async def fake_run_judging_pipeline(generation, challenges, run_id=None):
         # Populate fitness fields the engine reads after the pipeline returns
         for skill in generation.skills:
             skill.pareto_objectives = {"correctness": 0.85, "quality": 0.75}

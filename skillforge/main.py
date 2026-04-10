@@ -7,6 +7,9 @@ so the backend works in both deployments (with frontend) and dev (without).
 
 from __future__ import annotations
 
+import json as _json
+import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -14,7 +17,36 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+
+class _JsonFormatter(logging.Formatter):
+    """Single-line JSON log format for structured log ingestion (e.g. Railway)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        return _json.dumps({
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+        })
+
+
+# Configure structured logging before any other imports touch loggers.
+_log_level = os.getenv("SKILLFORGE_LOG_LEVEL", "INFO").upper()
+_log_format = os.getenv("SKILLFORGE_LOG_FORMAT", "text")
+
+if _log_format == "json":
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(_JsonFormatter())
+    logging.basicConfig(level=getattr(logging, _log_level, logging.INFO), handlers=[_handler])
+else:
+    logging.basicConfig(
+        level=getattr(logging, _log_level, logging.INFO),
+        format="%(asctime)s %(levelname)-5s %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
 from skillforge.api.bible import router as bible_router
+from skillforge.api.candidates import router as candidates_router
 from skillforge.api.debug import router as debug_router
 from skillforge.api.invites import router as invites_router
 from skillforge.api.routes import router as api_router
@@ -23,7 +55,10 @@ from skillforge.api.spec_assistant import router as spec_assistant_router
 from skillforge.api.uploads import router as uploads_router
 from skillforge.api.websocket import router as ws_router
 from skillforge.db.database import init_db
+from skillforge.db.queries import mark_zombie_runs
 from skillforge.db.seed_loader import load_seeds
+
+logger = logging.getLogger("skillforge")
 
 
 @asynccontextmanager
@@ -35,6 +70,9 @@ async def lifespan(app: FastAPI):
     """
     await init_db()
     await load_seeds()
+    zombie_count = await mark_zombie_runs()
+    if zombie_count:
+        logger.warning("Marked %d zombie run(s) as failed on startup", zombie_count)
     yield
     # No shutdown hook needed — aiosqlite connections are per-query.
 
@@ -54,12 +92,18 @@ app.include_router(spec_assistant_router)
 app.include_router(seeds_router)
 app.include_router(uploads_router)
 app.include_router(invites_router)
+app.include_router(candidates_router)
 
 
 @app.get("/api/health")
-async def health() -> dict[str, str]:
-    """Backend health check (unaffected by static mount)."""
-    return {"status": "ok", "service": "skillforge"}
+async def health() -> dict:
+    """Backend health check with active run count."""
+    from skillforge.api.routes import _active_runs
+    return {
+        "status": "ok",
+        "service": "skillforge",
+        "active_runs": len(_active_runs),
+    }
 
 
 # --- Optional frontend SPA mount ---------------------------------------------

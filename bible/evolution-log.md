@@ -10,3 +10,4 @@ Each entry records: run ID, date, mode, specialization, generation count, best f
 - **2026-04-09** — run `run-full` gen 1: 3 new finding(s)
 - **2026-04-09** — run `run-full` gen 2: 3 new finding(s)
 - **2026-04-09** — run `f11bb8d9` gen 1: 3 new finding(s)
+- **2026-04-10** — run `a12a2557` gen 1: 3 new finding(s)

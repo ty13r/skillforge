@@ -38,6 +38,7 @@ export interface RunDetail {
   population_size: number;
   num_generations: number;
   total_cost_usd: number;
+  best_fitness?: number | null;
   best_skill_id?: string | null;
 }
 
@@ -69,11 +70,7 @@ export type EvolutionEventName =
   | "competitor_started"
   | "competitor_finished"
   | "judging_started"
-  | "judging_layer1_complete"
-  | "judging_layer2_complete"
-  | "judging_layer3_complete"
-  | "judging_layer4_complete"
-  | "judging_layer5_complete"
+  | "judging_layer_complete"
   | "scores_published"
   | "cost_update"
   | "breeding_started"
@@ -82,11 +79,13 @@ export type EvolutionEventName =
   | "evolution_complete"
   | "run_failed"
   | "run_cancelled"
+  | "competitor_progress"
   | "heartbeat";
 
 export interface EvolutionEvent {
   event: EvolutionEventName;
   generation?: number;
+  layer?: number;
   competitor?: number;
   skill_id?: string;
   challenge_id?: string;
@@ -97,6 +96,8 @@ export interface EvolutionEvent {
   pareto_front?: string[];
   generation_cost_usd?: number;
   total_cost_usd?: number;
+  incremental?: boolean;
+  competitor_cost_usd?: number;
   trace_length?: number;
   report?: string;
   new_lessons?: string[];
@@ -104,6 +105,13 @@ export interface EvolutionEvent {
   generations_completed?: number;
   reason?: string;
   specialization?: string;
+  mutations?: string[];
+  traits?: string[];
+  meta_strategy?: string;
+  mutation_rationale?: string;
+  skill_md_content?: string;
+  turn?: number;
+  tool_name?: string;
 }
 
 // --- Derived view state ------------------------------------------------------
@@ -122,6 +130,15 @@ export interface CompetitorView {
   state: CompetitorState;
   challengeId?: string;
   message?: string;
+  // Skill identity (from competitor_started)
+  mutations?: string[];
+  traits?: string[];
+  metaStrategy?: string;
+  mutationRationale?: string;
+  skillMdContent?: string;
+  // Live progress (from competitor_progress)
+  turn?: number;
+  lastTool?: string;
 }
 
 export interface GenerationStats {

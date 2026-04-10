@@ -1,0 +1,59 @@
+---
+name: {SKILL_NAME}
+description: >-
+  {CAPABILITY_STATEMENT}. Use when {TRIGGER_1}, {TRIGGER_2}, or {TRIGGER_3},
+  even if they don't explicitly ask for {SKILL_NAME}. NOT for {EXCLUSION_1},
+  {EXCLUSION_2}, or {EXCLUSION_3}.
+allowed-tools: Read Write Bash(python *)
+---
+
+# {DISPLAY_TITLE}
+
+## Quick Start
+{2-3 sentences describing the core workflow.}
+
+## When to use this skill
+{Trigger phrases and activation conditions.}
+
+## Workflow
+
+### Step 1: Gather context
+{What to read/check before starting.}
+- Read `${CLAUDE_SKILL_DIR}/references/guide.md` for domain reference
+
+### Step 2: Execute
+{What to do.}
+- Run: `python ${CLAUDE_SKILL_DIR}/scripts/main_helper.py`
+
+### Step 3: Validate
+{How to verify the output.}
+- Run: `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh`
+- If validation fails, fix and re-validate before presenting to user
+
+### Step 4: Present results
+{How to format and deliver the output.}
+
+## Examples
+
+**Example 1: {Typical use case}**
+Input: "{realistic user prompt}"
+Output: {expected result}
+
+**Example 2: {Edge case}**
+Input: "{edge case prompt}"
+Output: {expected result}
+
+**Example 3: {Near-miss}**
+Input: "{synonym/adjacent concept prompt}"
+Output: {expected result}
+
+## Gotchas
+- {Known failure point 1}
+- {Known failure point 2}
+- {Common user mistake}
+
+## Out of Scope
+This skill does NOT:
+- {Exclusion 1} (use {alternative} instead)
+- {Exclusion 2}
+- {Exclusion 3}

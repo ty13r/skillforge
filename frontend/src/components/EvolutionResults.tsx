@@ -20,7 +20,7 @@ export default function EvolutionResults({
   runDetail,
 }: EvolutionResultsProps) {
   const finalGen = sockState.generations.at(-1);
-  const bestFitness = finalGen?.best_fitness ?? 0;
+  const bestFitness = finalGen?.best_fitness ?? runDetail?.best_fitness ?? 0;
 
   // Phase diagram in the sidebar — at this screen everything is complete
   const phases = useMemo(() => derivePhases(sockState, 0), [sockState]);
@@ -95,7 +95,7 @@ export default function EvolutionResults({
           {/* Code preview placeholder */}
           <div className="rounded-xl bg-surface-container-lowest p-5">
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Best Skill — {sockState.bestSkillId?.slice(0, 8) ?? "—"}
+              Best Skill — {(sockState.bestSkillId ?? runDetail?.best_skill_id)?.slice(0, 8) ?? "—"}
             </p>
             {skillMd ? (
               <pre className="mt-3 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-mono text-xs text-on-surface">
@@ -160,7 +160,7 @@ export default function EvolutionResults({
             </div>
 
             <p className="text-center font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              Total spent: ${sockState.totalCostUsd.toFixed(2)}
+              Total spent: ${(sockState.totalCostUsd || runDetail?.total_cost_usd || 0).toFixed(2)}
             </p>
           </div>
         </div>

@@ -71,6 +71,11 @@ export default function SpecializationInput() {
   const [allSeeds, setAllSeeds] = useState<SeedSummary[] | null>(null);
   const [seedCategoryFilter, setSeedCategoryFilter] = useState<string>("all");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [generatedPackage, setGeneratedPackage] = useState<{
+    skillMdContent: string;
+    supportingFiles: Record<string, string>;
+    specialization: string;
+  } | null>(null);
 
   const handleValidated = useCallback((code: string) => {
     setInviteCode(code);
@@ -87,7 +92,6 @@ export default function SpecializationInput() {
           const match = seeds.find((s) => s.id === seedParam);
           if (match) {
             setForkedSeed(match);
-            setSpecialization(match.description);
           }
         }
       })
@@ -109,22 +113,40 @@ export default function SpecializationInput() {
     try {
       let res: Response;
       if (sourceMode === "scratch") {
-        if (!specialization.trim()) {
+        if (!specialization.trim() && !generatedPackage) {
           throw new Error("Specialization is required");
         }
-        const body: EvolveRequest & { invite_code?: string } = {
-          mode: "domain",
-          specialization,
-          population_size: populationSize,
-          num_generations: numGenerations,
-          max_budget_usd: budget,
-          invite_code: inviteCode ?? undefined,
-        };
-        res = await fetch("/api/evolve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+        if (generatedPackage) {
+          // Use the AI-generated skill package as parent
+          res = await fetch("/api/evolve/from-parent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              parent_source: "generated",
+              skill_md_content: generatedPackage.skillMdContent,
+              supporting_files: generatedPackage.supportingFiles,
+              specialization: generatedPackage.specialization || specialization,
+              population_size: populationSize,
+              num_generations: numGenerations,
+              max_budget_usd: budget,
+              invite_code: inviteCode ?? undefined,
+            }),
+          });
+        } else {
+          const body: EvolveRequest & { invite_code?: string } = {
+            mode: "domain",
+            specialization,
+            population_size: populationSize,
+            num_generations: numGenerations,
+            max_budget_usd: budget,
+            invite_code: inviteCode ?? undefined,
+          };
+          res = await fetch("/api/evolve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        }
       } else if (sourceMode === "upload") {
         if (!upload?.upload_id) {
           throw new Error("Upload a valid SKILL.md or zip first");
@@ -229,11 +251,11 @@ export default function SpecializationInput() {
           <textarea
             value={specialization}
             onChange={(e) => setSpecialization(e.target.value)}
-            placeholder="Describe the target evolution... e.g., Cleans messy pandas DataFrames — handling missing values, near-duplicate rows, and mixed-type columns. Use when user mentions data cleaning or dedupe. NOT for SQL."
+            placeholder="What should this skill do? e.g., 'Write pytest unit tests for Python code' or 'Review pull requests for security issues' — or click Generate Skill with AI to build one interactively."
             rows={6}
             className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-4 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
           />
-          <SpecAssistantChat onSpecReady={setSpecialization} />
+          <SpecAssistantChat onSpecReady={setSpecialization} onPackageReady={setGeneratedPackage} />
         </div>
       )}
 
@@ -269,8 +291,13 @@ export default function SpecializationInput() {
                   <p className="mt-1 font-display text-xl tracking-tight">
                     {forkedSeed.title}
                   </p>
-                  <p className="mt-2 max-w-2xl text-sm text-on-surface-dim">
-                    {forkedSeed.description}
+                  <p className="mt-1.5 inline-flex items-center gap-2">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
+                      {forkedSeed.category}
+                    </span>
+                    <span className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[forkedSeed.difficulty]}`}>
+                      {forkedSeed.difficulty}
+                    </span>
                   </p>
                 </div>
                 <button
@@ -290,6 +317,7 @@ export default function SpecializationInput() {
                 <textarea
                   value={specialization}
                   onChange={(e) => setSpecialization(e.target.value)}
+                  placeholder="(leave empty to inherit from the seed's specialization)"
                   rows={3}
                   className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-3 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
                 />
@@ -328,7 +356,7 @@ export default function SpecializationInput() {
                       key={seed.id}
                       onClick={() => {
                         setForkedSeed(seed);
-                        setSpecialization(seed.description);
+                        setSpecialization("");
                       }}
                       className="group flex flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-left transition-all hover:border-primary/40 hover:shadow-elevated"
                     >
@@ -354,6 +382,29 @@ export default function SpecializationInput() {
               )}
             </>
           )}
+        </div>
+      )}
+
+      {/* Generated package summary */}
+      {generatedPackage && sourceMode === "scratch" && (
+        <div className="mt-4 rounded-xl border border-tertiary/30 bg-tertiary/5 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
+                ✓ Skill Package Ready
+              </p>
+              <p className="mt-1 text-sm text-on-surface-dim">
+                {Object.keys(generatedPackage.supportingFiles).length + 1} files
+                will be used as the Gen 0 seed
+              </p>
+            </div>
+            <button
+              onClick={() => setGeneratedPackage(null)}
+              className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
+            >
+              Discard
+            </button>
+          </div>
         </div>
       )}
 

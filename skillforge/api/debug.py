@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from skillforge.engine.events import emit
@@ -183,6 +183,7 @@ async def _drive_fake_run(
     ]
 
     total_cost = 0.0
+    running_total = 0.0
 
     # --- run_started ---
     await emit(run_id, "run_started", specialization=SPECIALIZATION)
@@ -237,9 +238,24 @@ async def _drive_fake_run(
                     competitor=comp_idx,
                     skill_id=sk_id,
                     challenge_id=ch_id,
+                    mutations=["elite-carry"] if comp_idx == 0 else [f"mutation-{comp_idx}"],
+                    traits=["edge-case-first", "stdlib-only"] if comp_idx == 0 else [f"trait-{comp_idx}a", f"trait-{comp_idx}b"],
+                    meta_strategy="Original seed strategy" if comp_idx == 0 else f"Mutated strategy variant {comp_idx}",
+                    mutation_rationale="" if comp_idx == 0 else f"Explored alternative approach for variant {comp_idx}",
+                    skill_md_content="",  # fake runs don't have real content
                 )
-                # ~2.5s "writing/running tests" per challenge
-                await step(2.5)
+                # Emit progress events during the "work" period
+                tool_names = ["Read", "Write", "Bash"]
+                for turn in range(1, 4):
+                    await asyncio.sleep(0.3 * speed)
+                    await emit(run_id, "competitor_progress",
+                        generation=gen_num, competitor=comp_idx,
+                        skill_id=sk_id, challenge_id=ch_id,
+                        turn=turn,
+                        tool_name=tool_names[(turn - 1) % len(tool_names)],
+                    )
+                # ~1.6s remaining "work" (total ~2.5s with 0.9s from progress events)
+                await step(1.6)
                 # Realistic trace length: varies by competitor quality
                 trace_length = 8 + comp_idx * 2 + (gen_num * 1)
                 await emit(
@@ -251,11 +267,24 @@ async def _drive_fake_run(
                     challenge_id=ch_id,
                     trace_length=trace_length,
                 )
+                # Incremental cost update — budget ticks up in real-time
+                competitor_cost = 0.08 + 0.03 * comp_idx + 0.02 * gen_num
+                running_total += competitor_cost
+                await emit(
+                    run_id,
+                    "cost_update",
+                    total_cost_usd=round(running_total, 4),
+                    incremental=True,
+                )
                 await step(0.3)
 
-        # Judging pipeline — dwell longer so users can see L1→L5 shimmer
+        # Judging pipeline — emit per-layer events so the UI shows L1→L5 progress
         await emit(run_id, "judging_started", generation=gen_num)
-        await step(4.0)
+        await step(0.5)
+        for layer in range(1, 6):
+            await asyncio.sleep(0.6 / speed)
+            await emit(run_id, "judging_layer_complete", layer=layer, generation=gen_num)
+        await step(0.5)
 
         # Climbing fitness across generations with a small dip sometimes
         best, avg = FITNESS_CURVE[min(gen_num, len(FITNESS_CURVE) - 1)]
@@ -271,12 +300,14 @@ async def _drive_fake_run(
 
         gen_cost = COST_CURVE[min(gen_num, len(COST_CURVE) - 1)]
         total_cost += gen_cost
+        # Reconciliation point — set absolute total for the generation
+        running_total = total_cost
         await emit(
             run_id,
             "cost_update",
             generation=gen_num,
             generation_cost_usd=gen_cost,
-            total_cost_usd=round(total_cost, 3),
+            total_cost_usd=round(running_total, 4),
         )
         await step(0.4)
 
@@ -292,3 +323,66 @@ async def _drive_fake_run(
         total_cost_usd=round(total_cost, 3),
         generations_completed=num_generations,
     )
+
+
+# ----------------------------------------------------------------------------
+# Admin diagnostic endpoint
+# ----------------------------------------------------------------------------
+
+
+@router.get("/status")
+async def debug_status(token: str = "") -> dict:
+    """Admin diagnostic endpoint for debugging deployed environments.
+
+    Gated by SKILLFORGE_ADMIN_TOKEN. Returns active runs, recent failures,
+    leaked skills, and current configuration. Use ``?token=<admin-token>``
+    as a query parameter.
+    """
+    from skillforge.config import (
+        ADMIN_TOKEN,
+        COMPETITOR_BACKEND,
+        COMPETITOR_CONCURRENCY,
+        MODEL_DEFAULTS,
+    )
+
+    if not ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="admin token not configured")
+    if token != ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="invalid admin token")
+
+    from skillforge.api.routes import _active_runs
+    from skillforge.db.queries import list_leaked_skills, list_runs
+
+    # Active runs
+    active = []
+    for run_id, task in _active_runs.items():
+        active.append({
+            "run_id": run_id,
+            "done": task.done(),
+            "cancelled": task.cancelled(),
+        })
+
+    # Recent failed runs
+    all_runs = await list_runs(limit=20)
+    recent_failed = [
+        {
+            "id": r.id,
+            "reason": r.failure_reason,
+            "specialization": r.specialization[:60],
+        }
+        for r in all_runs
+        if r.status == "failed"
+    ][:5]
+
+    # Leaked skills
+    leaked = await list_leaked_skills()
+
+    return {
+        "active_runs": active,
+        "active_run_count": len(active),
+        "recent_failed_runs": recent_failed,
+        "leaked_skills_count": len(leaked),
+        "competitor_backend": COMPETITOR_BACKEND,
+        "competitor_concurrency": COMPETITOR_CONCURRENCY,
+        "models": MODEL_DEFAULTS,
+    }

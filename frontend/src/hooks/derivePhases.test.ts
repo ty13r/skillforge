@@ -20,6 +20,7 @@ function makeState(
     expectedCompetitors: 0,
     finishedCompetitors: 0,
     lastEventAt: 0,
+    currentJudgingLayer: 0,
     ...overrides,
   };
 }

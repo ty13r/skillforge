@@ -650,6 +650,22 @@ async def delete_leaked_skill(
         await conn.commit()
 
 
+async def mark_zombie_runs(db_path: Path | None = None) -> int:
+    """Mark any 'running'/'pending' runs as failed on startup.
+
+    Called during server lifespan init to clean up runs orphaned by
+    a server restart. Returns the count of affected rows.
+    """
+    async with _connect(db_path) as conn:
+        cursor = await conn.execute(
+            "UPDATE evolution_runs SET status = 'failed', "
+            "failure_reason = 'server restarted while run was in progress' "
+            "WHERE status IN ('running', 'pending')"
+        )
+        await conn.commit()
+        return cursor.rowcount
+
+
 __all__ = [
     "save_run",
     "get_run",
@@ -662,4 +678,109 @@ __all__ = [
     "log_leaked_skill",
     "list_leaked_skills",
     "delete_leaked_skill",
+    "mark_zombie_runs",
+    "save_candidate_seed",
+    "list_candidate_seeds",
+    "update_candidate_seed_status",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Candidate seeds
+# ---------------------------------------------------------------------------
+
+
+async def save_candidate_seed(
+    *,
+    id: str,
+    source: str,
+    title: str,
+    specialization: str,
+    skill_md_content: str,
+    supporting_files: dict[str, str] | None = None,
+    traits: list[str] | None = None,
+    category: str = "uncategorized",
+    fitness_score: float | None = None,
+    source_run_id: str | None = None,
+    source_skill_id: str | None = None,
+    created_at: str | None = None,
+) -> None:
+    """Save a candidate seed (AI-generated or evolution winner)."""
+    from datetime import UTC, datetime
+
+    async with _connect() as conn:
+        await conn.execute(
+            """INSERT OR REPLACE INTO candidate_seeds
+               (id, source, source_run_id, source_skill_id, title, specialization,
+                category, skill_md_content, supporting_files, traits, fitness_score,
+                status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
+            (
+                id,
+                source,
+                source_run_id,
+                source_skill_id,
+                title,
+                specialization,
+                category,
+                skill_md_content,
+                json.dumps(supporting_files or {}),
+                json.dumps(traits or []),
+                fitness_score,
+                created_at or datetime.now(UTC).isoformat(),
+            ),
+        )
+        await conn.commit()
+
+
+async def list_candidate_seeds(status: str | None = None) -> list[dict]:
+    """List candidate seeds, optionally filtered by status."""
+    async with _connect() as conn:
+        if status:
+            cur = await conn.execute(
+                "SELECT * FROM candidate_seeds WHERE status = ? ORDER BY created_at DESC",
+                (status,),
+            )
+        else:
+            cur = await conn.execute(
+                "SELECT * FROM candidate_seeds ORDER BY created_at DESC"
+            )
+        rows = await cur.fetchall()
+    return [
+        {
+            "id": r["id"],
+            "source": r["source"],
+            "source_run_id": r["source_run_id"],
+            "source_skill_id": r["source_skill_id"],
+            "title": r["title"],
+            "specialization": r["specialization"],
+            "category": r["category"],
+            "skill_md_content": r["skill_md_content"],
+            "supporting_files": json.loads(r["supporting_files"]),
+            "traits": json.loads(r["traits"]),
+            "fitness_score": r["fitness_score"],
+            "status": r["status"],
+            "created_at": r["created_at"],
+            "promoted_at": r["promoted_at"],
+            "notes": r["notes"],
+        }
+        for r in rows
+    ]
+
+
+async def update_candidate_seed_status(
+    id: str, status: str, notes: str | None = None
+) -> bool:
+    """Update a candidate seed's status. Returns True if found."""
+    from datetime import UTC, datetime
+
+    async with _connect() as conn:
+        promoted_at = datetime.now(UTC).isoformat() if status == "promoted" else None
+        cur = await conn.execute(
+            """UPDATE candidate_seeds
+               SET status = ?, notes = COALESCE(?, notes), promoted_at = COALESCE(?, promoted_at)
+               WHERE id = ?""",
+            (status, notes, promoted_at, id),
+        )
+        await conn.commit()
+        return cur.rowcount > 0

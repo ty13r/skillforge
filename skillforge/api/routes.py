@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import uuid
 from datetime import UTC, datetime
+
+logger = logging.getLogger("skillforge.api")
 
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
@@ -25,7 +28,7 @@ from skillforge.db.database import init_db
 from skillforge.db.queries import get_lineage, get_run, list_runs, save_run
 from skillforge.engine.evolution import PENDING_PARENTS, run_evolution
 from skillforge.engine.export import export_agent_sdk_config, export_skill_md, export_skill_zip
-from skillforge.models import EvolutionRun
+from skillforge.models import EvolutionRun, SkillGenome
 
 router = APIRouter(prefix="/api")
 
@@ -72,10 +75,17 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
     # Spawn background task — store reference so it isn't GC'd
     task = asyncio.create_task(run_evolution(run))
     _active_runs[run.id] = task
+    logger.info("run=%s started: spec=%s pop=%d gens=%d",
+                run.id[:8], run.specialization[:60], run.population_size, run.num_generations)
 
     # Cleanup callback removes the task from the registry when it finishes
     def _cleanup(t: asyncio.Task) -> None:
         _active_runs.pop(run.id, None)
+        exc = t.exception() if not t.cancelled() else None
+        if exc:
+            logger.error("run=%s task failed: %s", run.id[:8], exc)
+        else:
+            logger.info("run=%s task completed", run.id[:8])
 
     task.add_done_callback(_cleanup)
 
@@ -88,13 +98,16 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
 
 
 class EvolveFromParentRequest(BaseModel):
-    parent_source: str = Field(..., description='"registry" or "upload"')
-    parent_id: str = Field(..., description="skill_id (registry) or upload_id (upload)")
+    parent_source: str = Field(..., description='"registry", "upload", or "generated"')
+    parent_id: str = Field("", description="skill_id (registry) or upload_id (upload)")
     specialization: str | None = None
     population_size: int = 5
     num_generations: int = 3
     max_budget_usd: float = 10.0
     invite_code: str | None = None
+    # For parent_source="generated" — inline skill content
+    skill_md_content: str | None = None
+    supporting_files: dict[str, str] | None = None
 
 
 @router.post("/evolve/from-parent", response_model=EvolveResponse)
@@ -147,10 +160,26 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
                 status_code=404, detail=f"upload {req.parent_id!r} not found or expired"
             )
         effective_spec = req.specialization or "User-uploaded Skill (evolved)"
+    elif req.parent_source == "generated":
+        if not req.skill_md_content:
+            raise HTTPException(
+                status_code=400,
+                detail="generated source requires skill_md_content",
+            )
+        parent = SkillGenome(
+            id=str(uuid.uuid4()),
+            generation=0,
+            skill_md_content=req.skill_md_content,
+            supporting_files=req.supporting_files or {},
+            frontmatter={},
+            traits=[],
+            maturity="draft",
+        )
+        effective_spec = req.specialization or "AI-generated skill"
     else:
         raise HTTPException(
             status_code=400,
-            detail=f"parent_source must be 'registry' or 'upload', got {req.parent_source!r}",
+            detail=f"parent_source must be 'registry', 'upload', or 'generated', got {req.parent_source!r}",
         )
 
     await init_db()
@@ -217,8 +246,27 @@ async def get_run_detail(run_id: str) -> RunDetail:
         population_size=run.population_size,
         num_generations=run.num_generations,
         total_cost_usd=run.total_cost_usd,
+        best_fitness=(
+            max(run.best_skill.pareto_objectives.values())
+            if run.best_skill and run.best_skill.pareto_objectives
+            else None
+        ),
         best_skill_id=run.best_skill.id if run.best_skill else None,
     )
+
+
+@router.get("/runs/{run_id}/events")
+async def get_run_events(run_id: str) -> list[dict]:
+    """Return the full event history for a run (for post-mortem debugging)."""
+    from skillforge.db.queries import _connect
+
+    async with _connect() as conn:
+        cursor = await conn.execute(
+            "SELECT event_type, payload, timestamp FROM run_events WHERE run_id = ? ORDER BY id",
+            (run_id,),
+        )
+        rows = await cursor.fetchall()
+    return [{"event": row[0], "payload": json.loads(row[1]), "timestamp": row[2]} for row in rows]
 
 
 @router.get("/runs")
@@ -330,6 +378,7 @@ async def get_run_skill(run_id: str, skill_id: str) -> dict:
                     "id": skill.id,
                     "generation": skill.generation,
                     "skill_md_content": skill.skill_md_content,
+                    "supporting_files": skill.supporting_files or {},
                     "traits": skill.traits,
                     "maturity": skill.maturity,
                     "parent_ids": skill.parent_ids,
