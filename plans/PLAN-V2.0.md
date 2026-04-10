@@ -83,9 +83,11 @@ Within each wave, backend and frontend work are independent when possible. Acros
 
 **Create:**
 - `skillforge/db/taxonomy_seeds.py` — idempotent loader (same pattern as seed_loader.py)
-  - Hardcoded initial taxonomy: ~8 domains, ~30 focuses, ~15 languages
-  - Classify existing 16 seed skills into families
-  - Hash-based skip on startup (same as seed content hash)
+  - On first boot (empty taxonomy): run Taxonomist agent against each of the 16 seeds' specialization strings → Taxonomist creates domains, focuses, languages, and classifies each seed into a family
+  - On subsequent boots: hash-based skip (same as seed content hash)
+  - If new seeds are added: hash changes → Taxonomist re-runs for unclassified seeds only
+  - This means Wave 1-3 depends on the Taxonomist skill from Wave 1-1 (the `.claude/skills/taxonomist/` package) but NOT the full Taxonomist agent from Wave 2-1. Instead, use a lightweight `_bootstrap_classify()` function with a simpler prompt that only classifies (no decomposition). The full Taxonomist agent in Phase 2 replaces this with richer output.
+  - Fallback: if no API key available (local dev without key), load a hardcoded default taxonomy so the app still boots
 
 **Modify:**
 - `skillforge/main.py` — call `load_taxonomy()` in lifespan handler after `load_seeds()`
@@ -307,10 +309,12 @@ Within each wave, backend and frontend work are independent when possible. Acros
 - `GET /api/runs/{id}` — add variant_evolutions summary for atomic runs (Wave 4-3)
 
 ### Taxonomy sync strategy
-- Initial taxonomy seeded in Wave 1-3 (hardcoded, idempotent)
+- Initial taxonomy seeded in Wave 1-3 by running a lightweight classifier against the 16 Gen 0 seeds (LLM-driven, not hardcoded)
+- Fallback: hardcoded default taxonomy if no API key available (local dev)
 - Taxonomist can create new taxonomy_nodes at runtime when classifying runs (Wave 2-1)
 - New nodes require justification (logged) and are auto-persisted to DB
-- Seed reclassification: if taxonomy changes, `taxonomy_seeds.py` re-runs on next startup and updates family assignments
+- Seed reclassification: if seed content hash changes on startup, `taxonomy_seeds.py` re-runs the classifier for unclassified seeds
+- The Gen 0 seeds are the training data for the initial taxonomy — it emerges from real data, not manual guesses
 
 ---
 
