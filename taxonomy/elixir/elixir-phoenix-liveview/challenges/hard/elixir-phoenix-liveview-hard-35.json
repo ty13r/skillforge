@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-35",
+  "tier": "hard",
+  "title": "Form validation with embedded schema + custom validations",
+  "prompt": "Write lib/my_app_web/live/survey_live.ex (module MyAppWeb.SurveyLive). The survey form is backed by an embedded_schema MyApp.Survey.Form with fields :age (integer), :consent (boolean), :comments (string). changeset/2 must validate_required([:age, :consent]), validate_number(:age, greater_than_or_equal_to: 18), validate_acceptance(:consent, message: \"must accept\"). LiveView uses to_form + action :validate. Render <.form> with <.input> components.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/survey_live.ex"],
+    "must_contain": [
+      "to_form",
+      "action: :validate",
+      "<.form",
+      "<.input field={@form"
+    ],
+    "must_not_contain": [
+      "Map.put(changeset"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "embedded_schema_form",
+    "weight": 0.4
+  },
+  "tier_rationale": "Full form setup with embedded schema pattern.",
+  "calibration": null
+}

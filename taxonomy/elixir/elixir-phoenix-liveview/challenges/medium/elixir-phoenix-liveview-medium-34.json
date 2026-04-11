@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-medium-34",
+  "tier": "medium",
+  "title": "Refactor an over-nested <%= if %> into :if attributes",
+  "prompt": "Write lib/my_app_web/live/order_card_live.ex (module MyAppWeb.OrderCardLive). Render an order card with conditional sections: status badge (if @order.status), tracking block (if @order.tracking_code), refund notice (if @order.refunded). All three must use :if attributes on the containing HTML element, not nested <%= if %> blocks. mount/3 assigns a default order map.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/order_card_live.ex"],
+    "must_contain": [
+      ":if={@order.status}",
+      ":if={@order.tracking_code}",
+      ":if={@order.refunded}",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "<%= if ",
+      "~L\"\"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": [],
+    "criterion": "multi_if_attributes",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires applying :if to multiple elements — common but still a multi-site change.",
+  "calibration": null
+}

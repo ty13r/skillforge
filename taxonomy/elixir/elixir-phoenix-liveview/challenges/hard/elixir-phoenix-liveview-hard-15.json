@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-15",
+  "tier": "hard",
+  "title": "Audit and fix 4 distinct anti-patterns",
+  "prompt": "Write lib/my_app_web/live/projects_live.ex (module MyAppWeb.ProjectsLive) that fixes FOUR anti-patterns simultaneously: (1) DB query in mount → move to handle_params, (2) unguarded PubSub subscribe → add connected?/1, (3) large collection via assign → convert to stream, (4) unscoped PubSub topic → scope to \"projects:org:#{org_id}\". mount takes %{\"org_id\" => org_id} from session. All four fixes are required.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/projects_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "if connected?(socket)",
+      "\"projects:org:",
+      "stream(socket, :projects",
+      "Phoenix.PubSub.subscribe"
+    ],
+    "must_not_contain": [
+      "\"projects\"\n",
+      "assign(socket, :projects, projects)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle", "pubsub-and-realtime", "streams-and-collections"],
+    "criterion": "four_anti_patterns_fixed",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four distinct Iron Laws applied together. Hard because it requires not missing any.",
+  "research_citation": "oliver-kriska iron laws",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-04",
+  "tier": "easy",
+  "title": "Interpolate a route parameter with ~p",
+  "prompt": "Write a LiveView at lib/my_app_web/live/show_link_live.ex (module MyAppWeb.ShowLinkLive) that renders a single <.link navigate={~p\"/users/#{@user}\"}>Profile</.link>. mount/3 returns {:ok, assign(socket, :user, %{id: 42})}. Use ~H and <.link>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/show_link_live.ex"],
+    "must_contain": [
+      "~p\"/users/",
+      "<.link",
+      "navigate="
+    ],
+    "must_not_contain": [
+      "Routes.",
+      "live_redirect",
+      "live_patch"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "verified_routes_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single interpolation syntax in ~p. Canonical replacement for Routes.user_path.",
+  "calibration": null
+}

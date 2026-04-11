@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-05",
+  "tier": "medium",
+  "title": "Refactor function-head soup into discriminating head + body destructure",
+  "prompt": "The fixture test_fixtures/function_head_soup.ex has a handle_event/3 whose head binds 7 params + 2 assigns. Rewrite lib/my_app_web/live/settings_live.ex (module MyAppWeb.SettingsLive) so handle_event(\"validate\", %{\"settings\" => params}, socket) takes ONLY the discriminating \"validate\" + the top-level %{\"settings\" => ...} + socket. All field destructuring happens in the function body. Do not bind the current_user in the function head. The behavior is preserved.",
+  "fixture_files": ["test_fixtures/function_head_soup.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/settings_live.ex"],
+    "must_contain": [
+      "def handle_event(\"validate\", %{\"settings\" => params}, socket)",
+      "MyAppWeb.SettingsLive"
+    ],
+    "must_not_contain": [
+      "%{assigns: %{current_user",
+      "%{\"theme\" => theme,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "clean_handle_event_head",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires recognizing the anti-pattern and refactoring without changing behavior. Sonnet often keeps too much in the head.",
+  "research_citation": "John Elm Labs anti-patterns: 'Function Head Pattern Matching Abuse'",
+  "calibration": null
+}

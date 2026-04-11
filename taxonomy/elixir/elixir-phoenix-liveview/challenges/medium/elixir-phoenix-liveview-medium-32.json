@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-medium-32",
+  "tier": "medium",
+  "title": "Add phx-debounce and used_input? to a search form",
+  "prompt": "Write lib/my_app_web/live/search_form_live.ex (module MyAppWeb.SearchFormLive) that has a search form with phx-change=\"search\" and a text input with phx-debounce=\"300\". Also handle the case where the user hasn't submitted anything yet — only show results when used_input?(@form[:q]) is true. mount/3 builds @form via to_form(%{\"q\" => \"\"}).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/search_form_live.ex"],
+    "must_contain": [
+      "phx-debounce=\"300\"",
+      "used_input?",
+      "to_form"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["form-handling"],
+    "criterion": "debounced_search_with_used_input",
+    "weight": 0.3
+  },
+  "tier_rationale": "Combines debounce + used_input? — two lesser-known attributes.",
+  "calibration": null
+}

@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-easy-17",
+  "tier": "easy",
+  "title": "Demote a stateless LiveComponent to a function component",
+  "prompt": "The fixture MyAppWeb.UserCardComponent is a LiveComponent but has no state and no handle_event. Rewrite it as a function component in lib/my_app_web/components/user_card.ex (module MyAppWeb.UserCard). Expose user_card/1. Declare attrs :id (string, required), :user (map, required), :badge (string, default nil), :rest (:global). Render the same markup and use :if for the badge.",
+  "fixture_files": ["test_fixtures/stateless_live_component.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/user_card.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :id",
+      "attr :user",
+      "attr :badge",
+      "attr :rest, :global",
+      "def user_card(assigns)",
+      ":if="
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component",
+      "use Phoenix.LiveComponent"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "stateless_demoted_to_function_component",
+    "weight": 0.3
+  },
+  "tier_rationale": "One-way conversion with known signature and attrs. Demotion rule is well-known.",
+  "research_citation": "Phoenix.LiveComponent docs: 'Do not write a component that is simply encapsulating generic DOM components'",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-medium-20",
+  "tier": "medium",
+  "title": "Refactor on_mount to separate authentication from authorization",
+  "prompt": "Write lib/my_app_web/user_auth.ex (module MyAppWeb.UserAuth) with TWO separate on_mount clauses: on_mount(:ensure_authenticated, _params, session, socket) that checks session token and halts with redirect to ~p\"/login\" if missing, and on_mount(:ensure_admin, _params, _session, socket) that halts with redirect to ~p\"/\" if socket.assigns.current_user.role != :admin. Separation of concerns: auth checks who, authz checks what.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/user_auth.ex"],
+    "must_contain": [
+      "def on_mount(:ensure_authenticated",
+      "def on_mount(:ensure_admin",
+      ":halt",
+      "~p\"/login\"",
+      "~p\"/\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": [],
+    "criterion": "auth_vs_authz_separation",
+    "weight": 0.3
+  },
+  "tier_rationale": "Two separate on_mount clauses with discriminating atoms. Separation of concerns.",
+  "calibration": null
+}

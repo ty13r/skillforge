@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-29",
+  "tier": "hard",
+  "title": "Detect and fix 3 anti-patterns in fixture",
+  "prompt": "The fixture test_fixtures/multi_antipattern_liveview.ex has multiple anti-patterns. Produce lib/my_app_web/live/projects_live.ex (module MyAppWeb.ProjectsLive) that explicitly fixes THREE of them: (1) DB query in mount → handle_params, (2) unguarded PubSub subscribe → connected? guard, (3) unscoped topic \"projects\" → \"projects:org:#{current_user.org_id}\". The other anti-patterns in the fixture (stream conversion, authz) may be left alone for this challenge.",
+  "fixture_files": ["test_fixtures/multi_antipattern_liveview.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/projects_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "if connected?(socket)",
+      "\"projects:org:",
+      "Phoenix.PubSub.subscribe"
+    ],
+    "must_not_contain": [
+      "Phoenix.PubSub.subscribe(MyApp.PubSub, \"projects\")"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle", "pubsub-and-realtime"],
+    "criterion": "three_anti_pattern_fixes",
+    "weight": 0.35
+  },
+  "tier_rationale": "Requires identifying and fixing 3 distinct anti-patterns in a noisy fixture.",
+  "calibration": null
+}

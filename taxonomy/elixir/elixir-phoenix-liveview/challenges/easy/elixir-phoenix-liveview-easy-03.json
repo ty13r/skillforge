@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-03",
+  "tier": "easy",
+  "title": "Replace <%= if ... %> with :if attribute in HEEx",
+  "prompt": "Write a LiveView render function at lib/my_app_web/live/badge_live.ex (module MyAppWeb.BadgeLive) that renders a <span class=\"badge\">admin</span> only when @current_user.admin is true. Use the HEEx :if attribute, not <%= if %>. Module must call `use MyAppWeb, :live_view`. mount/3 should return {:ok, assign(socket, :current_user, %{admin: true})}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/badge_live.ex"],
+    "must_contain": [
+      ":if=",
+      "~H\"\"\"",
+      "MyAppWeb.BadgeLive"
+    ],
+    "must_not_contain": [
+      "<%= if ",
+      "~L\"\"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": [],
+    "criterion": "heex_directives_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single HEEx idiom swap. Canonical replacement.",
+  "calibration": null
+}

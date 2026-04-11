@@ -1,0 +1,31 @@
+{
+  "id": "elixir-phoenix-liveview-hard-22",
+  "tier": "hard",
+  "title": "Author a socket bucket refactor from procedural LV",
+  "prompt": "Write lib/my_app_web/live/trip_planner_live.ex (module MyAppWeb.TripPlannerLive). The LiveView has 4 distinct UI sections (search, results, selected, summary). Decompose into 4 stateless function components: <.search_panel>, <.results_panel>, <.selected_panel>, <.summary_panel>. All four must be declared as function components in the same file via `use Phoenix.Component` on a helper module MyAppWeb.TripPlannerComponents. Each takes only the assigns it needs — no passing of the entire socket. The LiveView render/1 is a simple composition.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/trip_planner_live.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_view",
+      "use Phoenix.Component",
+      "def search_panel(",
+      "def results_panel(",
+      "def selected_panel(",
+      "def summary_panel(",
+      "<.search_panel",
+      "<.results_panel",
+      "<.selected_panel",
+      "<.summary_panel"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "four_component_decomposition",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires 4 distinct component declarations + composition. Multi-site discipline.",
+  "calibration": null
+}

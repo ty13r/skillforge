@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-06",
+  "tier": "medium",
+  "title": "Two-layer auth: on_mount + per-event ownership check",
+  "prompt": "Write lib/my_app_web/live/invoices_live.ex (module MyAppWeb.InvoicesLive). Use on_mount {MyAppWeb.UserAuth, :ensure_authenticated} at the top. In handle_event(\"cancel\", %{\"id\" => id}, socket), look up the invoice and only cancel it if invoice.customer_id == socket.assigns.current_user.id. Deny with put_flash otherwise. mount/3 returns {:ok, assign(socket, :current_user, %{id: 1})} (the :ensure_authenticated hook populates it in real code).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/invoices_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "def handle_event(\"cancel\"",
+      "invoice.customer_id",
+      "socket.assigns.current_user.id",
+      "put_flash(socket, :error"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["event-handlers-and-handle-info"],
+    "criterion": "two_layer_auth",
+    "weight": 0.3
+  },
+  "tier_rationale": "Mount-level + event-level auth is a multi-site change. Canonical Phoenix auth pattern.",
+  "research_citation": "Phoenix LiveView Security considerations + Hashrocket authorization post",
+  "calibration": null
+}

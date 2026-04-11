@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-24",
+  "tier": "hard",
+  "title": "Author a component library with no compile warnings",
+  "prompt": "Write lib/my_app_web/components/kit.ex (module MyAppWeb.Kit). Declare four function components: card/1 (attr :class, :rest :global, slot :inner_block), button/1 (attr :type with values [\"button\",\"submit\"], attr :variant with values [\"primary\",\"secondary\"], :rest :global, slot :inner_block), input/1 (attr :field FormField, attr :label string required, attr :type default \"text\", :rest :global), and badge/1 (attr :label string required, attr :kind with values [\"info\",\"warning\",\"error\"]). Each attr must have correct type. No slot attributes with :default (would be a compile warning).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/kit.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "def card(assigns)",
+      "def button(assigns)",
+      "def input(assigns)",
+      "def badge(assigns)",
+      "values:",
+      "slot :inner_block",
+      "attr :rest, :global"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "component_library_no_warnings",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four components with varied attrs/slots. Must avoid the `:default` on slot compile warning and the `attr + slot same name` compile error.",
+  "research_citation": "Phoenix.Component docs compile warnings",
+  "calibration": null
+}

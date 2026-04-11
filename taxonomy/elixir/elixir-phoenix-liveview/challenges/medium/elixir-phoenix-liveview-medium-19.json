@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-medium-19",
+  "tier": "medium",
+  "title": "Build a multi-step wizard LiveView",
+  "prompt": "Write lib/my_app_web/live/wizard_live.ex (module MyAppWeb.WizardLive) that renders a 3-step form wizard using a single LiveView. State: @step (integer 1..3), @form_data (map). handle_event(\"next\", params, socket) advances the step and merges params. handle_event(\"back\", _, socket) steps back. Step 3 posts to handle_event(\"finish\", _, socket) which returns {:noreply, push_navigate(socket, to: ~p\"/done\")}. Render uses :if={@step == 1} / :if={@step == 2} / :if={@step == 3}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/wizard_live.ex"],
+    "must_contain": [
+      "MyAppWeb.WizardLive",
+      "def handle_event(\"next\"",
+      "def handle_event(\"back\"",
+      "def handle_event(\"finish\"",
+      "push_navigate",
+      ":if={@step == 1}",
+      ":if={@step == 2}",
+      ":if={@step == 3}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["form-handling", "navigation-patterns"],
+    "criterion": "wizard_single_live_view",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-step state machine inside a single LiveView. Several event handlers + conditional rendering.",
+  "calibration": null
+}

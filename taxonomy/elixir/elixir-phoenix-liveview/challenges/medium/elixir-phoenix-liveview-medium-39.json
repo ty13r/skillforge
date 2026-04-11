@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-medium-39",
+  "tier": "medium",
+  "title": "Extract a multi-level component tree",
+  "prompt": "Write lib/my_app_web/live/dashboard_page_live.ex (module MyAppWeb.DashboardPageLive) that uses a 2-level component hierarchy: <.dashboard_layout> wrapping <.dashboard_card title=\"Users\"> and <.dashboard_card title=\"Revenue\">. Declare both function components in the same file (a helper module MyAppWeb.DashboardComponents with dashboard_layout/1 and dashboard_card/1). Each card takes :title (string, required) and an :inner_block slot.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/dashboard_page_live.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_view",
+      "use Phoenix.Component",
+      "def dashboard_layout(",
+      "def dashboard_card(",
+      "attr :title",
+      "slot :inner_block",
+      "render_slot"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "component_tree_extracted",
+    "weight": 0.3
+  },
+  "tier_rationale": "Two-level component extraction. Non-trivial decomposition decision.",
+  "calibration": null
+}

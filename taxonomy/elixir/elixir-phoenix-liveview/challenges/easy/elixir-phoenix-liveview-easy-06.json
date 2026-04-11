@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-easy-06",
+  "tier": "easy",
+  "title": "Add connected?/1 guard around a PubSub subscribe",
+  "prompt": "Write lib/my_app_web/live/feed_live.ex (module MyAppWeb.FeedLive) that subscribes to \"feed:user:1\" via Phoenix.PubSub.subscribe/2 only when connected?(socket) is true. mount/3 returns {:ok, assign(socket, :items, [])}. Add a handle_info/2 that prepends new items on {:new_item, item}. Render <li :for={i <- @items}>{i.text}</li>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/feed_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "def handle_info",
+      ":for="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["mount-and-lifecycle"],
+    "criterion": "connected_check_before_subscribe",
+    "weight": 0.3
+  },
+  "tier_rationale": "Single Iron Law application: guard a subscribe with connected?/1. Canonical placement.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix iron law: 'Check connected?/1 before PubSub subscribe'",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-medium-37",
+  "tier": "medium",
+  "title": "Fix a LiveView that duplicates state between parent and child LC",
+  "prompt": "Write lib/my_app_web/live/kanban_live.ex (module MyAppWeb.KanbanLive) that owns a single source of truth for @columns state. It renders <.live_component module={MyAppWeb.ColumnComponent} id={\"col-#{col.id}\"} column={col} /> but the ColumnComponent MUST NOT maintain its own duplicate copy of the column state — it reads from assigns only. Events in the component must use send(self(), ...) to notify the parent, and the parent updates the canonical state. The parent LiveView owns @columns; the component is mostly stateless but has an `id`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/kanban_live.ex"],
+    "must_contain": [
+      "MyAppWeb.KanbanLive",
+      "<.live_component module={MyAppWeb.ColumnComponent}",
+      "id={\"col-",
+      "column={"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["live-components-stateful"],
+    "criterion": "single_source_of_truth",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires decision about where state lives. Multi-piece design.",
+  "research_citation": "hexshift advanced LiveComponent architecture",
+  "calibration": null
+}

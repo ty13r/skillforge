@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-easy-34",
+  "tier": "easy",
+  "title": "Add phx-value-id to a clickable row",
+  "prompt": "Write lib/my_app_web/live/events_list_live.ex (module MyAppWeb.EventsListLive). Render a list of rows with :for, where each row is <div phx-click=\"select\" phx-value-id={evt.id}>{evt.name}</div>. Add handle_event(\"select\", %{\"id\" => id}, socket) that assigns :selected_id to id. mount/3 returns {:ok, assign(socket, events: [], selected_id: nil)}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/events_list_live.ex"],
+    "must_contain": [
+      "phx-value-id=",
+      "phx-click=\"select\"",
+      "def handle_event(\"select\", %{\"id\" => id}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "phx_value_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Canonical phx-value-* pattern for event params. Single addition.",
+  "calibration": null
+}

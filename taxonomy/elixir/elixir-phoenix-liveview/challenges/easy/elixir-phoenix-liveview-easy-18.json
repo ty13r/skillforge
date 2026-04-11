@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-18",
+  "tier": "easy",
+  "title": "Extract a stateless header into a function component",
+  "prompt": "Write lib/my_app_web/components/page_header.ex (module MyAppWeb.PageHeader). Define a function component page_header/1 with attrs :title (string, required), :subtitle (string, default nil), and a default slot :inner_block. Render <header><h1>{@title}</h1><p :if={@subtitle}>{@subtitle}</p>{render_slot(@inner_block)}</header>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/page_header.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :title",
+      "attr :subtitle",
+      "slot :inner_block",
+      "render_slot(@inner_block)",
+      ":if="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "stateless_function_component_extracted",
+    "weight": 0.25
+  },
+  "tier_rationale": "Single-step decomposition: extract a stateless header. Canonical component shape.",
+  "calibration": null
+}

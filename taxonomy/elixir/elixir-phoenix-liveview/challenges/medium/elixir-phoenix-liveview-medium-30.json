@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-medium-30",
+  "tier": "medium",
+  "title": "Decide patch vs navigate for filter vs detail",
+  "prompt": "Write lib/my_app_web/live/catalog_live.ex (module MyAppWeb.CatalogLive). The catalog has a filter nav (\"all\", \"books\", \"music\") and each item is a clickable row leading to a detail page /catalog/:id. Filter links must use <.link patch={~p\"/catalog?category=#{c}\"}> to stay in the same LiveView. Row links must use <.link navigate={~p\"/catalog/#{item}\"}> to cross to a different LiveView. Must not mix up patch vs navigate. Use :for for both lists.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/catalog_live.ex"],
+    "must_contain": [
+      "<.link patch={~p\"/catalog?category=",
+      "<.link navigate={~p\"/catalog/",
+      ":for="
+    ],
+    "must_not_contain": [
+      "<.link navigate={~p\"/catalog?category=",
+      "<.link patch={~p\"/catalog/#{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "patch_vs_navigate_discrimination",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires correct decision at each link site. Canonical discrimination rule.",
+  "research_citation": "dev.to 'When to use navigate, patch, href'",
+  "calibration": null
+}

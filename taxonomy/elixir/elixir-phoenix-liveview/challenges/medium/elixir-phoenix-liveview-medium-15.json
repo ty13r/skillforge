@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-15",
+  "tier": "medium",
+  "title": "Author a stateful filter LiveComponent",
+  "prompt": "Write lib/my_app_web/components/filter_bar.ex (module MyAppWeb.FilterBar) as a Phoenix.LiveComponent (not a function component). It owns its own :filter assign, has a handle_event(\"change_filter\", %{\"value\" => value}, socket) that updates its own state AND uses send/2 to notify the parent with {__MODULE__, {:filter_changed, value}}. It must call use MyAppWeb, :live_component. Render <form phx-change=\"change_filter\" phx-target={@myself}>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/filter_bar.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_component",
+      "def handle_event(\"change_filter\"",
+      "phx-target={@myself}",
+      "send(",
+      "{:filter_changed"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["event-handlers-and-handle-info"],
+    "criterion": "stateful_live_component",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-piece: LiveComponent with its own state + @myself target + send to parent. Canonical pattern with 3+ moving parts.",
+  "research_citation": "Phoenix.LiveComponent docs + hexshift advanced LiveComponent architecture",
+  "calibration": null
+}

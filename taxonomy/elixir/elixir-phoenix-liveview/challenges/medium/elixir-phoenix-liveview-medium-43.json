@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-43",
+  "tier": "medium",
+  "title": "Migrate helpers import from LiveView.Helpers to Phoenix.Component",
+  "prompt": "Write lib/my_app_web/components/legacy.ex (module MyAppWeb.Components.Legacy) that imports Phoenix.Component — NOT Phoenix.LiveView.Helpers. Define button/1 and link/1 function components. Do not use any helper from Phoenix.LiveView.Helpers. The ~H sigil must be the current one.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/legacy.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "def button(assigns)",
+      "def link(assigns)"
+    ],
+    "must_not_contain": [
+      "Phoenix.LiveView.Helpers"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "phoenix_component_used",
+    "weight": 0.25
+  },
+  "tier_rationale": "LLMs often still import the deprecated Phoenix.LiveView.Helpers.",
+  "research_citation": "fly.io Migrating to LiveView v0.18: 'import Phoenix.Component and remove the Phoenix.LiveView.Helpers import'",
+  "calibration": null
+}

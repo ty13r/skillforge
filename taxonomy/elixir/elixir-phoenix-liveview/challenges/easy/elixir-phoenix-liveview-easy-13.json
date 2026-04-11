@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-easy-13",
+  "tier": "easy",
+  "title": "Add a handle_info/2 catch-all",
+  "prompt": "Write lib/my_app_web/live/events_live.ex (module MyAppWeb.EventsLive) with two handle_info/2 clauses: one that matches {:event, payload} and appends payload to @events, and a second catch-all clause that matches _msg and returns {:noreply, socket} without crashing. mount/3 returns {:ok, assign(socket, :events, [])}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/events_live.ex"],
+    "must_contain": [
+      "def handle_info({:event,",
+      "def handle_info(_msg, socket)",
+      "{:noreply, socket}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": [],
+    "criterion": "handle_info_catch_all",
+    "weight": 0.2
+  },
+  "tier_rationale": "Canonical catch-all pattern. Single-clause add to prevent unhandled-message crashes.",
+  "calibration": null
+}

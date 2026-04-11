@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-28",
+  "tier": "medium",
+  "title": "Author a presence-backed online-users list",
+  "prompt": "Write lib/my_app_web/live/presence_live.ex (module MyAppWeb.PresenceLive). mount/3 subscribes to \"presence:room:#{room_id}\" (scoped) if connected?. It must call Phoenix.Presence.track/3 via MyAppWeb.Presence with the user id. handle_info({Phoenix.Presence.Event, :join, _presence}, socket) and (:leave) clauses update the stream :online via stream_insert / stream_delete. mount/3 takes %{\"room_id\" => room_id} from session.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/presence_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"presence:room:",
+      "stream(socket, :online",
+      "stream_insert",
+      "stream_delete"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["streams-and-collections"],
+    "criterion": "presence_stream_wiring",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires presence concepts + stream + scoped topic. Non-trivial multi-piece wiring.",
+  "calibration": null
+}

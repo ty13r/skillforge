@@ -1,0 +1,36 @@
+{
+  "id": "elixir-phoenix-liveview-hard-36",
+  "tier": "hard",
+  "title": "Multi-anti-pattern detection: 3 bugs in navigation_mix_up",
+  "prompt": "The fixture test_fixtures/navigation_mix_up.ex has multiple deprecated navigation idioms. Produce lib/my_app_web/live/orders_live.ex that fixes all three families: (1) push_redirect → push_navigate, (2) live_patch/live_redirect/live_link → <.link patch/navigate=>, (3) ~L → ~H with :for/:if. Additionally, the handle_params/3 block must properly branch on the filter param (with a default _params clause). Must not leave any deprecated call.",
+  "fixture_files": ["test_fixtures/navigation_mix_up.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/orders_live.ex"],
+    "must_contain": [
+      "push_navigate",
+      "<.link patch=",
+      "<.link navigate=",
+      "~H\"\"\"",
+      ":for=",
+      "def handle_params(%{\"filter\"",
+      "def handle_params(_params"
+    ],
+    "must_not_contain": [
+      "push_redirect",
+      "live_link",
+      "live_patch",
+      "live_redirect",
+      "Routes.",
+      "~L\"\"\"",
+      "<%= for "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes", "mount-and-lifecycle"],
+    "criterion": "navigation_full_migration",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-family migration. Must not miss any call site.",
+  "calibration": null
+}

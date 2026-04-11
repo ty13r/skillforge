@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-hard-10",
+  "tier": "hard",
+  "title": "Form with embedded schema for UI-specific validation",
+  "prompt": "Write two files: (1) lib/my_app/checkout/form.ex (module MyApp.Checkout.Form) as an Ecto.Schema with `use Ecto.Schema`, `import Ecto.Changeset`, an embedded_schema declaring fields :cardholder, :card_last4, :zipcode, and a changeset/2 that casts + validates them. (2) lib/my_app_web/live/checkout_live.ex (module MyAppWeb.CheckoutLive) that uses MyApp.Checkout.Form (NOT the DB schema MyApp.Checkout.Order directly) for the <.form>. mount builds @form via to_form(Form.changeset(%Form{}, %{})). Decoupling the UI form from the DB schema is the key pattern.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/checkout_live.ex"],
+    "must_contain": [
+      "MyApp.Checkout.Form",
+      "to_form",
+      "<.form",
+      "<.input field={@form",
+      "def handle_event(\"validate\""
+    ],
+    "must_not_contain": [
+      "MyApp.Checkout.Order"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "form_specific_schema",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires introducing a separate form-specific schema — an architectural decision many LLMs miss.",
+  "research_citation": "John Elm Labs top-3 form mistakes #2: 'Brittle system where UI and database can\\'t evolve independently'",
+  "calibration": null
+}

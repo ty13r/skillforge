@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-04",
+  "tier": "medium",
+  "title": "Tenant-scoped PubSub subscribe and broadcast pair",
+  "prompt": "Write lib/my_app_web/live/tenant_chat_live.ex (module MyAppWeb.TenantChatLive). mount/3 takes %{\"org_id\" => org_id, \"room_id\" => room_id} from session. Build the topic as \"chat:org:#{org_id}:room:#{room_id}\". Subscribe via connected?/1 guard. Broadcast on handle_event(\"send\") to the same scoped topic. Render the messages as a stream. Do NOT use the unscoped topic \"chat\" or \"chat:room:#{room_id}\" — the tenant must be part of the scope.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tenant_chat_live.ex"],
+    "must_contain": [
+      "\"chat:org:\"",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "Phoenix.PubSub.broadcast",
+      "stream("
+    ],
+    "must_not_contain": [
+      "\"chat\"\n",
+      "\"chat:room"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["auth-and-authz", "streams-and-collections"],
+    "criterion": "tenant_scoped_pubsub",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires knowing tenant scoping + paired subscribe/broadcast + connected?/1 + stream combo. Multi-step.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'Unscoped topics leak data between tenants'",
+  "calibration": null
+}

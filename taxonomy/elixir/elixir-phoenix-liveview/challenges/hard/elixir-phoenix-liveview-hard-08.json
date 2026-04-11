@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-hard-08",
+  "tier": "hard",
+  "title": "Refactor procedural LiveView into LiveView + context + components",
+  "prompt": "Write lib/my_app/reports.ex (module MyApp.Reports) as a context module with load_report/2 taking (org_id, date) and returning the report data — NOT taking the socket. Then write lib/my_app_web/live/reports_live.ex (module MyAppWeb.ReportsLive) that calls MyApp.Reports.load_report(org_id, date) in handle_params. Also extract <.report_header user={@user} date={@date} /> and <.report_chart data={@data} /> as stateless function components defined in a helper module MyAppWeb.Components.Reports. The LiveView must not perform business logic inline — all logic lives in the context.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/reports_live.ex"],
+    "must_contain": [
+      "MyApp.Reports.load_report",
+      "<.report_header",
+      "<.report_chart",
+      "def handle_params"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "context_decomposition",
+    "weight": 0.35
+  },
+  "tier_rationale": "Requires pulling business logic out of the LiveView into a context module and extracting display components. Multi-file design.",
+  "calibration": null
+}

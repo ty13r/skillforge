@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-03",
+  "tier": "legendary",
+  "title": "Debug and fix cross-tenant PubSub leak",
+  "prompt": "A fintech team reports that users in Org A are occasionally seeing notifications about transactions from Org B. The code uses Phoenix.PubSub.broadcast(MyApp.PubSub, \"transactions\", {:transaction, txn}) and Phoenix.PubSub.subscribe(MyApp.PubSub, \"transactions\"). Produce lib/my_app_web/live/transactions_live.ex (module MyAppWeb.TransactionsLive) that fixes the leak: (1) scope the topic by org \"transactions:org:#{org_id}\", (2) update the broadcast site to use the same scoped topic, (3) add a defensive check in handle_info: if txn.org_id != socket.assigns.scope.org_id, ignore, (4) add on_mount {MyAppWeb.UserAuth, :ensure_authenticated}, (5) connected?/1 before subscribe. Three defense layers are required.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/transactions_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "if connected?(socket)",
+      "\"transactions:org:",
+      "Phoenix.PubSub.subscribe",
+      "Phoenix.PubSub.broadcast",
+      "def handle_info({:transaction, txn}",
+      "txn.org_id",
+      "scope.org_id"
+    ],
+    "must_not_contain": [
+      "\"transactions\"\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["auth-and-authz"],
+    "criterion": "cross_tenant_leak_fixed",
+    "weight": 0.5
+  },
+  "tier_rationale": "Race/scoping bug that has been seen in production. Requires multi-layer defense including a consumer-side check.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'Unscoped topics leak data between tenants'",
+  "calibration": null
+}

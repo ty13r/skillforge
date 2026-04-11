@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-hard-34",
+  "tier": "hard",
+  "title": "Convert all 1.6 template idioms in one module",
+  "prompt": "Write lib/my_app_web/live/product_detail_live.ex (module MyAppWeb.ProductDetailLive) with a render that converts EVERY 1.6 idiom to 1.7: ~L → ~H, <%= live_link %> → <.link navigate=>, <%= live_patch %> → <.link patch=>, <%= if %> → :if, <%= for %> → :for, Routes.product_path → ~p, Routes.image_path → ~p, and <%= error_tag(f, :field) %> should be absent (errors come from <.input>). mount assigns :product %{id: 1, name: \"Widget\", images: [%{id: 1, url: \"/a.jpg\"}]}. Do not use any deprecated helper or macro.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/product_detail_live.ex"],
+    "must_contain": [
+      "~H\"\"\"",
+      "~p\"/products/",
+      "<.link navigate=",
+      "<.link patch=",
+      ":if=",
+      ":for="
+    ],
+    "must_not_contain": [
+      "~L\"\"\"",
+      "<%= live_link",
+      "<%= live_patch",
+      "<%= if ",
+      "<%= for ",
+      "Routes.product_path",
+      "error_tag("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "all_idioms_migrated",
+    "weight": 0.4
+  },
+  "tier_rationale": "Exhaustive template migration. Any single slip fails.",
+  "calibration": null
+}

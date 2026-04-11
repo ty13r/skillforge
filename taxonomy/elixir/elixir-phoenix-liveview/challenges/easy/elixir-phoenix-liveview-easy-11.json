@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-11",
+  "tier": "easy",
+  "title": "Swap assign/3 for stream/3 on a list",
+  "prompt": "Write lib/my_app_web/live/todo_live.ex (module MyAppWeb.TodoLive) that loads MyApp.Todos.list_todos/0 via stream(socket, :todos, todos) (not assign(socket, :todos, todos)) in handle_params/3. mount/3 returns {:ok, stream(socket, :todos, [])}. Render a <div id=\"todos\" phx-update=\"stream\"> containing <div :for={{id, t} <- @streams.todos} id={id}>{t.text}</div>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/todo_live.ex"],
+    "must_contain": [
+      "stream(socket, :todos",
+      "phx-update=\"stream\"",
+      "@streams.todos",
+      ":for={{",
+      "id={id}"
+    ],
+    "must_not_contain": [
+      "assign(socket, :todos, todos)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": [],
+    "criterion": "stream_used_for_list",
+    "weight": 0.25
+  },
+  "tier_rationale": "Canonical stream/3 replacement for a list. Known idiom with a specific container pattern.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix iron law: 'Use streams for lists >100 items'",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-10",
+  "tier": "medium",
+  "title": "Fix a LiveView that queries in mount and missing connected?/1",
+  "prompt": "The fixture test_fixtures/db_in_mount_dashboard.ex queries the DB in mount/3 and subscribes to PubSub without a connected?/1 guard. Produce lib/my_app_web/live/dashboard_live.ex (module MyAppWeb.DashboardLive). mount/3 must only set up the current_user + initial empty assigns. Subscribing must be gated by if connected?(socket). The queries (invoices, metrics, unread_count) must run in handle_params/3. Keep the handle_info/2 clause.",
+  "fixture_files": ["test_fixtures/db_in_mount_dashboard.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/dashboard_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "def handle_params",
+      "Billing.list_recent_invoices",
+      "Reports.compute_dashboard_metrics",
+      "def mount"
+    ],
+    "must_not_contain": [
+      "Billing.list_recent_invoices(current_user.id)\n    metrics"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["pubsub-and-realtime", "anti-patterns-catalog"],
+    "criterion": "mount_cleanup",
+    "weight": 0.35
+  },
+  "tier_rationale": "Two Iron Laws applied together: no DB in mount + connected? before subscribe. Multi-step refactor.",
+  "research_citation": "georgeguimaraes phoenix-thinking + Binary Noggin lifecycle post",
+  "calibration": null
+}

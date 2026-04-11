@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-33",
+  "tier": "easy",
+  "title": "Pass only assigns, not the socket, into a helper",
+  "prompt": "Write lib/my_app_web/live/report_header_live.ex (module MyAppWeb.ReportHeaderLive) with a render/1 that calls a private helper format_header/2 receiving (user, date) — NOT the full socket or assigns. mount/3: assign :current_user %{name: \"Ada\"} and :report_date ~D[2026-01-01]. The helper must be named format_header/2 and take two positional args. Do not pass @socket or assigns.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/report_header_live.ex"],
+    "must_contain": [
+      "defp format_header(",
+      "format_header(@current_user, @report_date)"
+    ],
+    "must_not_contain": [
+      "format_header(@socket",
+      "format_header(socket"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "no_socket_leak",
+    "weight": 0.25
+  },
+  "tier_rationale": "Canonical refactor: helper takes what it needs, not the socket. Single-name renaming + signature.",
+  "research_citation": "John Elm Labs anti-patterns: 'Don\\'t Pass the Socket as an Argument to Functions'",
+  "calibration": null
+}

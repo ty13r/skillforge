@@ -1,0 +1,38 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-01",
+  "tier": "legendary",
+  "title": "Fix six anti-patterns in multi_antipattern_liveview",
+  "prompt": "The fixture test_fixtures/multi_antipattern_liveview.ex contains 6 anti-patterns: (1) DB query in mount, (2) PubSub subscribe without connected? guard, (3) large collection via assign (should be stream), (4) unscoped PubSub topic, (5) no authorization on handle_event(\"archive\"), (6) function-head soup in handle_event(\"update\"). Produce lib/my_app_web/live/projects_live.ex (module MyAppWeb.ProjectsLive) that fixes ALL SIX. Additionally, (7) use on_mount :ensure_authenticated and (8) convert the ~L template to ~H with :for. The module must use MyApp.Scope threading for authorization.",
+  "fixture_files": ["test_fixtures/multi_antipattern_liveview.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/projects_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "def handle_params",
+      "if connected?(socket)",
+      "\"projects:org:",
+      "stream(socket, :projects",
+      "def handle_event(\"archive\"",
+      "def handle_event(\"update\", %{\"project\" => params}, socket)",
+      "~H\"\"\"",
+      ":for={",
+      "def handle_info"
+    ],
+    "must_not_contain": [
+      "\"projects\"\n",
+      "~L\"\"\"",
+      "%{\"project\" => %{\"id\" => id, \"name\" => name",
+      "live_link",
+      "Routes."
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle", "pubsub-and-realtime", "streams-and-collections", "auth-and-authz", "heex-and-verified-routes"],
+    "criterion": "six_anti_patterns_fixed",
+    "weight": 0.5
+  },
+  "tier_rationale": "Eight coordinated fixes in a single module. Any single miss fails. Adversarial — the fixture is deliberately maximal.",
+  "research_citation": "oliver-kriska + georgeguimaraes iron law catalogs + John Elm Labs anti-patterns",
+  "calibration": null
+}

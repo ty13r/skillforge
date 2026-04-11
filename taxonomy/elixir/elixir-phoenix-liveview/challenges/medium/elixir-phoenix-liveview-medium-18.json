@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-medium-18",
+  "tier": "medium",
+  "title": "Convert temporary_assigns+phx-update=append to streams",
+  "prompt": "Write lib/my_app_web/live/log_stream_live.ex (module MyAppWeb.LogStreamLive) that replaces the pre-stream idiom (temporary_assigns: [log_entries: []] + phx-update=\"append\") with the modern streams pattern. mount/3 must NOT declare temporary_assigns. It should call stream(:log_entries, []) and render <div id=\"logs\" phx-update=\"stream\"> iterating @streams.log_entries. A handle_info({:log, entry}, ...) clause must stream_insert the entry.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/log_stream_live.ex"],
+    "must_contain": [
+      "stream(socket, :log_entries",
+      "phx-update=\"stream\"",
+      "@streams.log_entries",
+      "stream_insert"
+    ],
+    "must_not_contain": [
+      "temporary_assigns:",
+      "phx-update=\"append\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["mount-and-lifecycle"],
+    "criterion": "streams_replace_append",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires recognizing pre-stream idiom and replacing both the opts and the phx-update attribute.",
+  "research_citation": "fly.io Phoenix Dev Blog Streams",
+  "calibration": null
+}

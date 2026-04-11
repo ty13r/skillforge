@@ -1,0 +1,33 @@
+{
+  "id": "elixir-phoenix-liveview-hard-02",
+  "tier": "hard",
+  "title": "Scoped chat LiveView from unguarded fixture",
+  "prompt": "The fixture test_fixtures/pubsub_unguarded_chat.ex subscribes to \"messages\" without connected? guard. Produce lib/my_app_web/live/chat_live.ex (module MyAppWeb.ChatLive): (1) scope the topic to \"chat:room:#{room_id}\", (2) gate subscribe with if connected?(socket), (3) move the chat message loading out of mount into handle_params, (4) use stream(:messages, ...) not assign(:messages, ...), (5) broadcast on the scoped topic too, (6) stream_insert new messages at: 0.",
+  "fixture_files": ["test_fixtures/pubsub_unguarded_chat.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/chat_live.ex"],
+    "must_contain": [
+      "\"chat:room:",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "Phoenix.PubSub.broadcast",
+      "stream(socket, :messages",
+      "stream_insert",
+      "at: 0",
+      "def handle_params"
+    ],
+    "must_not_contain": [
+      "\"messages\"",
+      "assign(socket, :messages, messages)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["streams-and-collections", "mount-and-lifecycle"],
+    "criterion": "full_chat_fix",
+    "weight": 0.4
+  },
+  "tier_rationale": "Six coordinated fixes across the chat LiveView. Must apply all to pass.",
+  "research_citation": "georgeguimaraes phoenix-thinking + oliver-kriska",
+  "calibration": null
+}

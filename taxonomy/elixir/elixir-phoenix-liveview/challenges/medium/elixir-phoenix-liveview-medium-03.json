@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-medium-03",
+  "tier": "medium",
+  "title": "Wire a contact form with to_form, validate, and error handling",
+  "prompt": "The fixture test_fixtures/raw_form_contact.ex has a contact form that never displays errors correctly and uses Map.put on the changeset. Write lib/my_app_web/live/contact_live.ex (module MyAppWeb.ContactLive) that: (1) builds @form via to_form(Support.change_contact(%ContactRequest{})) in mount, (2) handle_event(\"validate\", params, socket) runs the changeset through Map.put(:action, :validate) then to_form, (3) handle_event(\"save\", ...) handles {:ok, _} and {:error, changeset} branches, (4) uses <.form>/<.input>/<.input type=\"textarea\"> instead of text_input/textarea helpers.",
+  "fixture_files": ["test_fixtures/raw_form_contact.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/contact_live.ex"],
+    "must_contain": [
+      "to_form",
+      "action: :validate",
+      "<.form",
+      "<.input field={@form",
+      "{:error, changeset}"
+    ],
+    "must_not_contain": [
+      "Map.put(changeset",
+      "Map.merge(changeset",
+      "text_input(",
+      "textarea("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "form_validate_full_cycle",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-step: build to_form + action :validate + proper save branches + swap helpers for core_components. Sonnet usually gets 3 of 4.",
+  "research_citation": "John Elm Labs top-3 form mistakes #3",
+  "calibration": null
+}

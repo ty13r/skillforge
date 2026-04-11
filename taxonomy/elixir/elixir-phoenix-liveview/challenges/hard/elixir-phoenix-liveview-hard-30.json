@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-hard-30",
+  "tier": "hard",
+  "title": "Keep live_component state in sync with parent source of truth",
+  "prompt": "Write lib/my_app_web/live/tasks_board_live.ex (module MyAppWeb.TasksBoardLive). The parent owns @tasks (a list). Child is <.live_component module={MyAppWeb.TaskCardComponent} id={\"task-#{task.id}\"} task={task} /> inside a :for loop. The parent handles handle_event(\"reorder\", ...) that updates @tasks. The child component MUST NOT keep its own copy of task — it always reads from assigns. On a task edit, the child uses send(self(), {:task_updated, task}) to notify the parent. The parent updates @tasks and the component re-renders. Parent is source of truth.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tasks_board_live.ex"],
+    "must_contain": [
+      "MyAppWeb.TasksBoardLive",
+      "<.live_component module={MyAppWeb.TaskCardComponent}",
+      "id={\"task-",
+      "task={task}",
+      "def handle_event(\"reorder\"",
+      "def handle_info({:task_updated"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["live-components-stateful"],
+    "criterion": "single_source_of_truth_parent",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires explicit source-of-truth decision + coordinator pattern.",
+  "research_citation": "hexshift advanced LiveComponent architecture",
+  "calibration": null
+}

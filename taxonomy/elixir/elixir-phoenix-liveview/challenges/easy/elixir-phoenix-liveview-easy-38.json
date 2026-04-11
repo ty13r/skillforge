@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-easy-38",
+  "tier": "easy",
+  "title": "Fix a missing phx-submit on a form",
+  "prompt": "Write lib/my_app_web/live/subscribe_live.ex (module MyAppWeb.SubscribeLive). Render a <.form for={@form} phx-change=\"validate\" phx-submit=\"save\"> containing an <.input field={@form[:email]} type=\"email\" label=\"Email\" /> and a submit button. Add handle_event(\"save\", _params, socket) that returns {:noreply, put_flash(socket, :info, \"Subscribed\")}. mount/3 builds @form from to_form(%{\"email\" => \"\"}).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/subscribe_live.ex"],
+    "must_contain": [
+      "<.form",
+      "phx-submit=\"save\"",
+      "phx-change=\"validate\"",
+      "def handle_event(\"save\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "phx_submit_present",
+    "weight": 0.2
+  },
+  "tier_rationale": "Canonical phx-change + phx-submit wiring. Known idiom.",
+  "calibration": null
+}

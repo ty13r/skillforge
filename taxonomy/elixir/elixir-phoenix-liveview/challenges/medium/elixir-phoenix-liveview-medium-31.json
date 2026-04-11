@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-31",
+  "tier": "medium",
+  "title": "Author a cross-live_session boundary with push_navigate",
+  "prompt": "Write lib/my_app_web/live/account_live.ex (module MyAppWeb.AccountLive) whose handle_event(\"switch_workspace\", %{\"workspace_id\" => ws_id}, socket) uses push_navigate(socket, to: ~p\"/workspaces/#{ws_id}\") because workspaces live in a different live_session. Do NOT use push_patch for this — patch cannot cross live_session boundaries. Must include a comment or doc noting \"different live_session\".",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/account_live.ex"],
+    "must_contain": [
+      "push_navigate",
+      "live_session",
+      "~p\"/workspaces/"
+    ],
+    "must_not_contain": [
+      "push_patch"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": [],
+    "criterion": "navigate_across_live_session",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires understanding that push_patch can't cross live_session boundaries.",
+  "research_citation": "Phoenix LiveView live-navigation docs",
+  "calibration": null
+}

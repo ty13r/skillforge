@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-37",
+  "tier": "hard",
+  "title": "Fix live_session boundary mismatch with push_navigate",
+  "prompt": "Write lib/my_app_web/live/after_login_live.ex (module MyAppWeb.AfterLoginLive). On successful login, the post-login flow crosses from a public live_session to an authenticated live_session. The redirect must use push_navigate(socket, to: ~p\"/dashboard\") — NOT push_patch — because patch can't cross live_session boundaries. Add a comment explaining the constraint. Include handle_event(\"submit_login\") that calls MyApp.Accounts.authenticate and, on success, performs the push_navigate.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/after_login_live.ex"],
+    "must_contain": [
+      "push_navigate",
+      "~p\"/dashboard\"",
+      "live_session",
+      "def handle_event(\"submit_login\""
+    ],
+    "must_not_contain": [
+      "push_patch"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["auth-and-authz"],
+    "criterion": "navigate_across_live_session",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires knowing that patch cannot cross live_session boundaries.",
+  "calibration": null
+}

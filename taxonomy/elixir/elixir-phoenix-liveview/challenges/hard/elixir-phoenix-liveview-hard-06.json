@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-hard-06",
+  "tier": "hard",
+  "title": "Offload external polling to a supervised GenServer",
+  "prompt": "The fixture test_fixtures/external_poll_price.ex has every LiveView polling an external API. Produce two files: (1) lib/my_app/price_ticker.ex (module MyApp.PriceTicker) — a GenServer started in Application's supervision tree, with init/1 scheduling a :tick, handle_info(:tick, state) that calls HTTPClient.fetch_price(\"BTC\"), broadcasts via Phoenix.PubSub.broadcast(MyApp.PubSub, \"prices:BTC\", {:price, price}), and schedules the next tick; (2) lib/my_app_web/live/price_ticker_live.ex (module MyAppWeb.PriceTickerLive) — subscribes to \"prices:BTC\" via connected?/1 and handles {:price, price}.",
+  "fixture_files": ["test_fixtures/external_poll_price.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/price_ticker_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"prices:BTC\"",
+      "def handle_info({:price"
+    ],
+    "must_not_contain": [
+      "HTTPClient.fetch_price",
+      ":timer.send_interval"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["anti-patterns-catalog", "architectural-stance"],
+    "criterion": "external_polling_offloaded",
+    "weight": 0.35
+  },
+  "tier_rationale": "Multi-file architectural fix. Requires understanding per-user scaling of external polls.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'External Data Polling' pattern",
+  "calibration": null
+}

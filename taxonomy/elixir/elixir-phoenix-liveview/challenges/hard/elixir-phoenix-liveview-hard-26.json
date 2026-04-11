@@ -1,0 +1,31 @@
+{
+  "id": "elixir-phoenix-liveview-hard-26",
+  "tier": "hard",
+  "title": "Author a data_card function component with conditional slots",
+  "prompt": "Write lib/my_app_web/components/data_card.ex (module MyAppWeb.Components.DataCard). data_card/1 with attrs :title (string, required), :trend (atom, default nil, values [:up, :down, :flat, nil]), :href (string, default nil), slot :icon, slot :actions, slot :inner_block (required). Render <article class=\"data-card\"><header>{render_slot(@icon)}<h3>{@title}</h3><span :if={@trend} class={[\"trend\", \"trend-#{@trend}\"]} /></header><div class=\"body\">{render_slot(@inner_block)}</div><footer :if={@actions != []}>{render_slot(@actions)}</footer></article>. Wrap in <.link :if={@href} navigate={@href}> if href is set, otherwise the plain article.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/data_card.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :title",
+      "attr :trend",
+      "attr :href",
+      "slot :icon",
+      "slot :actions",
+      "slot :inner_block, required: true",
+      "values:",
+      "render_slot",
+      ":if="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "data_card_conditional_slots",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-slot, multi-attr, conditional rendering based on attrs. Complex composition.",
+  "calibration": null
+}

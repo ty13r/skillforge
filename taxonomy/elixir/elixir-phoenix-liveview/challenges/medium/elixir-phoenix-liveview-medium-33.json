@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-33",
+  "tier": "medium",
+  "title": "Author a multi-message LiveView without crashing on unknown",
+  "prompt": "Write lib/my_app_web/live/events_router_live.ex (module MyAppWeb.EventsRouterLive). The LiveView subscribes (when connected) to \"events:org:1\" and handles three message types: {:event_created, event}, {:event_updated, event}, and {:event_deleted, id}. Each updates a stream :events via stream_insert or stream_delete. A final handle_info(_, socket) clause must catch everything else without crashing.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/events_router_live.ex"],
+    "must_contain": [
+      "def handle_info({:event_created",
+      "def handle_info({:event_updated",
+      "def handle_info({:event_deleted",
+      "def handle_info(_msg, socket)",
+      "stream_insert",
+      "stream_delete"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["streams-and-collections", "pubsub-and-realtime"],
+    "criterion": "multi_message_handle_info",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-message routing with catch-all. Composition of event handling + streams.",
+  "calibration": null
+}

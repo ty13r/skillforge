@@ -1,0 +1,33 @@
+{
+  "id": "elixir-phoenix-liveview-medium-02",
+  "tier": "medium",
+  "title": "Convert a large-list assign to a stream with full update wiring",
+  "prompt": "The fixture test_fixtures/assigns_messages_inbox.ex loads ~12000 messages into assigns. Rewrite it as lib/my_app_web/live/inbox_live.ex (module MyAppWeb.InboxLive) using stream/3. The LiveView must: (1) stream(:messages, [], reset: false) in mount, (2) reset/populate the stream in handle_params via stream(..., reset: true), (3) render a container with id=\"messages\" and phx-update=\"stream\", iterating with {dom_id, msg}, (4) handle stream_delete for \"delete\" events, (5) handle stream_insert at: 0 on {:new_message, m}, (6) track a separate :message_count assign because you cannot Enum.count @streams.",
+  "fixture_files": ["test_fixtures/assigns_messages_inbox.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/inbox_live.ex"],
+    "must_contain": [
+      "stream(socket, :messages",
+      "stream_delete",
+      "stream_insert",
+      "phx-update=\"stream\"",
+      "{{dom_id",
+      "reset: true",
+      ":message_count"
+    ],
+    "must_not_contain": [
+      "assign(socket, :messages, messages)",
+      "Enum.count(@streams",
+      "length(@messages)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["mount-and-lifecycle", "event-handlers-and-handle-info"],
+    "criterion": "full_stream_conversion",
+    "weight": 0.35
+  },
+  "tier_rationale": "Multi-step conversion with container wiring + separate count tracking. Sonnet usually catches the swap but forgets the count-via-assign or the reset: true.",
+  "research_citation": "oliver-kriska iron law + fly.io Phoenix Dev Blog - Streams",
+  "calibration": null
+}

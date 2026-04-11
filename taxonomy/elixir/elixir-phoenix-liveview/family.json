@@ -1,0 +1,73 @@
+{
+  "slug": "elixir-phoenix-liveview",
+  "name": "Elixir Phoenix LiveView",
+  "language": "elixir",
+  "tier": "S",
+  "curve": "rich",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "development",
+    "focus": "phoenix-framework",
+    "language": "elixir"
+  },
+  "foundation_dimension": "architectural-stance",
+  "capability_dimensions": [
+    "heex-and-verified-routes",
+    "function-components-and-slots",
+    "live-components-stateful",
+    "form-handling",
+    "streams-and-collections",
+    "mount-and-lifecycle",
+    "event-handlers-and-handle-info",
+    "pubsub-and-realtime",
+    "navigation-patterns",
+    "auth-and-authz",
+    "anti-patterns-catalog"
+  ],
+  "challenges": {
+    "total": 125,
+    "by_tier": {
+      "easy": 38,
+      "medium": 45,
+      "hard": 38,
+      "legendary": 4
+    },
+    "held_out_ids": [
+      "elixir-phoenix-liveview-easy-05",
+      "elixir-phoenix-liveview-easy-11",
+      "elixir-phoenix-liveview-easy-18",
+      "elixir-phoenix-liveview-easy-24",
+      "elixir-phoenix-liveview-easy-30",
+      "elixir-phoenix-liveview-easy-35",
+      "elixir-phoenix-liveview-easy-37",
+      "elixir-phoenix-liveview-medium-03",
+      "elixir-phoenix-liveview-medium-09",
+      "elixir-phoenix-liveview-medium-16",
+      "elixir-phoenix-liveview-medium-22",
+      "elixir-phoenix-liveview-medium-28",
+      "elixir-phoenix-liveview-medium-34",
+      "elixir-phoenix-liveview-medium-40",
+      "elixir-phoenix-liveview-medium-44",
+      "elixir-phoenix-liveview-hard-04",
+      "elixir-phoenix-liveview-hard-11",
+      "elixir-phoenix-liveview-hard-17",
+      "elixir-phoenix-liveview-hard-23",
+      "elixir-phoenix-liveview-hard-29",
+      "elixir-phoenix-liveview-hard-34",
+      "elixir-phoenix-liveview-hard-37",
+      "elixir-phoenix-liveview-legendary-02",
+      "elixir-phoenix-liveview-legendary-03"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Known gap: legendary tier at 4/30 target — drafting agent was cut off before writing the legendary tier; can be augmented in a follow-up.",
+  "known_gaps": {
+    "legendary_tier_short": "Legendary tier has 4 challenges vs 30 target (drafting agent cut off)"
+  }
+}

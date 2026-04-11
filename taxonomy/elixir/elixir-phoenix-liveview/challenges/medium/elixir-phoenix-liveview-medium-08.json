@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-08",
+  "tier": "medium",
+  "title": "Author a modal component with named slots",
+  "prompt": "Write lib/my_app_web/components/modal.ex (module MyAppWeb.Components.Modal). Define modal/1 with attrs :id (string, required), :show (boolean, default false), :on_cancel (any, default nil). Declare slot :title, slot :actions, and slot :inner_block (required). Render <dialog :if={@show} id={@id}><h2>{render_slot(@title)}</h2><div class=\"body\">{render_slot(@inner_block)}</div><footer>{render_slot(@actions)}</footer></dialog>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/modal.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "slot :title",
+      "slot :actions",
+      "slot :inner_block, required: true",
+      "render_slot(@title)",
+      "render_slot(@inner_block)",
+      "render_slot(@actions)",
+      ":if="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "multi_slot_component",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-slot component with three distinct named slots + default inner_block + required markers. Standard pattern with 4 pieces.",
+  "research_citation": "Phoenix.Component docs slots section",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-22",
+  "tier": "medium",
+  "title": "Replace assign_new with an explicit refresh on reconnect",
+  "prompt": "The fixture test_fixtures/assign_new_stale_time.ex uses assign_new for :now, which silently preserves the value across reconnects and leaves the clock frozen. Rewrite lib/my_app_web/live/clock_live.ex (module MyAppWeb.ClockLive) so :now is freshly computed on every mount — do not use assign_new for it. Keep :render_count via assign_new since it's intended to persist. Tick once per second while connected. mount/3 must use assign (not assign_new) for :now.",
+  "fixture_files": ["test_fixtures/assign_new_stale_time.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/clock_live.ex"],
+    "must_contain": [
+      "assign(socket, :now",
+      ":timer.send_interval",
+      "handle_info(:tick"
+    ],
+    "must_not_contain": [
+      "assign_new(socket, :now"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "assign_new_not_for_refreshed",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires understanding assign_new semantics on reconnect (a lesser-known pitfall).",
+  "research_citation": "oliver-kriska iron law: 'Never use assign_new for values refreshed every mount'",
+  "calibration": null
+}

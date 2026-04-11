@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-38",
+  "tier": "medium",
+  "title": "Fix a multi-anti-pattern LiveView (pick 2)",
+  "prompt": "Write lib/my_app_web/live/notifications_list_live.ex (module MyAppWeb.NotificationsListLive). It must fix TWO anti-patterns: (1) DB query in mount — move to handle_params; (2) unscoped PubSub topic — use \"notifications:user:#{user_id}\" instead of \"notifications\". mount/3 takes %{\"user_id\" => user_id}, subscribes via connected? guard. Everything else is normal.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/notifications_list_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "\"notifications:user:",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe"
+    ],
+    "must_not_contain": [
+      "\"notifications\"\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle", "pubsub-and-realtime"],
+    "criterion": "two_anti_patterns_fixed",
+    "weight": 0.3
+  },
+  "tier_rationale": "Fix 2 distinct anti-patterns in one module. Not independent — must be applied together.",
+  "calibration": null
+}

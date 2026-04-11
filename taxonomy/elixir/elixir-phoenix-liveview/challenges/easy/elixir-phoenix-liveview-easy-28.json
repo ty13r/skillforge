@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-28",
+  "tier": "easy",
+  "title": "Use <.link href> for full-page reload, navigate for live",
+  "prompt": "Write lib/my_app_web/live/footer_live.ex (module MyAppWeb.FooterLive). Its render must have exactly two links in a <footer>: <.link href=\"https://example.com\">External docs</.link> and <.link navigate={~p\"/contact\"}>Contact</.link>. Do not use <.link patch> for either.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/footer_live.ex"],
+    "must_contain": [
+      "<.link href=",
+      "<.link navigate={~p\"/contact\"}"
+    ],
+    "must_not_contain": [
+      "live_redirect",
+      "live_patch",
+      "Routes."
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": [],
+    "criterion": "href_vs_navigate",
+    "weight": 0.2
+  },
+  "tier_rationale": "Two-way discrimination between href and navigate — single decision, two links.",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-16",
+  "tier": "easy",
+  "title": "Replace <%= link %> with <.link> function component",
+  "prompt": "Write lib/my_app_web/live/nav_live.ex (module MyAppWeb.NavLive) that renders a top nav bar with three links: Home (~p\"/\"), Users (~p\"/users\"), and Posts (~p\"/posts\"). Use the <.link navigate={...}> function component for each, not <%= link %> or <%= live_patch %>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/nav_live.ex"],
+    "must_contain": [
+      "<.link navigate={~p\"/\"}",
+      "<.link navigate={~p\"/users\"}",
+      "<.link navigate={~p\"/posts\"}"
+    ],
+    "must_not_contain": [
+      "<%= link ",
+      "<%= live_patch",
+      "live_redirect",
+      "Routes."
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "link_component_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Three canonical replacements. Obvious pattern.",
+  "calibration": null
+}

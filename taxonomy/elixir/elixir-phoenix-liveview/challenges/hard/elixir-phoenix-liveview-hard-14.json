@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-14",
+  "tier": "hard",
+  "title": "Replace temporary_assigns+append with streams and preserve dom_id",
+  "prompt": "Write lib/my_app_web/live/log_tail_live.ex (module MyAppWeb.LogTailLive). The pre-stream idiom in Phoenix 1.6 used `temporary_assigns: [log_entries: []]` with `phx-update=\"append\"` and each entry had a stable DOM id. Replace with stream/3: mount/3 calls stream(:log_entries, []) with no temporary_assigns. Use phx-update=\"stream\" on a container with id=\"log-tail\". Each entry renders inside :for={{dom_id, entry} <- @streams.log_entries} with id={dom_id}. handle_info({:log, entry}, socket) stream_inserts at position -1. The dom_id semantics must be preserved.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/log_tail_live.ex"],
+    "must_contain": [
+      "stream(socket, :log_entries",
+      "phx-update=\"stream\"",
+      "id=\"log-tail\"",
+      ":for={{dom_id",
+      "id={dom_id}",
+      "stream_insert"
+    ],
+    "must_not_contain": [
+      "temporary_assigns:",
+      "phx-update=\"append\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["mount-and-lifecycle"],
+    "criterion": "temporary_assigns_to_stream",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-idiom migration. Requires knowing both the old and new patterns.",
+  "calibration": null
+}

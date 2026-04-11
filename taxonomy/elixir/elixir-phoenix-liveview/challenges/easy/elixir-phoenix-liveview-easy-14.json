@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-easy-14",
+  "tier": "easy",
+  "title": "Author an on_mount hook that ensures authentication",
+  "prompt": "Write lib/my_app_web/user_auth.ex (module MyAppWeb.UserAuth) with an on_mount/4 clause on_mount(:ensure_authenticated, _params, session, socket) that returns {:halt, redirect(socket, to: ~p\"/login\")} when session has no \"user_token\", and {:cont, assign(socket, :current_user, MyApp.Accounts.get_user_by_session_token(token))} otherwise. Module must `import Phoenix.Component` and `import Phoenix.LiveView`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/user_auth.ex"],
+    "must_contain": [
+      "def on_mount(:ensure_authenticated",
+      ":halt",
+      ":cont",
+      "~p\"/login\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "on_mount_hook_present",
+    "weight": 0.25
+  },
+  "tier_rationale": "Canonical on_mount hook pattern straight from Phoenix auth generator.",
+  "calibration": null
+}

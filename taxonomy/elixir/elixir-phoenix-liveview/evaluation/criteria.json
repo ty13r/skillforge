@@ -1,0 +1,101 @@
+{
+  "family_slug": "elixir-phoenix-liveview",
+  "capabilities": {
+    "architectural-stance": {
+      "weight": 0.08,
+      "objectives": {
+        "clean_decomposition": {"weight": 0.5, "description": "LiveView / LiveComponent / function component boundaries respected"},
+        "no_mount_db": {"weight": 0.3, "description": "No Repo call inside mount/3"},
+        "modern_template_style": {"weight": 0.2, "description": "~H sigil used"}
+      }
+    },
+    "heex-and-verified-routes": {
+      "weight": 0.12,
+      "objectives": {
+        "verified_routes_used": {"weight": 0.4, "description": "All routes use ~p sigil"},
+        "heex_directives_used": {"weight": 0.3, "description": ":for and :if used over <%= for/if %>"},
+        "no_old_link_helpers": {"weight": 0.3, "description": "No live_link or Routes.*_path helpers"}
+      }
+    },
+    "function-components-and-slots": {
+      "weight": 0.08,
+      "objectives": {
+        "attr_declarations": {"weight": 0.5, "description": "attr declarations for every component input"},
+        "slot_declarations": {"weight": 0.3, "description": "slot declarations where applicable"},
+        "inner_block_used": {"weight": 0.2, "description": "inner_block rendered correctly"}
+      }
+    },
+    "live-components-stateful": {
+      "weight": 0.08,
+      "objectives": {
+        "use_live_component": {"weight": 0.5, "description": "use Phoenix.LiveComponent for stateful components"},
+        "component_handle_event": {"weight": 0.3, "description": "handle_event defined in the component, not parent"},
+        "update_callback": {"weight": 0.2, "description": "update/2 callback defined"}
+      }
+    },
+    "form-handling": {
+      "weight": 0.10,
+      "objectives": {
+        "uses_to_form": {"weight": 0.4, "description": "Form built via to_form/2"},
+        "phx_change_validate": {"weight": 0.3, "description": "phx-change wired to validate handler"},
+        "core_components_form": {"weight": 0.3, "description": "<.form> and <.input> from core_components"}
+      }
+    },
+    "streams-and-collections": {
+      "weight": 0.08,
+      "objectives": {
+        "stream_used": {"weight": 0.5, "description": "stream/3 used for large collections"},
+        "stream_insert_delete": {"weight": 0.3, "description": "stream_insert/stream_delete used"},
+        "dom_id_set": {"weight": 0.2, "description": "dom_id option set correctly"}
+      }
+    },
+    "mount-and-lifecycle": {
+      "weight": 0.10,
+      "objectives": {
+        "no_db_in_mount": {"weight": 0.5, "description": "No Repo call inside mount/3"},
+        "connected_check": {"weight": 0.3, "description": "connected?(socket) guards heavy ops"},
+        "handle_params_defined": {"weight": 0.2, "description": "handle_params/3 used for URL state"}
+      }
+    },
+    "event-handlers-and-handle-info": {
+      "weight": 0.08,
+      "objectives": {
+        "handle_event_defined": {"weight": 0.5, "description": "handle_event/3 handles phx-* events"},
+        "handle_info_defined": {"weight": 0.5, "description": "handle_info/2 handles external messages"}
+      }
+    },
+    "pubsub-and-realtime": {
+      "weight": 0.08,
+      "objectives": {
+        "subscribe_on_connected": {"weight": 0.5, "description": "PubSub.subscribe guarded by connected?"},
+        "topic_namespacing": {"weight": 0.3, "description": "Topics namespaced per entity"},
+        "broadcast_used": {"weight": 0.2, "description": "PubSub.broadcast used for updates"}
+      }
+    },
+    "navigation-patterns": {
+      "weight": 0.08,
+      "objectives": {
+        "push_navigate_correct": {"weight": 0.4, "description": "push_navigate vs push_patch vs redirect chosen correctly"},
+        "modern_link_component": {"weight": 0.3, "description": "<.link> with navigate/patch attribute"},
+        "no_old_helpers": {"weight": 0.3, "description": "No live_redirect or live_patch helpers"}
+      }
+    },
+    "auth-and-authz": {
+      "weight": 0.06,
+      "objectives": {
+        "on_mount_hook": {"weight": 0.5, "description": "on_mount hook for authentication"},
+        "live_session_boundary": {"weight": 0.3, "description": "live_session groups auth-gated views"},
+        "per_event_authz": {"weight": 0.2, "description": "Ownership checks in handle_event"}
+      }
+    },
+    "anti-patterns-catalog": {
+      "weight": 0.06,
+      "objectives": {
+        "no_db_in_mount": {"weight": 0.4, "description": "No DB query in mount"},
+        "no_old_helpers": {"weight": 0.3, "description": "No live_link/live_patch/live_redirect/Routes helpers"},
+        "connected_check_present": {"weight": 0.3, "description": "connected? check before PubSub subscribe"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-09",
+  "tier": "easy",
+  "title": "Add attr declarations to a function component",
+  "prompt": "Write lib/my_app_web/components/core_components/badge.ex (module MyAppWeb.CoreComponents.Badge) that defines a function component badge/1. The component takes attrs :label (string, required), :variant (string, default \"info\"), :rest (:global). It renders <span class={[\"badge\", \"badge-#{@variant}\"]} {@rest}>{@label}</span>. Use Phoenix.Component and ~H.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/core_components/badge.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :label",
+      "attr :variant",
+      "attr :rest, :global",
+      "def badge(assigns)"
+    ],
+    "must_not_contain": [
+      "Phoenix.LiveView.Helpers"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "attr_declarations_present",
+    "weight": 0.25
+  },
+  "tier_rationale": "Single component with known attr pattern. attr/slot declarations are part of the canonical Phoenix.Component idiom.",
+  "research_citation": "Phoenix.Component docs — compiler validates slot/attr at compile time",
+  "calibration": null
+}

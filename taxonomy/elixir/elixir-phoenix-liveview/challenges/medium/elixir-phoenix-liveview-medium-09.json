@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-09",
+  "tier": "medium",
+  "title": "Eliminate socket-leak anti-pattern in helpers",
+  "prompt": "The fixture test_fixtures/socket_leak_helpers.ex passes %Socket{} into three private helpers. Rewrite lib/my_app_web/live/report_live.ex (module MyAppWeb.ReportLive) so the helpers take only the data they need: fetch_report/2 becomes fetch_report/2 taking (org_id, date) returning the data list (assignment happens inline), format_header/2 takes (user, date), and chart_data/1 takes (raw_data). The render/1 must pass @current_user and @report_date or the derived values, not @socket.",
+  "fixture_files": ["test_fixtures/socket_leak_helpers.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/report_live.ex"],
+    "must_contain": [
+      "defp format_header(user",
+      "defp chart_data(raw_data",
+      "MyAppWeb.ReportLive"
+    ],
+    "must_not_contain": [
+      "defp format_header(socket)",
+      "defp chart_data(socket)",
+      "format_header(@socket",
+      "chart_data(@socket"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "no_socket_leak_in_helpers",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-site refactor. Must understand intent and not over-pass. Sonnet sometimes keeps the socket in one helper.",
+  "research_citation": "John Elm Labs anti-patterns #1",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-24",
+  "tier": "easy",
+  "title": "Use <.form> and <.input> instead of text_input",
+  "prompt": "Write lib/my_app_web/live/new_post_live.ex (module MyAppWeb.NewPostLive) that uses <.form for={@form} phx-change=\"validate\" phx-submit=\"save\"> with <.input field={@form[:title]} label=\"Title\" /> and <.input field={@form[:body]} type=\"textarea\" label=\"Body\" />. Do not use text_input/2 or textarea/2 helpers. mount/3 builds @form via to_form(%{\"title\" => \"\", \"body\" => \"\"}).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/new_post_live.ex"],
+    "must_contain": [
+      "<.form",
+      "<.input field={@form[:title]",
+      "<.input field={@form[:body]",
+      "to_form"
+    ],
+    "must_not_contain": [
+      "text_input(",
+      "textarea("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "input_component_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Replace old form helpers with core_components. Canonical 1.7 form idiom.",
+  "calibration": null
+}

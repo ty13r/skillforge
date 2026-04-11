@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-hard-07",
+  "tier": "hard",
+  "title": "Build an infinite-scroll stream with viewport events",
+  "prompt": "Write lib/my_app_web/live/infinite_feed_live.ex (module MyAppWeb.InfiniteFeedLive) that implements infinite scrolling with phx-viewport-top / phx-viewport-bottom and stream(:posts, initial, limit: -50) (negative limit prunes from the top). mount streams 50 posts. phx-viewport-bottom=\"load_more\" triggers handle_event(\"load_more\") which stream_inserts the next 50 at the end. phx-viewport-top=\"load_previous\" handles loading the previous page. Use a single stream with a negative limit.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/infinite_feed_live.ex"],
+    "must_contain": [
+      "stream(socket, :posts",
+      "limit: -50",
+      "phx-viewport-bottom=\"load_more\"",
+      "phx-viewport-top=\"load_previous\"",
+      "stream_insert"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["event-handlers-and-handle-info"],
+    "criterion": "infinite_scroll_stream",
+    "weight": 0.4
+  },
+  "tier_rationale": "phx-viewport-* attributes + negative stream limits are recent features. Multi-piece combo.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-25",
+  "tier": "easy",
+  "title": "Read URL params in handle_params/3, not mount",
+  "prompt": "Write lib/my_app_web/live/products_filter_live.ex (module MyAppWeb.ProductsFilterLive). mount/3 must NOT read any URL parameters — return {:ok, assign(socket, :products, [])}. handle_params/3 must read %{\"category\" => category} and call MyApp.Catalog.list_products(category: category), assigning the result to :products. Include a default clause handle_params(_params, _url, socket).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/products_filter_live.ex"],
+    "must_contain": [
+      "def mount",
+      "def handle_params(%{\"category\"",
+      "MyApp.Catalog.list_products",
+      "def handle_params(_params"
+    ],
+    "must_not_contain": [
+      "def mount(%{\"category\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": [],
+    "criterion": "url_params_in_handle_params",
+    "weight": 0.25
+  },
+  "tier_rationale": "Canonical placement rule for URL-param-driven state. Well-documented idiom.",
+  "research_citation": "Binary Noggin: 'Database queries should be placed in handle_params/3 rather than mount/3'",
+  "calibration": null
+}
