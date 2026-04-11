@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-01",
+  "tier": "medium",
+  "title": "Fix a DataCase that forces every test to be serial",
+  "prompt": "The fixture at `test_fixtures/data_case_no_async_handling.ex` is a DataCase template that calls `mode(MyApp.Repo, {:shared, self()})` in every setup block regardless of the `:async` tag. This makes every test serial. Rewrite the file to `test/support/data_case.ex` using the `shared: not tags[:async]` pattern via `start_owner!/2`, so async-tagged modules get exclusive connections and non-async-tagged modules get shared ones. Include `on_exit` to call `stop_owner`.",
+  "fixture_files": ["test_fixtures/data_case_no_async_handling.ex"],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.start_owner!",
+      "shared: not tags[:async]",
+      "stop_owner",
+      "on_exit"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["sandbox-checkout-and-modes", "async-test-safety-rules"],
+    "criterion": "fix_forced_serial",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires recognizing that the shared-mode-always pattern is an anti-fix AND producing the canonical alternative. Two-step.",
+  "research_citation": "\"The `shared: not tags[:async]` pattern controls connection ownership\" — Rakshan Shetty",
+  "calibration": null
+}

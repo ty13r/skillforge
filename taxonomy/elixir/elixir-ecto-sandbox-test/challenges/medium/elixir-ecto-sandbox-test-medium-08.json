@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-08",
+  "tier": "medium",
+  "title": "Write a setup block that switches modes per-test based on tags",
+  "prompt": "Write a `setup tags do` block inside `test/support/data_case.ex` that: (1) always checks out the sandbox via `Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)`, (2) if `tags[:manual]` is truthy, does NOT call mode — leaves in manual (the default after checkout), (3) if `tags[:shared]` is truthy, calls `mode(MyApp.Repo, {:shared, self()})`, (4) otherwise does nothing additional. Include the full module.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)",
+      "tags[:shared]",
+      "mode(MyApp.Repo, {:shared, self()})"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "tag_based_mode",
+    "weight": 0.6
+  },
+  "tier_rationale": "Conditional logic — slightly non-canonical but reasonable test idiom for module-local overrides.",
+  "calibration": null
+}

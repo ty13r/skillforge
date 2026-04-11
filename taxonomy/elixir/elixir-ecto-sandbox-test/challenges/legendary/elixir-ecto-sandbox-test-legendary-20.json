@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-20",
+  "tier": "legendary",
+  "title": "Detect a multi-turn Tidewave corruption cascade",
+  "prompt": "Write `docs/tidewave_cascade.md` auditing this 5-turn cascade:\n\n- Turn 1: User says 'tests are failing'. Claude runs `mix test`, sees 3 failures, all ecto errors.\n- Turn 2: Claude queries Tidewave MCP for each failing test's expected table; sees populated rows.\n- Turn 3: Claude adds `Repo.insert!` in setup blocks for 3 test files to 'match' dev state.\n- Turn 4: Tests still fail (new errors: `unique_constraint` under async).\n- Turn 5: Claude changes 3 modules to `async: false`.\n\nYour audit must: (1) identify the initial error in Turn 2 (consulting dev DB for test state), (2) identify Turn 3 as the first cascade (seeding), (3) identify Turn 4's symptoms as a result of Turn 3, NOT an independent flake, (4) identify Turn 5 as doubling down rather than reverting, (5) recommend reverting ALL changes from Turn 3 onward and starting the debug from scratch by reading the test's own insert paths. Must name all 5 turns and their errors.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/tidewave_cascade.md"],
+    "must_contain": [
+      "Turn 1",
+      "Turn 2",
+      "Turn 3",
+      "Turn 4",
+      "Turn 5",
+      "revert",
+      "insert paths"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis", "async-test-safety-rules"],
+    "criterion": "cascade_audit",
+    "weight": 0.9
+  },
+  "tier_rationale": "Adversarial multi-turn audit — the classic BoothIQ failure pattern traced across 5 compounding decisions.",
+  "research_citation": "\"It'll happily rewrite code it thinks it needs if it doesn't know where it exists...It's a little bit like onboarding a junior dev with amnesia every day\" — Elixir Forum BoothIQ discussion, John-BoothIQ",
+  "calibration": null
+}

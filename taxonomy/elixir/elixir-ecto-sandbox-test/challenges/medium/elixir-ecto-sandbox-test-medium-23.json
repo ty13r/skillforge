@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-23",
+  "tier": "medium",
+  "title": "Move the sandbox plug to the top of endpoint.ex",
+  "prompt": "The fixture at `test_fixtures/liveview_endpoint.ex` has the `Phoenix.Ecto.SQL.Sandbox` plug placed AFTER other plugs (after `Plug.Session`). Rewrite to `lib/my_app_web/endpoint.ex` with the sandbox plug as the FIRST plug (immediately after the `@session_options` module attribute and before `socket`, Plug.Static, and all other plugs). Preserve all other plugs in their original order.",
+  "fixture_files": ["test_fixtures/liveview_endpoint.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "Phoenix.Ecto.SQL.Sandbox",
+      "Application.compile_env(:my_app, :sql_sandbox",
+      "Plug.Session",
+      "Plug.Static"
+    ],
+    "must_not_contain": [
+      "plug Plug.Session, @session_options\n\n  # BUG"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "sandbox_plug_first",
+    "weight": 0.6
+  },
+  "tier_rationale": "Positional fix — requires understanding of plug pipeline order semantics.",
+  "research_citation": "\"It's important that this is at the top of `endpoint.ex`, before any other plugs.\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

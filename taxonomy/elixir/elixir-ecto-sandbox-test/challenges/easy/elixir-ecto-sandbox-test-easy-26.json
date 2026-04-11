@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-26",
+  "tier": "easy",
+  "title": "Use perform_job/3 with string-keyed args in an Oban test",
+  "prompt": "Write a test at `test/my_app/mailer/digest_worker_test.exs` that imports `Oban.Testing` via `use Oban.Testing, repo: MyApp.Repo`, and invokes `perform_job(MyApp.Mailer.DigestWorker, %{\"user_id\" => 1})` with STRING-keyed args (not atom keys). Include `use MyApp.DataCase, async: true` and assert `perform_job/3` returns `:ok`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/mailer/digest_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job(MyApp.Mailer.DigestWorker",
+      "\"user_id\""
+    ],
+    "must_not_contain": [
+      "user_id: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "perform_job_string_args",
+    "weight": 0.5
+  },
+  "tier_rationale": "String-keyed args are the canonical Oban testing idiom but Claude frequently writes atom keys.",
+  "calibration": null
+}

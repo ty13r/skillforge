@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-36",
+  "tier": "medium",
+  "title": "Trace a test failure to its create_* function bug",
+  "prompt": "Write `docs/trace_failure.md` tracing this failure: `test/my_app/billing_test.exs:42: Assertion with == failed. code: assert user.subscription.status == \"active\". left: nil`. Given that the test calls `Billing.activate_subscription/1` before the assertion and that function is supposed to set status to 'active', the root cause is almost certainly in `activate_subscription/1` — NOT in the sandbox, NOT in test isolation, NOT in seed data. Must identify: (1) the correct place to look (the `activate_subscription/1` function body), (2) what kind of bug to look for (a missing field update, a failed pattern match, a changeset error), (3) why seeding/async changes would NOT help.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/trace_failure.md"],
+    "must_contain": [
+      "activate_subscription",
+      "changeset",
+      "not the sandbox",
+      "not seed"
+    ],
+    "must_not_contain": [
+      "disable async",
+      "add seed data"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["flaky-test-diagnosis", "test-isolation-philosophy"],
+    "criterion": "trace_to_insert_path",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires ignoring three tempting wrong-fixes to identify the actual root cause.",
+  "calibration": null
+}

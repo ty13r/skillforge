@@ -1,0 +1,93 @@
+{
+  "family_slug": "elixir-ecto-sandbox-test",
+  "capabilities": {
+    "test-isolation-philosophy": {
+      "weight": 0.08,
+      "objectives": {
+        "data_case_template": {"weight": 0.4, "description": "Uses ExUnit.CaseTemplate with canonical start_owner!/stop_owner lifecycle"},
+        "shared_not_async_pattern": {"weight": 0.35, "description": "shared: not tags[:async] dispatcher present"},
+        "no_auto_mode": {"weight": 0.25, "description": "No Sandbox.mode(_, :auto) leakage"}
+      }
+    },
+    "sandbox-checkout-and-modes": {
+      "weight": 0.12,
+      "objectives": {
+        "start_owner_pair": {"weight": 0.4, "description": "start_owner!/stop_owner lifecycle"},
+        "correct_mode_selection": {"weight": 0.35, "description": ":manual vs {:shared, self()} chosen appropriately"},
+        "no_auto_mode": {"weight": 0.25, "description": "No :auto mode in tests"}
+      }
+    },
+    "async-test-safety-rules": {
+      "weight": 0.10,
+      "objectives": {
+        "async_true_default": {"weight": 0.5, "description": "async: true used where safe"},
+        "shared_on_sync": {"weight": 0.3, "description": "shared mode only when async is false"},
+        "no_async_false_workaround": {"weight": 0.2, "description": "async: false not used to mask isolation bugs"}
+      }
+    },
+    "allow-pattern-for-spawned-processes": {
+      "weight": 0.10,
+      "objectives": {
+        "allow_before_spawn": {"weight": 0.5, "description": "Sandbox.allow/3 called before Task.async/spawn"},
+        "owner_pid_captured": {"weight": 0.3, "description": "Owner pid captured for passing to spawned process"},
+        "task_supervisor_with_allow": {"weight": 0.2, "description": "Task.Supervisor usage when applicable"}
+      }
+    },
+    "connection-ownership-transfer": {
+      "weight": 0.10,
+      "objectives": {
+        "explicit_ownership": {"weight": 0.5, "description": "Explicit ownership passed via allow/3 or metadata"},
+        "no_sleep_workaround": {"weight": 0.3, "description": "No Process.sleep to 'wait for' transfer"},
+        "owner_death_handled": {"weight": 0.2, "description": "Owner death semantics acknowledged"}
+      }
+    },
+    "liveview-sandbox-integration": {
+      "weight": 0.10,
+      "objectives": {
+        "phoenix_ecto_sandbox_plug": {"weight": 0.5, "description": "Phoenix.Ecto.SQL.Sandbox plug in endpoint"},
+        "metadata_for_shape": {"weight": 0.3, "description": "metadata_for_async_header used in Conn tests"},
+        "liveview_test_case": {"weight": 0.2, "description": "Correct case template for LiveViewTest"}
+      }
+    },
+    "channels-sandbox-integration": {
+      "weight": 0.06,
+      "objectives": {
+        "channel_case_used": {"weight": 0.5, "description": "Phoenix.ChannelCase used"},
+        "allow_on_channel_pid": {"weight": 0.5, "description": "Sandbox.allow called with channel pid"}
+      }
+    },
+    "oban-sandbox-integration": {
+      "weight": 0.10,
+      "objectives": {
+        "perform_job_helper": {"weight": 0.5, "description": "perform_job/3 used (not drain_queue)"},
+        "oban_testing_use": {"weight": 0.3, "description": "use Oban.Testing, repo: MyApp.Repo present"},
+        "no_drain_queue": {"weight": 0.2, "description": "No Oban.drain_queue/1 in sandbox context"}
+      }
+    },
+    "tidewave-dev-vs-test-trap": {
+      "weight": 0.09,
+      "objectives": {
+        "explicit_sandbox_ownership": {"weight": 0.5, "description": "Test-owned sandbox, not dev DB reliance"},
+        "no_seed_test_fix": {"weight": 0.35, "description": "No seeding test DB to force pass"},
+        "correct_env_detection": {"weight": 0.15, "description": "Tests correctly detect :test env config"}
+      }
+    },
+    "shared-mode-fallback": {
+      "weight": 0.07,
+      "objectives": {
+        "shared_tuple_correct": {"weight": 0.5, "description": "{:shared, self()} tuple used correctly"},
+        "fallback_justification": {"weight": 0.3, "description": "Comment or docstring explains why shared mode is necessary"},
+        "still_transactional": {"weight": 0.2, "description": "Shared mode retained inside transaction for rollback"}
+      }
+    },
+    "flaky-test-diagnosis": {
+      "weight": 0.08,
+      "objectives": {
+        "root_cause_fix": {"weight": 0.5, "description": "Root cause (ownership) fixed, not symptom"},
+        "no_process_sleep": {"weight": 0.3, "description": "No Process.sleep workaround"},
+        "diagnostic_comment": {"weight": 0.2, "description": "Comment explains why the test was flaky"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

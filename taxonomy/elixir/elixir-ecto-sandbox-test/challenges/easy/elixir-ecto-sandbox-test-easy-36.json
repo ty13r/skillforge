@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-36",
+  "tier": "easy",
+  "title": "Generate unique test data with Ecto.UUID",
+  "prompt": "A test module creates users with `email: \"test@example.com\"` — hard-coded, causing unique-constraint collisions across concurrent async tests. Rewrite a single test at `test/my_app/accounts_test.exs` to use `email: \"user_#{Ecto.UUID.generate()}@example.com\"` so each concurrent test generates a unique email. Use `Ecto.UUID.generate/0`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/accounts_test.exs"],
+    "must_contain": [
+      "Ecto.UUID.generate",
+      "#{"
+    ],
+    "must_not_contain": [
+      "\"test@example.com\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "unique_test_data",
+    "weight": 0.5
+  },
+  "tier_rationale": "Pattern swap with named target generator.",
+  "research_citation": "\"If your data should be unique, make it unique across all tests\" — AppSignal",
+  "calibration": null
+}

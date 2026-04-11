@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-25",
+  "tier": "hard",
+  "title": "Refactor a sleep-based worker test to use notify+allow+assert_receive",
+  "prompt": "The fixture at `test_fixtures/process_sleep_flaky.ex` uses `Process.sleep(200)` to wait for a `DeliveryWorker`. Rewrite to `test/my_app/inbox/inbox_delivery_test.exs`: (1) change the worker call to pass `notify: self()` as an option, (2) after spawning, call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), worker_pid)`, (3) use `assert_receive({:delivered, _}, 1_000)` to synchronize, (4) assert the final DB state. Must NOT contain Process.sleep.",
+  "fixture_files": ["test_fixtures/process_sleep_flaky.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/inbox/inbox_delivery_test.exs"],
+    "must_contain": [
+      "assert_receive",
+      "notify: self()",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["flaky-test-diagnosis", "allow-pattern-for-spawned-processes"],
+    "criterion": "sleep_notify_allow",
+    "weight": 0.8
+  },
+  "tier_rationale": "Three-step refactor — notify plumbing, allow, assert_receive. Connects flaky-diagnosis to LV integration.",
+  "research_citation": "Iron Law: No Process.sleep. Use assert_receive with timeout.",
+  "calibration": null
+}

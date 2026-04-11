@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-39",
+  "tier": "medium",
+  "title": "Rank 3 tests for shared-mode necessity",
+  "prompt": "Given three test modules, write `docs/shared_mode_ranking.md` ranking them by how NECESSARY shared mode is:\n\n- Test A: spawns 3 Task.Supervisor children that all query Repo.\n- Test B: relies on a `Phoenix.PubSub` broadcast received by a Registry-owned subscriber process that cannot accept allowances.\n- Test C: starts a GenServer at `setup` that queries Repo.\n\nMust rank: B = necessary (no other option), A = avoidable (use allow/3), C = avoidable (use start_supervised! and $callers tracking).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_mode_ranking.md"],
+    "must_contain": [
+      "Test A",
+      "Test B",
+      "Test C",
+      "necessary",
+      "avoidable",
+      "allow/3",
+      "$callers"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "rank_by_necessity",
+    "weight": 0.6
+  },
+  "tier_rationale": "Ranked classification — requires applying the full decision tree to 3 scenarios.",
+  "calibration": null
+}

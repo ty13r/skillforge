@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-30",
+  "tier": "hard",
+  "title": "Migrate an Oban-using test module from drain_queue to perform_job",
+  "prompt": "Rewrite `test/my_app/reporting_worker_test.exs` that currently has 5 tests each inserting a job via `Oban.insert` then calling `Oban.drain_queue`. Convert all 5 to use `perform_job/3` with string-keyed args, each test asserting the downstream effect of the worker. Include `use Oban.Testing, repo: MyApp.Repo`. Must NOT contain `Oban.drain_queue` or `Oban.insert` in the test bodies — replace them with direct `perform_job` calls.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/reporting_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job(",
+      "\"user_id\""
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue",
+      "|> Oban.insert()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "five_test_migration",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-test refactor with consistent pattern.",
+  "calibration": null
+}

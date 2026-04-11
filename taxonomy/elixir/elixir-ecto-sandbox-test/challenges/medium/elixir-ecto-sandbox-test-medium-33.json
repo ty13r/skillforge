@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-33",
+  "tier": "medium",
+  "title": "Remove a prior agent's seed data from test setup",
+  "prompt": "The fixture at `test_fixtures/tidewave_confused_turn.ex` has a setup block with `Repo.insert(%Plan{code: \"pro\", name: \"Pro\", price_cents: 999})` that was added by a prior Claude turn based on Tidewave dev DB observations. Rewrite to `test/my_app/subscriptions_test.exs` REMOVING the entire setup insert — the test's own `create_subscription/2` flow handles plan creation via `Subscriptions.ensure_plan/1`. Add a prominent comment block above the test explaining the removal. Must NOT re-insert the Plan in setup.",
+  "fixture_files": ["test_fixtures/tidewave_confused_turn.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/subscriptions_test.exs"],
+    "must_contain": [
+      "Subscriptions.create_subscription(user",
+      "# REMOVED",
+      "Tidewave"
+    ],
+    "must_not_contain": [
+      "{:ok, _plan} = Repo.insert(%Plan{code: \"pro\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "remove_seed_data",
+    "weight": 0.8
+  },
+  "tier_rationale": "Named Claude failure mode with direct fixture. Must remove the anti-pattern and annotate why.",
+  "research_citation": "\"I've watched Claude try to seed the test database so a test will pass. That's clearly wrong.\" — BoothIQ",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-23",
+  "tier": "hard",
+  "title": "Write a full LV test with render_async + create_user + db assert",
+  "prompt": "Write `test/my_app_web/live/dashboard_live_test.exs` that: (1) uses `MyAppWeb.ConnCase` with `async: true`, (2) creates a user before mounting, (3) mounts the LV via `{:ok, lv, _html} = live(conn, ~p\"/dashboard\")`, (4) calls `render_async(lv)` to await the LV's internal `assign_async` data, (5) asserts the rendered HTML contains the user's email. Must include `render_async(lv)` and use `~p\"/dashboard\"` for the route.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app_web/live/dashboard_live_test.exs"],
+    "must_contain": [
+      "use MyAppWeb.ConnCase, async: true",
+      "Phoenix.LiveViewTest",
+      "live(conn, ~p\"/dashboard\")",
+      "render_async(lv)"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "full_lv_test",
+    "weight": 0.7
+  },
+  "tier_rationale": "Integration test template — must compose ConnCase, LiveViewTest, create_user, render_async.",
+  "calibration": null
+}

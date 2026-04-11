@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-05",
+  "tier": "hard",
+  "title": "Implement a DataCase.setup_sandbox/1 helper that handles all modes",
+  "prompt": "Write `test/support/data_case.ex` with a `setup_sandbox/1` public helper function that accepts a tags map and: (1) if `tags[:shared]` is truthy, use `checkout/2` + `mode(:shared, self())` pattern, (2) if `tags[:async]` is truthy AND no `:shared` tag, use `start_owner!/2` with `shared: false` and register stop_owner in on_exit, (3) otherwise default to `start_owner!/2` with `shared: true` and register stop_owner. Include the DataCase module wrapper and `setup tags do setup_sandbox(tags); :ok end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "def setup_sandbox(tags)",
+      "start_owner!",
+      "stop_owner",
+      "on_exit",
+      "tags[:shared]",
+      "tags[:async]",
+      "mode(MyApp.Repo, {:shared, self()})"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback", "async-test-safety-rules"],
+    "criterion": "full_setup_sandbox",
+    "weight": 0.8
+  },
+  "tier_rationale": "Requires correctly combining three APIs with tag-based branching — non-trivial surface area.",
+  "calibration": null
+}

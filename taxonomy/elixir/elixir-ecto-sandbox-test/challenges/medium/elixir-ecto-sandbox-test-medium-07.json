@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-07",
+  "tier": "medium",
+  "title": "Document why :auto mode is not suitable for tests",
+  "prompt": "Write `docs/auto_mode.md` explaining what `Ecto.Adapters.SQL.Sandbox.mode(repo, :auto)` actually does and why it is NOT suitable for test isolation. Must explain: (1) :auto mode is essentially 'no sandboxing', (2) every process automatically checks out a connection, (3) this is for production pool behavior, not test isolation. Must NOT recommend using :auto in tests.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/auto_mode.md"],
+    "must_contain": [
+      ":auto",
+      "no sandboxing",
+      "production",
+      "not suitable"
+    ],
+    "must_not_contain": [
+      "use :auto in tests"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": [],
+    "criterion": "auto_mode_doc",
+    "weight": 0.5
+  },
+  "tier_rationale": "Documentation with named false-friend (Claude occasionally recommends :auto because it's 'auto').",
+  "research_citation": "\"The sandbox defaults to `:auto` mode, which is essentially 'no sandboxing'.\" — Elixir Forum, LostKobrakai",
+  "calibration": null
+}

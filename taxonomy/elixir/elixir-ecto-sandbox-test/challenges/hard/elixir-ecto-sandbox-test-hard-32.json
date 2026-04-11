@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-32",
+  "tier": "hard",
+  "title": "Mix inline and manual Oban modes across a feature test",
+  "prompt": "Write `test/my_app/feature_jobs_test.exs` for a feature where (a) email jobs should run inline (so the test can assert delivered emails immediately) and (b) scheduled report jobs should stay manual (so the test can assert they were scheduled without running). Use `Oban.Testing.with_testing_mode/2`: wrap email-producing code in `with_testing_mode(:inline, fn -> ... end)` and the scheduled job in `with_testing_mode(:manual, fn -> ... end)`. Include both inside a single test.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/feature_jobs_test.exs"],
+    "must_contain": [
+      "Oban.Testing.with_testing_mode(:inline",
+      "Oban.Testing.with_testing_mode(:manual",
+      "use Oban.Testing"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "mixed_testing_modes",
+    "weight": 0.7
+  },
+  "tier_rationale": "Dual-mode use within a single test — obscure Oban API composition.",
+  "calibration": null
+}

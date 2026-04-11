@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-06",
+  "tier": "medium",
+  "title": "Fix ordering bug: mode(:shared) called before checkout",
+  "prompt": "The fixture at `test_fixtures/buggy_data_case.ex` calls `mode(MyApp.Repo, {:shared, self()})` BEFORE `checkout(MyApp.Repo)`. That's wrong — the shared-mode GenServer has no owner to share because checkout hasn't established one. Rewrite the file to `test/support/data_case.ex` with the correct order: checkout FIRST, then conditionally mode based on `unless tags[:async]`.",
+  "fixture_files": ["test_fixtures/buggy_data_case.ex"],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)",
+      "unless tags[:async]",
+      "mode(MyApp.Repo, {:shared, self()})"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})\n    :ok = Ecto.Adapters.SQL.Sandbox.checkout"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback"],
+    "criterion": "correct_ordering",
+    "weight": 0.6
+  },
+  "tier_rationale": "Ordering bug — requires understanding of the state machine to fix correctly.",
+  "research_citation": "\"changing the sandbox mode affects what happens when you call `checkout`, so these should likely be in the opposite order\" — Elixir Forum, al2o3cr",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-43",
+  "tier": "hard",
+  "title": "Write a test suite hygiene checklist",
+  "prompt": "Write `docs/test_hygiene_checklist.md` with a 10-item checklist for keeping an Elixir test suite healthy. Must include: (1) async: true by default; (2) explicit async: false requires a comment; (3) no Process.sleep; (4) unique test data via UUID; (5) start_supervised! for owned processes; (6) allow/3 for spawned children that can't be supervised; (7) sandbox plug at top of endpoint.ex; (8) Oban testing :manual or :inline — never drain_queue in sandbox; (9) on_exit never writes to DB; (10) reject seed-data-in-DataCase PRs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/test_hygiene_checklist.md"],
+    "must_contain": [
+      "async: true",
+      "Process.sleep",
+      "UUID",
+      "start_supervised",
+      "allow/3",
+      "endpoint.ex",
+      "Oban",
+      "on_exit",
+      "seed"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["test-isolation-philosophy", "async-test-safety-rules", "oban-sandbox-integration"],
+    "criterion": "hygiene_checklist",
+    "weight": 0.6
+  },
+  "tier_rationale": "10-item synthesis of the family's rules.",
+  "calibration": null
+}

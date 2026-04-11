@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-44",
+  "tier": "medium",
+  "title": "Detect Application.put_env/3 leakage in an async test",
+  "prompt": "Given a test module that contains `setup do Application.put_env(:my_app, :feature_x, true); on_exit(fn -> Application.delete_env(:my_app, :feature_x) end) end`, write `docs/app_env_leak.md` explaining: (1) this is NOT safe for `async: true`, (2) `Application.put_env` is global state shared across all processes, (3) another concurrent test reading `:feature_x` will see the unexpected value, (4) fix is to mark `async: false` with a comment OR use `Process.put/2` if the per-process scope is acceptable.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/app_env_leak.md"],
+    "must_contain": [
+      "Application.put_env",
+      "global state",
+      "async: false",
+      "Process.put"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "app_env_diagnosis",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires recognizing an obscure anti-pattern and the two alternative fixes.",
+  "calibration": null
+}

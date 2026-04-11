@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-31",
+  "tier": "medium",
+  "title": "Distinguish :inline vs :manual Oban testing modes",
+  "prompt": "Write `docs/oban_testing_modes.md` comparing Oban's `:inline` and `:manual` testing modes. Must include: (1) `:inline` executes jobs synchronously in the calling process with no DB for job bookkeeping, (2) `:manual` inserts jobs into the DB but does not execute them — they can be asserted via `assert_enqueued`, (3) `:inline` does not work for jobs that depend on the sandbox transaction (the worker would see the test's rolled-back data), (4) `:manual` does work because no execution actually happens.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/oban_testing_modes.md"],
+    "must_contain": [
+      ":inline",
+      ":manual",
+      "assert_enqueued",
+      "synchronously",
+      "sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "modes_comparison",
+    "weight": 0.5
+  },
+  "tier_rationale": "Reference doc — requires knowing both modes and their tradeoffs.",
+  "research_citation": "\"`:inline`—jobs execute immediately within the calling process and without touching the database.\" — Oban testing docs",
+  "calibration": null
+}

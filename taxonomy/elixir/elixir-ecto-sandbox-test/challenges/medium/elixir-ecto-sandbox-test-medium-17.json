@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-17",
+  "tier": "medium",
+  "title": "Move a DB write out of on_exit to the test body",
+  "prompt": "The fixture at `test_fixtures/on_exit_db_write.ex` performs `AuditTrail.record_event(user.id, \"test_exited\")` inside `on_exit/2`, which runs in a different process than the test owner and triggers `DBConnection.OwnershipError`. Rewrite to `test/my_app/audit_trail_test.exs`: remove the on_exit DB write entirely — the sandbox rollback handles cleanup automatically. Keep the test body intact.",
+  "fixture_files": ["test_fixtures/on_exit_db_write.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/audit_trail_test.exs"],
+    "must_contain": [
+      "defmodule MyApp.AuditTrailTest",
+      "use MyApp.DataCase",
+      "AuditTrail.record_event(user.id, \"something_happened\")"
+    ],
+    "must_not_contain": [
+      "on_exit(fn ->\n      AuditTrail.record_event"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "removes_on_exit_db_write",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires recognizing that on_exit runs in another process AND that sandbox rollback replaces manual cleanup.",
+  "research_citation": "\"The issue is that `on_exit` is executed in a different process than the test one\" — Elixir Forum, totorigolo",
+  "calibration": null
+}

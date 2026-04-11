@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-08",
+  "tier": "legendary",
+  "title": "Diagnose connection-per-allowance exhaustion under pool pressure",
+  "prompt": "Write `docs/allowance_exhaustion.md` explaining why a test that calls `Ecto.Adapters.SQL.Sandbox.allow/3` 500 times (in a loop, for 500 spawned tasks) causes `DBConnection` timeouts. Must explain: (1) each `allow/3` call does NOT create a new pool connection — it allows an existing pid to share the test process's connection, (2) however, if the 500 tasks attempt concurrent queries, they queue on the single sandbox-owned connection, (3) under default `:queue_target: 50` and `:queue_interval: 1000`, the pool times out, (4) fix: use `Task.async_stream/3` with `max_concurrency:` set to avoid oversubscription, OR accept that the sandbox model is inherently serial for a single test's allowed tasks.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/allowance_exhaustion.md"],
+    "must_contain": [
+      "allow/3",
+      "pool",
+      "queue",
+      "max_concurrency",
+      "serial"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["sandbox-checkout-and-modes", "flaky-test-diagnosis"],
+    "criterion": "allowance_exhaustion",
+    "weight": 0.8
+  },
+  "tier_rationale": "Obscure — requires knowing that allowances share connections, not create them.",
+  "calibration": null
+}

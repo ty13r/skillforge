@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-22",
+  "tier": "easy",
+  "title": "Write a UserSocket with connect_info and sandbox metadata",
+  "prompt": "Write `lib/my_app_web/channels/user_socket.ex` as a `Phoenix.Socket` module that declares a channel route `channel \"room:*\", MyAppWeb.RoomChannel` and a `connect/3` callback that stores the sandbox metadata in the socket assigns. The `connect` callback must extract `phoenix_ecto_sandbox` metadata from `connect_info` and store it as `socket.assigns.phoenix_ecto_sandbox`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/user_socket.ex"],
+    "must_contain": [
+      "use Phoenix.Socket",
+      "channel \"room:*\"",
+      "def connect(",
+      "phoenix_ecto_sandbox",
+      "assign(socket, :phoenix_ecto_sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["liveview-sandbox-integration"],
+    "criterion": "user_socket_connect",
+    "weight": 0.5
+  },
+  "tier_rationale": "Module scaffold with specific assigns — sonnet produces this cleanly.",
+  "calibration": null
+}

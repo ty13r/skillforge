@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-07",
+  "tier": "easy",
+  "title": "Use start_owner!/2 instead of checkout/2 for a spawned supervisor test",
+  "prompt": "Write a DataCase setup function in `test/support/data_case.ex` that uses `Ecto.Adapters.SQL.Sandbox.start_owner!/2` (NOT `checkout/2`) because unlinked processes will be spawned in some tests and must access the sandbox without the test process being their parent. The setup must pass `shared: not tags[:async]` to `start_owner!/2` and register `on_exit` to call `stop_owner`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.start_owner!",
+      "shared: not tags[:async]",
+      "stop_owner",
+      "on_exit"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["connection-ownership-transfer", "test-isolation-philosophy"],
+    "criterion": "start_owner_pattern",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires knowing start_owner!/2 exists — a named Ecto helper with a one-line idiomatic usage.",
+  "research_citation": "\"`start_owner!/2` solves the problem of unlinked processes started in a test outliving the test process and causing ownership errors\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

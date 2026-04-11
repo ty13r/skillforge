@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-26",
+  "tier": "medium",
+  "title": "Write a channel test that joins, sends a message, asserts a broadcast",
+  "prompt": "Write `test/my_app_web/channels/room_channel_test.exs` that: (1) `use MyAppWeb.ChannelCase, async: true`, (2) connects via `{:ok, _, socket} = MyAppWeb.UserSocket |> socket(\"user_id\", %{user_id: user.id}) |> subscribe_and_join(MyAppWeb.RoomChannel, \"room:lobby\")`, (3) pushes a `\"new_msg\"` event with `%{\"body\" => \"hello\"}`, (4) asserts broadcast with `assert_broadcast \"new_msg\", %{body: \"hello\"}`. Must include sandbox allowance setup (the channel needs the test's sandbox allowance propagated via socket.assigns.phoenix_ecto_sandbox).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app_web/channels/room_channel_test.exs"],
+    "must_contain": [
+      "use MyAppWeb.ChannelCase, async: true",
+      "subscribe_and_join(MyAppWeb.RoomChannel",
+      "assert_broadcast \"new_msg\"",
+      "phoenix_ecto_sandbox"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "channel_test_with_allow",
+    "weight": 0.6
+  },
+  "tier_rationale": "Full channel test requiring knowledge of subscribe_and_join, push, assert_broadcast AND sandbox propagation.",
+  "calibration": null
+}

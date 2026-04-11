@@ -1,0 +1,23 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-19",
+  "tier": "easy",
+  "title": "Enable the Phoenix.Ecto.SQL.Sandbox plug in test config",
+  "prompt": "Write `config/test.exs` that enables the Phoenix.Ecto.SQL.Sandbox plug by setting `config :my_app, :sql_sandbox, true` and configures `config :my_app, MyApp.Repo, pool: Ecto.Adapters.SQL.Sandbox`. Include a brief `# ` comment on the sandbox pool line explaining that it wraps every test in a transaction.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/test.exs"],
+    "must_contain": [
+      "config :my_app, :sql_sandbox, true",
+      "pool: Ecto.Adapters.SQL.Sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "test_config",
+    "weight": 0.4
+  },
+  "tier_rationale": "Config file — single canonical pattern.",
+  "calibration": null
+}

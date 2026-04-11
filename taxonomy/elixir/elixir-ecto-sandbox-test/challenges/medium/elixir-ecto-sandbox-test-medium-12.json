@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-12",
+  "tier": "medium",
+  "title": "Write a LiveView on_mount sandbox hook",
+  "prompt": "Write a module `MyAppWeb.UserAuth` at `lib/my_app_web/user_auth.ex` that defines `on_mount(:sandbox, params, session, socket)` which: (1) calls `Phoenix.LiveView.get_connect_info(socket, :user_agent)` to extract the user-agent header, (2) decodes sandbox metadata via `Phoenix.Ecto.SQL.Sandbox.decode_metadata(user_agent)`, (3) calls `Phoenix.Ecto.SQL.Sandbox.allow(metadata, Ecto.Adapters.SQL.Sandbox)`, and (4) returns `{:cont, socket}`. Handle the nil-user-agent case safely.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/user_auth.ex"],
+    "must_contain": [
+      "def on_mount(:sandbox",
+      "Phoenix.LiveView.get_connect_info",
+      "Phoenix.Ecto.SQL.Sandbox.decode_metadata",
+      "Phoenix.Ecto.SQL.Sandbox.allow",
+      ":user_agent",
+      "{:cont, socket}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "on_mount_sandbox_hook",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-step integration — needs knowing get_connect_info, decode_metadata, and allow/2.",
+  "research_citation": "\"The sandbox uses the mechanic described here to track the caller (aka the test process) for a LV\" — Elixir Forum, LostKobrakai",
+  "calibration": null
+}

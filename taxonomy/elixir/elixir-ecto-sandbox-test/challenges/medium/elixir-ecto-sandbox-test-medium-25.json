@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-25",
+  "tier": "medium",
+  "title": "Propagate phoenix_ecto_sandbox from connect_info to socket assigns",
+  "prompt": "Write `lib/my_app_web/channels/user_socket.ex` as a `Phoenix.Socket` that defines `connect(params, socket, connect_info)` extracting the sandbox metadata. The connect function must: (1) decode `connect_info[:user_agent]` via `Phoenix.Ecto.SQL.Sandbox.decode_metadata/1`, (2) assign the decoded metadata to the socket as `:phoenix_ecto_sandbox`, (3) return `{:ok, socket}`. Channel tests will then read this assign in join/3 to call allow/2.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/user_socket.ex"],
+    "must_contain": [
+      "def connect(",
+      "Phoenix.Ecto.SQL.Sandbox.decode_metadata",
+      "assign(socket, :phoenix_ecto_sandbox",
+      "{:ok, socket}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["liveview-sandbox-integration"],
+    "criterion": "socket_connect_decode",
+    "weight": 0.6
+  },
+  "tier_rationale": "Multi-step — requires knowing decode_metadata exists and where to store the result.",
+  "calibration": null
+}

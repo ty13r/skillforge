@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-37",
+  "tier": "medium",
+  "title": "Justify shared mode for a Registry-using integration test",
+  "prompt": "Write `test/my_app/integration/realtime_pubsub_test.exs` that needs to use `mode(:shared)` because it touches `Phoenix.PubSub` which routes through a Registry process that cannot accept allowances. The module must: (1) `use MyApp.DataCase, async: false` (with a comment explaining why), (2) call `Ecto.Adapters.SQL.Sandbox.checkout/1` then `mode(MyApp.Repo, {:shared, self()})` in setup, (3) include at least one test. The comment must mention PubSub and the Registry allowance limitation.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/integration/realtime_pubsub_test.exs"],
+    "must_contain": [
+      "use MyApp.DataCase, async: false",
+      "Ecto.Adapters.SQL.Sandbox.checkout",
+      "mode(MyApp.Repo, {:shared, self()})",
+      "PubSub",
+      "Registry"
+    ],
+    "must_not_contain": [
+      "async: true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "justified_shared_mode",
+    "weight": 0.6
+  },
+  "tier_rationale": "Justification requirement — must NOT pick shared mode without also going async: false and explaining why.",
+  "research_citation": "\"we give up running db-tests in parallel, which is a sad compromise on Erlang VM\" — Piotr Włodarek",
+  "calibration": null
+}

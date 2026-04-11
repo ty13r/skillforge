@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-19",
+  "tier": "legendary",
+  "title": "Test Oban peer leader failover without real queues",
+  "prompt": "Write `docs/oban_peer_leader_sandbox.md` explaining how to test Oban plugins that depend on peer leader election (like `Oban.Plugins.Cron`) WITHOUT running real queues in sandbox tests. Must explain: (1) Oban.Plugins.Cron schedules jobs based on peer leader election, (2) in `testing: :manual` mode, plugins are NOT run — peer leader election does not happen, (3) to test cron jobs, instantiate the plugin state directly via `Oban.Plugins.Cron.handle_info/2` with a mock leader state, (4) or use `with_testing_mode(:inline, fn -> ... end)` briefly to exercise the plugin, (5) never attempt to wait for a real peer leader in a sandbox test.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/oban_peer_leader_sandbox.md"],
+    "must_contain": [
+      "Oban.Plugins.Cron",
+      "peer leader",
+      ":manual",
+      "with_testing_mode",
+      "never"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "peer_leader_doc",
+    "weight": 0.75
+  },
+  "tier_rationale": "Very niche Oban internal knowledge.",
+  "calibration": null
+}

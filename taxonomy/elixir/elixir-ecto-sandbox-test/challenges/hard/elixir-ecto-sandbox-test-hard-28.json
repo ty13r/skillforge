@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-28",
+  "tier": "hard",
+  "title": "Diagnose a channel test that races the allow call",
+  "prompt": "Write `docs/channel_race_diagnosis.md` diagnosing this: a channel test with `async: true` passes locally ~90% of the time and fails ~10% with `DBConnection.OwnershipError`. The join/3 calls `allow_ecto_sandbox/1` but the channel's `handle_in/3` is called immediately after join completes. The failure occurs in `handle_in/3` on a Repo call. Must explain: (1) the allow call in join runs once, (2) handle_in in the channel process is synchronous — no race there, (3) the real race is between the SOCKET connect and the test's push — the socket connect decodes metadata and the test sometimes pushes before connect completes, (4) fix: ensure the test awaits socket connection before pushing.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/channel_race_diagnosis.md"],
+    "must_contain": [
+      "channel",
+      "race",
+      "socket connect",
+      "allow",
+      "join/3"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "channel_race_explained",
+    "weight": 0.7
+  },
+  "tier_rationale": "Subtle race diagnosis in the channel lifecycle.",
+  "calibration": null
+}

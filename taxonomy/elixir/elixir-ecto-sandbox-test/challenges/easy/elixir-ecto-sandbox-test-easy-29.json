@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-29",
+  "tier": "easy",
+  "title": "Write a docs note: do not use Tidewave MCP in test context",
+  "prompt": "Write `docs/tidewave_boundary.md` describing that Tidewave MCP queries the DEV database, not the test database, and thus any rows observed via Tidewave are IRRELEVANT to reasoning about test state. Must state: (1) Tidewave is a dev-only tool, (2) test DB is isolated and always empty at the start of each test, (3) never use Tidewave output to fabricate expected test state.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/tidewave_boundary.md"],
+    "must_contain": [
+      "Tidewave",
+      "dev database",
+      "test database",
+      "isolated",
+      "never"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "tidewave_boundary_doc",
+    "weight": 0.5
+  },
+  "tier_rationale": "Documentation task with named tool and named boundary.",
+  "research_citation": "\"Claude doesn't understand this. It uses Tidewave's dev DB connection and thinks it's looking at the test DB — which is always empty.\" — BoothIQ",
+  "calibration": null
+}

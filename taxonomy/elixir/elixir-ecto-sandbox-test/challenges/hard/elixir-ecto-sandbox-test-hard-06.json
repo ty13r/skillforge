@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-06",
+  "tier": "hard",
+  "title": "Explain the state-machine reason for checkout-then-mode ordering",
+  "prompt": "Write `docs/ordering_state_machine.md` explaining in detail why `Ecto.Adapters.SQL.Sandbox.checkout/2` must precede `Ecto.Adapters.SQL.Sandbox.mode/2` when transitioning to shared mode. Must explain: (1) the sandbox is implemented as a GenServer that holds an 'owner' field, (2) `checkout/2` establishes the test process as the owner, (3) `mode({:shared, pid})` transitions the GenServer state to 'share connections from owner pid', (4) if you call mode before checkout, the GenServer has no owner state set and silently uses a stale or nil owner, (5) the race manifests as 'cannot find ownership process' in spawned children.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/ordering_state_machine.md"],
+    "must_contain": [
+      "GenServer",
+      "owner",
+      "checkout",
+      "state",
+      "shared"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback"],
+    "criterion": "state_machine_explained",
+    "weight": 0.7
+  },
+  "tier_rationale": "Deep conceptual explanation — requires understanding the sandbox as a state-holding GenServer.",
+  "research_citation": "\"For shared mode the checkout actually has to happen first. The checkout requests go through a GenServer which will have its state set with the owner's connection when changing the mode to shared\" — Elixir Forum, joey_the_snake",
+  "calibration": null
+}

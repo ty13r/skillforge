@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-10",
+  "tier": "medium",
+  "title": "Audit a test suite — which modules can reclaim async: true",
+  "prompt": "Given this inventory of test modules and their justifications, write `docs/async_audit.md` listing which modules can be safely changed to `async: true` and which must stay `async: false`:\n\n1. `AccountsTest` — async: false, uses `create_user/1`\n2. `RateLimiterTest` — async: false, writes to `Application.put_env(:my_app, :rate_limit, ...)`\n3. `ReportsTest` — async: false, spawns a Task via Task.Supervisor\n4. `FullStackIntegrationTest` — async: false, uses `mode(:shared)` to cover a Registry\n5. `AccountsContextTest` — async: false, reads from Repo only\n\nMust state: (1) can be async, (2) must stay false (global state), (3) can be async via allow/3, (4) must stay false (shared mode), (5) can be async.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/async_audit.md"],
+    "must_contain": [
+      "AccountsTest",
+      "RateLimiterTest",
+      "ReportsTest",
+      "FullStackIntegrationTest",
+      "AccountsContextTest",
+      "allow/3",
+      "global state",
+      "shared mode"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["shared-mode-fallback", "allow-pattern-for-spawned-processes"],
+    "criterion": "async_audit",
+    "weight": 0.7
+  },
+  "tier_rationale": "5-item classification with different criteria per item. Requires applying the full rule set.",
+  "calibration": null
+}

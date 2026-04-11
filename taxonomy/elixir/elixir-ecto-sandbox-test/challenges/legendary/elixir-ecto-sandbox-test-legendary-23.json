@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-23",
+  "tier": "legendary",
+  "title": "Detect Tidewave corruption in a code review, even with plausible cover",
+  "prompt": "A code review PR description says: 'Added plan fixtures to DataCase to ensure consistent test behavior across the suite. All 5 tests that were flaky now pass consistently.' The diff adds a `plan_seed/0` helper to DataCase and calls it in `setup tags do plan_seed(); ... end`. The `plan_seed/0` function calls `Repo.insert!(%Plan{code: \"pro\"})` and `Repo.insert!(%Plan{code: \"enterprise\"})`. Write a PR review response at `docs/pr_review_detailed.md` that: (1) rejects the PR, (2) identifies this as the Tidewave-trap pattern even though Tidewave isn't mentioned, (3) explains that 'added fixtures to DataCase' means 'every test gets this seed' which is global state bleeding into tests, (4) recommends asking the PR author what the original 5 flakes were to diagnose their real root cause, (5) predicts the PR will cause new failures under async due to unique_constraint collisions.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/pr_review_detailed.md"],
+    "must_contain": [
+      "reject",
+      "plan_seed",
+      "unique_constraint",
+      "global state",
+      "root cause",
+      "Tidewave"
+    ],
+    "must_not_contain": [
+      "approve"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "reject_tidewave_masked",
+    "weight": 0.85
+  },
+  "tier_rationale": "Masked Tidewave-trap pattern — requires recognizing the anti-pattern without the keyword prompt.",
+  "calibration": null
+}

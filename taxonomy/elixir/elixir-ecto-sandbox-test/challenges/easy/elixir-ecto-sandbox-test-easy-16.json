@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-16",
+  "tier": "easy",
+  "title": "Replace start_link with start_supervised in a GenServer test",
+  "prompt": "A test currently starts a GenServer via `{:ok, pid} = MyApp.Cache.start_link([])`. Rewrite the test in `test/my_app/cache_test.exs` to use ExUnit's `start_supervised!/1` instead, so the GenServer's lifetime is tied to the test supervisor and cannot outlive the test. Use `start_supervised!({MyApp.Cache, []})`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/cache_test.exs"],
+    "must_contain": [
+      "start_supervised!({MyApp.Cache"
+    ],
+    "must_not_contain": [
+      "MyApp.Cache.start_link"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "start_supervised",
+    "weight": 0.5
+  },
+  "tier_rationale": "Pattern swap. Sonnet knows start_supervised!/1.",
+  "research_citation": "\"you might try to start the genserver under the test supervisor so it doesn't outlive the individual test process\" — Elixir Forum, CherryPoppins",
+  "calibration": null
+}

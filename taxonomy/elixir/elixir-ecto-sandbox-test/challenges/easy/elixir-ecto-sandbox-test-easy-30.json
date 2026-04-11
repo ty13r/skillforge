@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-30",
+  "tier": "easy",
+  "title": "Answer: 'The test says not found but I can see the row in Tidewave'",
+  "prompt": "A developer asks: 'My test asserts `assert user = Accounts.get_user_by_email(\"a@example.com\")` and it returns nil. But I ran Tidewave and there IS a user with that email in the database. What's going on?' Write the answer in `docs/answer.md`. Must mention: (1) Tidewave queries the DEV DB, (2) test DB is empty at test start and rolled back, (3) the dev row is irrelevant.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/answer.md"],
+    "must_contain": [
+      "dev DB",
+      "test DB",
+      "rolled back",
+      "irrelevant"
+    ],
+    "must_not_contain": [
+      "seed the test"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "tidewave_answer",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical explanation. Sonnet produces the answer reliably.",
+  "research_citation": "\"A test fails. Claude queries the database. Finds nothing. Thinks there's a data problem.\" — BoothIQ",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-42",
+  "tier": "medium",
+  "title": "Fix unique-constraint collision with dynamic test data",
+  "prompt": "The fixture at `test_fixtures/unique_collision_test.exs` has two tests both creating users with `email: \"test@example.com\"`. Under async mode these can race on the unique constraint. Rewrite to `test/my_app/accounts_test.exs`: generate unique emails per test via `\"user_#{Ecto.UUID.generate()}@example.com\"` and preserve `async: true`.",
+  "fixture_files": ["test_fixtures/unique_collision_test.exs"],
+  "expected_outputs": {
+    "files": ["test/my_app/accounts_test.exs"],
+    "must_contain": [
+      "Ecto.UUID.generate",
+      "async: true",
+      "#{"
+    ],
+    "must_not_contain": [
+      "\"test@example.com\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "unique_data_fix",
+    "weight": 0.6
+  },
+  "tier_rationale": "Known anti-pattern with named fix.",
+  "research_citation": "\"If your data should be unique, make it unique across all tests\" — AppSignal",
+  "calibration": null
+}

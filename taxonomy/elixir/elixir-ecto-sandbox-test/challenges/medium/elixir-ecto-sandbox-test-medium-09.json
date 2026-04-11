@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-09",
+  "tier": "medium",
+  "title": "Identify a self-contradiction: async: true + mode(:shared)",
+  "prompt": "The fixture at `test_fixtures/async_shared_contradiction.ex` declares `use MyApp.DataCase, async: true` AND calls `Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})` in setup. Rewrite to `test/my_app/report_generator_test.exs` removing the mode(:shared) call — preserve `async: true` because the test does not spawn any child processes that need shared mode. Add a comment in the setup block: `# async: true implies manual mode — no mode/2 call needed`.",
+  "fixture_files": ["test_fixtures/async_shared_contradiction.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/report_generator_test.exs"],
+    "must_contain": [
+      "async: true",
+      "# async: true implies manual mode"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["shared-mode-fallback", "sandbox-checkout-and-modes"],
+    "criterion": "remove_mode_shared",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires recognizing the self-contradiction, keeping async, and removing the offending line.",
+  "research_citation": "\"you are using the code above and also setting `async: true`. This means the sandbox won't enter shared mode\" — Elixir Forum, joey_the_snake",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-41",
+  "tier": "medium",
+  "title": "Replace Process.sleep with assert_receive for a worker notification",
+  "prompt": "The fixture at `test_fixtures/process_sleep_flaky.ex` uses `Process.sleep(200)` to wait for a `DeliveryWorker` to complete. Rewrite to `test/my_app/inbox/inbox_delivery_test.exs`: (1) change the worker call to `DeliveryWorker.deliver_async(user.id, \"hello\", notify: self())`, (2) replace Process.sleep with `assert_receive({:delivered, _user_id}, 1_000)`, (3) allow the worker pid via `Ecto.Adapters.SQL.Sandbox.allow/3`. Must NOT contain Process.sleep.",
+  "fixture_files": ["test_fixtures/process_sleep_flaky.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/inbox/inbox_delivery_test.exs"],
+    "must_contain": [
+      "assert_receive",
+      "notify: self()",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules", "allow-pattern-for-spawned-processes"],
+    "criterion": "sleep_to_receive",
+    "weight": 0.7
+  },
+  "tier_rationale": "Two-part swap: sleep removal AND refactor the worker call to support notification.",
+  "research_citation": "Iron Law: No Process.sleep — oliver-kriska testing SKILL.md",
+  "calibration": null
+}

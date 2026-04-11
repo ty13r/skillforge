@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-01",
+  "tier": "hard",
+  "title": "Rewrite an Oban drain-queue test to use perform_job + Oban.Testing",
+  "prompt": "Rewrite the Oban test at `test_fixtures/oban_real_queue_test.exs` to `test/my_app/mailer/digest_worker_test.exs`. Requirements: (1) `use MyApp.DataCase, async: true`, (2) `use Oban.Testing, repo: MyApp.Repo`, (3) create two users — one opted-in, one opted-out, (4) use `perform_job(DigestWorker, %{\"user_id\" => alice.id})` to execute the worker synchronously in-process (which CAN see sandbox data), (5) assert the email was delivered. Must NOT use `Oban.drain_queue/1` or `Oban.insert()`. Explain in a comment why drain_queue would not work with sandbox.",
+  "fixture_files": ["test_fixtures/oban_real_queue_test.exs"],
+  "expected_outputs": {
+    "files": ["test/my_app/mailer/digest_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job(DigestWorker",
+      "\"user_id\"",
+      "async: true",
+      "# drain_queue"
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue",
+      "Oban.insert()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy", "async-test-safety-rules"],
+    "criterion": "oban_drain_to_perform",
+    "weight": 0.8
+  },
+  "tier_rationale": "Requires understanding WHY drain_queue fails (sandbox commit-visibility), not just how to use perform_job. Sonnet often fixes the symptom without explaining the cause.",
+  "research_citation": "\"Sandbox transactions never commit. If they never commit, then the rows are never visible to other processes, and that means they are never visible to Oban.\" — Elixir Forum, benwilson512",
+  "calibration": null
+}

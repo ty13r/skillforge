@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-04",
+  "tier": "legendary",
+  "title": "Fix allow/3 called on the wrong PID (supervisor, not child)",
+  "prompt": "The fixture at `test_fixtures/dynamic_supervisor_test.ex` calls `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), supervisor_pid)` where `supervisor_pid` is the DynamicSupervisor's pid — but the supervisor itself never performs DB operations. The child workers spawned via `DynamicSupervisor.start_child/2` do. Rewrite to `test/my_app/job_runner_test.exs`: capture the child pid from `start_child/2` and call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), child_pid)`. The test must pass `caller: self()` into the child so it can message back `{:job_complete, result}`.",
+  "fixture_files": ["test_fixtures/dynamic_supervisor_test.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/job_runner_test.exs"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), child_pid)",
+      "DynamicSupervisor.start_child",
+      "caller: self()"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), supervisor_pid)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["connection-ownership-transfer", "async-test-safety-rules"],
+    "criterion": "correct_child_pid",
+    "weight": 0.85
+  },
+  "tier_rationale": "Subtle bug — allow/3 is being called correctly in structure but on the wrong pid. Requires understanding process hierarchy.",
+  "calibration": null
+}

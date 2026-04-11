@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-28",
+  "tier": "easy",
+  "title": "Reject a suggestion to seed the test database",
+  "prompt": "A developer says: 'This test is failing because the plans table is empty. Let me add `Repo.insert!(%Plan{code: \"pro\", name: \"Pro\"})` to the setup block to fix it.' Write `docs/reject_seed.md` as a response explaining why this is wrong. Must mention: (1) test DB is rolled back per test (2) the real fix is in the test's own insert path (3) this creates unique-constraint collisions with other async tests.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/reject_seed.md"],
+    "must_contain": [
+      "rolled back",
+      "unique",
+      "insert path",
+      "do not"
+    ],
+    "must_not_contain": [
+      "add Repo.insert"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "async-test-safety-rules"],
+    "criterion": "reject_seed_fix",
+    "weight": 0.6
+  },
+  "tier_rationale": "Named BoothIQ anti-pattern. Sonnet produces the rejection when prompted with explicit anti-pattern.",
+  "research_citation": "\"I've watched Claude try to seed the test database so a test will pass. That's clearly wrong.\" — BoothIQ",
+  "calibration": null
+}

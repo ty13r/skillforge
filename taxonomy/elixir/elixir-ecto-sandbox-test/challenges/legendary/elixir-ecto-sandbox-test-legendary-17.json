@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-17",
+  "tier": "legendary",
+  "title": "Channel test failure under multi-socket fan-out",
+  "prompt": "Write `docs/multi_socket_channel_debug.md` diagnosing: a channel test that joins 3 channels on the same UserSocket connection (`room:lobby`, `room:general`, `room:private`) fails with `DBConnection.OwnershipError` on the second `join/3`. The allow_ecto_sandbox call is correctly placed at the start of each join. Must explain: (1) a Phoenix socket can host multiple channel PROCESSES on a single connection, (2) each channel process is a SEPARATE pid and needs its own sandbox allowance, (3) the UserSocket's `connect/3` stores the metadata in socket.assigns, but each channel's join/3 re-reads that assign and calls allow/2 on the CURRENT channel process, (4) the test must subscribe_and_join each channel with a freshly-minted socket OR ensure the metadata in socket.assigns is correctly propagated to each new channel process. Provide a fix: use `Phoenix.Channel.Server.socket/1` helper or pass explicit metadata in join params.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/multi_socket_channel_debug.md"],
+    "must_contain": [
+      "channel process",
+      "separate pid",
+      "allow/2",
+      "subscribe_and_join",
+      "metadata"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "multi_channel_debug",
+    "weight": 0.8
+  },
+  "tier_rationale": "Multi-channel lifecycle + sandbox — rarely documented in one place.",
+  "calibration": null
+}

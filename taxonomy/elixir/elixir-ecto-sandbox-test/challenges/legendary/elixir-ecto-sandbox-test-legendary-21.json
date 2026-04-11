@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-21",
+  "tier": "legendary",
+  "title": "Write a CLAUDE.md rule that forbids ALL Tidewave-based test reasoning",
+  "prompt": "Write `.claude/CLAUDE.md` with a section 'Test Failure Debugging: Tidewave Prohibition' that contains 5 ABSOLUTE rules: (1) NEVER query Tidewave MCP (or any DB MCP tool) to reason about test failures, (2) NEVER use Tidewave output to fabricate expected test state, (3) NEVER add `Repo.insert!` or similar seed data to test setup based on observed dev state, (4) ALWAYS start test debugging by reading the test's own insert/create path, (5) ALWAYS assume the test DB is in whatever state the test itself created it in — even if your database tool shows otherwise. Must include the word 'NEVER' at least 3 times and 'ALWAYS' at least 2 times. Must reject any softening language like 'usually' or 'generally'.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [".claude/CLAUDE.md"],
+    "must_contain": [
+      "NEVER",
+      "ALWAYS",
+      "Tidewave",
+      "test DB",
+      "dev",
+      "Repo.insert"
+    ],
+    "must_not_contain": [
+      "usually",
+      "generally"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "absolute_rules",
+    "weight": 0.85
+  },
+  "tier_rationale": "Absolutism test — Claude must NOT soften the rules even when it would naturally want to.",
+  "calibration": null
+}

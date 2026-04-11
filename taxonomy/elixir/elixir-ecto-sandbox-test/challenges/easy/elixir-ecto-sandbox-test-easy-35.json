@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-35",
+  "tier": "easy",
+  "title": "Replace Process.sleep with assert_receive",
+  "prompt": "Rewrite a test snippet at `test/my_app/worker_test.exs` that currently uses `Process.sleep(200)` to wait for a background worker to finish. Replace the sleep with `assert_receive({:worker_done, _result}, 1_000)` — the worker is assumed to send the calling process a `{:worker_done, result}` message on completion. Remove the Process.sleep entirely.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/worker_test.exs"],
+    "must_contain": [
+      "assert_receive({:worker_done"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "no_process_sleep",
+    "weight": 0.6
+  },
+  "tier_rationale": "Iron Law pattern swap. Named in the plugin's iron-law catalog as a top Claude failure.",
+  "research_citation": "\"No Process.sleep\" ... \"Use `assert_receive` with timeout for async operations\" — oliver-kriska/claude-elixir-phoenix testing SKILL.md Iron Law",
+  "calibration": null
+}

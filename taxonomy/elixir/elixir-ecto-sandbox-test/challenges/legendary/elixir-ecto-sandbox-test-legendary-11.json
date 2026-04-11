@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-11",
+  "tier": "legendary",
+  "title": "Debug a test that leaks processes via GenStage",
+  "prompt": "Write `docs/genstage_leak_debug.md` diagnosing this scenario: a test uses a GenStage pipeline (producer → consumer) to process events. The test passes alone. Under full suite, the test sometimes fails with `DBConnection.OwnershipError` on the CONSUMER's Repo call. Must explain: (1) GenStage producers and consumers are long-lived processes typically started at application boot, (2) in tests, the consumer is shared across test invocations, (3) when test A calls `checkout/2`, the consumer is granted allowance for A, (4) when test B runs, the consumer is still holding A's stale allowance, (5) fix options: (a) start a test-local GenStage pipeline per test via `start_supervised!`, (b) use `shared` mode with `async: false` for the module, (c) explicitly revoke+re-grant the consumer allowance in setup.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/genstage_leak_debug.md"],
+    "must_contain": [
+      "GenStage",
+      "consumer",
+      "start_supervised!",
+      "allowance",
+      "stale"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["shared-mode-fallback", "flaky-test-diagnosis"],
+    "criterion": "genstage_leak",
+    "weight": 0.85
+  },
+  "tier_rationale": "Niche library interaction — GenStage + sandbox is rarely documented.",
+  "calibration": null
+}

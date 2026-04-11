@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-03",
+  "tier": "medium",
+  "title": "Restore async: true to a test module that was downgraded",
+  "prompt": "A previous agent turn changed `test/my_app/reports_test.exs` from `async: true` to `async: false` claiming 'tests were flaky.' Rewrite the file at `test/my_app/reports_test.exs`: restore `use MyApp.DataCase, async: true`, add a proper sandbox setup hook that uses `Ecto.Adapters.SQL.Sandbox.allow/3` to grant a `Task.Supervisor` child access, and include one test `test \"report counts users\" do ... end` that creates a user and spawns a Task via `Task.Supervisor.async_nolink(MyApp.TaskSupervisor, fn -> MyApp.Reports.count_users() end)` then allows the task pid and awaits the result.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/reports_test.exs"],
+    "must_contain": [
+      "use MyApp.DataCase, async: true",
+      "Task.Supervisor.async_nolink",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["async-test-safety-rules", "allow-pattern-for-spawned-processes"],
+    "criterion": "restore_async_with_allow",
+    "weight": 0.7
+  },
+  "tier_rationale": "Two-part: restore async AND show the proper allow/3 pattern. Tests the reflex to use allow/3 instead of downgrading async.",
+  "research_citation": "\"Claude doesn't understand transaction isolation... It confuses itself and recommends disabling async tests altogether.\" — BoothIQ",
+  "calibration": null
+}

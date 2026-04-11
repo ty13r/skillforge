@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-26",
+  "tier": "legendary",
+  "title": "Debug a flake whose root cause is a Mox global call in a prior module",
+  "prompt": "Write `docs/mox_global_leak.md` for this scenario: `test/my_app/orders_test.exs` passes alone. Under `mix test`, it fails with `Mox.UnexpectedCallError: no expectation defined`. The failing call is `MyApp.PaymentClient.charge/1`. The module is `async: true`. The culprit is that `test/my_app/reports_test.exs` (earlier in the run) calls `Mox.set_mox_global/0` to share expectations across processes — this silently poisons later async tests. Must explain: (1) `Mox.set_mox_global/0` affects the entire Mox process registry, (2) it persists across tests and even across modules, (3) an async test later runs and Mox's global mode is still set, (4) the test's OWN expectations are not found because Mox looks in the wrong place, (5) fix: never call `set_mox_global` in an async-true suite — use `set_mox_private(self())` instead.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/mox_global_leak.md"],
+    "must_contain": [
+      "Mox",
+      "set_mox_global",
+      "set_mox_private",
+      "async: true",
+      "persist",
+      "global"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "mox_global_leak",
+    "weight": 0.85
+  },
+  "tier_rationale": "Cross-module Mox state leak — subtle and often misdiagnosed as sandbox issue.",
+  "calibration": null
+}

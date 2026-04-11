@@ -1,0 +1,85 @@
+{
+  "family_slug": "elixir-ecto-sandbox-test",
+  "generation": 0,
+  "foundation_variants": [
+    {
+      "slug": "test-isolation-philosophy--per-test-transaction",
+      "dimension": "test-isolation-philosophy",
+      "name": "Per-Test Transaction Isolation",
+      "description": "Every test runs in its own transaction, rolled back at teardown. Async tests get exclusive connections; sync tests fall back to shared mode via `shared: not tags[:async]`. The Ecto sandbox is the source of truth for test DB state.",
+      "skill_md": "---\nname: test-isolation-philosophy--per-test-transaction\ndescription: Enforces per-test transaction isolation via Ecto.Adapters.SQL.Sandbox.start_owner! with the canonical shared: not tags[:async] pattern. Use when writing Phoenix/Elixir test case templates, debugging test bleed, or diagnosing flaky tests that pass alone but fail in the suite. NOT for production DB connection pooling — this is test-only.\n---\n\n# Per-Test Transaction Isolation\n\n## Quick Start\nEvery Ecto test opens a sandboxed transaction that is rolled back on exit. The case template is the seam where this gets wired up.\n\n## When to use\n- Writing `MyApp.DataCase` or any custom case template\n- Debugging \"passes alone, fails in suite\" bugs\n- Fixing tests that leak state across runs\n- Reviewing PRs that touch test setup\n\n## Workflow\n1. Use `Ecto.Adapters.SQL.Sandbox.start_owner!(MyApp.Repo, shared: not tags[:async])`\n2. Register `on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)`\n3. Keep `async: true` on tests that can run concurrently\n4. For spawned processes, call `Sandbox.allow/3` BEFORE spawning\n\n## Examples\n```elixir\ndefmodule MyApp.DataCase do\n  use ExUnit.CaseTemplate\n\n  setup tags do\n    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(MyApp.Repo, shared: not tags[:async])\n    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)\n    :ok\n  end\nend\n```\n\n## Common mistakes\n- Using `Sandbox.mode(Repo, :auto)` in test code (breaks isolation)\n- Setting `async: false` to mask an ownership bug\n- Seeding the dev DB \"so tests have data\"\n"
+    }
+  ],
+  "capability_variants": [
+    {
+      "slug": "sandbox-checkout-and-modes--explicit-owner",
+      "dimension": "sandbox-checkout-and-modes",
+      "name": "Explicit Owner Lifecycle",
+      "description": "Uses start_owner!/stop_owner explicitly rather than the legacy checkout/checkin pair. Distinguishes :manual (default), :shared, and avoids :auto entirely in test contexts.",
+      "skill_md": "---\nname: sandbox-checkout-and-modes--explicit-owner\ndescription: Ecto sandbox checkout and mode selection for test isolation. Use when configuring MyApp.DataCase, deciding between :manual and :shared mode, or reviewing test setup for correctness. NOT for production DB pools.\n---\n\n# Explicit Owner Lifecycle\n\n## Quick Start\n`start_owner!/2` replaces the legacy `checkout/2`. Always pair with `stop_owner/1`.\n\n## Workflow\n1. In setup: `pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Repo, shared: not tags[:async])`\n2. Register teardown: `on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)`\n3. Mode: `:manual` is default; `:shared` only when needed (sync tests); NEVER `:auto`\n\n## Common mistakes\n- Using `Sandbox.mode(:auto)` in test code\n- Forgetting `stop_owner` in on_exit\n"
+    },
+    {
+      "slug": "async-test-safety-rules--shared-on-sync",
+      "dimension": "async-test-safety-rules",
+      "name": "Shared Mode Only On Sync Tests",
+      "description": "Tests with `async: true` get exclusive connections; sync tests fall back to shared mode. The `shared: not tags[:async]` option is the canonical dispatcher.",
+      "skill_md": "---\nname: async-test-safety-rules--shared-on-sync\ndescription: Decides when async: true is safe and when shared mode is required. Use when writing new tests or debugging suite-level flakiness. NOT for production.\n---\n\n# Shared Mode Only On Sync Tests\n\n## Quick Start\nAsync-safe tests run in exclusive connections. Sync tests share one. The `shared: not tags[:async]` option handles both.\n\n## Workflow\n1. Default to `async: true` unless you have a specific reason not to\n2. Mark tests `async: false` ONLY when they use real GenServers, mox with global mode, or other shared state\n3. Never use `async: false` to mask an ownership bug\n"
+    },
+    {
+      "slug": "allow-pattern-for-spawned-processes--explicit-transfer",
+      "dimension": "allow-pattern-for-spawned-processes",
+      "name": "Explicit Connection Transfer",
+      "description": "Uses `Sandbox.allow/3` to transfer the test's connection ownership to a spawned Task or process BEFORE the spawn happens.",
+      "skill_md": "---\nname: allow-pattern-for-spawned-processes--explicit-transfer\ndescription: Uses Ecto.Adapters.SQL.Sandbox.allow/3 to give spawned processes access to the test's sandboxed connection. Use when testing code that spawns Tasks, GenServers, or background processes that need DB access.\n---\n\n# Explicit Connection Transfer\n\n## Quick Start\nBefore spawning a process that needs DB access, call `Sandbox.allow/3` to transfer ownership.\n\n## Workflow\n1. Capture the parent pid in setup\n2. Spawn with a call to `Ecto.Adapters.SQL.Sandbox.allow(Repo, parent, child)`\n3. Do this BEFORE the child does any DB work\n\n## Example\n```elixir\nparent = self()\nchild = Task.async(fn ->\n  Ecto.Adapters.SQL.Sandbox.allow(Repo, parent, self())\n  Repo.insert!(%User{name: \"test\"})\nend)\nTask.await(child)\n```\n"
+    },
+    {
+      "slug": "connection-ownership-transfer--no-sleep",
+      "dimension": "connection-ownership-transfer",
+      "name": "Explicit Transfer, No Sleep",
+      "description": "Transfers ownership explicitly via allow/3; never uses Process.sleep to 'wait for' an invisible transfer.",
+      "skill_md": "---\nname: connection-ownership-transfer--no-sleep\ndescription: Transfers Ecto sandbox connection ownership between processes explicitly. Avoids Process.sleep workarounds.\n---\n\n# Explicit Transfer, No Sleep\n\n## Quick Start\nOwnership transfer is synchronous — it happens in the call to `allow/3`. No sleep needed.\n\n## Workflow\n1. Transfer ownership via `Sandbox.allow/3`\n2. Proceed with DB operations immediately\n3. Handle owner death gracefully (the connection dies with the owner)\n"
+    },
+    {
+      "slug": "liveview-sandbox-integration--phoenix-plug",
+      "dimension": "liveview-sandbox-integration",
+      "name": "Phoenix.Ecto.SQL.Sandbox Plug",
+      "description": "Uses the Phoenix.Ecto.SQL.Sandbox plug in the endpoint to share sandbox ownership with LiveView processes via HTTP headers.",
+      "skill_md": "---\nname: liveview-sandbox-integration--phoenix-plug\ndescription: Configures Phoenix.Ecto.SQL.Sandbox plug so LiveViewTest can share sandbox ownership. Use when writing LiveView tests.\n---\n\n# Phoenix.Ecto.SQL.Sandbox Plug\n\n## Quick Start\nLiveView runs in its own process. The sandbox plug shares ownership via a header set by `Phoenix.Ecto.SQL.Sandbox.metadata_for/2`.\n\n## Workflow\n1. Add `Phoenix.Ecto.SQL.Sandbox` plug to the endpoint\n2. In Conn tests, set the header using `Sandbox.metadata_for/2`\n3. LiveViewTest automatically honors the metadata\n"
+    },
+    {
+      "slug": "channels-sandbox-integration--allow-on-channel",
+      "dimension": "channels-sandbox-integration",
+      "name": "Allow On Channel Process",
+      "description": "Calls Sandbox.allow/3 with the channel process pid so channel handlers can access the test's sandbox.",
+      "skill_md": "---\nname: channels-sandbox-integration--allow-on-channel\ndescription: Transfers sandbox ownership to Phoenix channel processes in tests.\n---\n\n# Allow On Channel Process\n\n## Quick Start\nChannels run in their own process. Call `Sandbox.allow/3` with the channel pid in your ChannelCase setup.\n\n## Workflow\n1. Use `Phoenix.ChannelCase`\n2. After subscribing/joining, call `Sandbox.allow(Repo, parent, channel_pid)`\n3. Proceed with DB operations\n"
+    },
+    {
+      "slug": "oban-sandbox-integration--perform-job",
+      "dimension": "oban-sandbox-integration",
+      "name": "perform_job In Sandbox",
+      "description": "Uses `perform_job/3` from `Oban.Testing` to execute workers synchronously in-process. Never uses `drain_queue` inside a sandbox test (won't see uncommitted data).",
+      "skill_md": "---\nname: oban-sandbox-integration--perform-job\ndescription: Tests Oban workers synchronously via perform_job/3 so they can see sandboxed data. NOT for integration tests with real queue.\n---\n\n# perform_job In Sandbox\n\n## Quick Start\n`perform_job/3` runs the worker in the test process, which sees the sandbox data. `drain_queue` runs in a different process, which does NOT.\n\n## Workflow\n1. `use Oban.Testing, repo: MyApp.Repo`\n2. Call `perform_job(Worker, %{\"key\" => val})` with string-keyed args\n3. Never use `Oban.drain_queue/1` in sandbox tests\n"
+    },
+    {
+      "slug": "tidewave-dev-vs-test-trap--explicit-ownership",
+      "dimension": "tidewave-dev-vs-test-trap",
+      "name": "Explicit Test Ownership",
+      "description": "Never reads from the dev DB in test context. The sandboxed connection is the source of truth. Tidewave's dev DB connection is separate.",
+      "skill_md": "---\nname: tidewave-dev-vs-test-trap--explicit-ownership\ndescription: Prevents the Tidewave dev-vs-test DB confusion. Explicit sandbox ownership, never fall back to seeding the dev DB.\n---\n\n# Explicit Test Ownership\n\n## Quick Start\nThe sandboxed Repo in tests is a separate connection from Tidewave's dev Repo. Don't conflate them.\n\n## Common mistakes\n- Seeding the dev DB \"so tests can see data\"\n- Trying to read test results via Tidewave's dev connection\n- Assuming Repo in tests and Repo in dev share state\n"
+    },
+    {
+      "slug": "shared-mode-fallback--justified",
+      "dimension": "shared-mode-fallback",
+      "name": "Justified Shared Mode",
+      "description": "Only uses {:shared, self()} mode when per-process isolation truly breaks down. Documents the justification in a comment.",
+      "skill_md": "---\nname: shared-mode-fallback--justified\ndescription: Uses shared mode as a documented fallback when per-process isolation is not viable. Not a default.\n---\n\n# Justified Shared Mode\n\n## Quick Start\nShared mode means every process sees the same sandboxed connection. It's a fallback, not a default.\n\n## Workflow\n1. Default to per-process isolation\n2. If you MUST use shared mode, call `Sandbox.mode(Repo, {:shared, self()})` in setup\n3. Add a comment explaining why (e.g., \"GenServer under test writes via a different process we can't allow/3\")\n"
+    },
+    {
+      "slug": "flaky-test-diagnosis--root-cause",
+      "dimension": "flaky-test-diagnosis",
+      "name": "Root Cause Fix, Not Sleep",
+      "description": "Diagnoses flaky tests by finding the ownership bug (missing allow/3, wrong mode, uncontrolled concurrency), not by adding Process.sleep.",
+      "skill_md": "---\nname: flaky-test-diagnosis--root-cause\ndescription: Diagnoses 'passes alone, fails in suite' bugs as ownership issues. Never uses Process.sleep as a fix.\n---\n\n# Root Cause Fix, Not Sleep\n\n## Quick Start\nFlaky tests usually mean an ownership bug: a spawned process doing DB work without allow/3, or wrong mode selection.\n\n## Workflow\n1. Reproduce alone → passes (confirms not a logic bug)\n2. Reproduce in suite → fails (confirms interaction)\n3. Look for spawned processes without allow/3\n4. Look for shared mode leaks\n5. Never add Process.sleep\n"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-05",
+  "tier": "legendary",
+  "title": "Explain why pool_size=1 causes tests to deadlock under async",
+  "prompt": "A project's `config/test.exs` has `pool_size: 1`. When tests run `async: true`, they deadlock after ~10 seconds with `:timeout` errors from `DBConnection`. Write `docs/pool_size_deadlock.md` explaining: (1) the sandbox uses the repo's connection pool, (2) with pool_size: 1, only ONE connection exists, (3) under async mode, each concurrent test tries to check out THE connection — but it's held by the first test that grabbed it, (4) subsequent tests queue indefinitely, (5) fix: set `pool_size` to at least the number of ExUnit async workers (default 2*System.schedulers_online) and use `start_owner!/2` per-test for exclusive checkouts.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/pool_size_deadlock.md"],
+    "must_contain": [
+      "pool_size",
+      "connection pool",
+      "async",
+      "deadlock",
+      "schedulers_online",
+      "start_owner!"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "pool_size_explained",
+    "weight": 0.8
+  },
+  "tier_rationale": "Obscure configuration interaction — requires synthesizing pool, sandbox, and ExUnit concurrency.",
+  "calibration": null
+}

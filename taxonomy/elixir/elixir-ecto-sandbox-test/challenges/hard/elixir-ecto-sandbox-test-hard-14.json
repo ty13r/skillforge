@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-14",
+  "tier": "hard",
+  "title": "Fix async: true + mode(:shared) contradiction while preserving concurrency",
+  "prompt": "The fixture at `test_fixtures/async_shared_contradiction.ex` has `use MyApp.DataCase, async: true` AND calls `mode(MyApp.Repo, {:shared, self()})`. This is a self-contradiction. Rewrite to `test/my_app/report_generator_test.exs`: remove the entire setup block's mode(:shared) call (keep `async: true`), and also do NOT re-add `mode(:shared)` or `async: false`. The DataCase template handles sandbox setup via `start_owner!` automatically. The module must keep `async: true` and have no sandbox function calls in its own setup.",
+  "fixture_files": ["test_fixtures/async_shared_contradiction.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/report_generator_test.exs"],
+    "must_contain": [
+      "async: true",
+      "defmodule MyApp.ReportGeneratorTest"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared",
+      "async: false",
+      "Ecto.Adapters.SQL.Sandbox.checkout"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["shared-mode-fallback", "test-isolation-philosophy"],
+    "criterion": "strip_sandbox_overrides",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires recognizing that the DataCase already handles setup and removing the redundant/contradictory override.",
+  "calibration": null
+}

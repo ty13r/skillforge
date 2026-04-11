@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-02",
+  "tier": "hard",
+  "title": "Explain rollback semantics to debug a sandbox-confused prior turn",
+  "prompt": "Write `docs/rollback_explained.md` as an authoritative explanation of Ecto sandbox rollback. The document must: (1) define 'transaction rollback' with reference to the SQL BEGIN...ROLLBACK semantics, (2) explain that each test runs inside `transaction do ... raise :rollback end`, (3) explain that the sandbox does NOT clean up by DELETE statements — it uses rollback, (4) explain that the 'test DB' is a normal Postgres DB that is wrapped in a single transaction for each test, (5) state explicitly: 'the test database is never empty — it's just inside a rolled-back transaction'. Must be precise about the difference between 'the DB is empty' and 'the transaction is rolled back'.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/rollback_explained.md"],
+    "must_contain": [
+      "rollback",
+      "transaction",
+      "BEGIN",
+      "sandbox",
+      "never empty",
+      "inside a rolled-back"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["tidewave-dev-vs-test-trap"],
+    "criterion": "rollback_semantics",
+    "weight": 0.8
+  },
+  "tier_rationale": "Precise conceptual explanation — Claude often mixes up 'empty DB' with 'rolled-back transaction'.",
+  "research_citation": "\"In Elixir tests, each test runs in a database transaction that rolls back at the end.\" — BoothIQ",
+  "calibration": null
+}

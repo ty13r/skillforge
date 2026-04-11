@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-19",
+  "tier": "hard",
+  "title": "Pair on_exit with per-test state cleanup without DB writes",
+  "prompt": "A test needs to clean up an ETS table at test exit. Write `test/my_app/cache_table_test.exs` that: (1) is `async: true`, (2) creates a unique ETS table in setup using `:ets.new(make_ref(), [:public, :named_table])` — use the ref-based name for uniqueness, (3) uses `on_exit(fn -> :ets.delete(table_name) end)` — ETS delete is safe in on_exit because it doesn't touch the sandbox, (4) includes a test that uses the table. Do NOT do any Repo calls in on_exit.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/cache_table_test.exs"],
+    "must_contain": [
+      "async: true",
+      ":ets.new",
+      "on_exit",
+      ":ets.delete"
+    ],
+    "must_not_contain": [
+      "Repo.delete",
+      "Repo.insert"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "on_exit_safe_cleanup",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires understanding when on_exit IS safe (non-DB cleanup) vs not.",
+  "calibration": null
+}

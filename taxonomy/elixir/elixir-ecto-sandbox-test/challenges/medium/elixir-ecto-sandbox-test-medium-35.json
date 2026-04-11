@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-35",
+  "tier": "medium",
+  "title": "Write CLAUDE.md boundary rules for Tidewave usage",
+  "prompt": "Write `.claude/CLAUDE.md` (relative to project root) with a section titled 'Tidewave Boundary Rules' that states: (1) Tidewave MCP is for DEV database only, (2) NEVER use Tidewave output to reason about test failures, (3) NEVER add seed data to test setup to 'match' dev state, (4) when a test asserts on missing data, look at the test's own insert path first. Include a one-line 'Use when' and 'Do not use when' section.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [".claude/CLAUDE.md"],
+    "must_contain": [
+      "Tidewave",
+      "Dev",
+      "never",
+      "test failures",
+      "seed data"
+    ],
+    "must_not_contain": [
+      "Tidewave is safe to use in test context"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": [],
+    "criterion": "tidewave_guardrails",
+    "weight": 0.5
+  },
+  "tier_rationale": "Guardrail writing — Claude must produce restrictive language about a tool it might otherwise want to use.",
+  "research_citation": "\"Never use Tidewave tools in production contexts.\" — oliver-kriska tidewave-integration SKILL.md",
+  "calibration": null
+}

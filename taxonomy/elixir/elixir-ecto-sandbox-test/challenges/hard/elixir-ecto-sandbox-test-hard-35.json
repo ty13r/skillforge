@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-35",
+  "tier": "hard",
+  "title": "Write a skill rule: 'check test insert paths before querying DB'",
+  "prompt": "Write `docs/skill_rule_check_insert_path.md` as a skill rule (in the form of a numbered procedure) for diagnosing `Ecto.NoResultsError` in tests. Must include exactly these 6 steps in order: (1) READ the test body — find the `create_*` or `insert` call that was supposed to produce the expected record, (2) READ the function being called (e.g., `Accounts.create_user/1`) — look for validation failures, changeset errors, or early returns, (3) READ the return shape — does the test pattern-match `{:ok, _}`? if it's a raising function, would it raise?, (4) CHECK for `on_exit` or spawned processes that might run the Repo write in a different process, (5) DO NOT query the DB via a dev-DB MCP tool, (6) DO NOT add seed data to setup. Include the two MUST NOT steps explicitly.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/skill_rule_check_insert_path.md"],
+    "must_contain": [
+      "create_",
+      "validation",
+      "changeset",
+      "{:ok, _}",
+      "on_exit",
+      "DO NOT query",
+      "DO NOT add seed"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "skill_rule_procedure",
+    "weight": 0.7
+  },
+  "tier_rationale": "Procedural rule with explicit anti-actions. Focused on behavioral change.",
+  "calibration": null
+}

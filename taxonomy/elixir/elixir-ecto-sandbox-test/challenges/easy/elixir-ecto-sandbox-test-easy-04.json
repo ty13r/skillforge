@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-04",
+  "tier": "easy",
+  "title": "Write a minimal setup block that checks out the sandbox in manual mode",
+  "prompt": "Write the body of a `setup` block for a DataCase template that checks out the sandbox from `MyApp.Repo` using `Ecto.Adapters.SQL.Sandbox.checkout/2` and returns `:ok`. Place this in `test/support/data_case.ex` inside a `defmodule MyApp.DataCase do ... end` module that uses `ExUnit.CaseTemplate`. The setup must call `checkout` (not `start_owner!`) and must return `:ok`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "defmodule MyApp.DataCase",
+      "use ExUnit.CaseTemplate",
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)",
+      "setup",
+      ":ok"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, :auto)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "manual_checkout",
+    "weight": 0.5
+  },
+  "tier_rationale": "Single function call with fixed signature. Sonnet one-shots this.",
+  "calibration": null
+}

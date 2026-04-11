@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-13",
+  "tier": "medium",
+  "title": "Add allow/3 to a Task.Supervisor.async_stream consumer",
+  "prompt": "Write a test at `test/my_app/batch_processor_test.exs` that uses `Task.Supervisor.async_stream_nolink(MyApp.TaskSupervisor, [1,2,3], fn id -> MyApp.Reports.fetch_report(id) end)` and reduces the stream into a list. Before consuming the stream, grant allowance to every child task. Pattern: use the stream's `max_concurrency: 1` option and allow the task's pid as it is created. Include `use MyApp.DataCase, async: true`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/batch_processor_test.exs"],
+    "must_contain": [
+      "Task.Supervisor.async_stream_nolink",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["connection-ownership-transfer", "async-test-safety-rules"],
+    "criterion": "async_stream_allowance",
+    "weight": 0.6
+  },
+  "tier_rationale": "async_stream is a well-known pattern; the discriminator is allowing children that don't exist until stream enumeration.",
+  "calibration": null
+}

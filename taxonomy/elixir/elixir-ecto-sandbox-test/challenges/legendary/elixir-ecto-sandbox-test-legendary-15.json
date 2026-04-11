@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-15",
+  "tier": "legendary",
+  "title": "Reconcile Phoenix.LiveViewTest + sandbox + real assign_async tasks",
+  "prompt": "Write `docs/liveview_assign_async_sandbox.md` explaining the complete flow of how a sandbox allowance reaches an `assign_async` task. Must include: (1) test process checks out sandbox → sandbox GenServer records the owner, (2) test calls `Plug.Test.init_test_session` + `get \"/users\"`, (3) the conn includes the Phoenix.Ecto.SQL.Sandbox metadata in the response headers, (4) the subsequent `live(conn, ~p\"/users\")` establishes the LV socket with `:user_agent` connect_info, (5) on_mount(:sandbox) calls `Phoenix.Ecto.SQL.Sandbox.allow(metadata, adapter)`, (6) the LV process is now an allowed process, (7) `assign_async` spawns a Task VIA Task.async (NOT Task.Supervisor.async_nolink) which inherits `$callers` including the LV process, (8) the task's Repo call uses the LV process's allowance chain back to the test. Must explain why `Task.Supervisor.async_nolink` would BREAK the chain.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/liveview_assign_async_sandbox.md"],
+    "must_contain": [
+      "on_mount(:sandbox)",
+      "metadata",
+      ":user_agent",
+      "$callers",
+      "Task.async",
+      "Task.Supervisor.async_nolink",
+      "allowance chain"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "connection-ownership-transfer"],
+    "criterion": "end_to_end_flow",
+    "weight": 0.9
+  },
+  "tier_rationale": "End-to-end flow explanation across 8 steps. Requires synthesizing every piece of the integration.",
+  "calibration": null
+}

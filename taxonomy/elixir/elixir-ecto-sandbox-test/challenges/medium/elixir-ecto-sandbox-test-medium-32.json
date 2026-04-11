@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-32",
+  "tier": "medium",
+  "title": "Write an Oban worker test that uses perform_job with setup data",
+  "prompt": "Write `test/my_app/workers/user_notification_worker_test.exs` that: (1) `use MyApp.DataCase, async: true`, (2) `use Oban.Testing, repo: MyApp.Repo`, (3) creates a user in the test via `Accounts.create_user/1`, (4) calls `assert :ok = perform_job(MyApp.Workers.UserNotificationWorker, %{\"user_id\" => user.id})`, (5) asserts a downstream effect (e.g., `Notifications.count_for(user.id) == 1`). The key point: `perform_job` runs in the test process, so it sees the sandbox data.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/user_notification_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job(MyApp.Workers.UserNotificationWorker",
+      "async: true",
+      "\"user_id\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "perform_job_sees_sandbox",
+    "weight": 0.6
+  },
+  "tier_rationale": "Pattern combining DataCase + Oban.Testing + string-keyed args.",
+  "calibration": null
+}

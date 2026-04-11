@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-33",
+  "tier": "hard",
+  "title": "Document the Oban-Sandbox commit visibility trap",
+  "prompt": "Write `docs/oban_sandbox_commit_trap.md` explaining why an Oban test that inserts a real job via `Oban.insert/1` and then calls `Oban.drain_queue/1` NEVER finds the job. Must explain: (1) the test process owns a sandbox transaction that is rolled back at the end, (2) `Oban.insert/1` inserts the job INSIDE the test's transaction (not committed), (3) `Oban.drain_queue/1` runs in a DIFFERENT process (the Oban queue worker), (4) that worker reads from the DB OUTSIDE the test's transaction, so it sees zero committed jobs, (5) fix: use `testing: :manual` + `perform_job/3` instead.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/oban_sandbox_commit_trap.md"],
+    "must_contain": [
+      "Oban.insert",
+      "Oban.drain_queue",
+      "sandbox transaction",
+      "rolled back",
+      "perform_job",
+      "committed"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "commit_trap_explained",
+    "weight": 0.7
+  },
+  "tier_rationale": "Deep explanation of commit-visibility semantics — two processes with separate views.",
+  "research_citation": "\"Sandbox transactions never commit. If they never commit, then the rows are never visible to other processes, and that means they are never visible to Oban.\" — Elixir Forum, benwilson512",
+  "calibration": null
+}

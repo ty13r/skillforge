@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-28",
+  "tier": "medium",
+  "title": "Fix a channel that calls allow after its first Repo query",
+  "prompt": "Write a Phoenix channel at `lib/my_app_web/channels/game_channel.ex` that handles `join(\"game:\" <> game_id, _params, socket)`. The allow call MUST occur BEFORE the `Games.get_game!(game_id)` call — place the allow line as the first line of the join body, then the Repo query.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/game_channel.ex"],
+    "must_contain": [
+      "def join(\"game:\" <> game_id",
+      "Phoenix.Ecto.SQL.Sandbox.allow",
+      "Games.get_game!(game_id)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "allow_before_query",
+    "weight": 0.6
+  },
+  "tier_rationale": "Ordering — the allow call must precede any Repo access.",
+  "calibration": null
+}

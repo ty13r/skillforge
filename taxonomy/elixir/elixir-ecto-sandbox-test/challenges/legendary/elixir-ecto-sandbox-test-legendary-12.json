@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-12",
+  "tier": "legendary",
+  "title": "Pass ownership to a long-lived test orchestrator",
+  "prompt": "Write `test/my_app/integration/multi_step_test.exs` for an integration test that must execute 3 phases: (1) setup DB state in the test process, (2) hand off ownership to a test orchestrator GenServer that runs 5 async steps, each checking out the DB, (3) hand ownership back to the test for final assertions. Use `Ecto.Adapters.SQL.Sandbox.checkin/1` and `start_owner!/2` to transfer ownership. Must `async: false` because of the hand-off. Include the orchestrator module `MyApp.TestOrchestrator` with a `run/1` function that accepts the owner pid.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/integration/multi_step_test.exs"],
+    "must_contain": [
+      "async: false",
+      "Ecto.Adapters.SQL.Sandbox.checkin",
+      "Ecto.Adapters.SQL.Sandbox.start_owner!",
+      "MyApp.TestOrchestrator"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["sandbox-checkout-and-modes"],
+    "criterion": "ownership_handoff",
+    "weight": 0.8
+  },
+  "tier_rationale": "Ownership transfer across three phases — obscure but real pattern.",
+  "calibration": null
+}

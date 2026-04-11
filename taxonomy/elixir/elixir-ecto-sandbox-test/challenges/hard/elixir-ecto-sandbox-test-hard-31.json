@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-31",
+  "tier": "hard",
+  "title": "Test Oban unique jobs with the sandbox's rollback semantics",
+  "prompt": "Write `test/my_app/unique_job_test.exs` that verifies Oban's `unique` constraint works correctly. The worker `MyApp.Workers.EmailWorker` is declared `use Oban.Worker, queue: :mailers, unique: [period: 60]`. The test must: (1) insert an Oban job with args `%{\"email\" => \"a@example.com\"}`, (2) immediately try to insert the SAME args — should return `{:ok, %Job{conflict?: true}}` per Oban's unique semantics, (3) `assert_enqueued` shows only 1 job. Use `testing: :manual` mode (inherits from config).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/unique_job_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "conflict?",
+      "assert_enqueued"
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "unique_job_test",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires knowing Oban unique constraint return shape in sandboxed test context.",
+  "calibration": null
+}

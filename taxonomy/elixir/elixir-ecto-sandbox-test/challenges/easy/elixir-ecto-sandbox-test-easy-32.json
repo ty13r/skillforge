@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-32",
+  "tier": "easy",
+  "title": "Mark a shared-mode module async: false",
+  "prompt": "A test module at `test/my_app/integration/full_stack_test.exs` needs to use `Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})` because it spans a Registry process that can't accept allowances. Write the opening of the module: declare `use MyApp.DataCase, async: false` (NOT async: true), and add a single-line comment explaining why.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/integration/full_stack_test.exs"],
+    "must_contain": [
+      "use MyApp.DataCase, async: false",
+      "shared",
+      "Registry"
+    ],
+    "must_not_contain": [
+      "async: true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "shared_mode_async_false",
+    "weight": 0.5
+  },
+  "tier_rationale": "Direct application of the 'shared mode requires async: false' rule.",
+  "research_citation": "\"If a test sets the Ecto.Adapters.SQL.Sandbox to :shared mode, never run it asynchronously\" — AppSignal",
+  "calibration": null
+}

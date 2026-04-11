@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-10",
+  "tier": "easy",
+  "title": "Write a reference doc listing which tests CAN be async",
+  "prompt": "Write `docs/async_rules.md` listing which kinds of tests are safe to mark `async: true` and which must be `async: false`. The doc must state: (1) tests with exclusive sandbox connections (allow/3) can be async, (2) tests that use `mode(:shared)` must be `async: false`, (3) tests that write to `Application.put_env/3` or ETS must be `async: false`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/async_rules.md"],
+    "must_contain": [
+      "async: true",
+      "async: false",
+      "allow/3",
+      "mode(:shared)",
+      "Application.put_env"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["shared-mode-fallback"],
+    "criterion": "async_taxonomy",
+    "weight": 0.5
+  },
+  "tier_rationale": "Reference-doc writing. Sonnet produces this reliably when given the exact list of points to cover.",
+  "research_citation": "\"If a test sets the Ecto.Adapters.SQL.Sandbox to :shared mode, never run it asynchronously\" — AppSignal: 8 Common Causes of Flaky Tests",
+  "calibration": null
+}

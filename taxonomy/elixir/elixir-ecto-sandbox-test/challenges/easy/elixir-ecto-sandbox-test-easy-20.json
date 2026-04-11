@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-20",
+  "tier": "easy",
+  "title": "Add Phoenix.Ecto.SQL.Sandbox plug to endpoint at the top",
+  "prompt": "Write a complete `lib/my_app_web/endpoint.ex` module that starts with (before ANY other plug) a conditional `if Application.compile_env(:my_app, :sql_sandbox, false), do: plug(Phoenix.Ecto.SQL.Sandbox)` block. Follow with basic session options, socket, and router plugs. Placement order is the whole point of the challenge.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "Phoenix.Ecto.SQL.Sandbox",
+      "Application.compile_env(:my_app, :sql_sandbox",
+      "Phoenix.Endpoint",
+      "plug Plug.Session"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "sandbox_plug_top",
+    "weight": 0.5
+  },
+  "tier_rationale": "Single-file module writing. The tricky part is placement — this challenge discriminates placement heuristically via pattern ordering.",
+  "research_citation": "\"It's important that this is at the top of `endpoint.ex`, before any other plugs.\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

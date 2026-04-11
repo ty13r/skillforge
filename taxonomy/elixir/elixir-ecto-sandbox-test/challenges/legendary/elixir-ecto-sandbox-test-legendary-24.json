@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-24",
+  "tier": "legendary",
+  "title": "Audit 15 shared-mode modules for reclaim potential",
+  "prompt": "Given 15 test modules currently marked `async: false` with `mode(:shared)` setup, write `docs/fifteen_module_audit.md` classifying each. Assume this distribution (representative of a real Phoenix codebase):\n\n- 4 modules: spawn Task.Supervisor children — reclaim via allow/3\n- 3 modules: subscribe to Phoenix.PubSub and receive broadcasts from a Registry-owned publisher — KEEP shared\n- 2 modules: use Cachex with a globally-named table — KEEP shared OR refactor Cachex to per-test\n- 2 modules: use a named GenServer in setup_all — reclaim via start_supervised in setup\n- 2 modules: use Wallaby or similar browser driver — KEEP shared (or use Phoenix.Ecto.SQL.Sandbox plug with browser metadata)\n- 1 module: spans a GenStage pipeline — KEEP shared\n- 1 module: uses an Oban real queue (pre-Oban.Testing) — reclaim via Oban.Testing :manual mode\n\nFor each: state 'reclaim' or 'keep' with the specific technique. Tally the total reclaimable.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/fifteen_module_audit.md"],
+    "must_contain": [
+      "Task.Supervisor",
+      "Phoenix.PubSub",
+      "Cachex",
+      "Wallaby",
+      "GenStage",
+      "Oban.Testing",
+      "allow/3",
+      "start_supervised",
+      "reclaim",
+      "keep"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "oban-sandbox-integration"],
+    "criterion": "fifteen_module_audit",
+    "weight": 0.85
+  },
+  "tier_rationale": "15-way audit — the largest classification task in the family. Requires knowing the full decision tree.",
+  "calibration": null
+}

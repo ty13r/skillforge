@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-27",
+  "tier": "easy",
+  "title": "Write an assert_enqueued test for an Oban worker",
+  "prompt": "Write a test at `test/my_app/reports/report_worker_test.exs` that inserts an Oban job with `MyApp.Reports.ReportWorker.new(%{\"id\" => 42}) |> Oban.insert()` and then asserts the job was enqueued via `assert_enqueued(worker: MyApp.Reports.ReportWorker, args: %{\"id\" => 42})`. Include `use Oban.Testing, repo: MyApp.Repo` and `use MyApp.DataCase, async: true`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/reports/report_worker_test.exs"],
+    "must_contain": [
+      "assert_enqueued(worker: MyApp.Reports.ReportWorker",
+      "use Oban.Testing",
+      "Oban.insert()"
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "assert_enqueued",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical Oban.Testing pattern.",
+  "calibration": null
+}

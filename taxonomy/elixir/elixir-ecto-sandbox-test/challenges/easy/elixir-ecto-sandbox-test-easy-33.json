@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-33",
+  "tier": "easy",
+  "title": "Explain the owner-outlive-dependent constraint of shared mode",
+  "prompt": "Write `docs/shared_mode_constraint.md` explaining why `:shared` mode requires `async: false`. The explanation must mention: (1) shared mode makes one process's connection available to every other process, (2) the owner process must outlive every allowed process, (3) if the owner dies or finishes first, the connection is reclaimed mid-use.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_mode_constraint.md"],
+    "must_contain": [
+      "shared",
+      "owner",
+      "outlive",
+      "async: false"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": [],
+    "criterion": "outlive_constraint_explained",
+    "weight": 0.4
+  },
+  "tier_rationale": "Doc task with named conceptual requirement.",
+  "research_citation": "\"beware that if the test process terminates while the worker is using the connection, the connection will be taken away\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

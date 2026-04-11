@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-27",
+  "tier": "hard",
+  "title": "Multi-channel allowance without double-allow errors",
+  "prompt": "Write `lib/my_app_web/channels/multi_channel.ex` where a user joins two channels sequentially (`room:lobby` then `room:general`). Both channels must have sandbox allowance. Write a shared helper `allow_ecto_sandbox/1` that: (1) extracts metadata from `socket.assigns.phoenix_ecto_sandbox`, (2) calls `Phoenix.Ecto.SQL.Sandbox.allow(metadata, Ecto.Adapters.SQL.Sandbox)`, (3) is idempotent (calling twice does not error). Each channel's `join/3` calls `allow_ecto_sandbox(socket)` as its first line.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/multi_channel.ex"],
+    "must_contain": [
+      "def join(\"room:lobby\"",
+      "def join(\"room:general\"",
+      "allow_ecto_sandbox(socket)",
+      "Phoenix.Ecto.SQL.Sandbox.allow"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "multi_channel_allow",
+    "weight": 0.6
+  },
+  "tier_rationale": "Multi-channel pattern — requires thinking about idempotence of allow.",
+  "calibration": null
+}

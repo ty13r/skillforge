@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-14",
+  "tier": "medium",
+  "title": "Decide whether $callers covers a Task.async call",
+  "prompt": "A test contains: `task = Task.async(fn -> MyApp.Accounts.count_users() end); result = Task.await(task)`. Write `docs/task_async_analysis.md` explaining: (1) whether this test needs an explicit `Ecto.Adapters.SQL.Sandbox.allow/3` call or not, (2) why — must mention the `$callers` process dictionary tracking, (3) that allow/3 is NOT required here because Task.async is a direct child of the test process and $callers propagates. Must state the answer: allow/3 is not required.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/task_async_analysis.md"],
+    "must_contain": [
+      "$callers",
+      "Task.async",
+      "not required"
+    ],
+    "must_not_contain": [
+      "must call allow/3"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "callers_decision",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires knowing the $callers mechanic AND applying it to a specific scenario.",
+  "research_citation": "\"Spawning a task will respect the $callers/$ancestors hierarchy, and find the correct task to use\" — Elixir Forum, ityonemo",
+  "calibration": null
+}

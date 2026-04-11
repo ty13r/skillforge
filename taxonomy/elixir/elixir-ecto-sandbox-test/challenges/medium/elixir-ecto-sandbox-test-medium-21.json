@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-21",
+  "tier": "medium",
+  "title": "Reorder on_mount hooks so sandbox runs before auth",
+  "prompt": "The fixture at `test_fixtures/liveview_no_on_mount.ex` is a router `live_session :authenticated` with `on_mount: [{MyAppWeb.UserAuth, :mount_current_user}]`. The auth hook queries the DB and fails in tests because the sandbox hook is missing. Rewrite `lib/my_app_web/router.ex`: add the sandbox hook BEFORE the auth hook as `on_mount: [{MyAppWeb.UserAuth, :sandbox}, {MyAppWeb.UserAuth, :mount_current_user}]`. Order matters.",
+  "fixture_files": ["test_fixtures/liveview_no_on_mount.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "on_mount: [{MyAppWeb.UserAuth, :sandbox}, {MyAppWeb.UserAuth, :mount_current_user}]"
+    ],
+    "must_not_contain": [
+      "on_mount: [{MyAppWeb.UserAuth, :mount_current_user}, {MyAppWeb.UserAuth, :sandbox}]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "sandbox_hook_ordering",
+    "weight": 0.7
+  },
+  "tier_rationale": "Order matters — named pitfall in the phoenix_ecto docs. Sonnet sometimes puts sandbox last.",
+  "research_citation": "\"If you have other `on_mount` hooks in `live_session` defined in your router (such as authentication hooks), make sure the sandbox acceptance hook runs first\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

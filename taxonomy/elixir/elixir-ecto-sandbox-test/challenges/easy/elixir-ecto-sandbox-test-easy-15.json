@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-15",
+  "tier": "easy",
+  "title": "Use Task.Supervisor to tie worker lifetime to the test",
+  "prompt": "Rewrite a test snippet that currently uses `Task.start/1` to spawn an unsupervised task to use `Task.Supervisor.async/2` under `MyApp.TaskSupervisor` so the task's lifetime is tied to the test process. Write the test in `test/my_app/ownership_test.exs`. Use `Task.Supervisor.async(MyApp.TaskSupervisor, fn -> ... end)` and `Task.await/1` to ensure the worker finishes before the test returns.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/ownership_test.exs"],
+    "must_contain": [
+      "Task.Supervisor.async(MyApp.TaskSupervisor",
+      "Task.await"
+    ],
+    "must_not_contain": [
+      "Task.start("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "task_supervisor_usage",
+    "weight": 0.5
+  },
+  "tier_rationale": "Pattern swap — known API replacement.",
+  "research_citation": "\"Make sure those tasks are terminated at the end of the test. This means you should start those tasks behind a Task.Supervisor\" — Elixir Forum, josevalim",
+  "calibration": null
+}

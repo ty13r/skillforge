@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-29",
+  "tier": "hard",
+  "title": "Write a ChannelCase that wires sandbox automatically",
+  "prompt": "Write `test/support/channel_case.ex` (MyAppWeb.ChannelCase) that: (1) `use ExUnit.CaseTemplate`, (2) in `setup tags do`, call `MyApp.DataCase.setup_sandbox(tags)` then return `{:ok, conn: Phoenix.ConnTest.build_conn()}`, (3) register a helper macro/function `connect_socket/0` that builds a `Phoenix.Socket` with the sandbox metadata encoded and ready. Also import `Phoenix.ChannelTest` and `MyAppWeb.ChannelCase` into all users.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/channel_case.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.ChannelCase",
+      "use ExUnit.CaseTemplate",
+      "Phoenix.ChannelTest",
+      "MyApp.DataCase.setup_sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["sandbox-checkout-and-modes"],
+    "criterion": "channel_case_wiring",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-component test case template writing.",
+  "calibration": null
+}

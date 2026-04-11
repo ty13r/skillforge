@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-11",
+  "tier": "hard",
+  "title": "Audit 6 modules for async reclaim potential",
+  "prompt": "Write `docs/async_reclaim_audit.md` auditing these 6 modules:\n\n1. `AccountsTest`: async: false, 'flaky after a schema change'\n2. `MailerTest`: async: false, uses Bamboo test adapter which is process-local\n3. `FeatureTest`: async: false, uses Wallaby which spawns browser drivers\n4. `CacheTest`: async: false, uses Cachex with a named global table\n5. `ApiClientTest`: async: false, uses Mox.set_mox_global/0\n6. `BackgroundJobTest`: async: false, uses Oban real queue mode\n\nFor each: state 'reclaim' or 'must stay' and cite the specific fix. Expected: 1=reclaim (investigate actual flake), 2=reclaim (Bamboo is process-local), 3=must stay (Wallaby), 4=must stay or refactor cache, 5=reclaim via Mox.set_mox_private, 6=reclaim via Oban.Testing :manual mode.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/async_reclaim_audit.md"],
+    "must_contain": [
+      "AccountsTest",
+      "MailerTest",
+      "FeatureTest",
+      "CacheTest",
+      "ApiClientTest",
+      "BackgroundJobTest",
+      "Mox.set_mox_private",
+      "Oban.Testing"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["shared-mode-fallback", "oban-sandbox-integration"],
+    "criterion": "audit_6_modules",
+    "weight": 0.8
+  },
+  "tier_rationale": "6-module classification spanning Mox, Oban, Bamboo, Wallaby — broad knowledge.",
+  "calibration": null
+}

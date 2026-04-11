@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-03",
+  "tier": "hard",
+  "title": "Correct a suite where one async test leaks data into another",
+  "prompt": "Given this description: `test/my_app/accounts_test.exs` has 3 tests. Test 2 modifies a shared ETS table via `MyApp.Cache.put(:rate_limit, 100)`. Test 3 reads from the same ETS table and expects default value. When run async, Test 3 sometimes sees Test 2's mutation. Write `docs/ets_leakage_fix.md` describing: (1) the root cause (ETS is global, not sandbox-scoped), (2) three fix options — (a) mark this module async: false with a comment, (b) use `Process.put/2` per-test if local scope suffices, (c) use a named ETS table per test with `:ets.new/2`, (3) recommend option (a) as safest. Must NOT recommend seeding or disabling async as a blanket fix.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/ets_leakage_fix.md"],
+    "must_contain": [
+      "ETS",
+      "global",
+      "async: false",
+      "Process.put",
+      ":ets.new"
+    ],
+    "must_not_contain": [
+      "seed the test"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["flaky-test-diagnosis", "async-test-safety-rules"],
+    "criterion": "ets_leakage_fix",
+    "weight": 0.7
+  },
+  "tier_rationale": "Three named fix options with correct recommendation. Requires knowing ETS is process-agnostic.",
+  "calibration": null
+}

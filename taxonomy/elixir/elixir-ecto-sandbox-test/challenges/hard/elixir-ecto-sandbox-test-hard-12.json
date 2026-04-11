@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-12",
+  "tier": "hard",
+  "title": "Write a failing-then-passing 10-test async stress test",
+  "prompt": "Write a stress test at `test/my_app/async_stress_test.exs` with 10 `test` cases that each: (1) generate a unique user email via `Ecto.UUID.generate/0`, (2) create the user, (3) assert the user is retrievable by that email. The module must be `async: true` and must NOT use `mode(:shared)`. All 10 tests must be able to run concurrently without collisions. Use dynamic test data generation.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/async_stress_test.exs"],
+    "must_contain": [
+      "async: true",
+      "Ecto.UUID.generate",
+      "test \"",
+      "Accounts.create_user"
+    ],
+    "must_not_contain": [
+      "async: false",
+      "mode(:shared",
+      "\"test@example.com\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "stress_test_async_safe",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires producing 10 concurrency-safe tests with unique data — multi-test scaffold.",
+  "calibration": null
+}

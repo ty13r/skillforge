@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-18",
+  "tier": "legendary",
+  "title": "Test an Oban worker's retry behavior inside the sandbox",
+  "prompt": "Write `test/my_app/workers/retryable_worker_test.exs` that verifies: (1) on first failure, `MyApp.Workers.RetryableWorker` raises and returns `{:error, :retry}`, (2) after retry, on second attempt, it succeeds. Use `perform_job/3` to execute the worker. The worker's retry state is maintained by Oban's `attempt` field in the Job struct. The test must: (1) `use Oban.Testing, repo: MyApp.Repo`, (2) construct the job manually via `build_job/2` with `attempt: 1`, (3) call `perform_job/3` and expect raise/error, (4) construct a second job with `attempt: 2`, (5) call `perform_job/3` and expect :ok. Must NOT use `Oban.drain_queue/1` or the real queue.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/retryable_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "perform_job(MyApp.Workers.RetryableWorker",
+      "attempt: 1",
+      "attempt: 2"
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "retry_test_sandbox_safe",
+    "weight": 0.8
+  },
+  "tier_rationale": "Obscure — retry testing inside sandbox without drain_queue.",
+  "calibration": null
+}

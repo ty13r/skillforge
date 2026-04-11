@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-43",
+  "tier": "medium",
+  "title": "Use mix test --seed to reproduce an order-dependent flake",
+  "prompt": "A test passes when run alone but fails in 'mix test'. Write `docs/seed_reproduction.md` explaining the diagnostic procedure: (1) note the seed printed by the failing CI run, (2) reproduce locally via `mix test --seed <seed>`, (3) if reproduction succeeds, the flake is order-dependent, (4) narrow down by running `mix test --seed <seed> --failed` until you find the smallest failing set, (5) identify state leakage between the tests in that set. Must mention `--seed`, `--failed`, and 'state leakage'.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/seed_reproduction.md"],
+    "must_contain": [
+      "--seed",
+      "--failed",
+      "state leakage",
+      "order-dependent"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": [],
+    "criterion": "seed_procedure",
+    "weight": 0.5
+  },
+  "tier_rationale": "Procedure doc with named flags.",
+  "research_citation": "\"If tests pass with `--seed` but fail randomly, you have state leakage between tests.\" — oliver-kriska",
+  "calibration": null
+}

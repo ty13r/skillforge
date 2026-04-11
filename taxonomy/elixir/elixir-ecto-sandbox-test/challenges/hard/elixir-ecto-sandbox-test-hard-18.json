@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-18",
+  "tier": "hard",
+  "title": "Fix a suite where child processes outlive the test owner",
+  "prompt": "A test suite has this pattern: `setup do {:ok, pid} = MyApp.Worker.start_link([]); {:ok, worker: pid} end` — the Worker is unlinked from the test process. On suite termination, remaining workers sometimes query the Repo and produce `DBConnection.OwnershipError`. Rewrite the setup at `test/my_app/worker_outlives_test.exs`: use `start_supervised!({MyApp.Worker, []})` instead of `start_link/1`. Add a brief comment explaining the fix.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/worker_outlives_test.exs"],
+    "must_contain": [
+      "start_supervised!({MyApp.Worker",
+      "# "
+    ],
+    "must_not_contain": [
+      "MyApp.Worker.start_link"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "worker_lifetime_fix",
+    "weight": 0.7
+  },
+  "tier_rationale": "Lifetime management fix with a subtle discriminator (start_link vs start_supervised).",
+  "research_citation": "\"These ownership errors usually happen when a GenServer outlives the process that called `checkout`\" — Elixir Forum, al2o3cr",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-13",
+  "tier": "legendary",
+  "title": "Find the stray process in a setup_all-based suite",
+  "prompt": "Write `docs/stray_process_hunt.md` describing the hunt for a stray process in this scenario: module `MyApp.BigFeatureTest` has 10 tests. 7 pass reliably. 3 fail only under `mix test --trace`. Trace shows: a `setup_all` block starts a background worker via `GenServer.start_link/3` (unsupervised). Every individual test passes its sandbox checkout cleanly, but mid-test the worker GenServer attempts a Repo.insert and dies with OwnershipError. Must explain: (1) `setup_all` runs in a SEPARATE process from each test process, (2) the GenServer started in setup_all is linked to the setup_all process, (3) that process is alive for the entire module run, (4) its Repo access has NO sandbox allowance from any individual test, (5) fix: move the GenServer start to `setup` (per-test) via `start_supervised!/1` — then each test owns it.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/stray_process_hunt.md"],
+    "must_contain": [
+      "setup_all",
+      "setup",
+      "--trace",
+      "start_supervised!",
+      "OwnershipError",
+      "per test"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "stray_process_hunt",
+    "weight": 0.85
+  },
+  "tier_rationale": "Three layers deep: setup_all semantics + GenServer lifetime + sandbox per-process ownership.",
+  "research_citation": "\"For us they were caused almost exclusively by async code spawned by liveviews...the test process finished and exited before their async tasks could finish running\" — Elixir Forum, egeersoz",
+  "calibration": null
+}

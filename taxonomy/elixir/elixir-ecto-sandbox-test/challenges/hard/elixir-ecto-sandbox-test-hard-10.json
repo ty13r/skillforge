@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-10",
+  "tier": "hard",
+  "title": "Rewrite an async-false module to async-true using allow/3",
+  "prompt": "A module `test/my_app/notification_service_test.exs` is `async: false` because its setup starts a GenServer under a supervisor that it passes connections to via shared mode. Rewrite to `test/my_app/notification_service_test.exs`: (1) `async: true`, (2) use `start_supervised!` to tie GenServer lifetime to the test, (3) use `allow/3` to grant the GenServer sandbox access, (4) do NOT use `mode(:shared)` at all. Include at least one test that verifies DB writes by the GenServer.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/notification_service_test.exs"],
+    "must_contain": [
+      "async: true",
+      "start_supervised!",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "async: false",
+      "mode(MyApp.Repo, {:shared"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "connection-ownership-transfer"],
+    "criterion": "async_true_migration",
+    "weight": 0.8
+  },
+  "tier_rationale": "Three-step refactor: start_supervised + allow + remove shared mode. Requires full workflow.",
+  "research_citation": "\"Because allowances use an explicit mechanism, their advantage is that you can still run your tests in async mode.\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}
