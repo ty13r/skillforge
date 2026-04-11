@@ -73,17 +73,16 @@ class IntegrationReport:
 _OUTPUT_SCHEMA = """{
   "frontmatter": {
     "name": "kebab-case",
-    "description": "≤250 char composite description",
+    "description": "≤250 char composite description that MUST begin with or contain 'Use when ...' (pushy pattern)",
     "allowed-tools": "Read Write Bash(python *)"
   },
   "skill_md_content": "# Display Name\\n\\n## Quick Start\\n...\\n## Workflow\\n...\\n## Examples\\n...",
-  "supporting_files": {
-    "scripts/validate.sh": "...",
-    "scripts/score.py": "...",
-    "references/guide.md": "..."
-  },
   "integration_notes": "one paragraph describing key merge decisions, conflicts encountered, and any rejected instructions"
-}"""
+}
+
+NOTE: Do NOT emit a `supporting_files` field. Script/reference files from the
+foundation and capabilities are merged deterministically by the runtime after
+your response — you only produce the body text + frontmatter."""
 
 
 def _build_engineer_prompt(
@@ -100,10 +99,10 @@ def _build_engineer_prompt(
             f"{cap.pareto_objectives.get('quality', 'n/a')})\n\n"
             f"#### Frontmatter\n```json\n{json.dumps(cap.frontmatter, indent=2)}\n```\n\n"
             f"#### SKILL.md content\n```markdown\n{cap.skill_md_content[:3000]}\n```\n\n"
-            f"#### Supporting files\n"
+            f"#### Supporting file paths (content will be merged automatically)\n"
             + "\n".join(
-                f"- `{path}` ({len(content)} bytes)"
-                for path, content in cap.supporting_files.items()
+                f"- `{path}`"
+                for path in cap.supporting_files
             )
         )
 
@@ -133,8 +132,8 @@ capability variants contribute focused modules that plug into it.
 {foundation.skill_md_content[:5000]}
 ```
 
-### Foundation supporting files
-{chr(10).join(f"- `{path}` ({len(content)} bytes)" for path, content in foundation.supporting_files.items()) or "(none)"}
+### Foundation supporting file paths (content will be merged automatically)
+{chr(10).join(f"- `{path}`" for path in foundation.supporting_files) or "(none)"}
 
 ## Capability variants
 
@@ -142,8 +141,9 @@ capability variants contribute focused modules that plug into it.
 
 ## Your job
 
-Produce ONE composite SKILL.md package by weaving the capability content
-into the foundation skeleton. Specifically:
+Produce the composite SKILL.md body + frontmatter by weaving capability
+content into the foundation skeleton. The runtime will handle supporting
+file merging deterministically — you are only responsible for the prose.
 
 1. **Skeleton**: keep the foundation's SKILL.md as the structural base.
    Preserve its Quick Start, the order of its H2 sections, and its
@@ -161,21 +161,23 @@ into the foundation skeleton. Specifically:
    instruction in `integration_notes`.
 
 4. **Frontmatter merge**:
-   - `name`: keep `{family.slug}` (the family canonical slug)
-   - `description`: combine into a ≤250 char composite that names the
-     primary capability + lists triggers + retains explicit NOT-for clauses
+   - `name`: set to `{family.slug}` (the family canonical slug)
+   - `description`: ≤250 chars. MUST begin with or contain the exact
+     phrase "Use when" inside the first 250 characters — this is the
+     pushy-pattern signal the structural validator requires. Also name
+     the primary capability, list trigger phrases, and retain explicit
+     "NOT for ..." exclusions from the foundation.
    - `allowed-tools`: union of all variants' tool lists
    - Drop any other extension fields
 
-5. **Supporting file merge**:
-   - Copy every unique file from the foundation as-is
-   - For each capability, copy its files INTO the composite. If a filename
-     collides with a foundation file, RENAME the capability's version to
-     `<stem>_<dimension>.<ext>` (where `<dimension>` is the capability's
-     `dimension` frontmatter value), and update any references in the
-     composite SKILL.md body to point at the renamed file.
+5. **Reference paths in body**: every ``${{CLAUDE_SKILL_DIR}}/<path>``
+   reference in the body MUST point at a file that already exists in
+   the foundation or capability supporting files listed above (the
+   runtime merges those files into the composite). Do not invent new
+   paths.
 
-6. **Body must stay ≤500 lines** and include AT LEAST 2 examples.
+6. **Body must stay ≤500 lines** and include AT LEAST 2 `**Example`
+   markers.
 
 ## Output format
 
@@ -248,14 +250,76 @@ def _validate_composite_shape(raw: dict[str, Any]) -> None:
         )
     if not isinstance(raw.get("skill_md_content"), str):
         raise ValueError("Engineer output missing skill_md_content")
-    if not isinstance(raw.get("supporting_files"), dict):
-        raise ValueError("Engineer output missing supporting_files dict")
 
     desc = fm.get("description", "")
     if isinstance(desc, str) and len(desc) > 250:
         raise ValueError(
             f"Engineer composite description is {len(desc)} chars > 250 limit"
         )
+    # Pushy-pattern requirement — validate_skill_structure rule 5 rejects
+    # descriptions that don't contain "Use when" in the first 250 chars.
+    # Catch it here so the Engineer gets one retry instead of hitting the
+    # integration check and burning the refinement pass.
+    if isinstance(desc, str) and "use when" not in desc[:250].lower():
+        raise ValueError(
+            "Engineer composite description must contain 'Use when' "
+            "(pushy pattern) within the first 250 chars"
+        )
+
+
+def _merge_supporting_files(
+    foundation: SkillGenome,
+    capabilities: list[SkillGenome],
+) -> tuple[dict[str, str], list[dict[str, str]]]:
+    """Build composite.supporting_files from foundation + capabilities.
+
+    Deterministic — the LLM is never asked to produce file contents.
+    Foundation files are copied verbatim. Capability files are added
+    with their original path, unless that path collides with one already
+    in the merged map, in which case the capability file is renamed to
+    ``<stem>_<dimension>.<ext>``.
+
+    Returns ``(merged_files, rename_records)`` so the caller can also
+    populate the IntegrationReport's ``duplicate_files_renamed`` list.
+    """
+    merged: dict[str, str] = dict(foundation.supporting_files)
+    renames: list[dict[str, str]] = []
+    for cap in capabilities:
+        dim = cap.frontmatter.get("dimension", "cap")
+        for path, content in cap.supporting_files.items():
+            if path in merged:
+                stem, sep, ext = path.rpartition(".")
+                new_path = (
+                    f"{stem}_{dim}.{ext}" if sep else f"{path}_{dim}"
+                )
+                merged[new_path] = content
+                renames.append(
+                    {"original": path, "renamed": new_path, "dimension": dim}
+                )
+            else:
+                merged[path] = content
+    return merged, renames
+
+
+def _stitch_frontmatter_into_body(
+    frontmatter: dict[str, Any], body: str
+) -> str:
+    """Prepend a YAML ``---`` frontmatter block to the body.
+
+    ``validate_skill_structure`` rule 1 requires ``skill_md_content`` to
+    start with ``---`` and contain a parseable YAML frontmatter block
+    before the body. The Engineer's LLM returns frontmatter and body
+    separately because that's easier for the model to reason about and
+    for downstream agents (Breeder, Reviewer) to mutate. This helper
+    reunites them at the edge so the composite passes validation and can
+    be exported as a real SKILL.md.
+    """
+    import yaml
+
+    fm_yaml = yaml.safe_dump(
+        frontmatter, default_flow_style=False, sort_keys=False
+    ).rstrip()
+    return f"---\n{fm_yaml}\n---\n\n{body.lstrip()}"
 
 
 def _detect_conflicts(
@@ -345,6 +409,57 @@ async def assemble_variants(
         raw = _extract_json_object(text)
         _validate_composite_shape(raw)
 
+    # Deterministic file merge — foundation files as-is, capability files
+    # added with rename-on-collision. The LLM is NEVER asked to emit file
+    # contents because it can't reliably copy file content verbatim and
+    # would invent placeholder strings instead (real bug observed in the
+    # 5th live atomic test).
+    merged_files, rename_records = _merge_supporting_files(
+        foundation, capabilities
+    )
+
+    # Stitch the Engineer's separate frontmatter + body into a single
+    # SKILL.md string with YAML frontmatter at the top. This is what
+    # validate_skill_structure expects; without it every composite fails
+    # rule 1 ("SKILL.md missing YAML frontmatter").
+    raw_fm = raw["frontmatter"]
+    raw_body = raw["skill_md_content"]
+    combined_md = _stitch_frontmatter_into_body(raw_fm, raw_body)
+
+    # Inherit fitness scores from the foundation (+ average in capabilities)
+    # as a baseline for the composite. The composite itself hasn't been
+    # through the judging pipeline — that's gated on enable_behavioral_check
+    # because it doubles assembly cost. Without this inheritance every
+    # atomic composite has empty pareto_objectives / deterministic_scores,
+    # which leaks into the frontend as "best_fitness = 0.00". Inheritance
+    # is a reasonable proxy because the composite IS the foundation's
+    # structural skeleton with capability prose woven in — the foundation's
+    # scores bound the composite's likely performance from below. If a
+    # behavioral check later runs, it overwrites these in place.
+    def _blend_scores(
+        key_iter: dict[str, float], getter: str
+    ) -> dict[str, float]:
+        blended: dict[str, float] = dict(key_iter)
+        if capabilities:
+            for k in list(blended.keys()):
+                cap_vals = [
+                    getattr(c, getter).get(k)
+                    for c in capabilities
+                    if k in getattr(c, getter)
+                ]
+                if cap_vals:
+                    blended[k] = (blended[k] + sum(cap_vals)) / (
+                        1 + len(cap_vals)
+                    )
+        return blended
+
+    inherited_pareto = _blend_scores(
+        foundation.pareto_objectives, "pareto_objectives"
+    )
+    inherited_deterministic = _blend_scores(
+        foundation.deterministic_scores, "deterministic_scores"
+    )
+
     # Build the composite SkillGenome
     parent_ids = [foundation.id] + [c.id for c in capabilities]
     import uuid as _uuid
@@ -352,9 +467,9 @@ async def assemble_variants(
     composite = SkillGenome(
         id=f"composite_{_uuid.uuid4().hex[:12]}",
         generation=0,
-        skill_md_content=raw["skill_md_content"],
-        frontmatter=raw["frontmatter"],
-        supporting_files=raw["supporting_files"],
+        skill_md_content=combined_md,
+        frontmatter=raw_fm,
+        supporting_files=merged_files,
         traits=list(set(foundation.traits + [t for c in capabilities for t in c.traits])),
         meta_strategy=f"composite of {family.slug}: foundation + {len(capabilities)} capabilities",
         parent_ids=parent_ids,
@@ -362,11 +477,17 @@ async def assemble_variants(
         mutation_rationale=raw.get("integration_notes", ""),
         maturity="tested",
         generations_survived=0,
+        pareto_objectives=inherited_pareto,
+        deterministic_scores=inherited_deterministic,
     )
 
+    # Use the deterministic rename records so the report reflects what
+    # actually happened, not what the pre-scan predicted (the two should
+    # match — both derive from the same inputs — but the deterministic
+    # merge is the authoritative source).
     report = IntegrationReport(
         conflict_count=conflict_count,
-        duplicate_files_renamed=duplicates,
+        duplicate_files_renamed=rename_records or duplicates,
         overlapping_sections=overlap,
         description_truncated=False,
         body_truncated=len(composite.skill_md_content.splitlines()) > 500,

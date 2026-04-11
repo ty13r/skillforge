@@ -59,20 +59,15 @@ def _make_family(slug: str = "test-family") -> SkillFamily:
 
 def _canned_engineer_response(
     family_slug: str = "test-family",
-    extra_files: dict | None = None,
 ) -> str:
     fm = {
         "name": family_slug,
-        "description": "Composite skill assembled from foundation + capabilities",
+        "description": (
+            "Composite skill assembled from foundation + capabilities. "
+            "Use when evolved family is ready. NOT for in-progress runs."
+        ),
         "allowed-tools": "Read Write",
     }
-    files = {
-        "scripts/validate.sh": "#!/bin/bash\nexit 0",
-        "scripts/score.py": "#!/usr/bin/env python3\nprint('{}')",
-    }
-    if extra_files:
-        files.update(extra_files)
-
     return json.dumps(
         {
             "frontmatter": fm,
@@ -81,7 +76,6 @@ def _canned_engineer_response(
                 "## Workflow\n1. Read\n2. Run\n\n"
                 "## Examples\n**Example 1:** in → out\n**Example 2:** in → out\n"
             ),
-            "supporting_files": files,
             "integration_notes": "merged cleanly, no conflicts encountered",
         }
     )
@@ -133,15 +127,22 @@ def test_validate_composite_shape_happy():
 
 
 def test_validate_composite_shape_rejects_missing_frontmatter():
-    raw = {"skill_md_content": "x", "supporting_files": {}}
+    raw = {"skill_md_content": "x"}
     with pytest.raises(ValueError, match="frontmatter"):
         _validate_composite_shape(raw)
 
 
 def test_validate_composite_shape_rejects_oversize_description():
     raw = json.loads(_canned_engineer_response())
-    raw["frontmatter"]["description"] = "x" * 300
+    raw["frontmatter"]["description"] = "Use when " + "x" * 300
     with pytest.raises(ValueError, match="> 250"):
+        _validate_composite_shape(raw)
+
+
+def test_validate_composite_shape_rejects_missing_use_when():
+    raw = json.loads(_canned_engineer_response())
+    raw["frontmatter"]["description"] = "Composite skill with no pushy pattern"
+    with pytest.raises(ValueError, match="Use when"):
         _validate_composite_shape(raw)
 
 
@@ -185,6 +186,28 @@ async def test_assemble_variants_happy_path():
     assert composite.id.startswith("composite_")
     assert composite.parent_ids == ["found", "cap1", "cap2"]
     assert composite.maturity == "tested"
+
+    # Bug B regression: skill_md_content must have YAML frontmatter at the
+    # top so validate_skill_structure rule 1 passes. The Engineer returns
+    # frontmatter and body separately; assemble_variants stitches them.
+    assert composite.skill_md_content.startswith("---\n"), (
+        f"composite.skill_md_content must start with YAML frontmatter, got: "
+        f"{composite.skill_md_content[:80]!r}"
+    )
+    assert "name: py-pytest-composite" in composite.skill_md_content
+    assert "Use when" in composite.skill_md_content
+    # The body portion should still be there
+    assert "# Composite" in composite.skill_md_content
+
+    # Bug A regression: supporting_files must contain the REAL foundation
+    # file contents (not LLM placeholders) and the capability files, with
+    # the colliding cap1 file renamed.
+    assert composite.supporting_files["scripts/validate.sh"] == "fnd"
+    assert composite.supporting_files["scripts/score.py"] == "fnd"
+    assert (
+        composite.supporting_files["scripts/validate_mock-strategy.sh"] == "cap"
+    )
+    assert composite.supporting_files["scripts/asserts.py"] == "x"
 
     # Pre-scan should have caught the validate.sh collision from cap1
     assert isinstance(report, IntegrationReport)
@@ -239,3 +262,43 @@ async def test_assemble_variants_requires_foundation():
 
     with pytest.raises(ValueError, match="foundation"):
         await assemble_variants(None, [], family, generate_fn=_gen)
+
+
+@pytest.mark.asyncio
+async def test_composite_inherits_foundation_fitness_when_no_capabilities():
+    """Bug C regression: composite must have real fitness scores so the
+    frontend's best_fitness display isn't stuck at 0.00. Foundation-only
+    case: composite scores should equal foundation scores exactly."""
+    foundation = _make_genome("found", fitness=0.75)
+    foundation.deterministic_scores = {"coverage": 0.9, "style": 0.8}
+    family = _make_family()
+
+    async def _gen(_prompt):
+        return _canned_engineer_response()
+
+    composite, _ = await assemble_variants(
+        foundation, [], family, generate_fn=_gen
+    )
+
+    assert composite.pareto_objectives == {"quality": 0.75}
+    assert composite.deterministic_scores == {"coverage": 0.9, "style": 0.8}
+
+
+@pytest.mark.asyncio
+async def test_composite_blends_foundation_and_capability_fitness():
+    """Multi-capability case: composite scores should average foundation
+    with the capability scores, so the blended signal reflects both."""
+    foundation = _make_genome("found", fitness=0.80)
+    cap1 = _make_genome("cap1", dimension="mock", fitness=0.60)
+    cap2 = _make_genome("cap2", dimension="assert", fitness=0.70)
+    family = _make_family()
+
+    async def _gen(_prompt):
+        return _canned_engineer_response()
+
+    composite, _ = await assemble_variants(
+        foundation, [cap1, cap2], family, generate_fn=_gen
+    )
+
+    # (0.80 + 0.60 + 0.70) / 3 = 0.70
+    assert composite.pareto_objectives["quality"] == pytest.approx(0.70)
