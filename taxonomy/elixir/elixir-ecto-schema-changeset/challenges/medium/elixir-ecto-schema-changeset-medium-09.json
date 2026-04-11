@@ -1,0 +1,35 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-09",
+  "tier": "medium",
+  "title": "Refuse polymorphic pattern; propose join-table alternative",
+  "prompt": "An image should be attachable to either a User, a Post, or a Comment. A developer wants to port the Rails polymorphic pattern (imageable_type, imageable_id). Refuse that approach (explain why in a comment at the top of the file: it breaks DB referential integrity, as warned by Ecto docs). Then build MyApp.Media.Image with separate many_to_many associations to each parent type via posts_images, users_images, and comments_images join tables. Include the migration creating these three join tables. Write image schema to lib/my_app/media/image.ex and migration to priv/repo/migrations/20260412200000_create_images.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/media/image.ex",
+      "priv/repo/migrations/20260412200000_create_images.exs"
+    ],
+    "must_contain": [
+      "many_to_many :users",
+      "many_to_many :posts",
+      "many_to_many :comments",
+      "join_through: \"users_images\"",
+      "join_through: \"posts_images\"",
+      "join_through: \"comments_images\"",
+      "create table(:users_images"
+    ],
+    "must_not_contain": [
+      "imageable_type",
+      "imageable_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["associations", "migrations"],
+    "criterion": "reject_polymorphic_use_join_tables",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires refusing a Rails-shaped request and producing the Ecto-idiomatic alternative. Sonnet often ports the Rails pattern directly.",
+  "research_citation": "Ecto Polymorphic Associations guide: 'The issue with the design above is that it breaks database references.'",
+  "calibration": null
+}

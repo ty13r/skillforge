@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-03",
+  "tier": "hard",
+  "title": "Race-condition-aware unique email flow",
+  "prompt": "Build the full flow for ensuring user emails are unique, race-condition-aware: (1) unsafe_validate_unique(:email, Repo) in the changeset (pre-insert friendly error), (2) unique_constraint(:email) in the changeset to catch DB-level race, (3) unique_index(:users, [:email]) in migration, (4) a `create_user/1` function in MyApp.Accounts that calls Repo.insert and pattern-matches the constraint-violation return. Write schema to lib/my_app/accounts/user.ex, migration to priv/repo/migrations/20260413200000_create_users.exs, and context module to lib/my_app/accounts.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "lib/my_app/accounts.ex",
+      "priv/repo/migrations/20260413200000_create_users.exs"
+    ],
+    "must_contain": [
+      "unsafe_validate_unique(:email, MyApp.Repo)",
+      "unique_constraint(:email)",
+      "create unique_index(:users, [:email])",
+      "def create_user",
+      "Repo.insert",
+      "{:error"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["validations-basic", "migrations", "schema-organization"],
+    "criterion": "race_condition_aware_unique_flow",
+    "weight": 1.0
+  },
+  "tier_rationale": "Synthesis of three capabilities + race-handling context function. Hard because the entire flow must be coherent.",
+  "research_citation": "Arrowsmith Labs — Foolproof uniqueness validations.",
+  "calibration": null
+}

@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-31",
+  "tier": "easy",
+  "title": "belongs_to with custom foreign_key",
+  "prompt": "Build MyApp.Orders.Order which belongs to a customer, but the foreign key column is named `buyer_id` (not the default `customer_id`). Use `belongs_to :customer, MyApp.CRM.Customer, foreign_key: :buyer_id`. Write to lib/my_app/orders/order.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/orders/order.ex"],
+    "must_contain": [
+      "belongs_to :customer, MyApp.CRM.Customer",
+      "foreign_key: :buyer_id",
+      "MyApp.Orders.Order"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": [],
+    "criterion": "belongs_to_custom_foreign_key",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single belongs_to with a named option. Easy but tests the foreign_key override.",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-29",
+  "tier": "easy",
+  "title": "Timestamps with microsecond precision",
+  "prompt": "Build MyApp.Audit.Event with fields actor_id (integer), action (string), and timestamps that are :utc_datetime_usec (microsecond precision — for high-throughput event logging). Write to lib/my_app/audit/event.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/audit/event.ex"],
+    "must_contain": [
+      "timestamps(type: :utc_datetime_usec)",
+      "MyApp.Audit.Event"
+    ],
+    "must_not_contain": [
+      "timestamps()\n",
+      ":naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": [],
+    "criterion": "utc_datetime_usec_timestamps",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single macro parameter. Easy and tests knowledge of the :utc_datetime_usec variant.",
+  "calibration": null
+}

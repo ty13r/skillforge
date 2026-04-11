@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-21",
+  "tier": "hard",
+  "title": "Cross-context event log via IDs only",
+  "prompt": "MyApp.Audit is a bounded context that records events referencing entities from other contexts. An Audit.Event should reference arbitrary entities by (entity_type :string, entity_id :integer) — NOT belongs_to (because Audit cannot import Accounts or Billing). But DO create a compound index on (entity_type, entity_id) in the migration for efficient lookup. Write schema to lib/my_app/audit/event.ex and migration to priv/repo/migrations/20260414000000_create_audit_events.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/audit/event.ex",
+      "priv/repo/migrations/20260414000000_create_audit_events.exs"
+    ],
+    "must_contain": [
+      "field :entity_type, :string",
+      "field :entity_id, :integer",
+      "create index(:audit_events, [:entity_type, :entity_id])",
+      "MyApp.Audit.Event"
+    ],
+    "must_not_contain": [
+      "belongs_to :user, MyApp.Accounts.User",
+      "alias MyApp.Accounts"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["polymorphic-associations", "migrations"],
+    "criterion": "cross_context_opaque_reference",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires context discipline + a pragmatic polymorphic-like pattern using plain fields + compound index. Hard because the ID-only discipline is counter-intuitive.",
+  "research_citation": "georgeguimaraes plugin: 'Query through the context, not across associations.'",
+  "calibration": null
+}

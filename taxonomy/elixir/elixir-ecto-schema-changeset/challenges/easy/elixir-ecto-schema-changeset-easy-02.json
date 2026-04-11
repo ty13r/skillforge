@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-02",
+  "tier": "easy",
+  "title": "Build a Product schema with price from scratch",
+  "prompt": "Design an Ecto schema for a `Product` that has a `name` (string, required), `sku` (string, unique), and `price` (money). Pick the correct Ecto field type for money. Include a `changeset/2` that casts these fields, validates that all three are required, and validates price is greater than 0. Write the file to lib/my_app/catalog/product.ex. Module name: MyApp.Catalog.Product.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/catalog/product.ex"],
+    "must_contain": [
+      "field :price, :decimal",
+      "field :name, :string",
+      "field :sku, :string",
+      "validate_number(:price",
+      "validate_required",
+      "MyApp.Catalog.Product"
+    ],
+    "must_not_contain": [
+      "field :price, :float",
+      "field :price, :integer"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["validations-basic", "schema-organization"],
+    "criterion": "decimal_type_from_scratch",
+    "weight": 1.0
+  },
+  "tier_rationale": "Greenfield design task with one canonical answer. Vanilla Sonnet reaches for :float by default per research; easy tier because once :decimal is picked the rest is trivial.",
+  "research_citation": "docs/research/elixir-llm-pain-points.md#5-float-for-money-in-ecto",
+  "calibration": null
+}

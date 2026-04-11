@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-22",
+  "tier": "medium",
+  "title": "Schema with @schema_prefix for tenant isolation",
+  "prompt": "Build MyApp.Tenants.Product in a multi-tenant app where each tenant has its own Postgres schema. Use `@schema_prefix \"tenant_data\"` at the module level. Fields: name, sku, price (decimal). Write to lib/my_app/tenants/product.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tenants/product.ex"],
+    "must_contain": [
+      "@schema_prefix \"tenant_data\"",
+      "field :price, :decimal",
+      "MyApp.Tenants.Product"
+    ],
+    "must_not_contain": [
+      "field :price, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "multi-tenant-schemas",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "schema_prefix_module_attr",
+    "weight": 1.0
+  },
+  "tier_rationale": "Module-level attribute + decimal type. Medium because the @schema_prefix placement is the detail.",
+  "research_citation": "Ecto Multi-tenancy guide: '@schema_prefix module attribute.'",
+  "calibration": null
+}

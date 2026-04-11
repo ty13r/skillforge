@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-19",
+  "tier": "easy",
+  "title": "Explicit cast allowlist excluding is_admin",
+  "prompt": "The file test_fixtures/user_mass_assignment_vulnerable.ex has a single `changeset/2` that casts `:is_admin` and `:role` from external input — a mass-assignment vulnerability documented in the Phoenix security guide. Write a public `changeset/2` that only casts [:email, :name, :password_hash]. Keep the schema structure identical. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": ["test_fixtures/user_mass_assignment_vulnerable.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "cast(attrs, [:email, :name, :password_hash])",
+      "MyApp.Accounts.User",
+      "field :is_admin, :boolean"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :is_admin",
+      ":is_admin, :role]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": [],
+    "criterion": "remove_is_admin_from_cast",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single cast list edit. Easy but discriminates directly against the canonical Phoenix security-guide anti-pattern.",
+  "research_citation": "Phoenix security guide: mass assignment example with :is_admin",
+  "calibration": null
+}

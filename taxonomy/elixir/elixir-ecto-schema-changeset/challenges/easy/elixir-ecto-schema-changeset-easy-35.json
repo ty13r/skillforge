@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-35",
+  "tier": "easy",
+  "title": "Tenant-aware Query.one call with prefix option",
+  "prompt": "Write a module function `MyApp.Tenant.Products.get_product/2` that takes a product id and a tenant_schema string, and calls `Repo.one` with the `prefix:` option set to the tenant_schema. Use `from p in Product, where: p.id == ^id`. Write to lib/my_app/tenant/products.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tenant/products.ex"],
+    "must_contain": [
+      "prefix: tenant_schema",
+      "Repo.one",
+      "MyApp.Tenant.Products"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "multi-tenant-schemas",
+    "secondary_capabilities": [],
+    "criterion": "repo_call_with_prefix",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single query function with one option. Easy and comes directly from the Ecto multi-tenancy guide.",
+  "research_citation": "Ecto Multi-tenancy guide: 'Repo.one(query, prefix: \"some_prefix\").'",
+  "calibration": null
+}

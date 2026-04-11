@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-02",
+  "tier": "medium",
+  "title": "Line items: has_many vs embeds_many decision",
+  "prompt": "Given MyApp.Sales.Order in test_fixtures/order_embed_vs_assoc.ex, add line items. The Order has_many :line_items because the product analytics team queries line_items directly for revenue-by-product reports — they need independent querying. Line items require independent querying means associations, not embeds. Create MyApp.Sales.LineItem with belongs_to :order, product_id (integer), quantity (integer), unit_price (decimal), and total (decimal). Write both to lib/my_app/sales/line_item.ex (both modules in that file) and update Order in lib/my_app/sales/order.ex.",
+  "fixture_files": ["test_fixtures/order_embed_vs_assoc.ex"],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/sales/line_item.ex",
+      "lib/my_app/sales/order.ex"
+    ],
+    "must_contain": [
+      "has_many :line_items, MyApp.Sales.LineItem",
+      "belongs_to :order, MyApp.Sales.Order",
+      "field :unit_price, :decimal",
+      "field :total, :decimal",
+      "field :quantity, :integer"
+    ],
+    "must_not_contain": [
+      "embeds_many :line_items",
+      "field :unit_price, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["associations", "field-types-and-decimal"],
+    "criterion": "has_many_over_embeds_many_when_queried",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing that 'independent querying' means association, not embed — a non-obvious modeling decision that Claude often gets wrong by reflexively embedding.",
+  "research_citation": "Ecto embedded schemas guide: 'You also can't use database constraints on structure and uniqueness when storing in a JSON field.'",
+  "calibration": null
+}

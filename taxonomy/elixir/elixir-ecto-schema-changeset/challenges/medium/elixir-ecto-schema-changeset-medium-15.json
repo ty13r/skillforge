@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-15",
+  "tier": "medium",
+  "title": "Composite unique with explicit name",
+  "prompt": "Build a Membership schema: a User may be member of many Organizations, but each (user, organization) pair should appear at most once. Write schema + migration. The unique constraint should be on (user_id, organization_id) jointly. Use explicit `name: :memberships_user_id_organization_id_index` on BOTH the migration's unique_index AND the changeset's unique_constraint(:user_id, name: ...) to avoid Postgres name-inference mismatches. Write schema to lib/my_app/accounts/membership.ex, migration to priv/repo/migrations/20260412500000_create_memberships.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/membership.ex",
+      "priv/repo/migrations/20260412500000_create_memberships.exs"
+    ],
+    "must_contain": [
+      "create unique_index(:memberships, [:user_id, :organization_id]",
+      "name: :memberships_user_id_organization_id_index",
+      "unique_constraint(",
+      "references(:users, on_delete: :delete_all)",
+      "references(:organizations, on_delete: :delete_all)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["migrations", "associations"],
+    "criterion": "composite_unique_with_explicit_name",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires using explicit name: option to avoid Postgres 63-char truncation + name-inference bug documented in Ecto #3259.",
+  "research_citation": "Ecto Issue #3259: 'When an index name is bigger than 63 characters, PostgreSQL truncates the name.'",
+  "calibration": null
+}

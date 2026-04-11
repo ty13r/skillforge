@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-20",
+  "tier": "medium",
+  "title": "virtual field for computed full_name",
+  "prompt": "Build MyApp.Accounts.Person with first_name, last_name, and a virtual field :full_name. In the changeset, use put_change to set full_name = first_name <> \" \" <> last_name. The :full_name field must have `virtual: true` and must never appear in the cast list. Write to lib/my_app/accounts/person.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/person.ex"],
+    "must_contain": [
+      "field :full_name, :string, virtual: true",
+      "put_change(:full_name",
+      "MyApp.Accounts.Person"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:first_name, :last_name, :full_name])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["validations-custom"],
+    "criterion": "virtual_field_put_change",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires virtual field + put_change + exclusion from cast. Sonnet sometimes casts the virtual.",
+  "calibration": null
+}

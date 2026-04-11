@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-14",
+  "tier": "easy",
+  "title": "Add soft-delete column to Member schema",
+  "prompt": "Add a `:deleted_at` field of type :utc_datetime to MyApp.Accounts.Member (starting from test_fixtures/soft_delete_missing_scope.ex). Also write a `soft_delete_changeset/1` function that returns a changeset setting deleted_at to the current UTC time. Write to lib/my_app/accounts/member.ex.",
+  "fixture_files": ["test_fixtures/soft_delete_missing_scope.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/member.ex"],
+    "must_contain": [
+      "field :deleted_at, :utc_datetime",
+      "soft_delete_changeset",
+      "DateTime.utc_now"
+    ],
+    "must_not_contain": [
+      "field :deleted_at, :naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "soft_delete_column_added",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single column addition with a single helper function. Easy because the pattern is canonical.",
+  "calibration": null
+}

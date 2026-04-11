@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-19",
+  "tier": "hard",
+  "title": "polymorphic_embed with type dispatch in changeset",
+  "prompt": "Using the polymorphic_embed library, build a WebhookEvent that can carry different payload types (UserCreated, OrderPlaced, PaymentFailed). Each payload is an embedded_schema with its own fields. The WebhookEvent schema declares `polymorphic_embeds_one :payload, types: [user_created: UserCreated, order_placed: OrderPlaced, payment_failed: PaymentFailed], on_type_not_found: :changeset_error`. Write the event + three payload modules to lib/my_app/webhooks/webhook_event.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/webhooks/webhook_event.ex"],
+    "must_contain": [
+      "polymorphic_embeds_one :payload",
+      "user_created:",
+      "order_placed:",
+      "payment_failed:",
+      "on_type_not_found: :changeset_error",
+      "embedded_schema",
+      "MyApp.Webhooks.WebhookEvent"
+    ],
+    "must_not_contain": [
+      "field :payload_type, :string",
+      "imageable"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["embedded-schemas"],
+    "criterion": "polymorphic_embed_with_error_on_not_found",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the on_type_not_found option which is niche but important for webhook validation.",
+  "research_citation": "polymorphic_embed library README.",
+  "calibration": null
+}

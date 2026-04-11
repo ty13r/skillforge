@@ -1,0 +1,77 @@
+{
+  "methodology": "heuristic",
+  "calibration_deferred": true,
+  "deferred_reason": "See taxonomy/elixir/SEEDING-PLAN.md item 4 — empirical Haiku+Sonnet calibration is a future workstream",
+  "calibrated_date": null,
+  "spec_version": "2.1",
+  "tier_distribution": {
+    "easy": 35,
+    "medium": 35,
+    "hard": 22,
+    "legendary": 8
+  },
+  "capability_coverage": {
+    "schema-organization": {
+      "primary_count": 9,
+      "secondary_count": 21,
+      "tier_breakdown": {"easy": 3, "medium": 2, "hard": 2, "legendary": 2}
+    },
+    "field-types-and-decimal": {
+      "primary_count": 14,
+      "secondary_count": 16,
+      "tier_breakdown": {"easy": 7, "medium": 4, "hard": 3, "legendary": 0}
+    },
+    "associations": {
+      "primary_count": 10,
+      "secondary_count": 13,
+      "tier_breakdown": {"easy": 4, "medium": 5, "hard": 1, "legendary": 0}
+    },
+    "embedded-schemas": {
+      "primary_count": 11,
+      "secondary_count": 5,
+      "tier_breakdown": {"easy": 2, "medium": 5, "hard": 3, "legendary": 1}
+    },
+    "validations-basic": {
+      "primary_count": 8,
+      "secondary_count": 15,
+      "tier_breakdown": {"easy": 6, "medium": 1, "hard": 0, "legendary": 1}
+    },
+    "validations-custom": {
+      "primary_count": 7,
+      "secondary_count": 5,
+      "tier_breakdown": {"easy": 1, "medium": 3, "hard": 2, "legendary": 1}
+    },
+    "unique-constraints-and-indexes": {
+      "primary_count": 7,
+      "secondary_count": 10,
+      "tier_breakdown": {"easy": 2, "medium": 3, "hard": 2, "legendary": 0}
+    },
+    "cast-and-allowed-fields": {
+      "primary_count": 9,
+      "secondary_count": 9,
+      "tier_breakdown": {"easy": 3, "medium": 4, "hard": 1, "legendary": 1}
+    },
+    "migrations": {
+      "primary_count": 7,
+      "secondary_count": 25,
+      "tier_breakdown": {"easy": 3, "medium": 2, "hard": 2, "legendary": 0}
+    },
+    "polymorphic-associations": {
+      "primary_count": 6,
+      "secondary_count": 1,
+      "tier_breakdown": {"easy": 0, "medium": 2, "hard": 3, "legendary": 1}
+    },
+    "soft-deletes-and-timestamps": {
+      "primary_count": 7,
+      "secondary_count": 1,
+      "tier_breakdown": {"easy": 2, "medium": 2, "hard": 2, "legendary": 1}
+    },
+    "multi-tenant-schemas": {
+      "primary_count": 5,
+      "secondary_count": 1,
+      "tier_breakdown": {"easy": 2, "medium": 2, "hard": 1, "legendary": 0}
+    }
+  },
+  "tier_rubric_link": "../../SEEDING-PLAN.md#heuristic-tier-rubric",
+  "notes": "score.py validated against 6 golden files (easy-01, easy-05, easy-10, medium-03, medium-08, medium-12, hard-02, hard-05, legendary-01) — all score >=0.86 with the rebalanced weighting. Bad input (file containing all anti-patterns) scores 0.36, empty file scores 0.0 — both well below 0.7 pass threshold. Discrimination is functional. Family-specific checks: money_not_float regex guard, no_is_admin_public_cast heuristic, unique_constraint/unique_index matching. Heuristic tier assignments per SEEDING-PLAN.md; empirical calibration deferred."
+}

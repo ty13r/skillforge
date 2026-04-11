@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-21",
+  "tier": "easy",
+  "title": "User has_many Posts migration with cascade",
+  "prompt": "Write a migration creating a `posts` table with title (not null), body (text), and a user_id foreign key that cascades on delete. Include UTC timestamps. Write to priv/repo/migrations/20260411300000_create_posts.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411300000_create_posts.exs"],
+    "must_contain": [
+      "create table(:posts)",
+      "references(:users",
+      "on_delete: :delete_all",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "add :user_id, :integer"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": ["associations"],
+    "criterion": "posts_migration_with_cascade",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical create_table with references + on_delete. Easy because the shape is fully templated.",
+  "calibration": null
+}

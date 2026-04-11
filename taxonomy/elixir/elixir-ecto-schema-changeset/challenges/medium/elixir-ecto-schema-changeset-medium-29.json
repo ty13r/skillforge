@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-29",
+  "tier": "medium",
+  "title": "Per-query prefix override",
+  "prompt": "Write `MyApp.Tenant.Repo.list_products_for/1` that takes a tenant string, constructs `from p in Product, where: p.in_stock == true`, and runs `Repo.all(query, prefix: tenant)`. Write to lib/my_app/tenant/repo.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tenant/repo.ex"],
+    "must_contain": [
+      "def list_products_for(tenant)",
+      "Repo.all",
+      "prefix: tenant",
+      "from p in"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "multi-tenant-schemas",
+    "secondary_capabilities": [],
+    "criterion": "per_query_prefix_override",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-function with one Ecto option. Medium because the prefix: placement matters (on Repo.all, not on from).",
+  "calibration": null
+}

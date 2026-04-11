@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-10",
+  "tier": "hard",
+  "title": "Tenant_id + email composite unique per tenant",
+  "prompt": "In a multi-tenant app where tenancy is enforced via a tenant_id column (not schema prefix), build MyApp.Accounts.User such that (tenant_id, email) is jointly unique — two different tenants may have a user with the same email. Use unique_constraint(:email, name: :users_tenant_id_email_index) in the changeset paired with a composite unique_index in the migration. Schema to lib/my_app/accounts/user.ex, migration to priv/repo/migrations/20260413700000_create_users.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "priv/repo/migrations/20260413700000_create_users.exs"
+    ],
+    "must_contain": [
+      "field :tenant_id, :integer",
+      "unique_constraint(:email, name: :users_tenant_id_email_index)",
+      "create unique_index(:users, [:tenant_id, :email]",
+      "name: :users_tenant_id_email_index"
+    ],
+    "must_not_contain": [
+      "create unique_index(:users, [:email])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["multi-tenant-schemas", "migrations"],
+    "criterion": "composite_unique_tenant_scoped",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires both the composite index and the explicit name-matching. Hard because two tenants sharing an email is a non-obvious requirement.",
+  "research_citation": "Arrowsmith Labs — Foolproof uniqueness validations in Phoenix with Ecto.",
+  "calibration": null
+}

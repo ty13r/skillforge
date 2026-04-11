@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-12",
+  "tier": "hard",
+  "title": "Refactor flat God-schema into core + embedded profile + split changesets",
+  "prompt": "Refactor test_fixtures/god_schema_user.ex: (1) extract profile fields (bio, avatar_url, phone) into an embedded MyApp.Accounts.Profile, (2) User embeds_one :profile, (3) split changesets into registration_changeset (email, name, password_hash), profile_changeset (name + cast_embed :profile), admin_changeset (is_admin, role, subscription_tier), credit_balance_changeset (credit_balance). Module file to lib/my_app/accounts/user.ex.",
+  "fixture_files": ["test_fixtures/god_schema_user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "MyApp.Accounts.Profile",
+      "embedded_schema",
+      "embeds_one :profile, MyApp.Accounts.Profile",
+      "def registration_changeset",
+      "def profile_changeset",
+      "def admin_changeset",
+      "def credit_balance_changeset",
+      "cast(attrs, [:email, :name, :password_hash])",
+      "cast_embed(:profile"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :phone, :bio"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["embedded-schemas", "cast-and-allowed-fields"],
+    "criterion": "god_schema_to_core_plus_embed_plus_splits",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-step refactor combining extraction, embedding, and changeset splitting. Hard because the coordination is non-trivial.",
+  "research_citation": "georgeguimaraes plugin: 'Different operations = different changesets.'",
+  "calibration": null
+}

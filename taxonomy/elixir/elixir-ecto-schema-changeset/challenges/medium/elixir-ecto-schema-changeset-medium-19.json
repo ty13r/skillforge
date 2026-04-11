@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-19",
+  "tier": "medium",
+  "title": "Shared embedded Address reused by Customer and Vendor",
+  "prompt": "Create MyApp.Shared.Address as an embedded_schema with fields street, city, postal_code, country (all required in its own validate_changeset/2). Then create MyApp.CRM.Customer and MyApp.Inventory.Vendor, each embedding the same Shared.Address as their primary_address via embeds_one. Write Address to lib/my_app/shared/address.ex, Customer to lib/my_app/crm/customer.ex, Vendor to lib/my_app/inventory/vendor.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/shared/address.ex",
+      "lib/my_app/crm/customer.ex",
+      "lib/my_app/inventory/vendor.ex"
+    ],
+    "must_contain": [
+      "MyApp.Shared.Address",
+      "embedded_schema",
+      "embeds_one :primary_address, MyApp.Shared.Address",
+      "MyApp.CRM.Customer",
+      "MyApp.Inventory.Vendor"
+    ],
+    "must_not_contain": [
+      "create table(:addresses)",
+      "belongs_to :address"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "shared_embedded_schema_reused",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires factoring a reusable embedded schema across two contexts. Sonnet often creates two near-duplicate embedded schemas.",
+  "calibration": null
+}

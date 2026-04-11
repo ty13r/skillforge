@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-06",
+  "tier": "medium",
+  "title": "unsafe_validate_unique plus unique_constraint pair",
+  "prompt": "Add pre-insert unique validation to MyApp.Accounts.User for the email field. Use BOTH unsafe_validate_unique(:email, MyApp.Repo) for early friendly error and unique_constraint(:email) to catch the DB-level race. Also write the migration creating the users table with a unique_index. Schema to lib/my_app/accounts/user.ex, migration to priv/repo/migrations/20260412000000_create_users.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "priv/repo/migrations/20260412000000_create_users.exs"
+    ],
+    "must_contain": [
+      "unsafe_validate_unique(:email, MyApp.Repo)",
+      "unique_constraint(:email)",
+      "create unique_index(:users, [:email])"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["validations-basic", "migrations"],
+    "criterion": "unsafe_validate_plus_constraint_plus_index",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-part coordination (unsafe_validate_unique + unique_constraint + unique_index). Sonnet usually picks one or two but skips unsafe_validate_unique.",
+  "research_citation": "Arrowsmith Labs — Foolproof uniqueness validations in Phoenix with Ecto.",
+  "calibration": null
+}

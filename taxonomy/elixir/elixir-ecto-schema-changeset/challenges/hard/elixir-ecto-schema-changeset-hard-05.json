@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-05",
+  "tier": "hard",
+  "title": "Embed with on_replace and nested validation",
+  "prompt": "Build MyApp.CRM.Customer with an embedded primary_address. The embedded schema is MyApp.CRM.Address (street, city, postal_code, country, all required in Address's changeset). In Customer's schema declaration, use `embeds_one :primary_address, Address, on_replace: :update` (not the default :raise). Customer's changeset uses `cast_embed(:primary_address, with: &Address.changeset/2)`. Write both modules to lib/my_app/crm/customer.ex.",
+  "fixture_files": ["test_fixtures/customer_address_single.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/crm/customer.ex"],
+    "must_contain": [
+      "MyApp.CRM.Address",
+      "MyApp.CRM.Customer",
+      "embedded_schema",
+      "embeds_one :primary_address, MyApp.CRM.Address, on_replace: :update",
+      "cast_embed(:primary_address",
+      "with: &MyApp.CRM.Address.changeset/2",
+      "validate_required([:street, :city, :postal_code, :country])"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "embed_with_on_replace_update",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the on_replace: :update option which is non-obvious but needed for update operations.",
+  "calibration": null
+}

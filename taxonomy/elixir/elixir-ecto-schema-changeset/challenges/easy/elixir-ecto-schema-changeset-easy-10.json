@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-10",
+  "tier": "easy",
+  "title": "Fix naive_datetime timestamps to UTC",
+  "prompt": "The LogEntry schema in test_fixtures/naive_datetime_timestamps.ex uses the default `timestamps()` which maps to naive_datetime. The app serves users globally across time zones, so inserted_at and updated_at should be stored in UTC. Update the timestamps() macro to use `type: :utc_datetime`. Write the fixed schema to lib/my_app/logging/log_entry.ex.",
+  "fixture_files": ["test_fixtures/naive_datetime_timestamps.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/logging/log_entry.ex"],
+    "must_contain": [
+      "timestamps(type: :utc_datetime)",
+      "MyApp.Logging.LogEntry"
+    ],
+    "must_not_contain": [
+      ":naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["soft-deletes-and-timestamps"],
+    "criterion": "utc_datetime_timestamps",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-macro change. Easy but high-value because the default is globally wrong — the Ecto maintainer has publicly acknowledged this is a historical accident.",
+  "research_citation": "Ecto Issue #2683 — Wojtek Mach: 'I personally agree these would be the better defaults.'",
+  "calibration": null
+}

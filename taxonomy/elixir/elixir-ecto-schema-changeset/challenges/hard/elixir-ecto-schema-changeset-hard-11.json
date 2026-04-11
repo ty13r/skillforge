@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-11",
+  "tier": "hard",
+  "title": "Custom validator + validate_confirmation + virtual fields",
+  "prompt": "Build a password-change flow for MyApp.Accounts.User: virtual fields :current_password and :new_password and :new_password_confirmation. The changeset should: (1) require all three, (2) validate_length new_password >= 12, (3) validate_confirmation(:new_password), (4) a custom validator that rejects new_password == current_password with a friendly error. Handle nils without crashing. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "field :current_password, :string, virtual: true",
+      "field :new_password, :string, virtual: true",
+      "field :new_password_confirmation, :string, virtual: true",
+      "validate_length(:new_password, min: 12)",
+      "validate_confirmation(:new_password)",
+      "defp validate_new_password_differs",
+      "add_error",
+      "MyApp.Accounts.User"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": ["validations-basic", "schema-organization"],
+    "criterion": "password_change_flow",
+    "weight": 1.0
+  },
+  "tier_rationale": "Synthesis of virtual fields + multiple validators + custom cross-field check. Hard because every piece is interlocking.",
+  "calibration": null
+}

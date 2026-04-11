@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-09",
+  "tier": "easy",
+  "title": "Validate email format",
+  "prompt": "Add a validate_format/3 call that checks the `:email` field has an @ sign and no whitespace. Also add a validate_length/3 on `:name` with a minimum of 1 and maximum of 120. Write the updated changeset function as part of lib/my_app/accounts/user.ex. Use MyApp.Accounts.User as the module name with fields :email, :name.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "validate_format(:email",
+      "validate_length(:name",
+      "min: 1",
+      "max: 120",
+      "MyApp.Accounts.User"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": [],
+    "criterion": "format_and_length_validations",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two validation combinators with specific options. Easy because each validation is a one-liner.",
+  "calibration": null
+}

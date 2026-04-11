@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-28",
+  "tier": "easy",
+  "title": "embeds_many for tags on a Post",
+  "prompt": "Build MyApp.Blog.Post with an embeds_many of Tag, where Tag is an embedded_schema with :name and :color. Use `embeds_many :tags, MyApp.Blog.Tag` and cast_embed with Tag's changeset. Write both modules to lib/my_app/blog/post.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/post.ex"],
+    "must_contain": [
+      "embeds_many :tags, MyApp.Blog.Tag",
+      "cast_embed(:tags",
+      "embedded_schema",
+      "MyApp.Blog.Post",
+      "MyApp.Blog.Tag"
+    ],
+    "must_not_contain": [
+      "has_many :tags, MyApp.Blog.Tag"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": [],
+    "criterion": "embeds_many_basic",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical embeds_many declaration. Easy because the choice is explicit in the prompt.",
+  "calibration": null
+}

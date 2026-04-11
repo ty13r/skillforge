@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-24",
+  "tier": "easy",
+  "title": "Required + optional field distinction",
+  "prompt": "MyApp.Accounts.Contact has email, name, phone fields. Email and name are required; phone is optional. Write the changeset — cast all three, but only validate_required email and name. Write to lib/my_app/accounts/contact.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/contact.ex"],
+    "must_contain": [
+      "validate_required([:email, :name])",
+      "cast(attrs, [:email, :name, :phone])",
+      "MyApp.Accounts.Contact"
+    ],
+    "must_not_contain": [
+      "validate_required([:email, :name, :phone])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": ["cast-and-allowed-fields"],
+    "criterion": "required_excludes_optional",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single changeset with a specific require list. Easy but catches Claude copy-paste of the cast list into validate_required.",
+  "calibration": null
+}

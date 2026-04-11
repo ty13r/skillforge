@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-25",
+  "tier": "easy",
+  "title": "Composite unique index on two columns",
+  "prompt": "Write a migration that creates a unique_index on the `posts` table covering both `(user_id, slug)`. Name the index explicitly as `:posts_user_id_slug_index`. Write to priv/repo/migrations/20260411500000_composite_unique_index.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411500000_composite_unique_index.exs"],
+    "must_contain": [
+      "create unique_index(:posts, [:user_id, :slug]",
+      "name: :posts_user_id_slug_index"
+    ],
+    "must_not_contain": [
+      "create index(:posts, [:user_id, :slug]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["migrations"],
+    "criterion": "composite_unique_index",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single migration statement. Easy but discriminates against plain `index` (non-unique).",
+  "calibration": null
+}

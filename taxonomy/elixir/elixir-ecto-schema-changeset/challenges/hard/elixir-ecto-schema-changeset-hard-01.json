@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-01",
+  "tier": "hard",
+  "title": "Zero-downtime add-non-null-with-backfill",
+  "prompt": "Add a new non-null column `plan_code` (string) to an existing `subscriptions` table without downtime. Use the canonical three-migration pattern: (1) add as nullable, (2) backfill with a default via execute \"UPDATE subscriptions SET plan_code = 'free'\", (3) alter to NOT NULL. For this challenge, produce all three migrations in separate files. Files: priv/repo/migrations/20260413000000_add_plan_code_nullable.exs, priv/repo/migrations/20260413000001_backfill_plan_code.exs, priv/repo/migrations/20260413000002_make_plan_code_not_null.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "priv/repo/migrations/20260413000000_add_plan_code_nullable.exs",
+      "priv/repo/migrations/20260413000001_backfill_plan_code.exs",
+      "priv/repo/migrations/20260413000002_make_plan_code_not_null.exs"
+    ],
+    "must_contain": [
+      "add :plan_code, :string",
+      "execute",
+      "UPDATE subscriptions",
+      "modify :plan_code, :string, null: false"
+    ],
+    "must_not_contain": [
+      "add :plan_code, :string, null: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": [],
+    "criterion": "zero_downtime_three_migration_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "Synthesis of three migration files with a specific ordering pattern. Hard because Sonnet typically collapses this into a single migration.",
+  "research_citation": "Hashrocket — Ecto Migrations: Simple to Complex",
+  "calibration": null
+}

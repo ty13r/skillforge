@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-32",
+  "tier": "easy",
+  "title": "Post changeset with validate_length body",
+  "prompt": "Add a validate_length(:body, min: 10, max: 5000) to MyApp.Blog.Post.changeset/2. Also validate_length(:title, min: 3, max: 200). Write to lib/my_app/blog/post.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/post.ex"],
+    "must_contain": [
+      "validate_length(:body, min: 10, max: 5000)",
+      "validate_length(:title, min: 3, max: 200)",
+      "MyApp.Blog.Post"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": [],
+    "criterion": "validate_length_bounds",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two validate_length calls. Trivial but useful for pool breadth.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-12",
+  "tier": "easy",
+  "title": "Explicit cast allowlist for User schema",
+  "prompt": "Write MyApp.Accounts.User.changeset/2 that explicitly casts only [:email, :name, :bio]. Do NOT include :is_admin, :role, or other privileged fields in the cast list even if they exist in the schema. This is Ecto's explicit-allowlist discipline against mass assignment. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "cast(attrs, [:email, :name, :bio])",
+      "MyApp.Accounts.User",
+      "validate_required"
+    ],
+    "must_not_contain": [
+      ":is_admin",
+      ":role"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "explicit_allowlist_no_privileged",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single cast list with a clear allow/deny. Easy but discriminates against the is_admin-in-cast anti-pattern that Phoenix's own security guide calls out.",
+  "research_citation": "Phoenix security guide: 'The problem is that :is_admin should never be set via external user input.'",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-16",
+  "tier": "hard",
+  "title": "Context-aware changeset via Ecto.Multi",
+  "prompt": "In MyApp.Accounts, write a `register_user/1` function that uses Ecto.Multi to: (1) insert the user via User.registration_changeset, (2) insert a default Profile record associated with that user, (3) return {:ok, %{user: user, profile: profile}} or {:error, failed_op, failed_value, _}. Use Ecto.Multi.insert twice. Write to lib/my_app/accounts.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Ecto.Multi.insert",
+      "Repo.transaction",
+      "User.registration_changeset",
+      "def register_user",
+      "MyApp.Accounts"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["schema-organization", "associations"],
+    "criterion": "ecto_multi_transactional_insert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires Ecto.Multi composition. Hard because the pattern is non-obvious and requires transactional thinking.",
+  "calibration": null
+}

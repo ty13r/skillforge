@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-17",
+  "tier": "medium",
+  "title": "Context-scoped schemas — no Accounts import in Billing",
+  "prompt": "Design Billing.Invoice and Billing.Subscription in a way that neither imports or references MyApp.Accounts.User directly. Both need a user_id (integer field), and both have independent changeset/2 functions. Explain in a module doc why no belongs_to :user is used. Write to lib/my_app/billing/invoice.ex and lib/my_app/billing/subscription.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/billing/invoice.ex",
+      "lib/my_app/billing/subscription.ex"
+    ],
+    "must_contain": [
+      "field :user_id, :integer",
+      "MyApp.Billing.Invoice",
+      "MyApp.Billing.Subscription",
+      "@moduledoc"
+    ],
+    "must_not_contain": [
+      "belongs_to :user, MyApp.Accounts.User",
+      "import MyApp.Accounts",
+      "alias MyApp.Accounts.User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": [],
+    "criterion": "context_boundary_id_only",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires architectural discipline across two files. Sonnet often reaches for belongs_to by habit.",
+  "research_citation": "georgeguimaraes plugin: 'Context isn't just a namespace — it changes what words mean.'",
+  "calibration": null
+}

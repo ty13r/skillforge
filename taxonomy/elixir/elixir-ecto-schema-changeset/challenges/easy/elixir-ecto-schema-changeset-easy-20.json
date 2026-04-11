@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-20",
+  "tier": "easy",
+  "title": "Multi-currency account with decimal balance",
+  "prompt": "Build MyApp.Finance.Account with fields owner_name (string), currency (string — a 3-letter ISO code), and balance (money). Pick the correct Ecto type for balance. Changeset must require all three and validate currency length is exactly 3. Write to lib/my_app/finance/account.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/finance/account.ex"],
+    "must_contain": [
+      "field :balance, :decimal",
+      "field :currency, :string",
+      "validate_length(:currency",
+      "is: 3",
+      "MyApp.Finance.Account"
+    ],
+    "must_not_contain": [
+      "field :balance, :float",
+      "field :balance, :integer"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "decimal_balance_currency",
+    "weight": 1.0
+  },
+  "tier_rationale": "Greenfield money-field schema. Easy but another discrimination point for the :decimal rule.",
+  "research_citation": "oliver-kriska Iron Laws + elixirmoney/money README: 'Money uses Decimal to store the amount which allows arbitrary precision arithmetic.'",
+  "calibration": null
+}

@@ -1,0 +1,41 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-02",
+  "tier": "hard",
+  "title": "Refuse polymorphic; build three join tables",
+  "prompt": "The file test_fixtures/polymorphic_rails_style.ex has the Rails polymorphic anti-pattern (imageable_type, imageable_id). Rewrite MyApp.Media.Image and its migration to use three separate join tables: users_images, posts_images, comments_images. Each join table has FK references to its parent with cascade delete + a unique_index on the pair. Image schema declares many_to_many to each parent. Write image schema to lib/my_app/media/image.ex and the new migration to priv/repo/migrations/20260413100000_create_images_with_join_tables.exs.",
+  "fixture_files": ["test_fixtures/polymorphic_rails_style.ex"],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/media/image.ex",
+      "priv/repo/migrations/20260413100000_create_images_with_join_tables.exs"
+    ],
+    "must_contain": [
+      "many_to_many :users, MyApp.Accounts.User, join_through: \"users_images\"",
+      "many_to_many :posts, MyApp.Blog.Post, join_through: \"posts_images\"",
+      "many_to_many :comments, MyApp.Blog.Comment, join_through: \"comments_images\"",
+      "create table(:users_images, primary_key: false)",
+      "create table(:posts_images, primary_key: false)",
+      "create table(:comments_images, primary_key: false)",
+      "references(:users, on_delete: :delete_all)",
+      "references(:posts, on_delete: :delete_all)",
+      "references(:comments, on_delete: :delete_all)",
+      "create unique_index(:users_images",
+      "create unique_index(:posts_images",
+      "create unique_index(:comments_images"
+    ],
+    "must_not_contain": [
+      "imageable_type",
+      "imageable_id",
+      "field :imageable"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["associations", "migrations", "unique-constraints-and-indexes"],
+    "criterion": "polymorphic_to_three_join_tables",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-file refactor with synthesis of associations + migrations + unique indexes. Hard because the full join-table pattern must be applied consistently across three parent types.",
+  "research_citation": "Ecto Polymorphic Associations guide: 'breaks database references... leads to an inconsistent database.'",
+  "calibration": null
+}

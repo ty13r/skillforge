@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-15",
+  "tier": "hard",
+  "title": "Nested cast_embed with embeds_many — inner schema required per item",
+  "prompt": "Build MyApp.Orders.Order with embeds_many :line_items, LineItem. Each LineItem has required fields :product_name, :unit_price (decimal), :quantity (integer). Both order and line item have their own changeset functions. Order's changeset validates that there is at least one line item. Write both modules to lib/my_app/orders/order.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/orders/order.ex"],
+    "must_contain": [
+      "embeds_many :line_items, MyApp.Orders.LineItem",
+      "cast_embed(:line_items",
+      "with: &MyApp.Orders.LineItem.changeset/2",
+      "field :unit_price, :decimal",
+      "validate_required([:product_name, :unit_price, :quantity])",
+      "MyApp.Orders.LineItem"
+    ],
+    "must_not_contain": [
+      "field :unit_price, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["field-types-and-decimal", "cast-and-allowed-fields"],
+    "criterion": "nested_embeds_many_with_validation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Synthesis of embeds_many + nested changeset + :decimal fields. Hard because per-item validation is easy to forget.",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-01",
+  "tier": "easy",
+  "title": "Fix :float price field to :decimal",
+  "prompt": "The Product schema in test_fixtures/product_float_price.ex uses :float for price, cost, and weight_kg. The iron law of Ecto is: NEVER use :float for money. Rewrite the schema so price and cost use :decimal (currency requires arbitrary-precision arithmetic). Also upgrade timestamps() to timestamps(type: :utc_datetime). Keep the module name MyApp.Catalog.Product and write the entire updated schema file to lib/my_app/catalog/product.ex.",
+  "fixture_files": ["test_fixtures/product_float_price.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/catalog/product.ex"],
+    "must_contain": [
+      "field :price, :decimal",
+      "field :cost, :decimal",
+      "timestamps(type: :utc_datetime)",
+      "MyApp.Catalog.Product"
+    ],
+    "must_not_contain": [
+      "field :price, :float",
+      "field :cost, :float",
+      ":float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "decimal_not_float_for_money",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-file transformation with a well-known idiom (:decimal over :float). Vanilla Sonnet typically one-shots it once told the rule, but the iron-law nature makes it the baseline test.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix Iron Laws: 'Never use :float for money.'",
+  "calibration": null
+}

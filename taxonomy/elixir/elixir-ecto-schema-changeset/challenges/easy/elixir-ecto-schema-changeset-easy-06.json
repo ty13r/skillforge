@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-06",
+  "tier": "easy",
+  "title": "Post has_many Comments — basic association",
+  "prompt": "Build two Ecto schemas: MyApp.Blog.Post (fields: title, body) and MyApp.Blog.Comment (fields: body), where a Post has many Comments. Get the direction right: the foreign key lives on the comments table. Write Post to lib/my_app/blog/post.ex and Comment to lib/my_app/blog/comment.ex. Use UTC timestamps.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/blog/post.ex",
+      "lib/my_app/blog/comment.ex"
+    ],
+    "must_contain": [
+      "has_many :comments, MyApp.Blog.Comment",
+      "belongs_to :post, MyApp.Blog.Post",
+      "MyApp.Blog.Post",
+      "MyApp.Blog.Comment"
+    ],
+    "must_not_contain": [
+      "belongs_to :comment, MyApp.Blog.Comment",
+      "has_many :posts, MyApp.Blog.Post"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "association_direction_correct",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single has_many/belongs_to pair with obvious cardinality. Easy tier because the direction follows directly from 'a Post has many Comments'.",
+  "calibration": null
+}

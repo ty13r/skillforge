@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-27",
+  "tier": "easy",
+  "title": "Decimal with explicit precision/scale in migration",
+  "prompt": "Write a migration that creates a `fx_rates` table with columns: base_currency (string), quote_currency (string), rate (decimal with precision 18 and scale 8 for FX precision), and UTC timestamps. Write to priv/repo/migrations/20260411600000_create_fx_rates.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411600000_create_fx_rates.exs"],
+    "must_contain": [
+      "add :rate, :decimal",
+      "precision: 18",
+      "scale: 8",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "add :rate, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["migrations"],
+    "criterion": "decimal_precision_scale",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single migration column with explicit precision/scale. Easy but catches the common Claude omission of precision/scale on decimal columns.",
+  "calibration": null
+}

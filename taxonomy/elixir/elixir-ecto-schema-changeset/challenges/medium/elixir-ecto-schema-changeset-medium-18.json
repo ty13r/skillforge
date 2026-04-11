@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-18",
+  "tier": "medium",
+  "title": "Ecto.Enum plus changeset preserves atomicity",
+  "prompt": "Rewrite test_fixtures/stringly_typed_status.ex to use Ecto.Enum for both :status and :priority. Keep the same allowed values. Also add a validate_required for :status (default Task gets :pending implicitly via default but require explicit presence). Write to lib/my_app/tasks/task.ex.",
+  "fixture_files": ["test_fixtures/stringly_typed_status.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/tasks/task.ex"],
+    "must_contain": [
+      "field :status, Ecto.Enum",
+      "field :priority, Ecto.Enum",
+      "values: [:pending, :in_progress, :done, :cancelled]",
+      "values: [:low, :medium, :high]",
+      "validate_required([:title, :status])"
+    ],
+    "must_not_contain": [
+      "validate_inclusion(:status",
+      "validate_inclusion(:priority"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "ecto_enum_migration",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full-field-swap from stringly-typed to Ecto.Enum with the validate_inclusion calls removed.",
+  "calibration": null
+}

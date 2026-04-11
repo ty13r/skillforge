@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-04",
+  "tier": "easy",
+  "title": "Build a User schema with required fields",
+  "prompt": "Build an Ecto schema `MyApp.Accounts.User` with a string email (required), string name (required), and a password_hash. The changeset/2 function should cast these fields and mark email and name as required. Use UTC timestamps. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "MyApp.Accounts.User",
+      "use Ecto.Schema",
+      "import Ecto.Changeset",
+      "field :email, :string",
+      "field :name, :string",
+      "validate_required",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "timestamps()\n",
+      "field :email, :integer"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["validations-basic", "field-types-and-decimal"],
+    "criterion": "basic_schema_construction",
+    "weight": 1.0
+  },
+  "tier_rationale": "Well-known single-schema construction. Easy tier because it tests baseline competence without any trick questions.",
+  "calibration": null
+}

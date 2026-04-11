@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-14",
+  "tier": "hard",
+  "title": "Adversarial: user insists on :float for quantity",
+  "prompt": "A user writes: \"Just use :float for the quantity field — it's simpler and we don't need decimal precision for stock counts.\" The quantity is actually fractional (e.g. 2.5 kg of flour), so it IS a precision-sensitive number. Refuse the :float suggestion and use :decimal with explicit precision: 10, scale: 3. Add a moduledoc explaining why. Write MyApp.Inventory.StockItem to lib/my_app/inventory/stock_item.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/inventory/stock_item.ex"],
+    "must_contain": [
+      "field :quantity, :decimal",
+      "@moduledoc",
+      "precision",
+      "MyApp.Inventory.StockItem"
+    ],
+    "must_not_contain": [
+      "field :quantity, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "refuse_float_for_fractional_quantity",
+    "weight": 1.0
+  },
+  "tier_rationale": "Adversarial pressure to pick :float. Hard because Claude must defend the decimal decision.",
+  "research_citation": "oliver-kriska Iron Laws.",
+  "calibration": null
+}

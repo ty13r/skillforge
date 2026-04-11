@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-34",
+  "tier": "medium",
+  "title": "Fix the default timestamps() — global upgrade",
+  "prompt": "A project has dozens of schemas all using default `timestamps()` (naive_datetime). Write a migration that does NOT modify the existing schemas but instead establishes an app-wide convention. Create lib/my_app/schema.ex — a reusable `use MyApp.Schema` macro that imports Ecto.Schema, sets default `@primary_key {:id, :id, autogenerate: true}` and defaults timestamps to :utc_datetime via `Module.register_attribute(__MODULE__, :timestamps_opts, ...)`. Existing schemas should then `use MyApp.Schema` instead of `use Ecto.Schema`. Write the helper module to lib/my_app/schema.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/schema.ex"],
+    "must_contain": [
+      "defmodule MyApp.Schema",
+      "use Ecto.Schema",
+      "@timestamps_opts [type: :utc_datetime]",
+      "defmacro __using__"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "reusable_schema_macro_utc_defaults",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing @timestamps_opts and the __using__ macro pattern. Medium-to-hard because the indirection is non-obvious.",
+  "research_citation": "Ecto Issue #2683 — maintainer acknowledgment that naive_datetime default is regrettable.",
+  "calibration": null
+}

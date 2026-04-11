@@ -1,0 +1,18 @@
+runtime:
+  language: python
+  version: "3.12"
+binaries:
+  - python3
+python_packages:
+  - regex
+optional_binaries:
+  - elixir@1.16
+  - mix@1.16
+optional_services:
+  - postgres@15
+notes: |
+  score.py uses regex for static checks against generated Ecto schemas,
+  migrations, and changesets. No Elixir runtime required for scoring —
+  we do not compile competitor output. Postgres is optional: no challenge
+  in this family currently asserts DB state (all evaluation is file-content
+  based).

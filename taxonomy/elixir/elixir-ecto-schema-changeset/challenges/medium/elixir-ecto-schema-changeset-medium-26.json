@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-26",
+  "tier": "medium",
+  "title": "Custom validator that respects changeset.valid?",
+  "prompt": "Write a custom validator `validate_start_year_before_end_year/1` for a DateRange changeset. The function must guard on changeset.valid? and on get_field returning nil to avoid crashing when preceding validations have already failed. Use validate_change is NOT appropriate here because the validation is cross-field; write a plain function that takes a changeset and returns a changeset. Apply to MyApp.Reports.DateRange fields :start_year, :end_year. Write to lib/my_app/reports/date_range.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports/date_range.ex"],
+    "must_contain": [
+      "defp validate_start_year_before_end_year",
+      "changeset.valid?",
+      "get_field(changeset, :start_year)",
+      "get_field(changeset, :end_year)",
+      "add_error"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": [],
+    "criterion": "custom_validator_respects_valid",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing that custom validators don't automatically bail on invalid input. Sonnet often crashes on nil.",
+  "research_citation": "dev.to — How To Write A Custom Elixir Schema Validation.",
+  "calibration": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-23",
+  "tier": "medium",
+  "title": "Partial unique index for soft-deleted rows",
+  "prompt": "When users soft-delete via deleted_at, a new user should be able to re-use the same email. Write a migration that creates a partial unique_index on :members [:email] with `where: \"deleted_at IS NULL\"` and an explicit name `:members_email_active_index`. Write to priv/repo/migrations/20260412600000_partial_unique_email.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260412600000_partial_unique_email.exs"],
+    "must_contain": [
+      "create unique_index(:members, [:email]",
+      "where: \"deleted_at IS NULL\"",
+      "name: :members_email_active_index"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": ["unique-constraints-and-indexes", "migrations"],
+    "criterion": "partial_unique_index_with_name",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing both partial-index syntax and the name: option. Sonnet often skips one or the other.",
+  "research_citation": "Dashbit — Soft deletes with Ecto and PostgreSQL: 'If you are adding constraints, such as unique indexes or check constraints, you may not want them to apply to deleted at.'",
+  "calibration": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-16",
+  "tier": "medium",
+  "title": "cast_embed with with: option for nested changeset",
+  "prompt": "Build MyApp.Accounts.User with an embedded shipping_address (MyApp.Accounts.ShippingAddress). Address has street, city, country, postal_code. Address has its own `validate_changeset/2` function (custom name, not just `changeset/2`). In User's changeset, use cast_embed(:shipping_address, with: &MyApp.Accounts.ShippingAddress.validate_changeset/2). Write both to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "embeds_one :shipping_address, MyApp.Accounts.ShippingAddress",
+      "cast_embed(:shipping_address",
+      "with: &MyApp.Accounts.ShippingAddress.validate_changeset/2",
+      "def validate_changeset"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["cast-and-allowed-fields"],
+    "criterion": "cast_embed_with_option",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the `with:` option explicitly. Sonnet often falls back to the default changeset name.",
+  "calibration": null
+}

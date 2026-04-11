@@ -1,0 +1,35 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-06",
+  "tier": "legendary",
+  "title": "Hybrid schema: some fields embed, others associate",
+  "prompt": "Build MyApp.Accounts.User where: (1) :preferences are an embedded_schema (embeds_one) because they are single-parent, never queried independently (UI-specific), (2) :audit_log is an association (has_many) because entries must persist beyond the user lifetime and are queried cross-user for security reports. Write Preferences + AuditLogEntry + User to lib/my_app/accounts/user.ex and the supporting migration for audit_log_entries to priv/repo/migrations/20260414300000_create_audit_log_entries.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "priv/repo/migrations/20260414300000_create_audit_log_entries.exs"
+    ],
+    "must_contain": [
+      "MyApp.Accounts.Preferences",
+      "MyApp.Accounts.AuditLogEntry",
+      "embedded_schema",
+      "embeds_one :preferences, MyApp.Accounts.Preferences",
+      "has_many :audit_log, MyApp.Accounts.AuditLogEntry",
+      "create table(:audit_log_entries)",
+      "references(:users"
+    ],
+    "must_not_contain": [
+      "embeds_many :audit_log",
+      "has_many :preferences"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["associations", "schema-organization", "migrations"],
+    "criterion": "hybrid_embed_vs_assoc",
+    "weight": 1.0
+  },
+  "tier_rationale": "Legendary because the modeling call per field requires domain reasoning about ephemeral-vs-persistent and single-vs-multi-parent. Sonnet often uses the same pattern for both.",
+  "research_citation": "Ecto embedded schemas guide: 'a record can only be embedded in a single parent, you can't model a many-to-many relationship with embedded records.'",
+  "calibration": null
+}

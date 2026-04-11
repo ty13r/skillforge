@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-28",
+  "tier": "medium",
+  "title": "JSONB field for flexible metadata",
+  "prompt": "MyApp.Analytics.Event should have a :metadata field that stores arbitrary JSON (typed :map in Elixir, :jsonb in Postgres). Write both the schema and the migration. Migration must declare `add :metadata, :map`. Schema declares `field :metadata, :map`. Write schema to lib/my_app/analytics/event.ex and migration to priv/repo/migrations/20260412700000_create_events.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/analytics/event.ex",
+      "priv/repo/migrations/20260412700000_create_events.exs"
+    ],
+    "must_contain": [
+      "field :metadata, :map",
+      "add :metadata, :map",
+      "MyApp.Analytics.Event"
+    ],
+    "must_not_contain": [
+      "field :metadata, :string"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["migrations"],
+    "criterion": "map_field_for_jsonb",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing :map maps to Postgres jsonb. Sonnet sometimes reaches for :string + Jason.",
+  "calibration": null
+}

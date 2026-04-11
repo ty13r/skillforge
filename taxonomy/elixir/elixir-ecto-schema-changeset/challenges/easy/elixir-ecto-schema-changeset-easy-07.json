@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-07",
+  "tier": "easy",
+  "title": "Comments migration with cascading on_delete",
+  "prompt": "Write the Ecto migration for the `comments` table. It should have a body (text, not null) and belong to a post. Use `references/2` with explicit `on_delete: :delete_all` so that deleting a post cascades to its comments. Add an index on post_id. Use UTC timestamps. Write to priv/repo/migrations/20260411100000_create_comments.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411100000_create_comments.exs"],
+    "must_contain": [
+      "references(:posts",
+      "on_delete: :delete_all",
+      "create index(:comments, [:post_id])",
+      "timestamps(type: :utc_datetime)",
+      "add :body, :text"
+    ],
+    "must_not_contain": [
+      "add :post_id, :integer",
+      "timestamps()\n  end"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": ["associations"],
+    "criterion": "references_with_on_delete",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single migration file with a single FK. Easy because the pattern is canonical, but discriminates against the common Claude failure of writing `add :post_id, :integer` without references.",
+  "research_citation": "doriankarter.com: 'The default value for the on_delete option on references is :nothing... may lead to orphaned or inconsistent data.'",
+  "calibration": null
+}
