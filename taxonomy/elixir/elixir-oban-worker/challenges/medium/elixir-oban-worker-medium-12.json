@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-12",
+  "tier": "medium",
+  "title": "Test a worker with perform_job and assert a returned error",
+  "prompt": "Write `MyApp.Workers.ChargeCardWorkerTest` using `Oban.Testing`. Call `perform_job(MyApp.Workers.ChargeCardWorker, %{\"card_id\" => \"deleted_card\"}, [])` and assert the result matches `{:cancel, :card_not_found}`. Use `use MyApp.DataCase` and `use Oban.Testing, repo: MyApp.Repo`. Include a second test that asserts `perform_job` with a valid card returns `:ok`. Write to `test/my_app/workers/charge_card_worker_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/charge_card_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "perform_job(MyApp.Workers.ChargeCardWorker",
+      "\"card_id\"",
+      "{:cancel, :card_not_found}"
+    ],
+    "must_not_contain": [
+      "card_id: \"deleted_card\"",
+      "%Oban.Job{args:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["return-values"],
+    "criterion": "perform_job_with_assertion",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the non-`:ok` return path via `perform_job/3` — needs knowledge that the helper returns the worker's result directly.",
+  "calibration": null
+}

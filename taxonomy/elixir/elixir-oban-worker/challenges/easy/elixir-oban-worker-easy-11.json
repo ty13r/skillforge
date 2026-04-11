@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-11",
+  "tier": "easy",
+  "title": "Write a simple Oban.Testing perform_job assertion",
+  "prompt": "Write a unit test `MyApp.Workers.EmailVerificationWorkerTest` that uses `Oban.Testing` to call `perform_job/3` against `MyApp.Workers.EmailVerificationWorker` with args `%{\"email\" => \"test@example.com\"}`. Assert the return is `:ok`. The test should `use MyApp.DataCase` and `use Oban.Testing, repo: MyApp.Repo`. Write to `test/my_app/workers/email_verification_worker_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/email_verification_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job",
+      "MyApp.Workers.EmailVerificationWorker",
+      "\"email\" => \"test@example.com\""
+    ],
+    "must_not_contain": [
+      "email: \"test@example.com\"",
+      "MyApp.Workers.EmailVerificationWorker.perform("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "perform_job_helper_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Textbook Oban.Testing example; the only trap is remembering that `perform_job/3` is the helper (not calling perform directly).",
+  "calibration": null
+}

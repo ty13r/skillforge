@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-15",
+  "tier": "easy",
+  "title": "Attach a telemetry handler for :oban :job :exception",
+  "prompt": "Write an `MyApp.ObanTelemetry` module with an `attach/0` function that uses `:telemetry.attach/4` to register a handler for `[:oban, :job, :exception]` events. The handler should log the failure via `Logger.error/1` including the worker name from metadata. The attach/0 function should be called from `MyApp.Application.start/2`. Write both modules to `lib/my_app/oban_telemetry.ex` and `lib/my_app/application.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/oban_telemetry.ex", "lib/my_app/application.ex"],
+    "must_contain": [
+      ":telemetry.attach",
+      "[:oban, :job, :exception]",
+      "Logger.error",
+      "metadata.worker"
+    ],
+    "must_not_contain": [
+      "[:oban_job_exception]",
+      "[:oban, :worker, :exception]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "correct_event_name",
+    "weight": 1.0
+  },
+  "tier_rationale": "Straight application of the telemetry-attach idiom; only trap is the exact event-name tuple (commonly guessed wrong).",
+  "calibration": null,
+  "research_citation": "Oban.Telemetry HexDocs — '[:oban, :job, :exception] — after a job fails and the failure is recorded in the database.'"
+}

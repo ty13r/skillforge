@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-legendary-06",
+  "tier": "legendary",
+  "title": "Diagnose and fix a unique constraint that silently stopped working",
+  "prompt": "A worker `MyApp.Workers.RecomputeWorker` has `unique: [period: 604_800, keys: [:entity_id]]` (one week). Reports are coming in that duplicate jobs started being created after about two days in production. The symptom: the unique check no longer prevents duplicates. Diagnose the root cause and write a fix. The root cause: the `Oban.Plugins.Pruner` is configured with the default `max_age: 60` (seconds? no — actually, check the docs — for this question, assume the pruner has a `max_age: 60 * 60 * 24 * 1` (1 day), which deletes completed jobs after 1 day. Uniqueness is insert-time: it checks against the oban_jobs table. When the pruner deletes the old records, the unique check has nothing to compare against, so duplicates can re-insert. Fix: set `pruner_max_age >= unique_period`, i.e., 7 days or more. Write the full `config/runtime.exs` block showing the correct Oban config: repo, queue, Pruner plugin with `max_age: 60 * 60 * 24 * 7` (1 week, matching the unique period), and a comment citing the Elixir Forum insight that the pruner can silently break uniqueness. Write to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "Oban.Plugins.Pruner",
+      "max_age:",
+      "60 * 60 * 24 * 7",
+      "pruner",
+      "config :my_app, Oban"
+    ],
+    "must_not_contain": [
+      "max_age: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["queues-and-priority", "worker-philosophy"],
+    "criterion": "pruner_period_alignment",
+    "weight": 1.0
+  },
+  "tier_rationale": "The pruner-vs-unique interaction is documented on Elixir Forum but almost impossible to diagnose without that specific context. Requires synthesizing plugin behavior with unique-check semantics.",
+  "calibration": null,
+  "research_citation": "Elixir Forum: 'Unique Oban jobs with period still seems to insert into DB' — 'I just needed to make sure the pruner didn't nuke the oban_jobs table so there was something to unique check against!'"
+}

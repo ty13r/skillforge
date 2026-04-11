@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-34",
+  "tier": "medium",
+  "title": "Test with drain_queue/1 for integration-level assertion",
+  "prompt": "Write a test `MyApp.Workers.ExportFlowTest` that verifies `MyApp.Exports.create_and_run(1)` enqueues AND executes an `ExportWorker`. Use `Oban.Testing` with `:manual` mode. The test must: (1) trigger `create_and_run/1`, (2) use `Oban.drain_queue/2` to execute all pending jobs in the `:exports` queue, (3) assert the result of drain_queue reports `%{success: 1}` in its counters, (4) also assert the expected side effect (e.g., `MyApp.Exports.get!(1).status == :done`). Write to `test/my_app/workers/export_flow_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/export_flow_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "Oban.drain_queue",
+      "queue: :exports",
+      "success: 1",
+      "MyApp.Exports.create_and_run"
+    ],
+    "must_not_contain": [
+      "testing: :inline",
+      "perform_job"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "drain_queue_assertion",
+    "weight": 1.0
+  },
+  "tier_rationale": "drain_queue/2 is the right tool for this integration-level test but is less advertised than perform_job/3. Needs knowledge of the helper.",
+  "calibration": null,
+  "research_citation": "Oban.Testing HexDocs — 'drain_* executes jobs inline for integration testing.'"
+}

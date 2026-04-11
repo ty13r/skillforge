@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-17",
+  "tier": "hard",
+  "title": "Configure Oban queues with pause/resume control via runtime functions",
+  "prompt": "Write `MyApp.ObanControl` with three public functions: (1) `pause_queue/1` — takes a queue name atom and calls `Oban.pause_queue(queue: queue)`, (2) `resume_queue/1` — calls `Oban.resume_queue(queue: queue)`, (3) `scale_queue/2` — takes queue name and limit integer, calls `Oban.scale_queue(queue: queue, limit: limit)`. Add a `@moduledoc` that clarifies these commands operate on the running Oban instance (not the static config), so they take effect across all running nodes via Oban's internal notifier. Write to `lib/my_app/oban_control.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/oban_control.ex"],
+    "must_contain": [
+      "Oban.pause_queue",
+      "Oban.resume_queue",
+      "Oban.scale_queue",
+      "queue: queue",
+      "@moduledoc",
+      "across all running nodes"
+    ],
+    "must_not_contain": [
+      "Application.put_env"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "runtime_queue_control",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests knowledge of the runtime queue-control API. Sonnet often tries to mutate config instead of calling the documented helpers.",
+  "calibration": null,
+  "research_citation": "Oban Defining Queues HexDocs — 'Queues can be started, stopped, paused, resumed and scaled independently at runtime locally or across all running nodes.'"
+}

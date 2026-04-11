@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-08",
+  "tier": "easy",
+  "title": "Declare an Oban worker with the standard perform/1 contract",
+  "prompt": "Create a new Oban worker `MyApp.Workers.EmailVerificationWorker` in the `:mailers` queue with `max_attempts: 5`. It should accept an args map with string key `\"email\"`, call `MyApp.Mailer.send_verification(email)`, and return `:ok` on success or `{:error, reason}` on failure. Include the `@impl Oban.Worker` attribute and destructure from `%Oban.Job{}`. Write to `lib/my_app/workers/email_verification_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/email_verification_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "queue: :mailers",
+      "max_attempts: 5",
+      "@impl Oban.Worker",
+      "%Oban.Job{args: %{\"email\""
+    ],
+    "must_not_contain": [
+      "def perform(%{email:",
+      "def perform(email)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "canonical_worker_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical worker template — exactly what the Oban.Worker docs example shows.",
+  "calibration": null
+}

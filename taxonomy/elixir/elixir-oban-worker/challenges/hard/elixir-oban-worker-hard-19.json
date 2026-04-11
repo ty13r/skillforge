@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-19",
+  "tier": "hard",
+  "title": "Worker that chains dependent jobs with transactional insert_all",
+  "prompt": "Write `MyApp.Workers.DataPipelineWorker` that on successful perform/1, enqueues a fan-out of downstream jobs using a single transactional insert_all. perform/1 takes `%{\"batch_id\" => id}`, calls `MyApp.Pipeline.split(id)` which returns a list of `child_ids`, then enqueues one `MyApp.Workers.ChildWorker.new(%{\"child_id\" => cid, \"batch_id\" => id})` per child_id. Use `Multi.insert_all/5` (or equivalent — wrapping a list of job changesets in a Repo.transaction) so the fan-out is atomic with a status update to the batch record (`MyApp.Pipeline.mark_split(id)`). Return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/data_pipeline_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/data_pipeline_worker.ex"],
+    "must_contain": [
+      "\"batch_id\" => id",
+      "MyApp.Pipeline.split",
+      "Oban.insert_all",
+      "MyApp.Workers.ChildWorker.new",
+      "\"child_id\" => cid",
+      "Ecto.Multi"
+    ],
+    "must_not_contain": [
+      "child_id: cid"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["args-serialization", "worker-philosophy"],
+    "criterion": "transactional_fanout",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi with Oban.insert_all for fan-out + transactional status update. Several concepts combined.",
+  "calibration": null
+}

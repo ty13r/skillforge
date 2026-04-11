@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-hard-13",
+  "tier": "hard",
+  "title": "Cron plugin with a dynamic-looking schedule (but actually static)",
+  "prompt": "A common LLM mistake: treating `Oban.Plugins.Cron` as if it supports dynamic/database-driven crontabs. It doesn't — the free plugin loads the crontab STATICALLY at boot time. `Oban.Pro.DynamicCron` is the only dynamic option. Write a `MyApp.CronSchedule` module that exposes a `@crontab` module attribute with three entries. Document explicitly in the `@moduledoc` that `Oban.Plugins.Cron` loads at boot time only, runtime updates require a supervisor restart or Oban Pro's DynamicCron. Also include a function `MyApp.CronSchedule.plugin_config/0` that returns `{Oban.Plugins.Cron, [crontab: @crontab]}` for use in the runtime config. The `@crontab` should contain three distinct entries. Write to `lib/my_app/cron_schedule.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/cron_schedule.ex"],
+    "must_contain": [
+      "@moduledoc",
+      "statically at boot time",
+      "@crontab",
+      "Oban.Plugins.Cron",
+      "plugin_config",
+      "Oban.Pro.DynamicCron"
+    ],
+    "must_not_contain": [
+      "GenServer",
+      "handle_info(:reload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "static_at_boot_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the difference between free and Pro cron plugins and documenting the limitation. Pre-training-data LLMs reach for dynamic solutions first.",
+  "calibration": null,
+  "research_citation": "Oban.Plugins.Cron HexDocs — 'This plugin only loads the crontab statically, at boot time.'"
+}

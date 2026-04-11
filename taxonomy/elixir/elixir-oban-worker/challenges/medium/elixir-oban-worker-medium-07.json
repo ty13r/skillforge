@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-07",
+  "tier": "medium",
+  "title": "Custom backoff/1 that slows down on rate-limit errors",
+  "prompt": "Write `MyApp.Workers.ExternalFetchWorker` (queue `:external_api`, max_attempts 20). Override `backoff/1` so it inspects `%Oban.Job{unsaved_error: unsaved_error}` — when `unsaved_error` has a rate-limit reason (`:rate_limited`), return `5 * 60` (5 minutes). Otherwise fall through to `Oban.Worker.backoff(job)` (the default exponential). perform/1 just calls `MyApp.Fetcher.run(id)` where `id` comes from args. Write to `lib/my_app/workers/external_fetch_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/external_fetch_worker.ex"],
+    "must_contain": [
+      "def backoff(%Oban.Job{",
+      "unsaved_error",
+      ":rate_limited",
+      "Oban.Worker.backoff(",
+      "max_attempts: 20"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "error_aware_backoff",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the exact `unsaved_error` field on `Oban.Job` and that you can delegate to `Oban.Worker.backoff/1` for the default — two API details that Sonnet tends to hallucinate.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'The unsaved error map can be used by backoff/1 to calculate a custom backoff based on the exact error that failed the job.'"
+}

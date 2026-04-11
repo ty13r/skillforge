@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-03",
+  "tier": "easy",
+  "title": "Stop storing a User struct in Oban args",
+  "prompt": "The worker in `test_fixtures/struct_args_worker.ex` passes a `%User{}` struct and a `%DateTime{}` directly into Oban args. Structs serialize to plain maps during JSON encoding, losing their `__struct__` field — the perform/1 pattern match on `%User{}` will crash on retry. Rewrite the module so the enqueue helper passes `%{\"user_id\" => user.id, \"deliver_at\" => DateTime.to_iso8601(deliver_at), \"channel\" => \"push\"}` and perform/1 loads the user via `Accounts.get_user!/1` and parses the deliver_at with `DateTime.from_iso8601/1`. Write the result to `lib/my_app/workers/notification_worker.ex`.",
+  "fixture_files": ["test_fixtures/struct_args_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/notification_worker.ex"],
+    "must_contain": [
+      "\"user_id\" => user.id",
+      "DateTime.to_iso8601",
+      "DateTime.from_iso8601",
+      "Accounts.get_user!"
+    ],
+    "must_not_contain": [
+      "%{user:",
+      "%User{} = user",
+      "\"user\" => %User{}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "no_structs_in_args",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step transformation once the problem is named; the fix (load by id, ISO8601 the datetime) is one of the canonical Oban idioms.",
+  "calibration": null,
+  "research_citation": "oliver-kriska/claude-elixir-phoenix Iron Laws — 'Storing Elixir structs directly in job args'"
+}

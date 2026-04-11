@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-02",
+  "tier": "hard",
+  "title": "Rebuild a self-rescheduling worker without retry amplification",
+  "prompt": "The worker in `test_fixtures/self_rescheduling_worker.ex` reschedules itself at the END of perform/1 — after `Digests.build_and_send(user)`. On a failed attempt (Digests.build_and_send raises or returns error), Oban retries perform/1, which re-executes both the business logic AND the reschedule call. This causes exponentially growing scheduled-job counts. Rewrite using the Sorentwo recipe: pattern-match two perform/1 clauses — the first clause matches `%Oban.Job{attempt: 1}` and schedules the NEXT occurrence FIRST (before calling Digests.build_and_send), the second clause matches all other attempts and ONLY does the business logic (no reschedule). Write to `lib/my_app/workers/digest_worker.ex`.",
+  "fixture_files": ["test_fixtures/self_rescheduling_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/digest_worker.ex"],
+    "must_contain": [
+      "def perform(%Oban.Job{args: %{\"user_id\" => user_id}, attempt: 1})",
+      "schedule_in:",
+      "Oban.insert",
+      "def perform(%Oban.Job{args: %{\"user_id\"",
+      "Digests.build_and_send"
+    ],
+    "must_not_contain": [
+      "Oban.Plugins.Cron"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["worker-philosophy", "retry-strategy"],
+    "criterion": "reschedule_first_clause",
+    "weight": 1.0
+  },
+  "tier_rationale": "The retry-amplification bug is non-obvious and the fix requires two perform/1 clauses pattern-matched on attempt number. This is almost entirely absent from pre-2023 training data.",
+  "calibration": null,
+  "research_citation": "Sorentwo 'Oban Recipes Part 3: Reliable Scheduling' — 'The first clause schedules the next iteration immediately, *before* attempting to deliver the email.'"
+}

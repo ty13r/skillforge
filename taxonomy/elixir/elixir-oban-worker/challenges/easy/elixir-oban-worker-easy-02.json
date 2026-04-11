@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-02",
+  "tier": "easy",
+  "title": "Make a charge-card worker idempotent",
+  "prompt": "The worker in `test_fixtures/non_idempotent_worker.ex` charges a customer and sends a receipt every time perform/1 runs. Oban retries on transient failures, so this worker will double-charge customers whenever Postgres or the mailer hiccups. Rewrite perform/1 so it first checks whether `invoice.charged_at` is already set — if so, return `:ok` without side effects. If not, call `Billing.charge_card/2`, then `Billing.mark_charged/2` to persist the charge id, then send the receipt. Assume `Billing.mark_charged/2` is available and returns `{:ok, invoice}`. Write the output to `lib/my_app/workers/invoice_worker.ex`.",
+  "fixture_files": ["test_fixtures/non_idempotent_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/invoice_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "invoice.charged_at",
+      "Billing.charge_card",
+      "Billing.mark_charged"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "idempotency_guard_present",
+    "weight": 1.0
+  },
+  "tier_rationale": "Straightforward idempotency fix once the problem is stated; the canonical pattern (check flag, then mark) is common across job queues.",
+  "calibration": null,
+  "research_citation": "Medium: 'Keep Calm and Let Oban Handle Your Elixir Background Jobs' — 'Design your workers so that executing the same job multiple times does not produce adverse effects.'"
+}

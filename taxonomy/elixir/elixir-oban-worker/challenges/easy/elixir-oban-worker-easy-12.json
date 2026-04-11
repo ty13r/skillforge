@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-12",
+  "tier": "easy",
+  "title": "Add backoff: :linear-equivalent via custom callback",
+  "prompt": "Write a new worker `MyApp.Workers.ScheduledWorker` in the `:default` queue. Override `backoff/1` to return `attempt * 60` (one minute per attempt, linear). Set `max_attempts: 10`. The perform/1 should accept `%{\"task_id\" => id}` and call `MyApp.Tasks.process(id)`. Write to `lib/my_app/workers/scheduled_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/scheduled_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "max_attempts: 10",
+      "def backoff(",
+      "attempt * 60"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "custom_backoff_callback",
+    "weight": 1.0
+  },
+  "tier_rationale": "One-line backoff callback; the only gotcha is the signature (must accept an Oban.Job or attempt integer).",
+  "calibration": null
+}

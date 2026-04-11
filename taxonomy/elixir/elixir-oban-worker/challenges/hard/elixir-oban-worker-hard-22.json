@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-22",
+  "tier": "hard",
+  "title": "Cron worker with per-timezone user delivery windows",
+  "prompt": "Write `MyApp.Workers.LocalizedDigestWorker` that runs hourly via `Oban.Plugins.Cron` (entry `\"0 * * * *\"` UTC), enqueueing individual per-user digest jobs ONLY when it's 9am in that user's timezone. perform/1 takes no args (it's invoked by the cron plugin). The worker must: (1) query `MyApp.Users.with_timezones/0` for a list of `{user_id, timezone}`, (2) for each user, compute the current hour in their timezone using `DateTime.now!(timezone)` — requires the `tz` dependency, (3) if the hour is 9, enqueue `MyApp.Workers.UserDigestWorker.new(%{\"user_id\" => id})`, (4) collect all inserted jobs into a list for logging. Include a module-level comment stating that `DateTime.now!/1` with a non-UTC timezone requires the `tz` library. Write to `lib/my_app/workers/localized_digest_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/localized_digest_worker.ex"],
+    "must_contain": [
+      "DateTime.now!",
+      "MyApp.Users.with_timezones",
+      ".hour == 9",
+      "MyApp.Workers.UserDigestWorker.new",
+      "tz",
+      "\"user_id\" => id"
+    ],
+    "must_not_contain": [
+      "user_id: id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["recurring-jobs-vs-cron", "transactional-jobs"],
+    "criterion": "per_timezone_dispatch",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines cron fan-out + per-entity timezone logic + tz dependency. High-complexity synthesis.",
+  "calibration": null,
+  "research_citation": "Oban.Plugins.Cron HexDocs — ':timezone… you must have a timezone database like tz installed and configured.'"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-05",
+  "tier": "medium",
+  "title": "Switch a test from :inline mode to :manual mode",
+  "prompt": "The test file in `test_fixtures/inline_test_case.exs` configures Oban in `:inline` mode inside `setup`, then calls `assert_enqueued/1`. This is a contradiction — `:inline` runs jobs synchronously and bypasses the database, so `assert_enqueued/1` cannot find anything. Rewrite the setup to use `:manual` mode. Update the `assert_enqueued/1` call so args use string keys (`\"user_id\"` not `user_id`). Keep the test's intent (prove that `Accounts.register_user/1` enqueues the welcome email). Write to `test/my_app/workers/welcome_email_worker_test.exs`.",
+  "fixture_files": ["test_fixtures/inline_test_case.exs"],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/welcome_email_worker_test.exs"],
+    "must_contain": [
+      "testing: :manual",
+      "assert_enqueued",
+      "worker: WelcomeEmailWorker",
+      "\"user_id\" => user.id"
+    ],
+    "must_not_contain": [
+      "testing: :inline",
+      "user_id: user.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "manual_mode_and_string_keys",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing a two-part contradiction (inline mode + assert_enqueued) plus applying the string-keys rule.",
+  "calibration": null,
+  "research_citation": "Oban.Testing HexDocs — 'Only :manual and :inline mode are supported, as :disabled implies that supervised queues and plugins are running.'"
+}

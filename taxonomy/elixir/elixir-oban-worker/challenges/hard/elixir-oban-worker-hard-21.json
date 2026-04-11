@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-hard-21",
+  "tier": "hard",
+  "title": "Worker that derives idempotency key from hashed args",
+  "prompt": "Write `MyApp.Workers.EmailWorker` (queue `:mailers`, max_attempts 5) whose perform/1 takes `%{\"to\" => to, \"subject\" => subject, \"body\" => body}`. Before sending, compute an idempotency key as `:crypto.hash(:sha256, \"#{to}|#{subject}|#{body}\") |> Base.encode16(case: :lower)`. Look up `MyApp.EmailLog.by_key(key)` — if a record exists with `sent_at` set, return `:ok` (already sent). Otherwise insert a pending log entry with the key, send via `MyApp.Mailer.deliver/3`, then update the log entry with `sent_at: DateTime.utc_now()`. Wrap the insert/update in an Ecto.Multi so a crash after `deliver/3` still records the send. Write to `lib/my_app/workers/email_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/email_worker.ex"],
+    "must_contain": [
+      ":crypto.hash(:sha256",
+      "Base.encode16",
+      "\"to\" => to",
+      "\"subject\" => subject",
+      "\"body\" => body",
+      "MyApp.EmailLog.by_key",
+      "Ecto.Multi",
+      "MyApp.Mailer.deliver"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["args-serialization", "transactional-jobs"],
+    "criterion": "hashed_idempotency_key",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the 'idempotency-from-content' pattern with hashing + ledger. Realistic production approach.",
+  "calibration": null
+}

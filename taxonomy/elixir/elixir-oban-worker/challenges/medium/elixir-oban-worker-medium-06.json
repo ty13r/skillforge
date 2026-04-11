@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-06",
+  "tier": "medium",
+  "title": "Add a unique constraint with a period aligned to the pruner",
+  "prompt": "Write `MyApp.Workers.DailyDigestWorker` for the `:digests` queue. Give it a `unique: [period: 86_400, keys: [:user_id]]` block so one user gets at most one digest per day. Add a brief `@moduledoc` explaining that the unique period must be no longer than the `Oban.Plugins.Pruner` max_age, otherwise the unique check silently stops working as old records are pruned. perform/1 takes `%{\"user_id\" => id}` and calls `MyApp.Digests.build_and_send(id)`. Write to `lib/my_app/workers/daily_digest_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/daily_digest_worker.ex"],
+    "must_contain": [
+      "unique:",
+      "period: 86_400",
+      "keys: [:user_id]",
+      "@moduledoc",
+      "pruner",
+      "MyApp.Digests.build_and_send"
+    ],
+    "must_not_contain": [
+      "period: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "pruner_aligned_period",
+    "weight": 1.0
+  },
+  "tier_rationale": "Knowing that the pruner can delete the records the unique check relies on is a documented Elixir Forum pitfall. Sonnet usually adds the unique block but forgets the pruner relationship.",
+  "calibration": null,
+  "research_citation": "Elixir Forum: 'Unique Oban jobs with period still seems to insert into DB' — 'I just needed to make sure the pruner didn't nuke the oban_jobs table so there was something to unique check against!'"
+}

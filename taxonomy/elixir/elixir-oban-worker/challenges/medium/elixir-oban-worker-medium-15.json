@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-15",
+  "tier": "medium",
+  "title": "Worker that differentiates first-attempt from retries",
+  "prompt": "Write `MyApp.Workers.EmailWithMetricsWorker` (queue `:mailers`, max_attempts 5). perform/1 destructures `%Oban.Job{attempt: attempt, args: %{\"email_id\" => id}}` and branches on whether `attempt == 1`. On attempt 1, call `MyApp.Metrics.record_first_attempt(id)` before sending. On retries (attempt >= 2), call `MyApp.Metrics.record_retry(id, attempt)`. Then call `MyApp.Mailer.send(id)` — return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/email_with_metrics_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/email_with_metrics_worker.ex"],
+    "must_contain": [
+      "%Oban.Job{attempt: attempt",
+      "\"email_id\" => id",
+      "attempt == 1",
+      "MyApp.Metrics.record_first_attempt",
+      "MyApp.Metrics.record_retry"
+    ],
+    "must_not_contain": [
+      "%{email_id: id}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "attempt_branching",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests reading multiple fields from the Oban.Job struct and branching on attempt number — a common retry-analytics pattern.",
+  "calibration": null
+}

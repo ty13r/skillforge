@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-20",
+  "tier": "medium",
+  "title": "Test assertion: assert a job is NOT enqueued",
+  "prompt": "Write a test `MyApp.Workers.IdempotencyCheckTest` that proves calling `MyApp.Actions.process/1` twice for the same `action_id` only enqueues ONE job. Use `Oban.Testing` with `:manual` mode. The test should (1) call `process/1` the first time, (2) `assert_enqueued/1` to confirm the job exists, (3) call `process/1` again with the same id, (4) use `all_enqueued/0` and assert the length is still 1. Write to `test/my_app/actions/idempotency_check_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/actions/idempotency_check_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "assert_enqueued",
+      "all_enqueued",
+      "length(",
+      "MyApp.Actions.process"
+    ],
+    "must_not_contain": [
+      "refute_enqueued",
+      "testing: :inline"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["unique-constraints"],
+    "criterion": "idempotency_in_test",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the `all_enqueued/0` helper exists and using it for a counting assertion. A step beyond `assert_enqueued/1`.",
+  "calibration": null
+}

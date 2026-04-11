@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-30",
+  "tier": "easy",
+  "title": "Use perform_job/3 to unit test a worker",
+  "prompt": "Write a test `MyApp.Workers.GreetWorkerTest` that uses `Oban.Testing` to directly invoke `MyApp.Workers.GreetWorker` via `perform_job/3` with args `%{\"name\" => \"Alice\"}`. Assert the result matches `:ok`. The test should `use MyApp.DataCase` and `use Oban.Testing, repo: MyApp.Repo`. Do NOT manually construct a `%Oban.Job{}`. Write to `test/my_app/workers/greet_worker_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/greet_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "perform_job(MyApp.Workers.GreetWorker",
+      "\"name\" => \"Alice\"",
+      "assert :ok"
+    ],
+    "must_not_contain": [
+      "%Oban.Job{args:",
+      "name: \"Alice\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "perform_job_not_manual",
+    "weight": 1.0
+  },
+  "tier_rationale": "Textbook use of the test helper — but the trap is that LLMs often hand-build %Oban.Job{} instead of using the helper.",
+  "calibration": null,
+  "research_citation": "Oban.Testing HexDocs — 'it automatically converts args to string keys before calling perform/1, ensuring that perform clauses aren't erroneously trying to match atom keys.'"
+}

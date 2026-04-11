@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-27",
+  "tier": "medium",
+  "title": "Test a worker using Ecto sandbox allowances for background processes",
+  "prompt": "Write a test `MyApp.Workers.AsyncFlowTest` that exercises a flow where a supervised GenServer triggers a worker. The test must: (1) `use MyApp.DataCase` (which sets up Ecto sandbox), (2) `use Oban.Testing, repo: MyApp.Repo`, (3) start a `MyApp.AsyncProcessor` (a GenServer) via `start_supervised!/1`, (4) call `Ecto.Adapters.SQL.Sandbox.allow/3` to grant the processor access to the sandbox connection, (5) trigger the flow with `MyApp.AsyncProcessor.fire/1`, (6) assert the job was enqueued with `assert_enqueued/1`. Write to `test/my_app/workers/async_flow_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/async_flow_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "Ecto.Adapters.SQL.Sandbox.allow",
+      "start_supervised!",
+      "assert_enqueued",
+      "MyApp.AsyncProcessor"
+    ],
+    "must_not_contain": [
+      "testing: :inline"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "sandbox_allowance",
+    "weight": 1.0
+  },
+  "tier_rationale": "The Ecto sandbox + background process interaction is subtle; requires knowing `Sandbox.allow/3` exists.",
+  "calibration": null
+}

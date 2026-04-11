@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-09",
+  "tier": "easy",
+  "title": "Configure Oban queues in config/runtime.exs",
+  "prompt": "Write a `config/runtime.exs` snippet that configures Oban with the `MyApp.Repo`, three queues — `default: 10`, `mailers: 20`, `reports: 5` — and no plugins. The snippet should be self-contained (start with `import Config`) and target `:my_app, Oban`. Write to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "config :my_app, Oban",
+      "repo: MyApp.Repo",
+      "default: 10",
+      "mailers: 20",
+      "reports: 5"
+    ],
+    "must_not_contain": [
+      "bypass: true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "queue_config_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical Oban config shape; no edge cases involved.",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-02",
+  "tier": "medium",
+  "title": "Convert two-call enqueue to a transactional Ecto.Multi",
+  "prompt": "The context in `test_fixtures/two_call_enqueue_context.ex` makes two separate calls: `Repo.insert(user)` followed by `Oban.insert(WelcomeEmailWorker.new(...))`. A crash between the two leaves a user with no welcome email. Rewrite `MyApp.Accounts.register_user/1` so both operations run inside a single `Ecto.Multi` transaction: insert the user, then call `Oban.insert(:welcome_email, fn %{user: user} -> WelcomeEmailWorker.new(%{\"user_id\" => user.id}) end)`. Return `{:ok, user}` or `{:error, changeset}`. Use `Repo.transaction/1` (not `Oban.transaction/1`). Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/two_call_enqueue_context.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Ecto.Multi.insert(:user",
+      "Oban.insert(:welcome_email",
+      "fn %{user: user}",
+      "\"user_id\" => user.id",
+      "Repo.transaction"
+    ],
+    "must_not_contain": [
+      "Repo.insert(changeset)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["worker-philosophy", "args-serialization"],
+    "criterion": "multi_with_dependent_step",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires understanding Oban.insert's Multi form with a function that receives the Multi context — a step up from the easy tier's shape-only refactor.",
+  "calibration": null,
+  "research_citation": "Oban module HexDocs — 'Ecto.Multi.new() |> Oban.insert(\"job-1\", MyApp.Worker.new(%{id: 1})) |> Oban.insert(\"job-2\", fn _ -> MyApp.Worker.new(%{id: 2}) end) |> MyApp.Repo.transaction()'"
+}

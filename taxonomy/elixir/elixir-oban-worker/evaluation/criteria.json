@@ -1,0 +1,101 @@
+{
+  "family_slug": "elixir-oban-worker",
+  "capabilities": {
+    "worker-philosophy": {
+      "weight": 0.12,
+      "objectives": {
+        "idempotency_present": {"weight": 0.5, "description": "Worker short-circuits on retry via a timestamp or ledger check"},
+        "philosophy_documented": {"weight": 0.25, "description": "@moduledoc states idempotency or retry contract explicitly"},
+        "no_raise_retry_loop": {"weight": 0.25, "description": "No Process.sleep or hand-rolled retry loop"}
+      }
+    },
+    "perform-callback-basics": {
+      "weight": 0.09,
+      "objectives": {
+        "job_struct_destructure": {"weight": 0.4, "description": "perform/1 destructures %Oban.Job{args: ...}"},
+        "string_key_pattern_match": {"weight": 0.4, "description": "Pattern match uses string keys, not atoms"},
+        "standard_return_values": {"weight": 0.2, "description": "Returns :ok, {:ok, _}, {:error, _}, {:cancel, _}, or {:snooze, _}"}
+      }
+    },
+    "args-serialization": {
+      "weight": 0.14,
+      "objectives": {
+        "string_keys_in_args": {"weight": 0.4, "description": "Enqueue uses string keys"},
+        "no_structs_in_args": {"weight": 0.3, "description": "No structs passed to Worker.new/2"},
+        "non_json_types_converted": {"weight": 0.3, "description": "Decimal, DateTime, NaiveDateTime are stringified via to_iso8601 / to_string / etc."}
+      }
+    },
+    "retry-strategy": {
+      "weight": 0.08,
+      "objectives": {
+        "reasonable_max_attempts": {"weight": 0.4, "description": "max_attempts > 1 for real work"},
+        "backoff_callback_valid": {"weight": 0.4, "description": "backoff/1 callback has correct signature and reasonable delay"},
+        "no_sleep_retry": {"weight": 0.2, "description": "No Process.sleep or recursive self-retry loop"}
+      }
+    },
+    "unique-constraints": {
+      "weight": 0.10,
+      "objectives": {
+        "period_explicit": {"weight": 0.35, "description": "unique: [period: _] is explicit, not defaulted"},
+        "safe_states_list": {"weight": 0.35, "description": ":available is in :states list (full safe list for hard/legendary)"},
+        "keys_specified": {"weight": 0.3, "description": "unique: [keys: _] is specified for multi-arg dedupe"}
+      }
+    },
+    "cron-scheduling": {
+      "weight": 0.08,
+      "objectives": {
+        "valid_cron_expression": {"weight": 0.4, "description": "5-field standard cron expression (no seconds)"},
+        "timezone_dependency_documented": {"weight": 0.3, "description": "Non-UTC timezone use cites tz dependency"},
+        "plugin_shape_correct": {"weight": 0.3, "description": "Oban.Plugins.Cron with crontab tuple list"}
+      }
+    },
+    "return-values": {
+      "weight": 0.10,
+      "objectives": {
+        "cancel_over_discard": {"weight": 0.35, "description": "Uses {:cancel, reason}, not {:discard, reason}"},
+        "snooze_on_rate_limit": {"weight": 0.35, "description": "Returns {:snooze, seconds} for rate-limit errors, not raise"},
+        "error_tuple_for_transient": {"weight": 0.3, "description": "Returns {:error, reason} for transient failures so Oban retries"}
+      }
+    },
+    "queues-and-priority": {
+      "weight": 0.06,
+      "objectives": {
+        "static_queue_in_use": {"weight": 0.4, "description": "Queue name is static in `use Oban.Worker`, not Application.get_env"},
+        "priority_range_correct": {"weight": 0.3, "description": "Priority is in 0..9 and 0 is treated as highest"},
+        "runtime_override_via_new": {"weight": 0.3, "description": "Runtime overrides pass through new/2 options"}
+      }
+    },
+    "testing-workers": {
+      "weight": 0.08,
+      "objectives": {
+        "testing_mode_correct": {"weight": 0.35, "description": "Uses :manual (with assert_enqueued) or :inline (with drain) appropriately"},
+        "perform_job_helper": {"weight": 0.35, "description": "Uses perform_job/3 helper, not manual %Oban.Job{} construction"},
+        "string_keys_in_test": {"weight": 0.3, "description": "Test args use string keys"}
+      }
+    },
+    "telemetry-and-observability": {
+      "weight": 0.05,
+      "objectives": {
+        "correct_event_names": {"weight": 0.5, "description": "[:oban, :job, :start|:stop|:exception] tuples are correct"},
+        "attach_in_application_start": {"weight": 0.3, "description": "Handler attached in Application.start/2, not perform/1"},
+        "attach_many_or_multi_clause": {"weight": 0.2, "description": "Uses attach_many/4 for multi-event handlers"}
+      }
+    },
+    "transactional-jobs": {
+      "weight": 0.07,
+      "objectives": {
+        "multi_with_oban_insert": {"weight": 0.5, "description": "Ecto.Multi chain contains Oban.insert/3 (not standalone Repo.insert + separate enqueue)"},
+        "dependent_step_function": {"weight": 0.25, "description": "Dependent step uses fn %{prev: _} -> Worker.new(...) end form"},
+        "no_bulk_unique": {"weight": 0.25, "description": "Does not claim insert_all/1 provides per-job uniqueness on the basic engine"}
+      }
+    },
+    "recurring-jobs-vs-cron": {
+      "weight": 0.03,
+      "objectives": {
+        "pattern_choice_correct": {"weight": 0.5, "description": "Per-entity intervals use schedule_in/scheduled_at, wall-clock fixed use cron"},
+        "reschedule_first_ordering": {"weight": 0.5, "description": "Self-rescheduling worker reschedules BEFORE business logic (attempt == 1 clause)"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

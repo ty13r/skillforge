@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-29",
+  "tier": "medium",
+  "title": "Separate cron-recurring and per-user-scheduled jobs cleanly",
+  "prompt": "A common confusion: 'every user gets a weekly digest at 9am on Monday' has two valid implementations. Write `MyApp.Digests` with two functions: (1) `MyApp.Digests.cron_impl/0` — a function returning the crontab tuple `{\"0 9 * * 1\", MyApp.Workers.WeeklyDigestFanoutWorker}` for the Oban.Plugins.Cron config (this worker enqueues individual per-user jobs at 9am Monday UTC). (2) `MyApp.Digests.self_reschedule_impl/1` — takes a `user_id` and inserts `MyApp.Workers.UserDigestWorker` with `schedule_in: 7 * 24 * 60 * 60` for per-user recursive scheduling. Add a `@moduledoc` explaining WHEN each pattern is appropriate: cron for wall-clock fixed times, self-reschedule for per-entity intervals. Write to `lib/my_app/digests.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/digests.ex"],
+    "must_contain": [
+      "@moduledoc",
+      "\"0 9 * * 1\"",
+      "MyApp.Workers.WeeklyDigestFanoutWorker",
+      "schedule_in:",
+      "MyApp.Workers.UserDigestWorker"
+    ],
+    "must_not_contain": [
+      "Oban.Plugins.Cron.Worker.new"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["cron-scheduling"],
+    "criterion": "both_patterns_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing both patterns can coexist in one module and documenting the tradeoff. Tests the author's ability to see both idioms as alternatives, not either/or.",
+  "calibration": null,
+  "research_citation": "Sorentwo 'Oban Recipes Part 3: Reliable Scheduling' — 'The recursive scheduling approach is more accurate and entirely self contained.'"
+}

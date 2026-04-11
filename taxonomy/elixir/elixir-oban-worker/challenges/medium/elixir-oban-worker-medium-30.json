@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-medium-30",
+  "tier": "medium",
+  "title": "Use :telemetry.attach_many/4 with pattern-matching handle_event clauses",
+  "prompt": "Write `MyApp.ObanMetrics` with an `attach/0` function that uses `:telemetry.attach_many/4` (not `attach/4` in a loop) to register one handler for three events: `[:oban, :job, :start]`, `[:oban, :job, :stop]`, `[:oban, :job, :exception]`. Define `handle_event/4` with three separate function clauses, one per event. Start clause increments a start counter, stop clause records duration, exception clause increments an error counter. Use `MyApp.Metrics.increment/1` and `MyApp.Metrics.timing/2`. Write to `lib/my_app/oban_metrics.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/oban_metrics.ex"],
+    "must_contain": [
+      ":telemetry.attach_many",
+      "[:oban, :job, :start]",
+      "[:oban, :job, :stop]",
+      "[:oban, :job, :exception]",
+      "def handle_event([:oban, :job, :start]",
+      "def handle_event([:oban, :job, :stop]",
+      "def handle_event([:oban, :job, :exception]"
+    ],
+    "must_not_contain": [
+      ":telemetry.attach(\"oban-start",
+      "Enum.each(["
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "multiclause_handler",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests pattern-match dispatch in handle_event + the `attach_many/4` API shape. Both are documented but easy to miss.",
+  "calibration": null
+}

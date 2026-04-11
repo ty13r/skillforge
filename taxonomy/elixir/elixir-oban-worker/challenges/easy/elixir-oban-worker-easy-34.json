@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-34",
+  "tier": "easy",
+  "title": "Worker with unique: [period: 300] to dedupe retries over 5 minutes",
+  "prompt": "Write `MyApp.Workers.WebhookNotifierWorker` (queue `:webhooks`) with `unique: [period: 300, keys: [:webhook_id]]`. perform/1 takes `%{\"webhook_id\" => id}` and calls `MyApp.Webhooks.notify(id)`. Return `:ok` on success, `{:error, reason}` otherwise. Write to `lib/my_app/workers/webhook_notifier_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/webhook_notifier_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "unique:",
+      "period: 300",
+      "keys: [:webhook_id]",
+      "\"webhook_id\" => id"
+    ],
+    "must_not_contain": [
+      "period: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "explicit_unique_period",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-line addition of a properly-sized unique period; tests that `:period` is always explicit.",
+  "calibration": null
+}

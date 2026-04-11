@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-18",
+  "tier": "hard",
+  "title": "Implement a worker that escalates to on-call on final-attempt failure",
+  "prompt": "Write `MyApp.Workers.CriticalSyncWorker` (queue `:critical`, max_attempts 3). perform/1 takes `%{\"entity_id\" => id}` and receives `%Oban.Job{attempt: attempt, max_attempts: max_attempts}`. Call `MyApp.Sync.run(id)`. On `:ok`, return `:ok`. On `{:error, reason}` AND `attempt < max_attempts`, return `{:error, reason}` (let Oban retry). On `{:error, reason}` AND `attempt == max_attempts`, call `MyApp.OnCall.page(:critical_sync_failed, %{entity_id: id, reason: reason})` before returning `{:error, reason}` — this fires the page on the final attempt only, not every retry. Write to `lib/my_app/workers/critical_sync_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/critical_sync_worker.ex"],
+    "must_contain": [
+      "attempt: attempt",
+      "max_attempts: max_attempts",
+      "attempt == max_attempts",
+      "MyApp.OnCall.page",
+      "{:error, reason}"
+    ],
+    "must_not_contain": [
+      "MyApp.OnCall.page(",
+      "\n    MyApp.OnCall.page(:critical_sync_failed"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["worker-philosophy", "telemetry-and-observability"],
+    "criterion": "paging_on_final_attempt_only",
+    "weight": 1.0
+  },
+  "tier_rationale": "The final-attempt escalation pattern is a common production need but easy to get wrong (paging on every attempt).",
+  "calibration": null
+}

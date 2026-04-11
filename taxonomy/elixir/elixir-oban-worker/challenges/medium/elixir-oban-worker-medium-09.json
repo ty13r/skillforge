@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-09",
+  "tier": "medium",
+  "title": "Enqueue a job that depends on two previous Multi steps",
+  "prompt": "Write `MyApp.Projects.create_project/2` that takes an `owner_id` and project `attrs`. Use `Ecto.Multi` to: (1) load the owner via `Multi.run(:owner, fn repo, _ -> {:ok, Accounts.get_user!(owner_id)} end)`, (2) insert the project with a changeset built from the attrs and the owner, (3) enqueue `MyApp.Workers.ProjectSetupWorker` in the same transaction using `Oban.insert(:setup_job, fn %{project: project, owner: owner} -> ProjectSetupWorker.new(%{\"project_id\" => project.id, \"owner_id\" => owner.id}) end)`. Run the multi with `Repo.transaction/1`. Return `{:ok, project}` or `{:error, reason}`. Write to `lib/my_app/projects.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/projects.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Multi.run(:owner",
+      "Multi.insert(:project",
+      "Oban.insert(:setup_job",
+      "\"project_id\" => project.id",
+      "\"owner_id\" => owner.id",
+      "Repo.transaction"
+    ],
+    "must_not_contain": [
+      "Repo.insert(project_changeset)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "multi_dependent_enqueue",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-step Multi with a dependent Oban.insert that reads prior step results. Requires mental model of Multi.run/3 + Oban.insert/3.",
+  "calibration": null
+}

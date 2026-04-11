@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-24",
+  "tier": "easy",
+  "title": "Schedule a welcome email 24 hours after signup via schedule_in",
+  "prompt": "Write `MyApp.Accounts.register_user/1` that takes a params map. Use `Ecto.Multi` to (1) insert a `User` changeset and (2) enqueue `MyApp.Workers.WelcomeEmailWorker` with `schedule_in: 86_400` (24 hours) using the newly-inserted user's id. This uses schedule_in, not cron, because the interval is per-user. Use string-keyed args. Return `{:ok, user}` or `{:error, changeset}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi",
+      "Oban.insert",
+      "schedule_in: 86_400",
+      "\"user_id\" => user.id",
+      "WelcomeEmailWorker"
+    ],
+    "must_not_contain": [
+      "Oban.Plugins.Cron"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["transactional-jobs"],
+    "criterion": "schedule_in_not_cron",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must recognize 'X hours after event' is schedule_in, not cron. One-hop decision.",
+  "calibration": null,
+  "research_citation": "Sorentwo 'Oban Recipes Part 3: Reliable Scheduling' — 'Delivering around the same time using cron-style scheduling would need extra book-keeping… The recursive scheduling approach is more accurate.'"
+}

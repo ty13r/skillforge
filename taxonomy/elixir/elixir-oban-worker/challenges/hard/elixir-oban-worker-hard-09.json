@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-09",
+  "tier": "hard",
+  "title": "Bulk enqueue with per-job unique constraints (basic engine limitation)",
+  "prompt": "A naive implementation writes `Oban.insert_all(Enum.map(ids, &Worker.new(%{id: &1}, unique: [period: 60, keys: [:id]])))` and expects Oban to dedupe. With the basic engine (free Oban), `insert_all/1` does NOT enforce unique constraints — only the Smart Engine in Oban Pro does. Rewrite `MyApp.Enqueuer.enqueue_batch/1` (takes a list of `ids`) so it uses a per-id `Oban.insert/1` loop instead of `insert_all/1`. Each `MyApp.Workers.ProcessWorker.new(%{\"id\" => id}, unique: [period: 60, keys: [:id]])` should be inserted individually. Return a list of `{:ok, job} | {:error, reason}` tuples, one per id. Include a comment citing the basic-engine limitation. Write to `lib/my_app/enqueuer.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/enqueuer.ex"],
+    "must_contain": [
+      "Enum.map",
+      "Oban.insert(",
+      "unique: [period: 60",
+      "keys: [:id]",
+      "Smart Engine",
+      "\"id\" => id"
+    ],
+    "must_not_contain": [
+      "Oban.insert_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["unique-constraints"],
+    "criterion": "insert_loop_over_insert_all",
+    "weight": 1.0
+  },
+  "tier_rationale": "Knowing that insert_all has NO unique enforcement on the basic engine is a direct docs citation but almost always missed. Sonnet defaults to insert_all for bulk operations.",
+  "calibration": null,
+  "research_citation": "Oban module HexDocs — 'Only the Smart Engine in Oban Pro supports bulk unique jobs… With the basic engine, you must use insert/3 to insert unique jobs one at a time.'"
+}

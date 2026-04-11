@@ -1,0 +1,32 @@
+{
+  "id": "elixir-oban-worker-legendary-01",
+  "tier": "legendary",
+  "title": "Fix a compile-time Application.get_env with runtime enqueue-time overrides",
+  "prompt": "The worker in `test_fixtures/compile_time_queue_worker.ex` calls `Application.get_env/2` inside `use Oban.Worker` — `use` is a compile-time macro, so the values freeze at compile time. Test configuration and prod configuration collide at boot. Rewrite the module to: (1) `use Oban.Worker` with STATIC queue `:exports` and STATIC `max_attempts: 3`, (2) add a public `enqueue/1` function that accepts an `export_id` and reads `Application.get_env(:my_app, :export_queue, :exports)` and `Application.get_env(:my_app, :export_attempts, 3)` at RUNTIME, then calls `new(%{\"export_id\" => export_id}, queue: queue, max_attempts: max_attempts)` and `Oban.insert/1`. Add a `@moduledoc` explicitly citing the Oban.Worker docs warning: 'Like all use macros, options are defined at compile time. Avoid using Application.get_env/2 to define worker options.' Include a mention of how test/prod config leak happens. Write to `lib/my_app/workers/export_worker.ex`.",
+  "fixture_files": ["test_fixtures/compile_time_queue_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/export_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker, queue: :exports",
+      "max_attempts: 3",
+      "def enqueue(export_id",
+      "Application.get_env(:my_app, :export_queue",
+      "queue: queue",
+      "@moduledoc",
+      "compile time"
+    ],
+    "must_not_contain": [
+      "use Oban.Worker,\n    queue: Application.get_env",
+      "queue: Application.get_env(:my_app"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy", "args-serialization"],
+    "criterion": "full_runtime_split_with_cite",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires understanding Elixir's compile-time macro semantics, the Oban.Worker docs warning, and designing a runtime escape hatch. Production-grade knowledge that rarely shows up in LLM output without priming.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'Like all use macros, options are defined at compile time. Avoid using Application.get_env/2 to define worker options.'"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-06",
+  "tier": "hard",
+  "title": "Unique constraint with replace strategy that updates scheduled_at",
+  "prompt": "Write `MyApp.Workers.UserActivityWorker` (queue `:activity`). Requirement: when a user triggers multiple activity updates within 5 minutes, only ONE job should run, and it should run 5 minutes after the LATEST update (not the first). Use `unique: [period: 300, keys: [:user_id], states: [:available, :scheduled], replace: [scheduled: [:scheduled_at]]]` so that a colliding insert REPLACES the existing job's `scheduled_at` with the new one. perform/1 takes `%{\"user_id\" => id}` and calls `MyApp.Activity.aggregate(id)`. Add a comment explaining how `replace:` works with the state filter. Write to `lib/my_app/workers/user_activity_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/user_activity_worker.ex"],
+    "must_contain": [
+      "unique:",
+      "period: 300",
+      "replace:",
+      "scheduled: [:scheduled_at]",
+      "states: [:available, :scheduled]",
+      "MyApp.Activity.aggregate"
+    ],
+    "must_not_contain": [
+      "period: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["recurring-jobs-vs-cron"],
+    "criterion": "replace_strategy",
+    "weight": 1.0
+  },
+  "tier_rationale": "The `replace: [state: [field]]` option is advanced; combining it with `:states` filtering is even more niche. Tests deep familiarity with the unique-options surface area.",
+  "calibration": null
+}

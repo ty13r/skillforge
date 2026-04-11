@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-19",
+  "tier": "medium",
+  "title": "Write a self-rescheduling worker (reschedule FIRST, then run)",
+  "prompt": "Write `MyApp.Workers.HeartbeatWorker` (queue `:monitoring`, max_attempts 3) that sends a heartbeat every 10 minutes by self-rescheduling. Per Sorentwo's 'Reliable Scheduling' recipe, the reschedule must happen at the start of perform/1 (before the business logic), otherwise retries will cause exponential growth of scheduled jobs. Use a pattern-match clause on `%Oban.Job{attempt: 1}` to reschedule only on the first attempt. perform/1 takes `%{\"host\" => host}` and calls `MyApp.Monitor.ping(host)`. Write to `lib/my_app/workers/heartbeat_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/heartbeat_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "attempt: 1",
+      "schedule_in:",
+      "MyApp.Monitor.ping",
+      "new("
+    ],
+    "must_not_contain": [
+      "Oban.Plugins.Cron",
+      "schedule_in: 600"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "reschedule_first_then_run",
+    "weight": 1.0
+  },
+  "tier_rationale": "The reschedule-first ordering is specific to the Sorentwo recipe and non-obvious. Reschedule-at-end is the default-LLM answer and is wrong.",
+  "calibration": null,
+  "research_citation": "Sorentwo 'Oban Recipes Part 3: Reliable Scheduling' — 'we'll keep retrying the job's business logic when the job retries, but we'll only schedule the next occurrence once.'"
+}

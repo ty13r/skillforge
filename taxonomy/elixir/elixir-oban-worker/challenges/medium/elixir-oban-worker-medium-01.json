@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-01",
+  "tier": "medium",
+  "title": "Rewrite a raise-on-429 worker with full return-value protocol",
+  "prompt": "The worker in `test_fixtures/rate_limited_worker.ex` currently raises on HTTP 429 responses from Stripe. Rewrite it so: (1) 429 returns `{:snooze, retry_after}`, (2) 404 returns `{:cancel, :customer_not_found}` (the customer was removed upstream, no point retrying), (3) other errors return `{:error, reason}` so Oban's backoff takes over, (4) happy path returns `:ok`. Preserve the `Logger.info` on snooze. Do not raise. Write to `lib/my_app/workers/stripe_sync_worker.ex`.",
+  "fixture_files": ["test_fixtures/rate_limited_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/stripe_sync_worker.ex"],
+    "must_contain": [
+      "{:snooze, retry_after}",
+      "{:cancel, :customer_not_found}",
+      "status: 429",
+      "status: 404",
+      "Logger.info"
+    ],
+    "must_not_contain": [
+      "raise \"",
+      "{:discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy", "worker-philosophy"],
+    "criterion": "full_return_protocol",
+    "weight": 1.0
+  },
+  "tier_rationale": "Needs recognition of three distinct error classes (snooze, cancel, retry) plus the deprecation-aware choice of `:cancel` over `:discard`. Sonnet typically gets snooze right but misses the cancel-on-404 nuance.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'When a worker receives a 429 (rate limited) status code, it should return {:snooze, calculate_backoff(attempt)}.'"
+}

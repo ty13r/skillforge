@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-04",
+  "tier": "easy",
+  "title": "Replace deprecated :discard with {:cancel, reason}",
+  "prompt": "The worker in `test_fixtures/discard_deprecated_worker.ex` returns `{:discard, reason}` in two places. `:discard` and `{:discard, reason}` are deprecated in Oban 2.17+ in favor of `{:cancel, reason}`. Rewrite the module so both returns use `{:cancel, ...}`. Preserve the rest of the logic as-is. Write the output to `lib/my_app/workers/webhook_delivery_worker.ex`.",
+  "fixture_files": ["test_fixtures/discard_deprecated_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/webhook_delivery_worker.ex"],
+    "must_contain": [
+      "{:cancel, :permanent_failure}",
+      "{:cancel, :webhook_removed}",
+      "use Oban.Worker"
+    ],
+    "must_not_contain": [
+      "{:discard,",
+      ":discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "cancel_over_discard",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-pass find-and-replace once you know the deprecation; the trap is that pre-2024 training data emits the deprecated form by default.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — ':discard and {:discard, reason} are deprecated in favor of {:cancel, reason}.'"
+}
