@@ -1,0 +1,85 @@
+{
+  "family_slug": "elixir-pattern-match-refactor",
+  "generation": 0,
+  "foundation_variants": [
+    {
+      "slug": "refactor-philosophy--in-place-idiomatic",
+      "dimension": "refactor-philosophy",
+      "name": "In-Place Idiomatic Rewrite",
+      "description": "Preserves module structure and public API but rewrites bodies idiomatically: function heads replace case chains, |> replaces temp vars, with replaces nested conditionals, pattern destructure replaces Map.get.",
+      "skill_md": "---\nname: refactor-philosophy--in-place-idiomatic\ndescription: Refactors non-idiomatic Elixir (Ruby/Java-style if/case chains, defensive nil checks, manual loops) into idiomatic Elixir using function heads, guards, pipes, with, and pattern-matched destructures. Use when asked to improve Elixir code style or to refactor imperative patterns. NOT for writing new code from scratch.\n---\n\n# In-Place Idiomatic Rewrite\n\n## Quick Start\nKeep the module structure and API. Rewrite the bodies.\n\n## When to use\n- Refactoring imperative Elixir into idiomatic Elixir\n- Fixing Ruby/Java-style code written by LLMs\n- Reviewing PRs for idiomatic style\n\n## Workflow\n1. Identify if/case/cond chains → rewrite as function heads with guards\n2. Identify intermediate temp vars → rewrite as pipes\n3. Identify nested conditionals → rewrite as `with <- ... do ... else ...`\n4. Identify `is_nil` / `x && x.field` → rewrite as function head pattern match\n5. Identify Map.get chains → rewrite as map destructure in head\n\n## Common mistakes\n- Leaving one `case` where a function head would work\n- Keeping `is_nil` as a \"defensive\" fallback\n- Using `Enum.reduce` where `for` comprehension is cleaner\n"
+    }
+  ],
+  "capability_variants": [
+    {
+      "slug": "function-head-pattern-matching--multi-clause",
+      "dimension": "function-head-pattern-matching",
+      "name": "Multi-Clause Function Heads",
+      "description": "Replaces case statements with multiple function heads matching different patterns. One head per pattern, not a single head with case inside.",
+      "skill_md": "---\nname: function-head-pattern-matching--multi-clause\ndescription: Replaces case chains with multi-clause function heads.\n---\n\n# Multi-Clause Function Heads\n\n## Quick Start\n`def foo(%{type: :a}), do: ...; def foo(%{type: :b}), do: ...` replaces `def foo(x), do: case x.type do ...`\n\n## Workflow\n1. Each branch of the case becomes a separate function head\n2. Put the pattern in the head, not in a case inside the body\n3. Order matters — Elixir tries heads top-to-bottom\n"
+    },
+    {
+      "slug": "guard-clauses--when",
+      "dimension": "guard-clauses",
+      "name": "When Guards",
+      "description": "Uses `when` guards in function heads to narrow patterns beyond what the head itself can match. Composes with and/or/not.",
+      "skill_md": "---\nname: guard-clauses--when\ndescription: when guards in function heads.\n---\n\n# When Guards\n\n## Quick Start\n`def foo(n) when is_integer(n) and n > 0, do: ...` narrows the match beyond the head.\n\n## Workflow\n1. Use guards for type/shape/range checks\n2. Compose with `and`, `or`, `not`\n3. Only use allowed guard functions (is_*, ==, >, <, etc.)\n"
+    },
+    {
+      "slug": "pipe-operator-flows--no-temps",
+      "dimension": "pipe-operator-flows",
+      "name": "No Temp Vars In Pipes",
+      "description": "Chains transformations with |> instead of intermediate variables. Breaks the pipe only when a side effect or explicit name is needed.",
+      "skill_md": "---\nname: pipe-operator-flows--no-temps\ndescription: |> pipe operator chains over intermediate temp vars.\n---\n\n# No Temp Vars In Pipes\n\n## Quick Start\n`input |> step1() |> step2() |> step3()` replaces `a = step1(input); b = step2(a); step3(b)`.\n\n## When to break the pipe\n- Side effects (log, persist) that don't return the flow value\n- When an explicit intermediate name improves readability\n"
+    },
+    {
+      "slug": "with-expressions--happy-path",
+      "dimension": "with-expressions",
+      "name": "Happy-Path With Expressions",
+      "description": "Uses `with` for multi-step flows where each step can fail. `else` clause handles all error branches in one place.",
+      "skill_md": "---\nname: with-expressions--happy-path\ndescription: with expressions for multi-step error handling.\n---\n\n# Happy-Path With Expressions\n\n## Quick Start\n```elixir\nwith {:ok, user} <- fetch_user(id),\n     {:ok, post} <- create_post(user, params),\n     :ok <- notify_subscribers(post) do\n  {:ok, post}\nelse\n  {:error, _} = error -> error\nend\n```\n\n## When to use\n- 3+ steps that each return `{:ok, _}` / `{:error, _}`\n- Nested case chains you want to flatten\n"
+    },
+    {
+      "slug": "recursive-functions--tail-recursive",
+      "dimension": "recursive-functions",
+      "name": "Tail-Recursive With Pattern Matching",
+      "description": "Base case and step case are separate function heads. Step case uses pattern-matched destructure. Tail-recursive.",
+      "skill_md": "---\nname: recursive-functions--tail-recursive\ndescription: Tail-recursive functions with pattern-matched base/step cases.\n---\n\n# Tail-Recursive With Pattern Matching\n\n## Workflow\n1. Base case: `def foo([], acc), do: acc`\n2. Step case: `def foo([h | t], acc), do: foo(t, [h * 2 | acc])`\n3. Tail position means the recursive call is the last expression\n"
+    },
+    {
+      "slug": "enum-vs-recursion-choice--enum-first",
+      "dimension": "enum-vs-recursion-choice",
+      "name": "Enum First, Recursion When Needed",
+      "description": "Prefers Enum.* functions when they fit. Falls back to explicit recursion only when Enum cannot express the logic (e.g., early termination, paired iteration, accumulator shape).",
+      "skill_md": "---\nname: enum-vs-recursion-choice--enum-first\ndescription: Choose Enum over explicit recursion unless Enum cannot express the logic.\n---\n\n# Enum First, Recursion When Needed\n\n## Quick Start\nEnum is faster, clearer, and more familiar. Use recursion only when necessary.\n\n## When to use recursion instead of Enum\n- Early termination (`Enum.reduce_while` is an alternative)\n- Paired iteration over two lists\n- Non-list data structures\n- When the accumulator shape is non-trivial\n"
+    },
+    {
+      "slug": "map-and-struct-destructuring--in-head",
+      "dimension": "map-and-struct-destructuring",
+      "name": "Destructure In Function Head",
+      "description": "Extracts fields directly in the function head using `%{field: val}` or `%Struct{field: val}`. Avoids Map.get/Map.fetch noise.",
+      "skill_md": "---\nname: map-and-struct-destructuring--in-head\ndescription: Destructure map/struct fields in function heads.\n---\n\n# Destructure In Function Head\n\n## Quick Start\n`def process(%User{id: id, email: email} = user)` instead of `def process(user), do: (id = user.id; email = user.email; ...)`\n\n## Workflow\n1. Put the pattern in the head\n2. Bind the whole value with `= user` if you need it\n3. Use struct destructure for schema-backed types\n"
+    },
+    {
+      "slug": "binary-pattern-matching-basic--prefix-match",
+      "dimension": "binary-pattern-matching-basic",
+      "name": "Binary Prefix Pattern",
+      "description": "Uses `<<\"prefix\", rest::binary>>` to match string prefixes. Replaces String.starts_with? + slice patterns for parsing.",
+      "skill_md": "---\nname: binary-pattern-matching-basic--prefix-match\ndescription: <<\"prefix\", rest::binary>> binary patterns for string parsing.\n---\n\n# Binary Prefix Pattern\n\n## Quick Start\n`def parse(<<\"http://\", rest::binary>>), do: ...` replaces `def parse(url), do: if String.starts_with?(url, \"http://\"), do: ...`\n"
+    },
+    {
+      "slug": "cond-and-if-reduction--heads-with-guards",
+      "dimension": "cond-and-if-reduction",
+      "name": "Heads With Guards Replace Cond",
+      "description": "Rewrites cond chains as multi-clause function heads with guards. Rewrites nested if chains as with expressions.",
+      "skill_md": "---\nname: cond-and-if-reduction--heads-with-guards\ndescription: Replace cond chains with function heads + guards.\n---\n\n# Heads With Guards Replace Cond\n\n## Workflow\n1. Each `cond` branch becomes a function head with a guard\n2. Nested `if` chains become `with` expressions\n3. Single `if-else` with different types is usually a sign you need pattern matching instead\n"
+    },
+    {
+      "slug": "defensive-nil-checks-elimination--pattern-match",
+      "dimension": "defensive-nil-checks-elimination",
+      "name": "Pattern Match Over Nil Check",
+      "description": "Replaces `is_nil(x)` and `x && x.field` patterns with function heads that match on the presence or absence of the value.",
+      "skill_md": "---\nname: defensive-nil-checks-elimination--pattern-match\ndescription: Eliminates defensive nil checks via pattern matching.\n---\n\n# Pattern Match Over Nil Check\n\n## Quick Start\n`def display_name(%User{name: name}) when is_binary(name) and name != \"\", do: name; def display_name(_), do: \"Anonymous\"` replaces `def display_name(user), do: if user && user.name && user.name != \"\", do: user.name, else: \"Anonymous\"`.\n\n## Common mistakes\n- Leaving `is_nil` as a \"safety net\"\n- Pattern-matching only the nil case and delegating to an if\n"
+    }
+  ]
+}

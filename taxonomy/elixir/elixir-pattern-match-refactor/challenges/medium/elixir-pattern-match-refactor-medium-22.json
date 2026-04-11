@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-22",
+  "tier": "medium",
+  "title": "Recursion vs Enum: rewrite an awkward Enum.reduce as explicit recursion",
+  "prompt": "Refactor `MyApp.Accumulators.group_by_parity/1` from test_fixtures/enum_reduce_awkward.ex. The current reduce uses `acc.evens ++ [x]` — O(n²). Rewrite as explicit recursion with prepend-and-reverse: two function heads on the list, an accumulator tuple `{evens, odds}`, and a final clause that reverses and packages into a map. Output a complete `defmodule MyApp.Accumulators do ... end` with just `group_by_parity/1` and its helper.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "def group_by_parity(list)",
+      "defp",
+      "Enum.reverse(",
+      ":evens",
+      ":odds"
+    ],
+    "must_not_contain": [
+      "Enum.reduce(",
+      "acc.evens ++",
+      "|> Map.put"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["recursive-functions"],
+    "criterion": "enum_to_recursion",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires judging that explicit recursion is clearer when Enum.reduce with map-update syntax becomes O(n²).",
+  "calibration": null
+}

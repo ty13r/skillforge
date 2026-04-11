@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-20",
+  "tier": "medium",
+  "title": "Replace dynamic map access with head destructuring (OrderFormatter.summary/1)",
+  "prompt": "Refactor `MyApp.OrderFormatter.summary/1` from test_fixtures/map_access_noise.ex. The function uses `order[:id]`, `order[:items]`, `order[:total]`, and then inner `item[:name]`, `item[:quantity]`. Replace with head destructuring: `def summary(%{id: id, items: items, total: total})` and inside `Enum.map/2` use `fn %{name: name, quantity: qty} -> ... end`. Also add a catch-all clause returning `\"Invalid order\"`. You may also refactor `plot_point/1` in the same module. Output a complete `defmodule MyApp.OrderFormatter do ... end` containing summary + plot_point only.",
+  "fixture_files": ["test_fixtures/map_access_noise.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/order_formatter.ex"],
+    "must_contain": [
+      "def summary(%{id: id, items: items, total: total})",
+      "%{name: name, quantity: qty}",
+      "def summary(_)",
+      "def plot_point(%{x: x, y: y, z: z})",
+      "\"Invalid order\""
+    ],
+    "must_not_contain": [
+      "order[:id]",
+      "order[:items]",
+      "item[:name]",
+      "item[:quantity]",
+      "id != nil && items != nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "pipe-operator-flows"],
+    "criterion": "dynamic_access_cleanup",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two-function refactor requiring inner-lambda destructuring inside Enum.map. Sonnet often destructures the outer but not the inner.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns: 'Non-assertive Map Access'"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-11",
+  "tier": "easy",
+  "title": "Replace `when not is_nil(req)` with an assertive `when is_binary(req)`",
+  "prompt": "Refactor MyApp.Validator.call_service/1 from test_fixtures/bad_guards.ex. The current guard `when not is_nil(req)` is the Credo.NegatedIsNil anti-pattern — replace it with an assertive guard `when is_binary(req)`. Also refactor the `process/1` function to use an assertive guard `when is_map(thing)` (or `when is_binary(thing)`) instead of `when not is_nil(thing)`. Keep the fallback clauses. Output the complete refactored module as `defmodule MyApp.Validator do ... end` with both functions (you may drop `validate_age/1` / `validate_email/1` / `format_user/1`).",
+  "fixture_files": ["test_fixtures/bad_guards.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/validator.ex"],
+    "must_contain": [
+      "def call_service(",
+      "when is_binary(req)",
+      "def process(",
+      ":missing_req"
+    ],
+    "must_not_contain": [
+      "when not is_nil(req)",
+      "when not is_nil(thing)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["defensive-nil-checks-elimination"],
+    "criterion": "assertive_guard",
+    "weight": 0.5
+  },
+  "tier_rationale": "Direct Credo rule application. The fix is a known anti-pattern and there is only one correct direction.",
+  "calibration": null,
+  "research_citation": "Credo.Check.Refactor.NegatedIsNil and Elixir Forum idiom guidance: 'don't use def call_service(%{req: req}) when not is_nil(req), instead use when is_binary(req)'"
+}

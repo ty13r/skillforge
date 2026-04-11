@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-43",
+  "tier": "medium",
+  "title": "Break a long pipe where argument positioning gets awkward",
+  "prompt": "Given: `def process(input), do: input |> step_a() |> step_b() |> step_c(input) |> step_d() |> step_e()`. The `step_c(input)` call needs both the running value AND the original `input`. Refactor: break the pipe with `then/2` so the running value is used correctly — `input |> step_a() |> step_b() |> then(&step_c(&1, input)) |> step_d() |> step_e()`. Output a complete `defmodule MyApp.Pipeline do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/pipeline.ex"],
+    "must_contain": [
+      "def process(input)",
+      "|> step_a()",
+      "|> then(",
+      "|> step_d()",
+      "|> step_e()"
+    ],
+    "must_not_contain": [
+      "|> step_c(input)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": [],
+    "criterion": "then_for_two_arg_binding",
+    "weight": 0.55
+  },
+  "tier_rationale": "The `then/2` + closure-over-input trick is uncommon. Sonnet often resorts to intermediate variables.",
+  "calibration": null
+}

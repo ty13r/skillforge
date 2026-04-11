@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-29",
+  "tier": "easy",
+  "title": "Use Map.get/3 default instead of case-on-nil",
+  "prompt": "Rewrite `def lang(settings) do case Map.get(settings, :language) do nil -> \"en\"; l -> l end end` using the 3-arity version of Map.get with a default value. Output a complete `defmodule MyApp.I18n do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/i18n.ex"],
+    "must_contain": [
+      "def lang(settings)",
+      "Map.get(settings, :language, \"en\")"
+    ],
+    "must_not_contain": [
+      "case Map.get",
+      "nil -> \"en\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": [],
+    "criterion": "map_get_default",
+    "weight": 0.3
+  },
+  "tier_rationale": "Direct 3-arity Map.get replacement. Well-known idiom.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: 'Use /3 variants (Keyword.get/3, Map.get/3) instead of case statements branching on nil.'"
+}

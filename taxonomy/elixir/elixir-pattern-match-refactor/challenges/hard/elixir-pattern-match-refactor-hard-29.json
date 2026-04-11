@@ -1,0 +1,38 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-29",
+  "tier": "hard",
+  "title": "Rewrite imperative_report_builder as a pipe-first module",
+  "prompt": "Refactor both functions in test_fixtures/imperative_report_builder.ex. `build/1` should pipe `orders |> Enum.filter(&(&1.status == \"completed\")) |> Enum.reduce(%{subtotal: 0, count: 0}, ...) |> then(&Map.merge(&1, %{tax: ..., grand_total: ...}))`. `format_lines/1` uses `Enum.map_join/3`. Both must be pipe pipelines. Output a complete `defmodule MyApp.ReportBuilder do ... end`.",
+  "fixture_files": ["test_fixtures/imperative_report_builder.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/report_builder.ex"],
+    "must_contain": [
+      "def build(orders)",
+      "|> Enum.filter",
+      "|> Enum.reduce",
+      "def format_lines(orders)",
+      "Enum.map_join",
+      ":subtotal",
+      ":tax",
+      ":grand_total",
+      ":order_count"
+    ],
+    "must_not_contain": [
+      "valid_orders = []",
+      "total = 0",
+      "for order <- orders do",
+      "for order <- valid_orders do",
+      "report = Map.put",
+      "lines = []",
+      "Enum.each(orders"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["pipe-operator-flows", "enum-vs-recursion-choice"],
+    "criterion": "module_wide_pipe_rewrite",
+    "weight": 0.7
+  },
+  "tier_rationale": "Two distinct pipe patterns across one module. Requires recognizing the non-mutation bug AND picking Enum.map_join.",
+  "calibration": null
+}

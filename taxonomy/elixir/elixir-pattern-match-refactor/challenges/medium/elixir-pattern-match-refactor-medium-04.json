@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-04",
+  "tier": "medium",
+  "title": "Rewrite the entire RoleRouter as pattern-matched heads (route + permission)",
+  "prompt": "Refactor both functions (`route/1` and `permission/2`) in test_fixtures/cond_role_router.ex as multi-clause function heads. For route/1, pattern-match `%{role: ..., active: ...}`. For permission/2, pattern-match `nil`, admin, editor-as-owner (via pinning), editor-read, viewer-read, and catch-all. Output the complete refactored module as `defmodule MyApp.RoleRouter do ... end`.",
+  "fixture_files": ["test_fixtures/cond_role_router.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/role_router.ex"],
+    "must_contain": [
+      "def route(%{role: \"admin\", active: true})",
+      "def route(%{role: \"admin\", active: false})",
+      "def route(%{role: \"editor\"})",
+      "def permission(nil",
+      "def permission(%{role: \"admin\"}",
+      "def permission(%{role: \"editor\", id: uid}, %{owner_id: uid})",
+      ":admin_dashboard",
+      ":suspended",
+      ":landing"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "user.role ==",
+      "true ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "consistent_head_refactor",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two-function module-wide refactor with pinning subtlety. Consistent philosophy across both functions.",
+  "calibration": null
+}

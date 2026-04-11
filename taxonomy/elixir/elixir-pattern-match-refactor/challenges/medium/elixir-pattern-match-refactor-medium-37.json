@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-37",
+  "tier": "medium",
+  "title": "Rewrite numbered/1 with Enum.with_index and Enum.map",
+  "prompt": "Refactor `MyApp.Collector.numbered/1` from test_fixtures/list_append_loop.ex. The current version is explicit recursion with `acc ++ [{n, head}]`. Rewrite using `Enum.with_index(1) |> Enum.map(fn {head, n} -> {n, head} end)`. Output a complete `defmodule MyApp.Collector do ... end` with just numbered.",
+  "fixture_files": ["test_fixtures/list_append_loop.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/collector.ex"],
+    "must_contain": [
+      "def numbered(list)",
+      "Enum.with_index(",
+      "Enum.map("
+    ],
+    "must_not_contain": [
+      "numbered_loop",
+      "acc ++ [{n, head}]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "recursion_to_with_index",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires knowing Enum.with_index/2 with offset — less common than Enum.map.",
+  "calibration": null
+}

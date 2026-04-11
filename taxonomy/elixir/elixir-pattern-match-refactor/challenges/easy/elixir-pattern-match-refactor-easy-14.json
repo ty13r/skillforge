@@ -1,0 +1,26 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-14",
+  "tier": "easy",
+  "title": "Use Enum.map instead of explicit recursion for a doubled/1 transform",
+  "prompt": "Given the module MyApp.Accumulators from test_fixtures/enum_reduce_awkward.ex, rewrite `doubled/1` to use `Enum.map/2` instead of explicit recursion. Output a single-function module `defmodule MyApp.Accumulators do ... end`.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "def doubled(list)",
+      "Enum.map(list"
+    ],
+    "must_not_contain": [
+      "def doubled([])",
+      "def doubled([head | tail])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "recursion_to_enum",
+    "weight": 0.4
+  },
+  "tier_rationale": "Obvious Enum.map replacement for a map-shaped transform. Single step.",
+  "calibration": null
+}

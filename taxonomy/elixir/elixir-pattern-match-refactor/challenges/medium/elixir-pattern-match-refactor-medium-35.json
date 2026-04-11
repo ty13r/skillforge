@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-35",
+  "tier": "medium",
+  "title": "Refactor if-ladder to function heads with guards on numeric bounds",
+  "prompt": "Given:\n\n```\ndef rating(score) do\n  if score >= 90 do\n    :excellent\n  else\n    if score >= 70 do\n      :good\n    else\n      if score >= 50 do\n        :fair\n      else\n        :poor\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads. Use guards `when is_number(score) and score >= 90`, etc. Order matters — Elixir checks heads top-to-bottom. Output a complete `defmodule MyApp.Rating do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/rating.ex"],
+    "must_contain": [
+      "def rating(score)",
+      "when is_number(score) and score >= 90",
+      "when is_number(score) and score >= 70",
+      "when is_number(score) and score >= 50",
+      ":excellent",
+      ":good",
+      ":fair",
+      ":poor"
+    ],
+    "must_not_contain": [
+      "if score >= 90",
+      "if score >= 70",
+      "if score >= 50"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["guard-clauses", "function-head-pattern-matching"],
+    "criterion": "if_ladder_to_guarded_heads",
+    "weight": 0.5
+  },
+  "tier_rationale": "Multi-step; ordering matters. Classic textbook example from Nick Janetakis.",
+  "calibration": null,
+  "research_citation": "Nick Janetakis: 'Refactoring Elixir Code: If, Cond and Pattern Matching'"
+}

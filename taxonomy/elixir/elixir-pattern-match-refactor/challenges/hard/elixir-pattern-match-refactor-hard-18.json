@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-18",
+  "tier": "hard",
+  "title": "Refactor a manual parser into a recursive binary-matching dispatch",
+  "prompt": "Given:\n\n```\ndef decode_list(binary) do\n  decode_list(binary, [])\nend\n\ndefp decode_list(\"\", acc), do: Enum.reverse(acc)\ndefp decode_list(binary, acc) do\n  len = :binary.first(binary)\n  payload = :binary.part(binary, 1, len)\n  rest = :binary.part(binary, 1 + len, byte_size(binary) - 1 - len)\n  decode_list(rest, [payload | acc])\nend\n```\n\nRewrite the private helper using binary pattern matching in the function head: `defp decode_list(<<len::8, payload::binary-size(len), rest::binary>>, acc)`. Output a complete `defmodule MyApp.LenPrefixList do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/len_prefix_list.ex"],
+    "must_contain": [
+      "def decode_list(binary)",
+      "defp decode_list(\"\", acc)",
+      "defp decode_list(<<len::8, payload::binary-size(len), rest::binary>>, acc)",
+      "Enum.reverse(acc)"
+    ],
+    "must_not_contain": [
+      ":binary.first",
+      ":binary.part("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": ["recursive-functions", "function-head-pattern-matching"],
+    "criterion": "recursive_binary_match",
+    "weight": 0.7
+  },
+  "tier_rationale": "Synthesizes binary pattern matching + recursion. The `len::8, payload::binary-size(len)` combo is the key idiom.",
+  "calibration": null
+}

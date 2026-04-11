@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-39",
+  "tier": "medium",
+  "title": "Destructure an Ecto changeset in function head",
+  "prompt": "Rewrite: `def error_count(changeset) do if changeset.valid? do 0 else length(changeset.errors) end end`. Use two function heads — one matching `%Ecto.Changeset{valid?: true}` returning `0`, and one matching `%Ecto.Changeset{errors: errors}` returning `length(errors)`. Output a complete `defmodule MyApp.ChangesetUtils do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/changeset_utils.ex"],
+    "must_contain": [
+      "def error_count(%Ecto.Changeset{valid?: true})",
+      "def error_count(%Ecto.Changeset{errors: errors})",
+      "length(errors)"
+    ],
+    "must_not_contain": [
+      "if changeset.valid?",
+      "changeset.errors"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "struct_destructure_heads",
+    "weight": 0.5
+  },
+  "tier_rationale": "Straight struct-destructure refactor. Sonnet often leaves `changeset.errors` as field access in the body.",
+  "calibration": null
+}

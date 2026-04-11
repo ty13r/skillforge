@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-20",
+  "tier": "easy",
+  "title": "Use `if` with binding instead of `case ... nil ->`",
+  "prompt": "Refactor this function to use the idiomatic `if var = expr` binding form: `def fetch_user(id) do case Repo.get(User, id) do nil -> :guest; user -> {:user, user} end end`. Rewrite as `if user = Repo.get(User, id), do: {:user, user}, else: :guest`. Output a complete `defmodule MyApp.Sessions do ... end` (with `alias MyApp.{Repo, User}`).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/sessions.ex"],
+    "must_contain": [
+      "def fetch_user(id)",
+      "if user = Repo.get(User, id)",
+      ":guest",
+      "{:user, user}"
+    ],
+    "must_not_contain": [
+      "case Repo.get",
+      "nil -> :guest"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["cond-and-if-reduction"],
+    "criterion": "case_nil_to_if_bind",
+    "weight": 0.5
+  },
+  "tier_rationale": "The dnautics-idiom direction is a small textual swap; easy because it's a direct 1:1 template.",
+  "calibration": null,
+  "research_citation": "dnautics, HN 46752907: 'case functioncall() do nil -> ... end instead of idiomatic if var = functioncall() do else'"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-33",
+  "tier": "easy",
+  "title": "Destructure %Post{author: %User{name: name}} in function head",
+  "prompt": "Write `MyApp.Display.author_name/1` that takes a `%Post{author: %User{name: name}}` struct and returns the name. Destructure both levels in the function head — do not access `post.author` or `author.name` inside the body. Add a second clause matching `%Post{author: nil}` that returns `\"Anonymous\"`. Output a complete `defmodule MyApp.Display do ... end` (with `alias MyApp.{Post, User}`).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/display.ex"],
+    "must_contain": [
+      "def author_name(%Post{author: %User{name: name}})",
+      "def author_name(%Post{author: nil})",
+      "\"Anonymous\""
+    ],
+    "must_not_contain": [
+      "post.author",
+      "author.name"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["defensive-nil-checks-elimination"],
+    "criterion": "nested_struct_destructure",
+    "weight": 0.4
+  },
+  "tier_rationale": "Nested struct destructuring is textbook; two-clause function.",
+  "calibration": null
+}

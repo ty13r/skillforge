@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-18",
+  "tier": "easy",
+  "title": "Collapse nested if/else into pattern-matched function heads",
+  "prompt": "Given: `def describe(x) do if x > 0 do \"positive\" else if x < 0 do \"negative\" else \"zero\" end end end`. Rewrite as three function heads, each with a guard: `def describe(x) when x > 0`, `def describe(x) when x < 0`, and a clause for `0`. Output the complete module `defmodule MyApp.SignLabel do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/sign_label.ex"],
+    "must_contain": [
+      "def describe(x) when x > 0",
+      "def describe(x) when x < 0",
+      "def describe(0)",
+      "\"positive\"",
+      "\"negative\"",
+      "\"zero\""
+    ],
+    "must_not_contain": [
+      "if x > 0",
+      "if x < 0"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["guard-clauses", "function-head-pattern-matching"],
+    "criterion": "nested_if_to_heads",
+    "weight": 0.4
+  },
+  "tier_rationale": "Classic refactoring exercise from Nick Janetakis's guide.",
+  "calibration": null,
+  "research_citation": "Nick Janetakis: 'Refactoring Elixir Code: If, Cond and Pattern Matching' — three-pass evolution to function heads."
+}

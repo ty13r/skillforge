@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-10",
+  "tier": "hard",
+  "title": "Avoid complex-extractions anti-pattern when refactoring a 4-arg function",
+  "prompt": "Given:\n\n```\ndef process_order(order, user, config, session) do\n  total = order.subtotal + order.tax + order.shipping\n  name = user.first_name <> \" \" <> user.last_name\n  region = config.shipping_regions[order.region_id]\n  session_id = session.id\n  MyApp.Orders.finalize(order.id, name, region, total, session_id)\nend\n```\n\nYou could destructure all four args in the function head, but that creates the 'complex extractions in clauses' anti-pattern. Instead, do LIGHT pattern matching (match on order and session at the boundary with `%Order{id: order_id}` and `%Session{id: session_id}`) and leave the deeper extractions in the body. Output a complete `defmodule MyApp.OrderProcessor do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/order_processor.ex"],
+    "must_contain": [
+      "def process_order(%Order{id: order_id}",
+      "%Session{id: session_id}",
+      "MyApp.Orders.finalize"
+    ],
+    "must_not_contain": [
+      "%Order{subtotal: subtotal, tax: tax, shipping: shipping, region_id: region_id, id: order_id}",
+      "%User{first_name: first_name, last_name: last_name}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "light_destructure",
+    "weight": 0.7
+  },
+  "tier_rationale": "Explicit test of avoiding the complex-extractions anti-pattern. Sonnet tends to over-destructure when told to 'use pattern matching'.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns guide + Elixir Streams: 'Refactoring an anti-pattern: complex extractions in function heads'"
+}

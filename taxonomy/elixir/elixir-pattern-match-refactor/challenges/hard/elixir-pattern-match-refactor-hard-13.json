@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-13",
+  "tier": "hard",
+  "title": "Refactor deeply nested conditional with pinning across args",
+  "prompt": "Given:\n\n```\ndef can_transfer?(from_user, to_user, post) do\n  if from_user.id == post.owner_id do\n    if to_user.role == \"editor\" or to_user.role == \"admin\" do\n      true\n    else\n      false\n    end\n  else\n    false\n  end\nend\n```\n\nRewrite as two function heads. The true clause uses pinning: `def can_transfer?(%{id: id}, %{role: role}, %{owner_id: id}) when role in [\"editor\", \"admin\"], do: true`. The fallback returns `false`. Note the pinning of `id` across the first and third arguments. Output a complete `defmodule MyApp.PostTransfer do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/post_transfer.ex"],
+    "must_contain": [
+      "def can_transfer?(%{id: id}",
+      "%{owner_id: id}",
+      "when role in [\"editor\", \"admin\"]",
+      "def can_transfer?(",
+      "true",
+      "false"
+    ],
+    "must_not_contain": [
+      "from_user.id ==",
+      "post.owner_id",
+      "to_user.role ==",
+      "if from_user.id",
+      "if to_user.role"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["guard-clauses", "map-and-struct-destructuring"],
+    "criterion": "cross_arg_pinning_guard",
+    "weight": 0.7
+  },
+  "tier_rationale": "Cross-arg pinning + role-in-list guard composition. Rarely seen even in human-written Elixir.",
+  "calibration": null
+}

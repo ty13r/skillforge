@@ -1,0 +1,35 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-01",
+  "tier": "hard",
+  "title": "Rewrite fetch_profile as with+else preserving all three error shapes",
+  "prompt": "Refactor `MyApp.UserService.fetch_profile/1` from test_fixtures/ruby_style_user_service.ex using a `with` expression that has an `else` clause. The original has three failure shapes: `{:error, :not_found}` when `Repo.get` returns nil, `{:error, :inactive}` when `user.active` is false, `{:error, :profile_missing}` when the profile is nil. The `with` must preserve all three. Use match expressions in the with clauses (`%User{active: true} = user <- Repo.get(...) || {:error, :not_found}`) so each mismatch lands on a distinct `else` clause that returns the correct error. Output a complete `defmodule MyApp.UserService do ... end` with just fetch_profile + helpers.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def fetch_profile(user_id)",
+      "with",
+      "<-",
+      "%User{active: true}",
+      "else",
+      "%User{active: false}",
+      ":not_found",
+      ":inactive",
+      ":profile_missing"
+    ],
+    "must_not_contain": [
+      "if is_nil(user)",
+      "if user.active == true",
+      "if is_nil(profile)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["function-head-pattern-matching", "defensive-nil-checks-elimination", "map-and-struct-destructuring"],
+    "criterion": "with_preserves_three_errors",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-step with delicate error-shape preservation. Requires using struct pattern matching inside `with` clauses and routing each mismatch to the correct error in `else`.",
+  "calibration": null,
+  "research_citation": "BoothIQ + Elixir anti-patterns 'Complex else clauses in with'"
+}

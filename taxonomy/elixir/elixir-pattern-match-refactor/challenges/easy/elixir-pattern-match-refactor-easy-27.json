@@ -1,0 +1,26 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-27",
+  "tier": "easy",
+  "title": "Convert recursive first_match/2 to Enum.find/2",
+  "prompt": "Given MyApp.Accumulators.first_match/2 in test_fixtures/enum_reduce_awkward.ex, rewrite as a single call to `Enum.find/2`. Output a single-function module `defmodule MyApp.Accumulators do ... end`.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "def first_match(list, predicate)",
+      "Enum.find("
+    ],
+    "must_not_contain": [
+      "def first_match([])",
+      "def first_match([head | tail]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": [],
+    "criterion": "recursion_to_find",
+    "weight": 0.3
+  },
+  "tier_rationale": "Direct Enum.find replacement. Single transformation.",
+  "calibration": null
+}

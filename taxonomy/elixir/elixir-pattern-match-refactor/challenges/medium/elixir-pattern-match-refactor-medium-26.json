@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-26",
+  "tier": "medium",
+  "title": "Rewrite running_sum/1 as tail-recursive with explicit accumulator",
+  "prompt": "Refactor `MyApp.ListUtils.running_sum/1` from test_fixtures/non_tail_recursive.ex. The current version is NOT tail-recursive (it calls itself, then inspects the result, then prepends). Rewrite so the recursive call is the last operation — use an accumulator tuple `{carry, acc}` and reverse at the end. The semantics: given `[1, 2, 3]`, return `[1, 3, 6]`. Output a complete `defmodule MyApp.ListUtils do ... end` with just running_sum.",
+  "fixture_files": ["test_fixtures/non_tail_recursive.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_utils.ex"],
+    "must_contain": [
+      "def running_sum(list)",
+      "defp",
+      "Enum.reverse(",
+      "[head + carry | acc]"
+    ],
+    "must_not_contain": [
+      "case running_sum(tail)",
+      "def running_sum([head | tail]) do\n    result"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": [],
+    "criterion": "tail_recursion_explicit_acc",
+    "weight": 0.55
+  },
+  "tier_rationale": "Non-trivial recursion rewrite. Claude typically writes a non-tail version first.",
+  "calibration": null
+}

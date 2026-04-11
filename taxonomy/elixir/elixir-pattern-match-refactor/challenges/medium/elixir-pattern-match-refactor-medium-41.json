@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-41",
+  "tier": "medium",
+  "title": "Collapse the cond-with-is_nil into nil-matching heads",
+  "prompt": "Given:\n\n```\ndef label(user, post) do\n  cond do\n    is_nil(user) -> \"guest\"\n    is_nil(post) -> \"user: #{user.name}\"\n    true -> \"#{user.name} — #{post.title}\"\n  end\nend\n```\n\nRewrite as three function heads pattern-matching on nil or on `%{...}` shapes. Output a complete `defmodule MyApp.PostDisplay do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/post_display.ex"],
+    "must_contain": [
+      "def label(nil, _post)",
+      "def label(%{name: name}, nil)",
+      "def label(%{name: name}, %{title: title})",
+      "\"guest\"",
+      " — "
+    ],
+    "must_not_contain": [
+      "cond do",
+      "is_nil(user)",
+      "is_nil(post)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "cond_is_nil_to_heads",
+    "weight": 0.55
+  },
+  "tier_rationale": "Multi-argument head pattern with nil matches — tricky argument ordering.",
+  "calibration": null
+}

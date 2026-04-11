@@ -1,0 +1,36 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-37",
+  "tier": "hard",
+  "title": "Decide when cond is the right shape vs function heads",
+  "prompt": "Given:\n\n```\ndef grade(score, extra_credit) do\n  cond do\n    score + extra_credit >= 90 -> :a\n    score + extra_credit >= 80 -> :b\n    score + extra_credit >= 70 -> :c\n    score + extra_credit >= 60 -> :d\n    true -> :f\n  end\nend\n```\n\nThe computation `score + extra_credit` is repeated. Refactor to compute once, then use a pattern-matched helper: wrap in a private function `def grade(score, extra_credit), do: grade_from_total(score + extra_credit)` and then define `grade_from_total/1` as multi-clause function heads with guards. Output a complete `defmodule MyApp.Grader do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/grader.ex"],
+    "must_contain": [
+      "def grade(score, extra_credit)",
+      "grade_from_total(",
+      "defp grade_from_total(total) when total >= 90",
+      "defp grade_from_total(total) when total >= 80",
+      "defp grade_from_total(total) when total >= 70",
+      "defp grade_from_total(total) when total >= 60",
+      "defp grade_from_total(_)",
+      ":a",
+      ":b",
+      ":c",
+      ":d",
+      ":f"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "score + extra_credit >= 90"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["cond-and-if-reduction", "guard-clauses"],
+    "criterion": "extract_intermediate",
+    "weight": 0.65
+  },
+  "tier_rationale": "Requires seeing the repeated computation as a refactoring opportunity AND applying function heads correctly.",
+  "calibration": null
+}

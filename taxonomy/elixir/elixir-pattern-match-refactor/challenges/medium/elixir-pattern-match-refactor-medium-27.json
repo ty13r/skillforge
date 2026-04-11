@@ -1,0 +1,26 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-27",
+  "tier": "medium",
+  "title": "Replace Enum.reduce with Enum.map_reduce for paired output",
+  "prompt": "Refactor this: `def with_running_total(list) do {result, _} = Enum.reduce(list, {[], 0}, fn x, {acc, total} -> {acc ++ [{x, total + x}], total + x} end); result end`. Rewrite to use `Enum.map_reduce/3` — a single call that produces the transformed list and the accumulator without the `++` append. Output a complete `defmodule MyApp.RunningTotal do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/running_total.ex"],
+    "must_contain": [
+      "def with_running_total(list)",
+      "Enum.map_reduce("
+    ],
+    "must_not_contain": [
+      "Enum.reduce(list",
+      "acc ++ [{x, total"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "map_reduce_swap",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires knowing Enum.map_reduce — a less-common Enum function. Sonnet typically keeps the plain reduce form.",
+  "calibration": null
+}

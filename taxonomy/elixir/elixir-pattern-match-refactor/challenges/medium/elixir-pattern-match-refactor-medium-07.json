@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-07",
+  "tier": "medium",
+  "title": "Refactor to avoid pipe-starting from a case",
+  "prompt": "The following function violates the official anti-pattern 'Pipelines starting with a control structure':\n\n```\ndef process(input) do\n  case parse(input) do\n    {:ok, val} -> val\n    {:error, _} -> default()\n  end\n  |> normalize()\n  |> String.upcase()\nend\n```\n\nRewrite so the pipeline starts from a value (or a function call), not from a `case` expression. Extract the case into a helper function `extract/1` that returns the value directly, then pipe from `input |> extract() |> normalize() |> String.upcase()`. Output a complete `defmodule MyApp.Processor do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/processor.ex"],
+    "must_contain": [
+      "def process(input)",
+      "input",
+      "|> extract()",
+      "|> normalize()",
+      "|> String.upcase()",
+      "defp extract(input)"
+    ],
+    "must_not_contain": [
+      "case parse(input) do\n    {:ok,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "pipe_starts_from_value",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires recognizing a non-obvious anti-pattern; then applying a helper-extract refactor. Two distinct steps.",
+  "calibration": null,
+  "research_citation": "Thinking Elixir: 'pipelines are usually best to start with a simple value rather than the result of something like a control structure'"
+}

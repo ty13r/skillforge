@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-30",
+  "tier": "easy",
+  "title": "Convert an if-truthiness check to proper guard+pattern",
+  "prompt": "Rewrite `def adult?(user) do if user.age && user.age >= 18, do: true, else: false end` as two function heads. One head matches `%{age: age}` with a guard `when is_integer(age) and age >= 18` and returns `true`. The other matches anything and returns `false`. Output a complete `defmodule MyApp.AgeCheck do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/age_check.ex"],
+    "must_contain": [
+      "def adult?(%{age: age})",
+      "when is_integer(age) and age >= 18",
+      "true",
+      "false"
+    ],
+    "must_not_contain": [
+      "if user.age",
+      "user.age && user.age",
+      "user.age >= 18"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "map-and-struct-destructuring"],
+    "criterion": "truthiness_to_guard",
+    "weight": 0.4
+  },
+  "tier_rationale": "Straight truthiness-to-guard refactor. Single direction.",
+  "calibration": null
+}

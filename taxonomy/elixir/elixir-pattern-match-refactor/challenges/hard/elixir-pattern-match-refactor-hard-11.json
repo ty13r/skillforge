@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-11",
+  "tier": "hard",
+  "title": "Refactor nested defensive if-chain across three functions with shared error contract",
+  "prompt": "Refactor MyApp.NotificationSender from test_fixtures/defensive_nil_pipeline.ex to use a `with` expression in `send_welcome/1` and pattern-matched heads in the downstream functions. The `with` should: extract email, build template, deliver. If any step fails it returns `{:error, <atom>}`. Use normalizer helpers — `extract_email/1` returning `{:ok, email}` / `{:error, :no_email}`, `build_template/1` returning `{:ok, template}` (pure — always succeeds), `deliver/2` returning `Mailer.send/2` result. Output a complete `defmodule MyApp.NotificationSender do ... end`.",
+  "fixture_files": ["test_fixtures/defensive_nil_pipeline.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/notification_sender.ex"],
+    "must_contain": [
+      "def send_welcome(user)",
+      "with",
+      "extract_email",
+      "build_template",
+      "deliver",
+      ":no_email"
+    ],
+    "must_not_contain": [
+      "if is_nil(",
+      "user && user.preferences",
+      "== nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "refactor-philosophy"],
+    "criterion": "with_based_module_rewrite",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-helper refactor with a specific contract. Tests whether the skill can normalize boundaries to avoid complex-else.",
+  "calibration": null
+}

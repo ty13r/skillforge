@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-40",
+  "tier": "medium",
+  "title": "Replace imperative sum loop with Enum.sum",
+  "prompt": "Given:\n\n```\ndef total(orders) do\n  total = 0\n  for o <- orders do\n    total = total + o.amount\n  end\n  total\nend\n```\n\nThis is broken — the `for` body doesn't mutate the outer `total`. Rewrite using `Enum.sum/1` with `Enum.map/2` (or `Enum.sum_by/2`). Output a complete `defmodule MyApp.Orders do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/orders.ex"],
+    "must_contain": [
+      "def total(orders)",
+      "Enum.sum"
+    ],
+    "must_not_contain": [
+      "total = 0",
+      "for o <- orders",
+      "total = total + o.amount"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "imperative_sum_to_enum",
+    "weight": 0.5
+  },
+  "tier_rationale": "Recognizes the broken 'rebind in for' pattern + picks Enum.sum.",
+  "calibration": null
+}

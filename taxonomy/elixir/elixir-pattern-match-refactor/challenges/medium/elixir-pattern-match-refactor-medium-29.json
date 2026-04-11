@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-29",
+  "tier": "medium",
+  "title": "Collapse three-level nested if into a single `with` chain",
+  "prompt": "Given:\n\n```\ndef deliver(params) do\n  if valid?(params) do\n    case lookup_user(params.id) do\n      {:ok, user} ->\n        if can_mail?(user) do\n          MyApp.Mailer.send(user, params.body)\n        else\n          {:error, :opted_out}\n        end\n      :not_found -> {:error, :not_found}\n    end\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nRewrite as a `with` expression. Helper functions: `valid?/1`, `lookup_user/1`, `can_mail?/1`. Output a complete `defmodule MyApp.Delivery do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/delivery.ex"],
+    "must_contain": [
+      "def deliver(params)",
+      "with",
+      "<-",
+      ":invalid",
+      ":not_found",
+      ":opted_out"
+    ],
+    "must_not_contain": [
+      "if valid?(params) do",
+      "case lookup_user",
+      "if can_mail?(user) do"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["cond-and-if-reduction", "refactor-philosophy"],
+    "criterion": "multi_level_if_case_to_with",
+    "weight": 0.55
+  },
+  "tier_rationale": "Three control-structure styles (if, case, if) to unify into `with`. Requires wrapping boolean helpers into `{:ok, _}`-shaped calls.",
+  "calibration": null
+}

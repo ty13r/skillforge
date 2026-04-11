@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-08",
+  "tier": "hard",
+  "title": "Refactor the full Auth module: authenticate + refresh + sign_out",
+  "prompt": "Given the complete MyApp.Auth module from test_fixtures/nested_case_auth.ex plus this additional function:\n\n```\ndef sign_out(token_string) do\n  case Token.decode(token_string) do\n    {:ok, claims} ->\n      case Session.destroy(claims[\"session_id\"]) do\n        :ok -> :ok\n        err -> err\n      end\n    err -> err\n  end\nend\n```\n\nRefactor the entire module — authenticate/2, refresh/1, sign_out/1 — so each uses a `with` expression. Apply a consistent philosophy: extract helper `lookup_user/1` that returns `{:ok, user}` / `{:error, :user_deleted}`. Extract `check_password/2` that returns `:ok` / `{:error, :invalid_credentials}`. Output a complete `defmodule MyApp.Auth do ... end`.",
+  "fixture_files": ["test_fixtures/nested_case_auth.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "def authenticate(email, password)",
+      "def refresh(token_string)",
+      "def sign_out(token_string)",
+      "with",
+      "defp lookup_user",
+      "defp check_password"
+    ],
+    "must_not_contain": [
+      "case Token.decode",
+      "case Session.create",
+      "case Session.destroy"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy", "function-head-pattern-matching"],
+    "criterion": "three_function_consistent_with",
+    "weight": 0.7
+  },
+  "tier_rationale": "Module-wide consistent refactor with shared helpers. Synthesis of philosophy + with + heads.",
+  "calibration": null
+}

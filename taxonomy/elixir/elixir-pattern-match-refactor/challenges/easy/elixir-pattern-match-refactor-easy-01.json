@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-01",
+  "tier": "easy",
+  "title": "Remove defensive nil guard and blank-string check from display_name/1",
+  "prompt": "Refactor MyApp.UserService.display_name/1 in test_fixtures/ruby_style_user_service.ex. The current implementation uses `user && user.name` followed by an `if is_nil(name) || name == \"\"` to return \"Anonymous\". Replace it with two function heads: one that pattern-matches on a non-empty binary name and returns it, and a catch-all that returns \"Anonymous\". Only output the `display_name/1` function(s) inside a `defmodule MyApp.UserService do ... end` module (with the existing alias for User).",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def display_name(",
+      "when is_binary(name)",
+      "\"Anonymous\""
+    ],
+    "must_not_contain": [
+      "is_nil(name)",
+      "user && user.name",
+      "|| name == \"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses"],
+    "criterion": "no_nil_pun",
+    "weight": 0.6
+  },
+  "tier_rationale": "Single-step, well-known idiom (is_nil → pattern match). Fixture is tiny. Classic one-shot for vanilla Sonnet.",
+  "calibration": null
+}

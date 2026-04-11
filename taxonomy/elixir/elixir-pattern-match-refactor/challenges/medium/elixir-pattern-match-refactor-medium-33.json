@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-33",
+  "tier": "medium",
+  "title": "Refactor build_path to use Path.join/1",
+  "prompt": "Refactor `MyApp.ListUtils.build_path/1` from test_fixtures/non_tail_recursive.ex. The current implementation concatenates `\"/\" <> segment` in a rebinding loop that doesn't actually work. Rewrite as `segments |> Enum.map(&(\"/\" <> &1)) |> Enum.join(\"\")`, or better use `Path.join/1` if the segments don't already contain slashes. Use the Enum.map+join form because the test expects leading-slash segments. Output a complete `defmodule MyApp.ListUtils do ... end` with just build_path.",
+  "fixture_files": ["test_fixtures/non_tail_recursive.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_utils.ex"],
+    "must_contain": [
+      "def build_path(segments)",
+      "Enum.map(",
+      "Enum.join("
+    ],
+    "must_not_contain": [
+      "path = \"\"",
+      "for segment <- segments do",
+      "path = path <> "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["enum-vs-recursion-choice"],
+    "criterion": "loop_to_pipe",
+    "weight": 0.5
+  },
+  "tier_rationale": "Recognizing the non-mutation bug in `for segment ... path = path <> ...` is the key insight.",
+  "calibration": null
+}

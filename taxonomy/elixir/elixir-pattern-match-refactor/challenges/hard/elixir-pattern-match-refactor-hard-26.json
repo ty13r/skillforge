@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-26",
+  "tier": "hard",
+  "title": "Defensive check at system boundary — KEEP IT",
+  "prompt": "Given:\n\n```\ndef handle_webhook(payload) do\n  cond do\n    is_nil(payload) -> {:error, :empty}\n    not is_map(payload) -> {:error, :bad_format}\n    not Map.has_key?(payload, \"event\") -> {:error, :missing_event}\n    true ->\n      MyApp.Webhook.dispatch(payload)\n  end\nend\n```\n\nThis is at a system boundary — the payload comes from an untrusted source, so defensive checks ARE warranted. Refactor to multi-clause function heads but KEEP the validation logic (don't drop the missing-event check). Use `def handle_webhook(nil)`, `def handle_webhook(payload) when is_map(payload)` with a guard on map_size + key presence where possible, plus body check for the `\"event\"` key. Output a complete `defmodule MyApp.WebhookHandler do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/webhook_handler.ex"],
+    "must_contain": [
+      "def handle_webhook(nil)",
+      "def handle_webhook(payload)",
+      "when is_map(payload)",
+      "Map.has_key?(payload, \"event\")",
+      "MyApp.Webhook.dispatch(payload)",
+      ":empty",
+      ":bad_format",
+      ":missing_event"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "not is_nil",
+      "is_nil(payload)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["guard-clauses", "defensive-nil-checks-elimination"],
+    "criterion": "preserve_boundary_checks",
+    "weight": 0.7
+  },
+  "tier_rationale": "Tests the judgment 'when defensive IS correct.' Sonnet will mechanically apply `let it crash` even at boundaries.",
+  "calibration": null,
+  "research_citation": "BoothIQ Alex66: 'style guide recommends avoiding defensive nil-checking' — nuance is at system boundaries"
+}

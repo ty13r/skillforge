@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-44",
+  "tier": "medium",
+  "title": "Refactor so each function head destructures only the fields it needs",
+  "prompt": "Given:\n\n```\ndef greet(%{name: name, age: age, email: email, preferences: prefs, role: role}) do\n  \"Hi #{name}!\"\nend\n```\n\nThis head destructures 5 fields but only uses `name`. Refactor to `def greet(%{name: name}), do: \"Hi #{name}!\"`. Then add a second head for when `name` is missing: `def greet(_), do: \"Hi!\"`. Output a complete `defmodule MyApp.Greeter do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/greeter.ex"],
+    "must_contain": [
+      "def greet(%{name: name})",
+      "def greet(_)",
+      "\"Hi #{name}!\"",
+      "\"Hi!\""
+    ],
+    "must_not_contain": [
+      "age: age",
+      "email: email",
+      "preferences: prefs",
+      "role: role"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "avoid_over_destructure",
+    "weight": 0.55
+  },
+  "tier_rationale": "Explicit test of 'don't over-destructure' — complex-extractions anti-pattern. Sonnet often keeps the full match.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns: 'Complex extractions in clauses'"
+}

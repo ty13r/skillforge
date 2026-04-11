@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-12",
+  "tier": "hard",
+  "title": "Refactor a GenServer handle_call that does defensive nil-munging",
+  "prompt": "Given:\n\n```\ndef handle_call({:get, key}, _from, state) do\n  if state == nil do\n    {:reply, {:error, :no_state}, state}\n  else\n    value = state[key]\n    if is_nil(value) do\n      {:reply, {:error, :not_found}, state}\n    else\n      {:reply, {:ok, value}, state}\n    end\n  end\nend\n```\n\nRewrite as three handle_call clauses: one matching `{:get, _key}, _from, nil`, one matching `{:get, key}, _from, state` with a `Map.fetch(state, key)` via `case`, and a fallback. Output a complete `defmodule MyApp.KV do ... end` with just the handle_call clauses and `use GenServer`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/kv.ex"],
+    "must_contain": [
+      "def handle_call({:get, _key}, _from, nil)",
+      "def handle_call({:get, key}, _from, state)",
+      ":no_state",
+      ":not_found",
+      "Map.fetch"
+    ],
+    "must_not_contain": [
+      "if state == nil",
+      "if is_nil(value)",
+      "state[key]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "genserver_nil_cleanup",
+    "weight": 0.65
+  },
+  "tier_rationale": "Multi-clause handle_call refactor + assertive Map.fetch. Sonnet typically leaves the nil state check in the body.",
+  "calibration": null
+}

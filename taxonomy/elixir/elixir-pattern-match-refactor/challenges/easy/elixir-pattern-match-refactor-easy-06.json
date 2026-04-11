@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-06",
+  "tier": "easy",
+  "title": "Collapse one level of nested case in MyApp.Auth.refresh/1",
+  "prompt": "Refactor only the `refresh/1` function from test_fixtures/nested_case_auth.ex into a `with` expression. The three-level nested `case` should become a three-clause `with`. Preserve the existing error atoms: `{:error, :user_deleted}` for a missing user, and pass through decode/validation errors as-is. Output only the `refresh/1` function inside `defmodule MyApp.Auth do ... end` (with the needed aliases).",
+  "fixture_files": ["test_fixtures/nested_case_auth.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "def refresh(token_string)",
+      "with",
+      "Token.decode",
+      "Token.validate",
+      "Repo.get",
+      ":user_deleted"
+    ],
+    "must_not_contain": [
+      "case Token.decode",
+      "case Token.validate",
+      "case Repo.get"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["cond-and-if-reduction"],
+    "criterion": "nested_case_to_with",
+    "weight": 0.5
+  },
+  "tier_rationale": "Classic 3-level case collapse. The `with` form is the textbook target. No conflicting constraints.",
+  "calibration": null
+}

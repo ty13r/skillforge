@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-28",
+  "tier": "hard",
+  "title": "Rewrite enum_reduce_awkward as a consistent idiomatic module",
+  "prompt": "Refactor ALL four functions in test_fixtures/enum_reduce_awkward.ex. `group_by_parity/1` → use `Enum.split_with/2` (returns `{evens, odds}` tuple, then map into result). `first_match/2` → use `Enum.find/2`. `doubled/1` → use `Enum.map/2`. `max_value/1` → use `Enum.max/1` with an empty-list guard clause. Every function should use the most-idiomatic Enum function. Output a complete `defmodule MyApp.Accumulators do ... end`.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "def group_by_parity(list)",
+      "Enum.split_with",
+      "def first_match(list, predicate)",
+      "Enum.find",
+      "def doubled(list)",
+      "Enum.map",
+      "def max_value([])",
+      "Enum.max("
+    ],
+    "must_not_contain": [
+      "Enum.reduce(list, %{evens:",
+      "def first_match([head | tail]",
+      "def doubled([head | tail]",
+      "def max_value([head | tail]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["refactor-philosophy", "pipe-operator-flows"],
+    "criterion": "idiomatic_enum_selection",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires knowing four different Enum functions and picking the right one per function.",
+  "calibration": null
+}

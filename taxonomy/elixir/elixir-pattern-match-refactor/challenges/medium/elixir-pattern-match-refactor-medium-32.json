@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-32",
+  "tier": "medium",
+  "title": "Use Map.fetch + with for required-key access pattern",
+  "prompt": "Given: `def endpoint(config) do url = config[:url]; api_key = config[:api_key]; if url && api_key, do: {:ok, url <> \"?key=\" <> api_key}, else: {:error, :missing_config} end`. Rewrite using a `with` expression + `Map.fetch/2` so missing keys trigger the error path via pattern-match short-circuit. Output a complete `defmodule MyApp.ApiClient do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/api_client.ex"],
+    "must_contain": [
+      "def endpoint(config)",
+      "with",
+      "Map.fetch(config, :url)",
+      "Map.fetch(config, :api_key)",
+      ":missing_config"
+    ],
+    "must_not_contain": [
+      "config[:url]",
+      "config[:api_key]",
+      "url && api_key"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "map-and-struct-destructuring"],
+    "criterion": "with_plus_fetch",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two transforms (dynamic access → fetch, truthy-check → with). Sonnet often does one.",
+  "calibration": null
+}

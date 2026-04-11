@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-45",
+  "tier": "medium",
+  "title": "Replace in [nil, \"\"] defensive check with assertive guards",
+  "prompt": "Given:\n\n```\ndef display(name) do\n  if name in [nil, \"\"] do\n    \"Anonymous\"\n  else\n    String.upcase(name)\n  end\nend\n```\n\nRewrite with two function heads — one matching `nil`, one matching `\"\"`, one pattern-matching a non-empty binary with a `when is_binary(name)` guard. Do not use `in [nil, \"\"]`. Output a complete `defmodule MyApp.Display do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/display.ex"],
+    "must_contain": [
+      "def display(nil)",
+      "def display(\"\")",
+      "def display(name)",
+      "when is_binary(name)",
+      "String.upcase(name)"
+    ],
+    "must_not_contain": [
+      "in [nil, \"\"]",
+      "name in [nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses"],
+    "criterion": "in_nil_to_heads",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires three-head split and an assertive guard.",
+  "calibration": null
+}

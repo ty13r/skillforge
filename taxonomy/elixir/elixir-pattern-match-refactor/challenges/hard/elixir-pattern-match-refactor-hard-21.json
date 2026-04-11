@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-21",
+  "tier": "hard",
+  "title": "Refactor UserService without introducing complex extractions",
+  "prompt": "Refactor MyApp.UserService from test_fixtures/ruby_style_user_service.ex. Pattern-matched heads for every function. IMPORTANT: do NOT fall into the complex-extractions anti-pattern — each head should destructure ONLY the fields used inside that head's body. For example, `fetch_profile/1` should accept the user_id as a plain arg; `update_role/2` should pattern-match on the role and accept `user` as an opaque value (rebind + pass through). Output a complete `defmodule MyApp.UserService do ... end`.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def fetch_profile(user_id)",
+      "def update_role(user, \"admin\")",
+      "def update_role(user, \"editor\")",
+      "def display_name("
+    ],
+    "must_not_contain": [
+      "def update_role(%User{id: _id, name: _name, email: _email}",
+      "is_nil(",
+      "maybe_load_profile"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["map-and-struct-destructuring", "function-head-pattern-matching"],
+    "criterion": "no_over_destructure",
+    "weight": 0.7
+  },
+  "tier_rationale": "The tension between 'use pattern matching' and 'don't over-destructure' is the entire point. Sonnet commonly picks one direction mechanically.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns: 'Complex extractions in clauses'"
+}

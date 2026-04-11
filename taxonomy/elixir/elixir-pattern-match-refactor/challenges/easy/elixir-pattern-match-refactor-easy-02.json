@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-02",
+  "tier": "easy",
+  "title": "Convert case-with-nil in maybe_load_profile/1 into a function head",
+  "prompt": "Refactor MyApp.UserService.maybe_load_profile/1 in test_fixtures/ruby_style_user_service.ex. The function calls `Repo.get_by/2` and then wraps the result in a `case nil -> nil; profile -> profile end`, which is an identity. Replace the whole body with a direct call — just return `Repo.get_by(MyApp.Profile, user_id: user.id)`. Rename the function to `load_profile/1` to reflect its actual contract (no `maybe_` prefix) and accept a destructured `%User{id: id}` in the head. Output a `defmodule MyApp.UserService do ... end` containing only the renamed function plus the necessary alias.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def load_profile(%User{id: id})",
+      "Repo.get_by(",
+      "user_id: id"
+    ],
+    "must_not_contain": [
+      "maybe_load_profile",
+      "case Repo.get_by",
+      "nil -> nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "no_maybe_wrapper",
+    "weight": 0.5
+  },
+  "tier_rationale": "Single-direction refactor; the tautological case block is an obvious removal. Renaming away from `maybe_` is a single textual change.",
+  "calibration": null,
+  "research_citation": "te_chris, HN 46752907: 'maybe_do_blah helper functions everywhere. 30 lines when 8 would do.'"
+}

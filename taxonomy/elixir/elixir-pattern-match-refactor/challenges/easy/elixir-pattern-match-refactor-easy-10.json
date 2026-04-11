@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-10",
+  "tier": "easy",
+  "title": "Refactor validate_age/1 and validate_email/1 to use guards",
+  "prompt": "Refactor MyApp.Validator.validate_age/1 and validate_email/1 from test_fixtures/bad_guards.ex. Both currently have `if is_binary(...)` / `if is_integer(...)` inside the body. Push type checks into `when` guard clauses on the function heads. Each function should have a guarded success clause plus a catch-all clause that returns `{:error, :invalid_age}` or `{:error, :invalid_email}`. Output the complete refactored module as `defmodule MyApp.Validator do ... end` including both functions.",
+  "fixture_files": ["test_fixtures/bad_guards.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/validator.ex"],
+    "must_contain": [
+      "def validate_age(age) when is_integer(age)",
+      "def validate_email(email) when is_binary(email)",
+      ":invalid_age",
+      ":invalid_email"
+    ],
+    "must_not_contain": [
+      "if is_integer(age)",
+      "if is_binary(email)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "body_to_guard",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical if-in-body → guard refactor. Pattern well-known.",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-02",
+  "tier": "medium",
+  "title": "Collapse NotificationSender defensive nil chain into function heads",
+  "prompt": "Refactor MyApp.NotificationSender.send_welcome/1 from test_fixtures/defensive_nil_pipeline.ex. The function currently has three nested `if is_nil(...)` checks. Rewrite the public entry as multi-clause function heads: one that matches a `%{email: email}` with `when is_binary(email)`, one that matches `%{email: nil}` returning `{:error, :no_email}`, and one that matches `nil` returning `{:error, :no_user}`. The happy path may call `Mailer.send/2`. You may also refactor build_template/1 but the primary target is send_welcome/1. Output the refactored module as `defmodule MyApp.NotificationSender do ... end`.",
+  "fixture_files": ["test_fixtures/defensive_nil_pipeline.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/notification_sender.ex"],
+    "must_contain": [
+      "def send_welcome(nil)",
+      "{:error, :no_user}",
+      "{:error, :no_email}",
+      "Mailer.send"
+    ],
+    "must_not_contain": [
+      "if is_nil(user)",
+      "if is_nil(email)",
+      "user && user.email"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "nil_chain_to_heads",
+    "weight": 0.55
+  },
+  "tier_rationale": "Sonnet typically converts the first-level nil check but leaves the nested ones. Multi-step refactor with 3 error atoms to preserve.",
+  "calibration": null,
+  "research_citation": "BoothIQ post-mortem: 'Claude writes Ruby-style Elixir — if/then/else chains, defensive nil-checking'"
+}

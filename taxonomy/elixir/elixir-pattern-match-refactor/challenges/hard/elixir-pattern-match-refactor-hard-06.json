@@ -1,0 +1,35 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-06",
+  "tier": "hard",
+  "title": "Fix Checkout's complex-else anti-pattern via per-step helpers",
+  "prompt": "Refactor `MyApp.Checkout.checkout/2` from test_fixtures/complex_with_else.ex. The current `else` clause has 12 branches covering every possible error across 5 steps. Apply the Elixir Streams refactoring: extract each step into a helper function that internally maps its specific errors to user-facing messages, then the top-level `with` has NO `else` clause at all. Output a complete `defmodule MyApp.Checkout do ... end` with helpers `fetch_cart/1`, `validate_items/1`, `reserve_inventory/1`, `charge_payment/2`, `finalize_order/2`, each doing its own error normalization.",
+  "fixture_files": ["test_fixtures/complex_with_else.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/checkout.ex"],
+    "must_contain": [
+      "def checkout(cart_id, payment_params)",
+      "with",
+      "fetch_cart",
+      "validate_items",
+      "reserve_inventory",
+      "charge_payment",
+      "finalize_order",
+      "\"Cart not found\"",
+      "\"Payment declined\""
+    ],
+    "must_not_contain": [
+      "{:error, :empty_cart} ->",
+      "{:error, :card_declined} ->",
+      "{:error, :finalization_failed} ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy", "function-head-pattern-matching"],
+    "criterion": "complex_else_extracted",
+    "weight": 0.75
+  },
+  "tier_rationale": "Canonical Elixir Streams refactoring. Five helpers to extract; each normalizes at boundary. Sonnet typically leaves the else-block.",
+  "calibration": null,
+  "research_citation": "Elixir Streams + anti-patterns guide: 'Complex else clauses in with'"
+}

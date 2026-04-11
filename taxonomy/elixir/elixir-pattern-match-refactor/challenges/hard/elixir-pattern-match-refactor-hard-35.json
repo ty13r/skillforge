@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-35",
+  "tier": "hard",
+  "title": "Rewrite recursion with state accumulator preserving exact behavior",
+  "prompt": "Given:\n\n```\ndef running_max(list) do\n  running_max(list, nil, [])\nend\n\ndefp running_max([], _max, acc), do: Enum.reverse(acc)\ndefp running_max([h | t], nil, acc), do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc) when h > max, do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc), do: running_max(t, max, [max | acc])\n```\n\nThe current implementation works but uses a 3-arg helper with three distinct heads. Rewrite so `running_max/1` is a single call to `Enum.scan/2` — `list |> Enum.scan(&max/2)` — which is MUCH cleaner. Output a complete `defmodule MyApp.RunningStats do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/running_stats.ex"],
+    "must_contain": [
+      "def running_max(list)",
+      "Enum.scan(",
+      "max"
+    ],
+    "must_not_contain": [
+      "defp running_max([], _max, acc)",
+      "defp running_max([h | t], nil, acc)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["recursive-functions", "pipe-operator-flows"],
+    "criterion": "recursion_to_scan",
+    "weight": 0.65
+  },
+  "tier_rationale": "`Enum.scan/2` is an uncommon function. Sonnet typically doesn't reach for it.",
+  "calibration": null
+}

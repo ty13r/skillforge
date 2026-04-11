@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-30",
+  "tier": "medium",
+  "title": "Refactor format_lines/1 imperative loop into a pipe",
+  "prompt": "Refactor `MyApp.ReportBuilder.format_lines/1` from test_fixtures/imperative_report_builder.ex. The original uses `Enum.each/2` and tries to rebind `lines = lines ++ [line]` — which is a no-op. Rewrite as a pipe using `Enum.map_join/3`: `orders |> Enum.map_join(\"\\n\", fn %{id: id, product: product, quantity: qty} -> \"#{id}: #{product} x#{qty}\" end)`. Output a complete `defmodule MyApp.ReportBuilder do ... end` with just format_lines.",
+  "fixture_files": ["test_fixtures/imperative_report_builder.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/report_builder.ex"],
+    "must_contain": [
+      "def format_lines(orders)",
+      "Enum.map_join("
+    ],
+    "must_not_contain": [
+      "Enum.each(",
+      "lines ++ [line]",
+      "lines = []"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["enum-vs-recursion-choice"],
+    "criterion": "each_to_map_join",
+    "weight": 0.5
+  },
+  "tier_rationale": "Knowing `Enum.map_join/3` is less common; Sonnet typically writes `Enum.map |> Enum.join` instead.",
+  "calibration": null
+}

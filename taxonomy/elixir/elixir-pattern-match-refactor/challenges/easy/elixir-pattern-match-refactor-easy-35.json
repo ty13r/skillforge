@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-35",
+  "tier": "easy",
+  "title": "Refactor philosophy — don't mix cases and heads in describe/1",
+  "prompt": "Refactor MyApp.PermissionService.describe/1 from test_fixtures/mixed_style_module.ex. The function has one clause with a `when is_binary(name)` guard and another clause that uses a `case user do ... end` — pick one philosophy. Rewrite both clauses as multi-clause function heads: one for `%{role: role, name: name}` with a `when is_binary(name)` guard, one for `%{name: nil}`, one for `%{name: name}`, and a catch-all for unknown shapes. Output only the `describe/1` function inside `defmodule MyApp.PermissionService do ... end`.",
+  "fixture_files": ["test_fixtures/mixed_style_module.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/permission_service.ex"],
+    "must_contain": [
+      "def describe(%{role: role, name: name})",
+      "when is_binary(name)",
+      "def describe(%{name: nil})",
+      "def describe(%{name: name})",
+      "\"Anonymous\""
+    ],
+    "must_not_contain": [
+      "case user do"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "consistent_heads",
+    "weight": 0.5
+  },
+  "tier_rationale": "Single-function consistency check. Tier is easy because the target is explicit.",
+  "calibration": null
+}

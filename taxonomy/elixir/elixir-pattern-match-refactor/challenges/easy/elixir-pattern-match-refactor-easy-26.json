@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-26",
+  "tier": "easy",
+  "title": "Pipe a simple two-step transformation",
+  "prompt": "Rewrite `def upper_trimmed(s), do: String.upcase(String.trim(s))` as a pipe pipeline starting from `s`. Output a complete `defmodule MyApp.StringOps do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/string_ops.ex"],
+    "must_contain": [
+      "def upper_trimmed(s)",
+      "s",
+      "|> String.trim()",
+      "|> String.upcase()"
+    ],
+    "must_not_contain": [
+      "String.upcase(String.trim"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": [],
+    "criterion": "nest_to_pipe",
+    "weight": 0.3
+  },
+  "tier_rationale": "Trivial nested-call → pipe conversion. Always the same direction.",
+  "calibration": null
+}

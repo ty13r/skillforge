@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-15",
+  "tier": "hard",
+  "title": "Refactor pattern + accumulator recursion to preserve error provenance",
+  "prompt": "Given:\n\n```\ndef process_all(items) do\n  Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->\n    case transform(item) do\n      {:ok, v} -> {:cont, {:ok, acc ++ [v]}}\n      {:error, r} -> {:halt, {:error, {item.id, r}}}\n    end\n  end)\nend\n```\n\nTwo problems: `acc ++ [v]` is O(n²), and the reduce_while is clunkier than explicit recursion here. Rewrite as explicit multi-clause recursion with a helper `do_process/2` that accepts `{items, acc}`, prepends to acc on success, halts with `{:error, {id, reason}}` on failure, and reverses the final acc. Output a complete `defmodule MyApp.Batch do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/batch.ex"],
+    "must_contain": [
+      "def process_all(items)",
+      "defp do_process",
+      "Enum.reverse",
+      "{:error, {"
+    ],
+    "must_not_contain": [
+      "Enum.reduce_while",
+      "acc ++ [v]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["enum-vs-recursion-choice", "refactor-philosophy"],
+    "criterion": "explicit_recursion_error_preserve",
+    "weight": 0.7
+  },
+  "tier_rationale": "Synthesis: recognize quadratic append, pick explicit recursion, preserve error provenance.",
+  "calibration": null
+}

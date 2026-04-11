@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-01",
+  "tier": "medium",
+  "title": "Replace 4-level nested case auth pipeline with a with expression",
+  "prompt": "Refactor MyApp.Auth.authenticate/2 from test_fixtures/nested_case_auth.ex using a `with` expression. The four-level nested `case` should become a four-clause `with` chain. Preserve error atoms: return `{:error, :invalid_credentials}` for missing user or bad password, pass through Session/Token errors. The final happy path should return `{:ok, %{user: user, token: token}}`. Output only the `authenticate/2` function inside `defmodule MyApp.Auth do ... end` (with the needed aliases).",
+  "fixture_files": ["test_fixtures/nested_case_auth.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "def authenticate(email, password)",
+      "with",
+      "<-",
+      "Repo.get_by(User, email: email)",
+      "User.check_password",
+      "Session.create",
+      "Token.issue",
+      ":invalid_credentials"
+    ],
+    "must_not_contain": [
+      "case Repo.get_by",
+      "case User.check_password",
+      "case Session.create",
+      "case Token.issue"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["cond-and-if-reduction", "defensive-nil-checks-elimination"],
+    "criterion": "nested_case_to_with",
+    "weight": 0.55
+  },
+  "tier_rationale": "Multi-step refactor that requires deciding how to surface :invalid_credentials from both the nil user and the false password branches. Sonnet typically gets the happy path but bungles the error normalization.",
+  "calibration": null
+}

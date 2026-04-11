@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-04",
+  "tier": "easy",
+  "title": "Convert a trivial case chain to multi-clause function heads",
+  "prompt": "The module MyApp.TrafficLight has a single function `action/1` that uses `case color do \"red\" -> :stop; \"yellow\" -> :slow; \"green\" -> :go; _ -> :unknown end`. Rewrite it so the function has four clauses — three pattern-matched on the literal colors plus a fallback clause that returns `:unknown`. Output a complete `defmodule MyApp.TrafficLight do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/traffic_light.ex"],
+    "must_contain": [
+      "def action(\"red\")",
+      "def action(\"yellow\")",
+      "def action(\"green\")",
+      ":stop",
+      ":slow",
+      ":go",
+      ":unknown"
+    ],
+    "must_not_contain": [
+      "case color",
+      "case action"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": [],
+    "criterion": "case_to_heads",
+    "weight": 0.4
+  },
+  "tier_rationale": "Canonical textbook refactor. Pattern well-known. Single-step.",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-17",
+  "tier": "hard",
+  "title": "Rewrite recursive walker with pattern-matched heads and deep destructure",
+  "prompt": "Given:\n\n```\ndef sum_leaves(tree) do\n  if tree == nil do\n    0\n  else\n    if is_integer(tree) do\n      tree\n    else\n      sum_leaves(tree.left) + sum_leaves(tree.right)\n    end\n  end\nend\n```\n\nRewrite as three function heads: one matching `nil`, one matching `n when is_integer(n)`, one matching `%{left: left, right: right}`. Output a complete `defmodule MyApp.Tree do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tree.ex"],
+    "must_contain": [
+      "def sum_leaves(nil)",
+      "def sum_leaves(n) when is_integer(n)",
+      "def sum_leaves(%{left: left, right: right})",
+      "sum_leaves(left) + sum_leaves(right)"
+    ],
+    "must_not_contain": [
+      "if tree == nil",
+      "if is_integer(tree)",
+      "tree.left"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses", "defensive-nil-checks-elimination"],
+    "criterion": "tree_walker_pattern_heads",
+    "weight": 0.65
+  },
+  "tier_rationale": "Classic recursion-over-tree pattern but requires synthesizing four capabilities.",
+  "calibration": null
+}

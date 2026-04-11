@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-05",
+  "tier": "easy",
+  "title": "Refactor update_role/2 into guard-gated function heads",
+  "prompt": "Refactor MyApp.UserService.update_role/2 in test_fixtures/ruby_style_user_service.ex. The current body is a nested if-chain that checks `user != nil && role != nil` then branches on the string role. Replace it with multi-clause function heads: one head per valid role string plus a nil-user clause that returns `{:error, :missing_args}` and a catch-all clause that returns `{:error, :invalid_role}`. Use a guard `when role not in [\"admin\", \"editor\", \"viewer\"]` on the invalid-role clause. Output only the `update_role/2` function inside `defmodule MyApp.UserService do ... end`.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def update_role(",
+      "\"admin\"",
+      "\"editor\"",
+      "\"viewer\"",
+      "{:error, :invalid_role}",
+      "{:error, :missing_args}"
+    ],
+    "must_not_contain": [
+      "user != nil",
+      "if role ==",
+      "if role",
+      "role != nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["guard-clauses", "defensive-nil-checks-elimination"],
+    "criterion": "case_to_heads_with_guard",
+    "weight": 0.5
+  },
+  "tier_rationale": "Well-known refactor; guard + literal-match is textbook. Single-file scope.",
+  "calibration": null
+}

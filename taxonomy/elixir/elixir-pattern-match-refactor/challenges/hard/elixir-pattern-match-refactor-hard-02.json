@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-02",
+  "tier": "hard",
+  "title": "Full Auth.authenticate/2 refactor preserving error distinctions",
+  "prompt": "Refactor `MyApp.Auth.authenticate/2` from test_fixtures/nested_case_auth.ex to use a `with` expression. Preserve error distinctions: `{:error, :invalid_credentials}` for missing user OR bad password (these must be indistinguishable from outside), `{:error, reason}` pass-through for Session + Token failures. Add an `else` clause only where actually needed — DO NOT create a complex-else anti-pattern with one clause per possible error. Instead, normalize error shapes at the clause boundary so `with` can pass them through. Output a complete `defmodule MyApp.Auth do ... end` including the needed helpers.",
+  "fixture_files": ["test_fixtures/nested_case_auth.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "def authenticate(email, password)",
+      "with",
+      "<-",
+      ":invalid_credentials",
+      "Session.create",
+      "Token.issue"
+    ],
+    "must_not_contain": [
+      "case Repo.get_by",
+      "case Session.create",
+      "case Token.issue",
+      "{:error, :empty_cart}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "with_no_complex_else",
+    "weight": 0.65
+  },
+  "tier_rationale": "Must normalize error shapes at the clause boundary to avoid the complex-else anti-pattern. Subtle tradeoff.",
+  "calibration": null,
+  "research_citation": "Elixir Streams (German Velasco): refactoring complex-else clauses by extracting per-step helpers"
+}

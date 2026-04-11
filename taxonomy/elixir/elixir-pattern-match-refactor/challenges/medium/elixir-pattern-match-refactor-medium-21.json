@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-21",
+  "tier": "medium",
+  "title": "Collapse nested map access with a with-expression",
+  "prompt": "Refactor `MyApp.OrderFormatter.shipping_address/1` from test_fixtures/map_access_noise.ex. Instead of using `Map.fetch/2` inside nested `if != nil` checks, use a `with` expression: `with {:ok, user} <- Map.fetch(order, :user), {:ok, address} <- Map.fetch(user, :address), %{street: street, city: city, zip: zip} <- address`. Return the formatted address or an appropriate fallback string (`\"No user\"` or `\"No address\"`) per the original branches. Output a complete `defmodule MyApp.OrderFormatter do ... end` with just shipping_address.",
+  "fixture_files": ["test_fixtures/map_access_noise.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/order_formatter.ex"],
+    "must_contain": [
+      "def shipping_address(order)",
+      "with",
+      "Map.fetch(order, :user)",
+      "Map.fetch(user, :address)",
+      "%{street: street, city: city, zip: zip}",
+      "else"
+    ],
+    "must_not_contain": [
+      "order[:user]",
+      "user[:address]",
+      "address[:street]",
+      "if user != nil",
+      "if address != nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "nested_access_to_with",
+    "weight": 0.55
+  },
+  "tier_rationale": "Must recognize the `with` pattern for nested fetch + destructure. Choice of Map.fetch vs Map.get is a deliberate decision.",
+  "calibration": null
+}

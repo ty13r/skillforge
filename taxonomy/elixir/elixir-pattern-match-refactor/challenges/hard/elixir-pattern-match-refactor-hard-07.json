@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-07",
+  "tier": "hard",
+  "title": "Decide when case is better than function heads",
+  "prompt": "Given:\n\n```\ndef serialize(term) do\n  case term do\n    nil -> \"null\"\n    true -> \"true\"\n    false -> \"false\"\n    n when is_integer(n) -> Integer.to_string(n)\n    n when is_float(n) -> Float.to_string(n)\n    b when is_binary(b) -> \"\\\"#{b}\\\"\"\n    list when is_list(list) ->\n      items = Enum.map(list, &serialize/1)\n      \"[\" <> Enum.join(items, \",\") <> \"]\"\n    _ -> raise ArgumentError\n  end\nend\n```\n\nHere the `case` is correct: the list branch has multi-line inner logic, and converting to 8 function heads would spread the serializer logic across the module. Refactor only the list branch: pipeline the inner `Enum.map` + `Enum.join` + concat into a single pipe. Keep the `case` structure. Do NOT convert to function heads. Output a complete `defmodule MyApp.Serializer do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/serializer.ex"],
+    "must_contain": [
+      "def serialize(term)",
+      "case term do",
+      "|> Enum.map",
+      "|> Enum.join"
+    ],
+    "must_not_contain": [
+      "def serialize(nil)",
+      "def serialize(true)",
+      "items = Enum.map"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "dont_over_refactor_case",
+    "weight": 0.7
+  },
+  "tier_rationale": "Tests judgment on WHEN to leave case alone. Sonnet typically mechanically converts every case to heads.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns: 'Complex extractions in clauses' as a warning against mechanical head splitting"
+}

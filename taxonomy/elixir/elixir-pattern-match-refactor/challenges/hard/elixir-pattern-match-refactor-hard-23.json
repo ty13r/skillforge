@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-23",
+  "tier": "hard",
+  "title": "Refactor defensive nil in 10+ call sites",
+  "prompt": "Given:\n\n```\ndefmodule MyApp.Profile do\n  def title(u), do: if is_nil(u), do: \"\", else: u.title || \"\"\n  def bio(u), do: if is_nil(u), do: \"\", else: u.bio || \"\"\n  def avatar(u), do: if is_nil(u), do: \"/default.png\", else: u.avatar || \"/default.png\"\n  def url(u), do: if is_nil(u), do: \"/\", else: u.url || \"/\"\n  def display_name(u), do: if is_nil(u), do: \"Guest\", else: u.display_name || \"Guest\"\nend\n```\n\nRefactor so each function is two heads: one for `nil`, one for `%{<field>: v} when is_binary(v) and v != \"\"`, and a catch-all that returns the default. Do NOT use `||`. Output a complete `defmodule MyApp.Profile do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/profile.ex"],
+    "must_contain": [
+      "def title(nil)",
+      "def title(%{title: title})",
+      "def bio(nil)",
+      "def avatar(nil)",
+      "def url(nil)",
+      "def display_name(nil)",
+      "when is_binary"
+    ],
+    "must_not_contain": [
+      "if is_nil(u)",
+      "u.title || ",
+      "u.bio || ",
+      "u.avatar || "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "mass_nil_cleanup",
+    "weight": 0.7
+  },
+  "tier_rationale": "Five functions to refactor consistently. Tests the philosophy of uniform application.",
+  "calibration": null
+}

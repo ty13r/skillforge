@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-46",
+  "tier": "medium",
+  "title": "Parse a length-prefixed payload using binary size modifier",
+  "prompt": "Given: `def decode(<<len::unsigned-integer-size(16), rest::binary>>) do payload = :binary.part(rest, 0, len); trailer = :binary.part(rest, len, byte_size(rest) - len); {payload, trailer} end`. Rewrite the single function head to destructure the payload and trailer directly: `def decode(<<len::unsigned-integer-size(16), payload::binary-size(len), trailer::binary>>)` returning `{payload, trailer}`. Output a complete `defmodule MyApp.Framer do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/framer.ex"],
+    "must_contain": [
+      "def decode(<<",
+      "len::unsigned-integer-size(16)",
+      "payload::binary-size(len)",
+      "trailer::binary"
+    ],
+    "must_not_contain": [
+      ":binary.part(rest"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": [],
+    "criterion": "length_prefixed_destructure",
+    "weight": 0.55
+  },
+  "tier_rationale": "Runtime-variable binary size is a less-common feature. Needs `binary-size(len)` in a pattern position.",
+  "calibration": null
+}
