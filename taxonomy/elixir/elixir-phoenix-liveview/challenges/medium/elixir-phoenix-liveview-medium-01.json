@@ -1,0 +1,38 @@
+{
+  "id": "elixir-phoenix-liveview-medium-01",
+  "tier": "medium",
+  "title": "Full 1.6 -> 1.7 migration of a LiveView template",
+  "prompt": "The fixture test_fixtures/pre_1_7_user_list.ex is a Phoenix 1.6 LiveView. Produce lib/my_app_web/live/user_list_live.ex that migrates it to Phoenix 1.7+: every route becomes ~p, every <%= live_patch/live_redirect/live_link %> becomes <.link patch/navigate=>, every <%= for %>/<%= if %> becomes :for/:if, ~L becomes ~H, push_redirect becomes push_navigate, and the LiveView loads its users in handle_params/3 (not mount/3). Preserve module name MyAppWeb.UserListLive.",
+  "fixture_files": ["test_fixtures/pre_1_7_user_list.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/user_list_live.ex"],
+    "must_contain": [
+      "~p\"/users",
+      "<.link",
+      ":for=",
+      ":if=",
+      "~H\"\"\"",
+      "push_navigate",
+      "def handle_params"
+    ],
+    "must_not_contain": [
+      "Routes.user_path",
+      "live_link",
+      "live_patch",
+      "live_redirect",
+      "<%= for ",
+      "<%= if ",
+      "push_redirect",
+      "~L\"\"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["navigation-patterns", "mount-and-lifecycle", "anti-patterns-catalog"],
+    "criterion": "full_1_7_migration",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-step migration across several deprecated idioms. Sonnet typically converts routes but misses one of: ~L->~H, push_redirect, or the handle_params move.",
+  "research_citation": "fly.io Migrating to Verified Routes + fly.io Migrating to LiveView v0.18 + oliver-kriska plugin iron laws",
+  "calibration": null
+}

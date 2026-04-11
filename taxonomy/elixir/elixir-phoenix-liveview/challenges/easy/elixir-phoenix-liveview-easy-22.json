@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-easy-22",
+  "tier": "easy",
+  "title": "Add phx-update=stream to a stream container",
+  "prompt": "Write lib/my_app_web/live/products_live.ex (module MyAppWeb.ProductsLive). Its render must contain <div id=\"products\" phx-update=\"stream\"> wrapping <div :for={{id, p} <- @streams.products} id={id}>{p.name}</div>. mount/3 must call stream(socket, :products, []). Without phx-update=\"stream\" the DOM won't diff correctly.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/products_live.ex"],
+    "must_contain": [
+      "phx-update=\"stream\"",
+      "@streams.products",
+      "id={id}",
+      "stream(socket, :products"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": [],
+    "criterion": "stream_container_markup",
+    "weight": 0.2
+  },
+  "tier_rationale": "Three required container attributes in one place. Single canonical fix.",
+  "research_citation": "Phoenix.LiveView docs: 'parent element of the list must have a unique id attribute and phx-update=\"stream\"'",
+  "calibration": null
+}

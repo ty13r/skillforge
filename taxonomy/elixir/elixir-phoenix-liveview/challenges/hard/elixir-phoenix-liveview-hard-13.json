@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-hard-13",
+  "tier": "hard",
+  "title": "Refactor function-head soup with multi-clause dispatch",
+  "prompt": "Write lib/my_app_web/live/settings_live.ex (module MyAppWeb.SettingsLive). The handle_event(\"validate\") must use a single clause with a tiny discriminating head `handle_event(\"validate\", %{\"settings\" => params}, socket)` — no field destructuring in the head, no binding of assigns in the head. Field-level logic lives in the body via `Enum.reduce` over params or similar. Also write a second clause `handle_event(\"save\", %{\"settings\" => params}, socket)` for submission. The fixture test_fixtures/function_head_soup.ex shows the anti-pattern.",
+  "fixture_files": ["test_fixtures/function_head_soup.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/settings_live.ex"],
+    "must_contain": [
+      "def handle_event(\"validate\", %{\"settings\" => params}, socket)",
+      "def handle_event(\"save\", %{\"settings\" => params}, socket)"
+    ],
+    "must_not_contain": [
+      "%{assigns: %{current_user",
+      "%{\"theme\" => theme,",
+      "saving?: false} = socket"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "clean_handle_event_heads",
+    "weight": 0.35
+  },
+  "tier_rationale": "Requires the cleanup of both the original soup AND the additional save clause. Consistent application of the rule.",
+  "research_citation": "John Elm Labs anti-patterns: 'Function Head Pattern Matching Abuse'",
+  "calibration": null
+}

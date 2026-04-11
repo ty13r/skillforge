@@ -1,0 +1,31 @@
+{
+  "id": "elixir-phoenix-liveview-medium-17",
+  "tier": "medium",
+  "title": "Decompose a procedural LiveView into live view + function components",
+  "prompt": "Write lib/my_app_web/live/profile_page_live.ex (module MyAppWeb.ProfilePageLive) that decomposes a profile page into a LiveView + three stateless function components: <.profile_header user={@user} />, <.profile_stats stats={@stats} />, <.profile_posts posts={@posts} />. Define the three components in the same file at the bottom (all under MyAppWeb.ProfilePageLive namespace, using `use Phoenix.Component` in a helper module or inline). mount/3 assigns :user, :stats, :posts. Keep the LiveView render small — just a composition of the three components.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/profile_page_live.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_view",
+      "use Phoenix.Component",
+      "attr :user",
+      "attr :stats",
+      "attr :posts",
+      "def profile_header(",
+      "def profile_stats(",
+      "def profile_posts("
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "live_view_decomposition",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-component decomposition decision. Requires correct separation of LiveView vs stateless.",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-21",
+  "tier": "hard",
+  "title": "Fix nested inputs_for where add button is in wrong position",
+  "prompt": "Write lib/my_app_web/live/recipe_live.ex (module MyAppWeb.RecipeLive). The form is for a Recipe with nested :ingredients via <.inputs_for>. The critical rule: the 'Add ingredient' button MUST appear AFTER the inputs_for block (not inside it), because Ecto needs to see the 'new' value in params to insert a new nested changeset. Use hidden sort inputs with name=\"recipe[ingredients_sort][]\". Add button: <button type=\"button\" name=\"recipe[ingredients_sort][]\" value=\"new\">Add ingredient</button>. Drop button inside inputs_for: <button type=\"button\" name=\"recipe[ingredients_drop][]\" value={ig.index}>Remove</button>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/recipe_live.ex"],
+    "must_contain": [
+      "<.inputs_for",
+      "field={@form[:ingredients]}",
+      "ingredients_sort",
+      "ingredients_drop",
+      "value=\"new\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "inputs_for_button_ordering",
+    "weight": 0.4
+  },
+  "tier_rationale": "Button-after-list ordering is a subtle rule with a documented failure mode.",
+  "research_citation": "Arrowsmith Labs nested forms advanced tricks",
+  "calibration": null
+}

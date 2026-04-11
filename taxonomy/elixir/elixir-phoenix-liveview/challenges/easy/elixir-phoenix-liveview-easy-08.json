@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-easy-08",
+  "tier": "easy",
+  "title": "Add a missing id attribute to a <.live_component> invocation",
+  "prompt": "Write lib/my_app_web/live/settings_live.ex (module MyAppWeb.SettingsLive) that calls <.live_component module={MyAppWeb.PreferencesComponent} id=\"preferences\" user={@user} /> in its render body. mount/3 returns {:ok, assign(socket, :user, %{id: 1, name: \"Ada\"})}. Every live_component invocation MUST have a unique id attribute. Use ~H.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/settings_live.ex"],
+    "must_contain": [
+      "<.live_component",
+      "id=\"preferences\"",
+      "module={MyAppWeb.PreferencesComponent}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": [],
+    "criterion": "live_component_has_id",
+    "weight": 0.2
+  },
+  "tier_rationale": "LiveComponents require unique id. Single-rule fix.",
+  "calibration": null
+}

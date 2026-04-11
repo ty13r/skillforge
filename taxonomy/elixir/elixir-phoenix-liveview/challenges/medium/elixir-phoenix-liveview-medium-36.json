@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-36",
+  "tier": "medium",
+  "title": "Fix stale handle_params on filter change",
+  "prompt": "Write lib/my_app_web/live/jobs_live.ex (module MyAppWeb.JobsLive) where the filter is URL-driven. The filter buttons use <.link patch={~p\"/jobs?status=#{status}\"}>. handle_params/3 reads params[\"status\"] (default \"all\") and reloads the stream with reset: true. Must NOT reload in mount. mount/3 only sets the empty stream + default assigns. Do not use push_patch inside handle_event — the patch links handle it.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/jobs_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "stream(socket, :jobs",
+      "reset: true",
+      "<.link patch={~p\"/jobs?status="
+    ],
+    "must_not_contain": [
+      "def handle_event(\"filter\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["navigation-patterns", "streams-and-collections"],
+    "criterion": "handle_params_reload",
+    "weight": 0.3
+  },
+  "tier_rationale": "URL-patch-driven filter reload with proper separation of mount vs handle_params.",
+  "calibration": null
+}

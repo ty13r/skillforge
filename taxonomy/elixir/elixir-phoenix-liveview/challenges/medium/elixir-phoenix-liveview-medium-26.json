@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-medium-26",
+  "tier": "medium",
+  "title": "Inputs_for basic nested form (single level)",
+  "prompt": "Write lib/my_app_web/live/author_form_live.ex (module MyAppWeb.AuthorFormLive) that renders a form for Author with a single-level nested :books association via <.inputs_for>. Use <.form for={@form} phx-change=\"validate\" phx-submit=\"save\">. The inputs_for block renders <.input field={book[:title]} label=\"Title\" /> for each book. mount/3 builds the form via to_form(MyApp.Library.change_author(%MyApp.Library.Author{})). handle_event validate re-runs with action :validate and re-forms.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/author_form_live.ex"],
+    "must_contain": [
+      "<.form",
+      "<.inputs_for",
+      "field={@form[:books]}",
+      "to_form",
+      "action: :validate"
+    ],
+    "must_not_contain": [
+      "inputs_for(f, :books)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "inputs_for_basic",
+    "weight": 0.3
+  },
+  "tier_rationale": "inputs_for function-component form introduction. Non-adversarial nested form.",
+  "research_citation": "Arrowsmith Labs nested forms post",
+  "calibration": null
+}

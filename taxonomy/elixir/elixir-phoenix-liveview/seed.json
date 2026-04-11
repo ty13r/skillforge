@@ -1,0 +1,92 @@
+{
+  "family_slug": "elixir-phoenix-liveview",
+  "generation": 0,
+  "foundation_variants": [
+    {
+      "slug": "architectural-stance--strict-liveview",
+      "dimension": "architectural-stance",
+      "name": "Strict LiveView",
+      "description": "Favor LiveView over LiveComponent. Function components only for stateless rendering. Phoenix context handles DB interaction. Forbid DB queries in mount/3 and demand connected?(socket) guards on side effects.",
+      "skill_md": "---\nname: architectural-stance--strict-liveview\ndescription: Enforces a strict LiveView architecture: LiveView modules own state, function components are stateless, context modules handle DB. NO DB queries in mount. Use when writing or refactoring Phoenix 1.7+ LiveView code. NOT for Phoenix 1.6 or older.\n---\n\n# Strict LiveView\n\n## Quick Start\nLiveView owns state. Function components render. Context handles DB. No DB in mount.\n\n## When to use\n- Writing a new LiveView module\n- Refactoring a 1.6 LiveView to 1.7\n- Reviewing PRs for Phoenix architecture\n\n## Workflow\n1. Use `Phoenix.LiveView` for the top-level module\n2. Move all DB queries into a context module, called from `handle_params` or `handle_event`\n3. Guard side-effectful work with `if connected?(socket), do: ...`\n4. Use `to_form/2` for forms, never raw changesets\n\n## Common mistakes\n- `Repo.all` in mount (runs twice: disconnected + connected)\n- PubSub.subscribe without `connected?` guard\n- Using `assign_new` for things that must be freshly computed\n"
+    }
+  ],
+  "capability_variants": [
+    {
+      "slug": "heex-and-verified-routes--idiomatic",
+      "dimension": "heex-and-verified-routes",
+      "name": "Idiomatic HEEx + Verified Routes",
+      "description": "Uses ~p sigil for all routes, :if and :for for conditionals/loops, <.link> component for navigation. Never live_link or Routes.*_path helpers.",
+      "skill_md": "---\nname: heex-and-verified-routes--idiomatic\ndescription: Phoenix 1.7+ HEEx idioms. Uses ~p sigil, :if, :for, <.link>. NOT for 1.6.\n---\n\n# Idiomatic HEEx + Verified Routes\n\n## Quick Start\n`~p\"/users/#{id}\"` replaces `Routes.user_path(@socket, :show, id)`. `:for={x <- @xs}` replaces `<%= for x <- @xs do %>`.\n\n## Workflow\n1. Use `~p` for every route\n2. Use `:if=` and `:for=` directives in HEEx\n3. Use `<.link navigate={~p\"/users\"}>` instead of `live_link`\n4. Use `~H\"\"\"` sigil for templates\n\n## Common mistakes\n- Mixing old helpers (`Routes.*`) with new (`~p`)\n- Using `<%= for %>` instead of `:for`\n"
+    },
+    {
+      "slug": "function-components-and-slots--well-typed",
+      "dimension": "function-components-and-slots",
+      "name": "Well-Typed Function Components",
+      "description": "Declares attr and slot for every component input. Uses inner_block for children. No stateful logic in function components.",
+      "skill_md": "---\nname: function-components-and-slots--well-typed\ndescription: Phoenix 1.7+ function components with attr/slot declarations.\n---\n\n# Well-Typed Function Components\n\n## Quick Start\n`attr :name, :string, required: true` declares component inputs. `slot :inner_block` declares children.\n\n## Workflow\n1. Define `attr` for every input\n2. Define `slot` for named slots and `inner_block`\n3. Render via `<%= render_slot(@inner_block) %>`\n\n## Common mistakes\n- Missing attr declarations (no type safety)\n- Stateful logic in function components (should be LiveComponent)\n"
+    },
+    {
+      "slug": "live-components-stateful--isolated",
+      "dimension": "live-components-stateful",
+      "name": "Isolated LiveComponent",
+      "description": "Uses Phoenix.LiveComponent for stateful children. handle_event in the component. update/2 for prop updates.",
+      "skill_md": "---\nname: live-components-stateful--isolated\ndescription: Stateful LiveComponent with own lifecycle and event handling.\n---\n\n# Isolated LiveComponent\n\n## Quick Start\n`use Phoenix.LiveComponent` for stateful children. They get their own `handle_event` and `update/2`.\n\n## Workflow\n1. `use Phoenix.LiveComponent`\n2. Implement `update/2` for prop changes\n3. Implement `handle_event/3` for component-local events\n4. Use `send_update/3` to trigger from parent\n"
+    },
+    {
+      "slug": "form-handling--to-form-canonical",
+      "dimension": "form-handling",
+      "name": "to_form Canonical",
+      "description": "Uses to_form/2 to wrap changesets. <.form> and <.input> from core_components. phx-change wired to a validate handler that re-runs the changeset and re-assigns the form.",
+      "skill_md": "---\nname: form-handling--to-form-canonical\ndescription: Canonical Phoenix 1.7+ form cycle: to_form, <.form>, <.input>, phx-change validate.\n---\n\n# to_form Canonical\n\n## Quick Start\n`to_form/2` wraps a changeset. `<.form for={@form}>` renders. `phx-change=\"validate\"` re-runs validation.\n\n## Workflow\n1. `assign(socket, :form, to_form(changeset))`\n2. `<.form for={@form} phx-change=\"validate\" phx-submit=\"save\">`\n3. `handle_event(\"validate\", %{\"thing\" => params}, socket)` re-builds changeset and re-assigns\n4. Use `<.input field={@form[:name]} />` for fields\n"
+    },
+    {
+      "slug": "streams-and-collections--stream-first",
+      "dimension": "streams-and-collections",
+      "name": "Stream-First for Large Collections",
+      "description": "Uses stream/3 for any collection >100 items. stream_insert/stream_delete for updates. dom_id option set for stable keys.",
+      "skill_md": "---\nname: streams-and-collections--stream-first\ndescription: Uses Phoenix.LiveView.stream/3 for large collections.\n---\n\n# Stream-First for Large Collections\n\n## Quick Start\n`stream(socket, :messages, list)` replaces `assign(socket, :messages, list)` for collections >100 items.\n\n## Workflow\n1. `stream(socket, :messages, initial_list)`\n2. Template: `<div :for={{id, msg} <- @streams.messages} id={id}>...</div>`\n3. Add: `stream_insert(socket, :messages, new_msg)`\n4. Remove: `stream_delete(socket, :messages, msg)`\n"
+    },
+    {
+      "slug": "mount-and-lifecycle--no-db-in-mount",
+      "dimension": "mount-and-lifecycle",
+      "name": "No DB In Mount",
+      "description": "Mount/3 NEVER calls Repo. Heavy work goes in handle_params/3 or behind a connected?(socket) guard. assign_new/3 only for values that are identical across disconnected and connected mounts.",
+      "skill_md": "---\nname: mount-and-lifecycle--no-db-in-mount\ndescription: Enforces the NO DATABASE QUERIES IN MOUNT iron law.\n---\n\n# No DB In Mount\n\n## Quick Start\nmount/3 runs TWICE (disconnected HTTP + connected WebSocket). Putting a Repo call in mount doubles your DB load.\n\n## Workflow\n1. Put DB queries in `handle_params/3` (runs once per URL change)\n2. For unconditional loads, guard with `if connected?(socket), do: ...`\n3. Use `handle_info(:load_data, socket)` + `send(self(), :load_data)` if needed\n\n## Common mistakes\n- `def mount(_params, _session, socket), do: {:ok, assign(socket, :users, Repo.all(User))}`\n- Using `assign_new` to \"dedupe\" instead of using `handle_params`\n"
+    },
+    {
+      "slug": "event-handlers-and-handle-info--clear-separation",
+      "dimension": "event-handlers-and-handle-info",
+      "name": "Clear Separation Of Concerns",
+      "description": "handle_event handles phx-click/submit/change. handle_info handles external messages (PubSub, GenServer). Never mix.",
+      "skill_md": "---\nname: event-handlers-and-handle-info--clear-separation\ndescription: Separates user events (handle_event) from external messages (handle_info).\n---\n\n# Clear Separation Of Concerns\n\n## Workflow\n1. `handle_event/3` for phx-* bindings (click, submit, change, focus)\n2. `handle_info/2` for PubSub broadcasts and GenServer messages\n3. Never mix — don't send yourself a phx-event\n"
+    },
+    {
+      "slug": "pubsub-and-realtime--connected-guard",
+      "dimension": "pubsub-and-realtime",
+      "name": "Connected-Guarded Subscribe",
+      "description": "PubSub.subscribe ONLY inside if connected?(socket). Topic namespaced per entity. Unsubscribe on terminate if needed.",
+      "skill_md": "---\nname: pubsub-and-realtime--connected-guard\ndescription: PubSub subscribe guarded by connected?(socket).\n---\n\n# Connected-Guarded Subscribe\n\n## Quick Start\nSubscribe during disconnected mount wastes subscriptions. Always guard with `connected?`.\n\n## Workflow\n1. `if connected?(socket), do: Phoenix.PubSub.subscribe(MyApp.PubSub, \"user:#{id}\")`\n2. `def handle_info({:new_message, msg}, socket), do: {:noreply, stream_insert(socket, :messages, msg)}`\n3. Broadcast via `Phoenix.PubSub.broadcast(MyApp.PubSub, topic, {:new_message, msg})`\n"
+    },
+    {
+      "slug": "navigation-patterns--push-navigate-and-link",
+      "dimension": "navigation-patterns",
+      "name": "push_navigate And <.link>",
+      "description": "Uses push_navigate for full LiveView swaps, push_patch for same-LiveView URL updates, <.link navigate={...}> in templates. Never live_link/live_redirect/live_patch helpers.",
+      "skill_md": "---\nname: navigation-patterns--push-navigate-and-link\ndescription: Phoenix 1.7+ navigation: push_navigate, push_patch, <.link>.\n---\n\n# push_navigate And <.link>\n\n## Workflow\n1. Cross-LiveView navigation: `push_navigate(socket, to: ~p\"/...\")`\n2. Same-LiveView URL update: `push_patch(socket, to: ~p\"/...\")`\n3. Template links: `<.link navigate={~p\"/users/#{user}\"}>...</.link>`\n"
+    },
+    {
+      "slug": "auth-and-authz--on-mount-hook",
+      "dimension": "auth-and-authz",
+      "name": "on_mount Hook + Per-Event Authz",
+      "description": "Uses on_mount hooks for authentication. Groups auth-gated views with live_session. Per-handle_event authorization checks for ownership.",
+      "skill_md": "---\nname: auth-and-authz--on-mount-hook\ndescription: LiveView authentication via on_mount, authorization via per-handle_event checks.\n---\n\n# on_mount Hook + Per-Event Authz\n\n## Workflow\n1. Define `on_mount :current_user` hook\n2. Use `live_session :authenticated, on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}]` in router\n3. In handle_event, check ownership: `if socket.assigns.current_user.id == post.user_id, do: ..., else: {:noreply, put_flash(socket, :error, \"unauthorized\")}`\n"
+    },
+    {
+      "slug": "anti-patterns-catalog--iron-laws",
+      "dimension": "anti-patterns-catalog",
+      "name": "Iron-Law Catalog",
+      "description": "Explicit catalog of what NOT to do: no DB in mount, connected? before subscribe, ~p for routes, no float for money in displayed values, to_form for forms.",
+      "skill_md": "---\nname: anti-patterns-catalog--iron-laws\ndescription: Explicit list of Phoenix 1.7+ LiveView anti-patterns to avoid.\n---\n\n# Iron-Law Catalog\n\n## Iron laws\n1. **NO DATABASE QUERIES IN MOUNT** — mount runs twice\n2. **Always connected?(socket) before PubSub.subscribe**\n3. **Always ~p, never Routes.*_path**\n4. **Always to_form for forms, never bare changesets**\n5. **Always stream/3 for lists >100 items**\n6. **Never use assign_new for values that need fresh computation on reconnect**\n7. **Never use live_link, live_patch, live_redirect — use <.link> and push_navigate/push_patch**\n"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "elixir-phoenix-liveview-hard-01",
+  "tier": "hard",
+  "title": "Convert DB-in-mount dashboard + add scoped PubSub",
+  "prompt": "The fixture test_fixtures/db_in_mount_dashboard.ex has DB queries running twice (once per HTTP mount, once per WS mount) plus an unguarded PubSub subscribe with an insufficiently scoped topic. Produce lib/my_app_web/live/dashboard_live.ex (module MyAppWeb.DashboardLive): (1) move ALL queries (invoices, metrics, unread_count) out of mount into handle_params, (2) gate PubSub.subscribe with if connected?(socket), (3) scope the topic to the user via \"dashboard:user:#{current_user.id}\", (4) keep the {:new_notification, _} handle_info clause, (5) mount only assigns current_user + empty defaults. All four changes are required.",
+  "fixture_files": ["test_fixtures/db_in_mount_dashboard.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/dashboard_live.ex"],
+    "must_contain": [
+      "def mount",
+      "def handle_params",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"dashboard:user:",
+      "Billing.list_recent_invoices",
+      "Reports.compute_dashboard_metrics",
+      "Accounts.count_unread_notifications",
+      "def handle_info({:new_notification"
+    ],
+    "must_not_contain": [
+      "\"dashboard:#{current_user.id}\"",
+      "def mount(_params, _session, socket) do\n    current_user = Accounts.get_current_user()\n    invoices"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["pubsub-and-realtime", "anti-patterns-catalog"],
+    "criterion": "multi_fix_dashboard",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four distinct fixes that must all be applied. Sonnet typically catches 2 of 4 without targeted prompting.",
+  "research_citation": "georgeguimaraes phoenix-thinking Iron Law + oliver-kriska connected?/1 rule",
+  "calibration": null
+}

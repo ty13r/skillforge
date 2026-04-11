@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-medium-21",
+  "tier": "medium",
+  "title": "Author a paginated table with push_patch + cursor",
+  "prompt": "Write lib/my_app_web/live/users_table_live.ex (module MyAppWeb.UsersTableLive) that paginates a user table by cursor. mount/3 stream(:users, []). handle_params/3 reads %{\"cursor\" => cursor} (default nil), loads MyApp.Accounts.list_users(cursor: cursor), and streams with reset: true. \"next\" button calls push_patch(to: ~p\"/users?cursor=#{next_cursor}\"). Must stay in the same LiveView — do not use push_navigate.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/users_table_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "stream(socket, :users",
+      "reset: true",
+      "push_patch",
+      "~p\"/users?cursor="
+    ],
+    "must_not_contain": [
+      "push_navigate"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["streams-and-collections", "mount-and-lifecycle"],
+    "criterion": "patch_pagination",
+    "weight": 0.3
+  },
+  "tier_rationale": "Push_patch vs push_navigate discrimination + stream + handle_params wiring in one LiveView.",
+  "calibration": null
+}

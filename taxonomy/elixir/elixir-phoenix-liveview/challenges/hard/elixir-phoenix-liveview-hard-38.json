@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-hard-38",
+  "tier": "hard",
+  "title": "Author a stream(:clear_all, reset: true) pattern",
+  "prompt": "Write lib/my_app_web/live/clearable_list_live.ex (module MyAppWeb.ClearableListLive). It must: (1) initialize stream(:items, initial) in mount, (2) handle_event(\"clear\", _, socket) calls stream(socket, :items, [], reset: true) — the reset: true flag is required to clear all DOM children, (3) handle_event(\"add\", %{\"name\" => name}, socket) stream_inserts a new item. Render <div id=\"items\" phx-update=\"stream\"> with :for iteration. The reset: true on clear is the key point.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/clearable_list_live.ex"],
+    "must_contain": [
+      "stream(socket, :items",
+      "stream(socket, :items, []",
+      "reset: true",
+      "stream_insert",
+      "phx-update=\"stream\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["event-handlers-and-handle-info"],
+    "criterion": "stream_clear_with_reset",
+    "weight": 0.35
+  },
+  "tier_rationale": "reset: true on stream is a specific required flag. Non-obvious.",
+  "calibration": null
+}

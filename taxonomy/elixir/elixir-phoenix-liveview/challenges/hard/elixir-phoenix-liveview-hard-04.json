@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-04",
+  "tier": "hard",
+  "title": "Fix N+1 with preload/1 batching",
+  "prompt": "The fixture test_fixtures/n_plus_one_component.ex has a LiveComponent that runs Accounts.get_user!(user_id) and Billing.get_plan_for_user(user_id) inside update/2, causing N+1 queries. Produce lib/my_app_web/components/user_detail_component.ex (module MyAppWeb.UserDetailComponent): (1) implement preload(list_of_assigns) that batches both queries via Accounts.get_users(user_ids) and Billing.get_plans_for_users(user_ids), (2) build Map.new by id, (3) return the updated list_of_assigns with :user and :plan merged in, (4) update/2 just assigns the data from the merged assigns.",
+  "fixture_files": ["test_fixtures/n_plus_one_component.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/user_detail_component.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_component",
+      "def preload(list_of_assigns)",
+      "Enum.map(list_of_assigns",
+      "Accounts.get_users",
+      "Billing.get_plans_for_users",
+      "Map.new"
+    ],
+    "must_not_contain": [
+      "def update(%{user_id: user_id} = assigns, socket) do\n    user = Accounts.get_user!"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "preload_batching",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires knowing preload/1 shape and understanding that update/2 should not query. Classic N+1 fix.",
+  "research_citation": "John Elm Labs anti-patterns #4: 'You Have N+1 Queries In Your LiveComponents'",
+  "calibration": null
+}

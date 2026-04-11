@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-medium-35",
+  "tier": "medium",
+  "title": "Author a live_component with preload/1 stub",
+  "prompt": "Write lib/my_app_web/components/user_row_component.ex (module MyAppWeb.UserRowComponent) as a Phoenix.LiveComponent. Implement preload/1 that receives list_of_assigns and returns the same list (this is a stub — preload is where batching logic would go). Implement update/2 that assigns the data. The key point: preload/1 must be defined, even if trivially. render/1 shows the user row.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/user_row_component.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_component",
+      "def preload(list_of_assigns)",
+      "def update(",
+      "def render(assigns)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": [],
+    "criterion": "preload_callback_defined",
+    "weight": 0.25
+  },
+  "tier_rationale": "Preload/1 is a lesser-used callback; declaring it correctly is the key test.",
+  "calibration": null
+}

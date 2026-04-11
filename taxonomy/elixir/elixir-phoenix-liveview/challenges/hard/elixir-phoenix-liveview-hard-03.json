@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-03",
+  "tier": "hard",
+  "title": "Convert trust-the-UI auth to per-event ownership with on_mount + stream",
+  "prompt": "The fixture test_fixtures/missing_authz_handle_event.ex relies on hiding the delete button to block unauthorized deletes. Produce lib/my_app_web/live/posts_live.ex (module MyAppWeb.PostsLive): (1) add on_mount {MyAppWeb.UserAuth, :ensure_authenticated}, (2) per-event ownership check in handle_event(\"delete\") that compares post.author_id to socket.assigns.current_user.id and denies mismatch with put_flash, (3) convert the post list from assign to stream, (4) use :if={post.author_id == @current_user.id} on the button instead of nested <%= if %>.",
+  "fixture_files": ["test_fixtures/missing_authz_handle_event.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/posts_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "stream(socket, :posts",
+      "stream_delete",
+      "def handle_event(\"delete\"",
+      "post.author_id",
+      ":if={post.author_id == @current_user.id}",
+      "put_flash(socket, :error"
+    ],
+    "must_not_contain": [
+      "assign(socket, :posts, posts)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["streams-and-collections", "heex-and-verified-routes"],
+    "criterion": "full_authz_fix",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four coordinated fixes. The combination of auth + stream + :if must all land.",
+  "calibration": null
+}

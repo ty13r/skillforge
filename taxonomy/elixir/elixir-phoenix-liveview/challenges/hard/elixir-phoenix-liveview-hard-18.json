@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-18",
+  "tier": "hard",
+  "title": "Fix LiveView using terminate/2 for cleanup",
+  "prompt": "Write lib/my_app_web/live/session_live.ex (module MyAppWeb.SessionLive) that DOES NOT rely on terminate/2 for cleanup. Instead, spawn a separate supervised process via Task.Supervisor.async_nolink that is monitored — cleanup happens on the :DOWN message, not in terminate/2. Use Process.monitor/1 on the task ref. Handle the :DOWN message in handle_info to do any cleanup. mount/3 starts the task. The module must contain a comment explaining why terminate/2 is not used.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/session_live.ex"],
+    "must_contain": [
+      "Process.monitor",
+      ":DOWN",
+      "def handle_info({:DOWN"
+    ],
+    "must_not_contain": [
+      "def terminate("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "no_terminate_uses_down_monitor",
+    "weight": 0.4
+  },
+  "tier_rationale": "terminate/2 pitfall is subtle — it won't fire without trap_exit. Requires knowledge of LV runtime model.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'terminate/2 won\\'t fire without trap_exit'",
+  "calibration": null
+}

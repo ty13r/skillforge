@@ -1,0 +1,37 @@
+{
+  "id": "elixir-phoenix-liveview-medium-14",
+  "tier": "medium",
+  "title": "Convert a multi-link navigation block to 1.7 idioms",
+  "prompt": "The fixture test_fixtures/navigation_mix_up.ex has a mix of push_redirect, push_patch (ok), live_patch, live_redirect, and live_link. Produce lib/my_app_web/live/orders_live.ex (module MyAppWeb.OrdersLive) using only 1.7 idioms: <.link patch={~p...}> for filter nav, <.link navigate={~p...}> for archived and new, push_navigate for new-order handler, push_patch for filter handler. Convert ~L to ~H and the <%= for %> to :for.",
+  "fixture_files": ["test_fixtures/navigation_mix_up.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/orders_live.ex"],
+    "must_contain": [
+      "~p\"/orders",
+      "<.link patch=",
+      "<.link navigate=",
+      "push_patch",
+      "push_navigate",
+      ":for=",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "live_link",
+      "live_patch",
+      "live_redirect",
+      "push_redirect",
+      "Routes.",
+      "~L\"\"\"",
+      "<%= for "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "full_navigation_migration",
+    "weight": 0.35
+  },
+  "tier_rationale": "Multi-site change across deprecated helpers. Requires knowing patch vs navigate discrimination.",
+  "research_citation": "fly.io Migrating to LiveView v0.18",
+  "calibration": null
+}

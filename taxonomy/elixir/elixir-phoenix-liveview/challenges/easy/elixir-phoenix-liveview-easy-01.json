@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-easy-01",
+  "tier": "easy",
+  "title": "Replace a single Routes.user_path with the ~p sigil",
+  "prompt": "The fixture below is a pre-1.7 Phoenix LiveView that uses Routes.user_path and <%= live_patch %> helpers. Produce lib/my_app_web/live/user_list_live.ex that replaces the helpers with Phoenix 1.7+ idioms: use the ~p sigil for every route, use <.link navigate={...}> in the template, use :for attribute instead of <%= for %>, and convert to ~H sigil. Keep the module name MyAppWeb.UserListLive and the same behavior.",
+  "fixture_files": ["test_fixtures/pre_1_7_user_list.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/user_list_live.ex"],
+    "must_contain": [
+      "~p\"/users",
+      "<.link",
+      ":for=",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "Routes.user_path",
+      "live_link",
+      "live_patch",
+      "live_redirect",
+      "<%= for "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "verified_routes_used",
+    "weight": 0.25
+  },
+  "tier_rationale": "Single-step idiom swap. Pattern is well-known (Routes.user_path -> ~p). Vanilla Sonnet can usually one-shot it when the old form is obvious.",
+  "research_citation": "fly.io Migrating to Verified Routes + fly.io Migrating to LiveView v0.18",
+  "calibration": null
+}

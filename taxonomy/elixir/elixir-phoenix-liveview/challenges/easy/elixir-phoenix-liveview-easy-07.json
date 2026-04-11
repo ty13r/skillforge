@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-07",
+  "tier": "easy",
+  "title": "Rename push_redirect/2 to push_navigate/2",
+  "prompt": "Write lib/my_app_web/live/redirect_live.ex (module MyAppWeb.RedirectLive) that handles handle_event(\"go_home\", _params, socket) by calling push_navigate(socket, to: ~p\"/\"). mount/3 returns {:ok, socket}. Render any content you want.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/redirect_live.ex"],
+    "must_contain": [
+      "push_navigate",
+      "~p\"/\"",
+      "def handle_event(\"go_home\""
+    ],
+    "must_not_contain": [
+      "push_redirect",
+      "live_redirect",
+      "Routes."
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "push_navigate_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single-name renaming of a deprecated helper. Canonical replacement per official migration guide.",
+  "research_citation": "Phoenix LiveView live-navigation docs: push_redirect/2 deprecated in favor of push_navigate/2",
+  "calibration": null
+}

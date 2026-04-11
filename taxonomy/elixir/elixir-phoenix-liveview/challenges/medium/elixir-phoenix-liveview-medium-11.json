@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-11",
+  "tier": "medium",
+  "title": "used_input?/1 gating for untouched fields",
+  "prompt": "Write lib/my_app_web/live/signup_live.ex (module MyAppWeb.SignupLive). mount assigns @form = to_form(MyApp.Accounts.change_user(%MyApp.Accounts.User{})). Render a form that displays per-field error messages only if used_input?(@form[:field]) is true. Use <.input field={@form[:email]} /> etc. handle_event(\"validate\", params, socket) re-runs the changeset with action :validate and calls to_form. Must use used_input?.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/signup_live.ex"],
+    "must_contain": [
+      "to_form",
+      "used_input?",
+      "action: :validate",
+      "<.form",
+      "<.input field={@form"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "used_input_gating",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires the lesser-known used_input?/1 function. Multi-step wiring with validate cycle.",
+  "research_citation": "Phoenix LiveView form-bindings: 'used_input?/1 can be used to filter error messages'",
+  "calibration": null
+}

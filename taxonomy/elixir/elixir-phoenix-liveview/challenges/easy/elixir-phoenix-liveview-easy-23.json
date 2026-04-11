@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-easy-23",
+  "tier": "easy",
+  "title": "Fix single stream item: dom_id on element",
+  "prompt": "Write lib/my_app_web/live/tasks_list_live.ex (module MyAppWeb.TasksListLive) that iterates @streams.tasks correctly. The element inside must set id={dom_id} from the {dom_id, task} tuple: <div :for={{dom_id, task} <- @streams.tasks} id={dom_id}>{task.title}</div>. mount/3 calls stream(socket, :tasks, []).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tasks_list_live.ex"],
+    "must_contain": [
+      "@streams.tasks",
+      "{{dom_id, task}",
+      "id={dom_id}",
+      "phx-update=\"stream\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": [],
+    "criterion": "stream_dom_id_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Stream tuple destructuring is a mechanical idiom once you know it.",
+  "calibration": null
+}

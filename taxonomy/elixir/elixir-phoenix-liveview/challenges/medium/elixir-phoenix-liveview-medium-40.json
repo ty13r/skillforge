@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-medium-40",
+  "tier": "medium",
+  "title": "Refactor a LiveView to use stream :limit for pagination",
+  "prompt": "Write lib/my_app_web/live/paginated_stream_live.ex (module MyAppWeb.PaginatedStreamLive) that uses stream(:rows, initial_rows, limit: 50) to cap the client-side DOM size to 50. Loading more rows uses stream_insert with at: -1 and the stream automatically prunes the oldest. mount/3 builds the initial stream with limit: 50. handle_event(\"load_more\") calls stream_insert in a loop.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/paginated_stream_live.ex"],
+    "must_contain": [
+      "stream(socket, :rows",
+      "limit: 50",
+      "stream_insert",
+      "at: -1"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": [],
+    "criterion": "stream_limit_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "stream/3 :limit option is a specific feature that many devs (and LLMs) miss.",
+  "calibration": null
+}

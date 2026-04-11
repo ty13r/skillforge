@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-easy-12",
+  "tier": "easy",
+  "title": "Add phx-debounce to a search input",
+  "prompt": "Write lib/my_app_web/live/search_live.ex (module MyAppWeb.SearchLive) that renders a <form phx-change=\"search\"> with a single <input name=\"q\" phx-debounce=\"300\">. Add a handle_event(\"search\", %{\"q\" => q}, socket) that assigns :query to the q value. mount/3 returns {:ok, assign(socket, :query, \"\")}. Use ~H.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/search_live.ex"],
+    "must_contain": [
+      "phx-debounce=\"300\"",
+      "phx-change=\"search\"",
+      "def handle_event(\"search\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "debounce_on_text_input",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single attribute addition. Canonical fix for keystroke flooding per Hex Shift '10 biggest mistakes'.",
+  "research_citation": "Hex Shift Ten Biggest LiveView Mistakes #4: 'Not debouncing or rate limiting'",
+  "calibration": null
+}

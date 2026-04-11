@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-medium-45",
+  "tier": "medium",
+  "title": "Fix :let on <.link> and <.form> usage",
+  "prompt": "Write lib/my_app_web/live/let_example_live.ex (module MyAppWeb.LetExampleLive). Use <.form :let={f} for={@form} phx-change=\"validate\">...<.input field={f[:name]} />...</.form>. The :let binding must expose the form struct as `f` inside the block. Also use @form[:name] outside the let context in a separate <p>Name field: {@form[:name].value}</p>. mount/3 builds @form via to_form(%{\"name\" => \"\"}).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/let_example_live.ex"],
+    "must_contain": [
+      "<.form :let={f}",
+      "f[:name]",
+      "to_form"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "let_binding_form",
+    "weight": 0.3
+  },
+  "tier_rationale": "The :let pattern on function components is an often-missed HEEx feature.",
+  "calibration": null
+}

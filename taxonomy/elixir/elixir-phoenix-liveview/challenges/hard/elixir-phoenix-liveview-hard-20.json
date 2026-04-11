@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-hard-20",
+  "tier": "hard",
+  "title": "Refactor multi-anti-pattern form module",
+  "prompt": "Write lib/my_app_web/live/signup_form_live.ex (module MyAppWeb.SignupFormLive). The form must: (1) use to_form with action :validate on change, (2) use <.form> and <.input>, (3) use used_input?/1 to suppress untouched-field errors, (4) NOT mutate the changeset with Map.put, (5) NOT store the \"show_password_rules\" toggle in socket assigns (use <details> or a hidden input), (6) handle the save with a proper {:ok, _} / {:error, changeset} branching using Ecto.Changeset.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/signup_form_live.ex"],
+    "must_contain": [
+      "to_form",
+      "action: :validate",
+      "used_input?",
+      "<.form",
+      "<.input field={@form",
+      "{:error, changeset}",
+      "<details"
+    ],
+    "must_not_contain": [
+      "Map.put(changeset",
+      ":show_password_rules"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "form_multi_anti_pattern_fix",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires applying six form-correctness rules simultaneously.",
+  "research_citation": "John Elm Labs top-3 form mistakes",
+  "calibration": null
+}

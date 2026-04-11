@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-hard-11",
+  "tier": "hard",
+  "title": "Thread Scope through context + LiveView",
+  "prompt": "Write three files: (1) lib/my_app/scope.ex — MyApp.Scope as a struct with :user and :org, (2) lib/my_app/tasks.ex (module MyApp.Tasks) with list_tasks(%MyApp.Scope{user: user} = scope), a query pinned with ^user.id (from(t in Task, where: t.user_id == ^user.id)). (3) lib/my_app_web/live/tasks_scoped_live.ex (module MyAppWeb.TasksScopedLive) that builds @scope in mount and calls Tasks.list_tasks(@scope) in handle_params. All Tasks functions take a scope, no unscoped access.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tasks_scoped_live.ex"],
+    "must_contain": [
+      "MyApp.Scope",
+      "MyApp.Tasks.list_tasks",
+      "def mount",
+      "def handle_params"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "scope_threaded_throughout",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-file refactor to thread Scope. Requires understanding the Phoenix 1.8+ pattern.",
+  "research_citation": "georgeguimaraes phoenix-thinking Scope pattern",
+  "calibration": null
+}

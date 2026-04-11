@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-hard-23",
+  "tier": "hard",
+  "title": "Stream-backed collaborative editor with PubSub",
+  "prompt": "Write lib/my_app_web/live/doc_editor_live.ex (module MyAppWeb.DocEditorLive). It subscribes (on connected?) to \"doc:#{doc_id}\" and streams :changes. handle_event(\"edit\", %{\"ops\" => ops}, socket) creates a local change, stream_inserts it, and broadcasts it on the topic. handle_info({:change, change}, socket) checks if change.author_id != socket.assigns.current_user.id (avoid echo) and stream_inserts. mount takes %{\"doc_id\" => doc_id, \"user_id\" => user_id} from session. Must use a scoped topic.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/doc_editor_live.ex"],
+    "must_contain": [
+      "\"doc:",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "Phoenix.PubSub.broadcast",
+      "stream_insert",
+      "def handle_event(\"edit\"",
+      "def handle_info({:change"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["streams-and-collections", "event-handlers-and-handle-info"],
+    "criterion": "collab_editor_wiring",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-piece combo: scoped topic + stream + broadcast + echo-suppression.",
+  "calibration": null
+}

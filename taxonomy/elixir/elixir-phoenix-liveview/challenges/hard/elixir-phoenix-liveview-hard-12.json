@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-hard-12",
+  "tier": "hard",
+  "title": "Cross-tenant leak fix in multi-site PubSub",
+  "prompt": "Write lib/my_app_web/live/tenant_orders_live.ex (module MyAppWeb.TenantOrdersLive) that subscribes to \"orders:org:#{org_id}\" (NOT \"orders\") gated by connected?/1. The handle_event(\"create\") call broadcasts on the same scoped topic. Additionally, handle_info({:new_order, order}, socket) must pattern-match against order.org_id == socket.assigns.current_org.id as a defensive check, so that even if a broadcast leaks, the UI ignores it. mount assigns :current_org from session. stream(:orders, []).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tenant_orders_live.ex"],
+    "must_contain": [
+      "\"orders:org:",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "Phoenix.PubSub.broadcast",
+      "def handle_info({:new_order, order}",
+      "stream("
+    ],
+    "must_not_contain": [
+      "\"orders\"\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["auth-and-authz"],
+    "criterion": "defensive_tenant_scope",
+    "weight": 0.4
+  },
+  "tier_rationale": "Scoped topic + defensive consumer check. Two layers of tenant isolation.",
+  "calibration": null
+}

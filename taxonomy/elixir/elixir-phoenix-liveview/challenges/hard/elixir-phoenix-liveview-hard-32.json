@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-32",
+  "tier": "hard",
+  "title": "Secure a multi-tenant inbox with scoped queries + topics",
+  "prompt": "Write lib/my_app_web/live/inbox_live.ex (module MyAppWeb.InboxLive). Security requirements: (1) on_mount :ensure_authenticated, (2) scope all queries through %MyApp.Scope{user: current_user, org_id: org_id}, (3) PubSub topic is \"inbox:org:#{org_id}:user:#{user_id}\", (4) handle_info({:new_message, msg}, socket) double-checks msg.org_id == socket.assigns.scope.org_id before stream_inserting (defense in depth). Multi-layer isolation.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/inbox_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "%MyApp.Scope{",
+      "\"inbox:org:",
+      "if connected?(socket)",
+      "def handle_info({:new_message",
+      "stream_insert"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["pubsub-and-realtime", "streams-and-collections"],
+    "criterion": "multi_tenant_isolation",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-layer isolation: authn + scope + topic + defensive consumer check.",
+  "calibration": null
+}

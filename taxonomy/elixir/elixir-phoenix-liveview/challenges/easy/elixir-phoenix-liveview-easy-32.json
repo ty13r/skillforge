@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-32",
+  "tier": "easy",
+  "title": "Remove Enum.find on a large list, use a Map lookup",
+  "prompt": "Write lib/my_app_web/live/departments_live.ex (module MyAppWeb.DepartmentsLive). Its mount/3 must receive a departments list and pre-compute a Map keyed by id via Map.new(departments, &{&1.id, &1}), assigning the map as :departments_by_id. handle_event(\"pick\", %{\"id\" => id}, socket) must look up via Map.fetch!(socket.assigns.departments_by_id, id) — NOT via Enum.find. mount/3 can start with departments = [].",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/departments_live.ex"],
+    "must_contain": [
+      "Map.new(departments",
+      "Map.fetch!(socket.assigns.departments_by_id",
+      ":departments_by_id"
+    ],
+    "must_not_contain": [
+      "Enum.find"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle"],
+    "criterion": "map_lookup_over_enum_find",
+    "weight": 0.25
+  },
+  "tier_rationale": "Well-known performance anti-pattern with a canonical Map-indexed replacement.",
+  "research_citation": "John Elm Labs anti-patterns: 'Indexing: Not Just For the Database'",
+  "calibration": null
+}

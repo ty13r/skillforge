@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-medium-44",
+  "tier": "medium",
+  "title": "Use start_async for blocking work in handle_event",
+  "prompt": "Write lib/my_app_web/live/export_live.ex (module MyAppWeb.ExportLive). handle_event(\"export\", _params, socket) must not block — it should call start_async(:export, fn -> MyApp.Exporter.run_heavy_export() end) and immediately return. A handle_async(:export, {:ok, result}, socket) clause assigns the result as :export_result and sets :exporting? false. mount/3 returns {:ok, assign(socket, export_result: nil, exporting?: false)}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/export_live.ex"],
+    "must_contain": [
+      "start_async(",
+      ":export",
+      "def handle_async(:export",
+      "MyApp.Exporter.run_heavy_export"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "start_async_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "start_async/3 + handle_async/3 is a modern pattern that LLMs miss, often using Task.async instead.",
+  "research_citation": "Hex Shift top 10 mistakes: 'Blocking work on the LiveView process'",
+  "calibration": null
+}

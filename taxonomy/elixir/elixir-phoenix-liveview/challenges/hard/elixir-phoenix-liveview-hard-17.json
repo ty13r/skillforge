@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-17",
+  "tier": "hard",
+  "title": "Dashboard with multiple LiveComponents + send_update coordination",
+  "prompt": "Write lib/my_app_web/live/admin_dashboard_live.ex (module MyAppWeb.AdminDashboardLive). It owns @filter state and hosts three LiveComponents: <.live_component module={MyAppWeb.FilterBar} id=\"filter\" filter={@filter} />, <.live_component module={MyAppWeb.StatsPanel} id=\"stats\" filter={@filter} />, <.live_component module={MyAppWeb.RecentActivity} id=\"activity\" filter={@filter} />. The FilterBar must use send(self(), {:filter_changed, value}) (or update via send_update). The LiveView updates @filter in a handle_info({:filter_changed, value}, socket) clause, which causes the stats and activity components to re-render with the new filter.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/admin_dashboard_live.ex"],
+    "must_contain": [
+      "MyAppWeb.AdminDashboardLive",
+      "<.live_component module={MyAppWeb.FilterBar}",
+      "<.live_component module={MyAppWeb.StatsPanel}",
+      "<.live_component module={MyAppWeb.RecentActivity}",
+      "def handle_info({:filter_changed",
+      "@filter"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["architectural-stance", "event-handlers-and-handle-info"],
+    "criterion": "multi_component_coordination",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires correct parent-child coordination with single source of truth on the parent.",
+  "calibration": null
+}

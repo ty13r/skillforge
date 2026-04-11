@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-13",
+  "tier": "medium",
+  "title": "URL-param-driven LiveView: mount shell, handle_params reads",
+  "prompt": "Write lib/my_app_web/live/articles_live.ex (module MyAppWeb.ArticlesLive) that is driven by URL params ?tag=elixir&sort=newest. mount/3 sets up an empty :articles stream + default :tag and :sort assigns. handle_params/3 reads the params (with defaults), loads articles from MyApp.Blog.list_articles(tag: tag, sort: sort), and streams them with reset: true. Changing the filter must be done via push_patch (not push_navigate) to stay in the same LiveView.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/articles_live.ex"],
+    "must_contain": [
+      "def mount",
+      "def handle_params",
+      "push_patch",
+      "stream(",
+      "reset: true",
+      "Blog.list_articles"
+    ],
+    "must_not_contain": [
+      "push_navigate",
+      "def mount(%{\"tag\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["navigation-patterns", "streams-and-collections"],
+    "criterion": "url_params_handle_params",
+    "weight": 0.3
+  },
+  "tier_rationale": "URL-param lifecycle with stream + patch navigation. Multi-step idiom pattern.",
+  "calibration": null
+}

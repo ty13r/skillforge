@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-medium-24",
+  "tier": "medium",
+  "title": "Scoped context function via Scope struct",
+  "prompt": "Write lib/my_app/posts.ex (module MyApp.Posts) with a list_posts/1 that takes a %MyApp.Scope{user: user} struct and returns `from(p in Post, where: p.user_id == ^user.id) |> Repo.all()`. Also define MyApp.Scope as a struct with :user. The function must pin the user id with ^ in the query. No raw Post |> Repo.all() anywhere. Additionally, write lib/my_app_web/live/posts_live_scope.ex (module MyAppWeb.PostsLiveScope) that builds %Scope{user: current_user} and calls Posts.list_posts(scope) in handle_params.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/posts_live_scope.ex"],
+    "must_contain": [
+      "%MyApp.Scope{user:",
+      "Posts.list_posts",
+      "def handle_params"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "scope_pattern_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Introduces Phoenix 1.8+ scope pattern. Requires understanding the layering.",
+  "research_citation": "georgeguimaraes phoenix-thinking Scopes pattern",
+  "calibration": null
+}

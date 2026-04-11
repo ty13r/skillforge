@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-hard-27",
+  "tier": "hard",
+  "title": "Author a filterable, sortable, paginated table with streams",
+  "prompt": "Write lib/my_app_web/live/invoices_table_live.ex (module MyAppWeb.InvoicesTableLive). Combine filter (?status=), sort (?sort=col&dir=asc), and cursor pagination (?cursor=) via URL params read in handle_params. stream(:invoices, rows, reset: true). Each column header is a <.link patch={~p\"/invoices?status=#{@status}&sort=#{col}&dir=#{next_dir}\"}>. Pagination links use <.link patch=> as well. mount only sets up empty stream.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/invoices_table_live.ex"],
+    "must_contain": [
+      "def handle_params",
+      "stream(socket, :invoices",
+      "reset: true",
+      "<.link patch=",
+      "?status=",
+      "&sort=",
+      "&cursor="
+    ],
+    "must_not_contain": [
+      "push_navigate"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["mount-and-lifecycle", "streams-and-collections"],
+    "criterion": "filter_sort_paginate_table",
+    "weight": 0.4
+  },
+  "tier_rationale": "Combines three URL-driven mechanisms. Requires all navigation via patch.",
+  "calibration": null
+}

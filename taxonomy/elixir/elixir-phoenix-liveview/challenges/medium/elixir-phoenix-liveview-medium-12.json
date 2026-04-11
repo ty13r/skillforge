@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-medium-12",
+  "tier": "medium",
+  "title": "Fix a LiveView that polls an external API per user",
+  "prompt": "The fixture test_fixtures/external_poll_price.ex has every connected user polling an external API once per second. Replace this pattern. Produce two files: (1) lib/my_app/price_ticker.ex (module MyApp.PriceTicker) — a GenServer that polls HTTPClient.fetch_price every 1000ms and broadcasts via Phoenix.PubSub.broadcast(MyApp.PubSub, \"prices:BTC\", {:price, price}); (2) lib/my_app_web/live/price_ticker_live.ex (module MyAppWeb.PriceTickerLive) — subscribes to \"prices:BTC\" via connected?/1 and handles {:price, price} in handle_info. No :timer.send_interval in the LiveView.",
+  "fixture_files": ["test_fixtures/external_poll_price.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/price_ticker_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"prices:BTC\"",
+      "def handle_info({:price"
+    ],
+    "must_not_contain": [
+      ":timer.send_interval",
+      "HTTPClient.fetch_price"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["anti-patterns-catalog", "mount-and-lifecycle"],
+    "criterion": "external_poll_offloaded",
+    "weight": 0.35
+  },
+  "tier_rationale": "Requires recognizing the per-user polling anti-pattern and moving it to a single GenServer + broadcast. Multi-file refactor.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'External Data Polling — Single GenServer polls, broadcasts via PubSub'",
+  "calibration": null
+}

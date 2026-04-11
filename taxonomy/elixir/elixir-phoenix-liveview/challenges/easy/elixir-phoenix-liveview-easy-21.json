@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-21",
+  "tier": "easy",
+  "title": "Remove Map.put changeset mutation, use put_change/3",
+  "prompt": "Write lib/my_app_web/live/user_edit_live.ex (module MyAppWeb.UserEditLive). Its handle_event(\"validate\", %{\"user\" => params}, socket) must build a changeset via MyApp.Accounts.change_user(user, params), then use Ecto.Changeset.put_change/3 to force :updated_at to DateTime.utc_now(). It MUST NOT use Map.put or Map.merge on a changeset. Build the form with to_form and action :validate. mount/3: assign :user as %MyApp.Accounts.User{} and :form as to_form(Accounts.change_user(user)).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/user_edit_live.ex"],
+    "must_contain": [
+      "Ecto.Changeset.put_change",
+      "to_form",
+      "action: :validate"
+    ],
+    "must_not_contain": [
+      "Map.put(changeset",
+      "Map.merge(changeset"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "no_map_put_on_changeset",
+    "weight": 0.25
+  },
+  "tier_rationale": "One known anti-pattern with one canonical replacement (put_change/3).",
+  "research_citation": "John Elm Labs top-3 form mistakes #3",
+  "calibration": null
+}

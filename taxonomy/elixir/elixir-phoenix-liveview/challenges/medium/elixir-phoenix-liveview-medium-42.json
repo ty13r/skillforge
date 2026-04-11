@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-medium-42",
+  "tier": "medium",
+  "title": "Add phx-hook for a client-side behavior",
+  "prompt": "Write lib/my_app_web/live/chart_live.ex (module MyAppWeb.ChartLive). Render a <div id=\"chart\" phx-hook=\"Chart\" data-values={Jason.encode!(@values)}> that binds a JS hook named \"Chart\". mount/3 assigns :values as [1, 2, 3, 4, 5]. The key output is the phx-hook attribute and the data-* attribute.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/chart_live.ex"],
+    "must_contain": [
+      "phx-hook=\"Chart\"",
+      "id=\"chart\"",
+      "data-values="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "phx_hook_declared",
+    "weight": 0.25
+  },
+  "tier_rationale": "phx-hook is a specific attribute with required id.",
+  "calibration": null
+}

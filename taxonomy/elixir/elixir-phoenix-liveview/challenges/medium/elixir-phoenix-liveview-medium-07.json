@@ -1,0 +1,30 @@
+{
+  "id": "elixir-phoenix-liveview-medium-07",
+  "tier": "medium",
+  "title": "Build a <.button> function component with slot + attrs",
+  "prompt": "Write lib/my_app_web/components/button.ex (module MyAppWeb.Components.Button). Define button/1 with attrs :type (string, default \"button\", values [\"button\", \"submit\", \"reset\"]), :variant (string, default \"primary\", values [\"primary\", \"secondary\", \"danger\"]), :disabled (boolean, default false), :class (string, default nil), :rest (:global, include: ~w(form name value)), and slot :inner_block (required). Render <button type={@type} disabled={@disabled} class={[\"btn\", \"btn-#{@variant}\", @class]} {@rest}>{render_slot(@inner_block)}</button>.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/button.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :type",
+      "attr :variant",
+      "attr :disabled",
+      "attr :rest, :global",
+      "slot :inner_block, required: true",
+      "render_slot(@inner_block)",
+      "values:"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "full_component_attrs_slots",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-attribute component with slot, values, and :global — a standard core_components pattern but several pieces must all be right.",
+  "research_citation": "Phoenix.Component docs",
+  "calibration": null
+}

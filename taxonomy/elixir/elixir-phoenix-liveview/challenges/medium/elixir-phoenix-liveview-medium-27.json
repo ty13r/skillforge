@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-27",
+  "tier": "medium",
+  "title": "Move UI toggle state from socket to hidden input",
+  "prompt": "Write lib/my_app_web/live/show_more_form_live.ex (module MyAppWeb.ShowMoreFormLive). The form has an \"Advanced settings\" toggle. Instead of round-tripping the toggle to the server (no phx-change on the toggle, no :show_advanced in assigns), store the toggle as a hidden <input type=\"hidden\" name=\"show_advanced\" value=\"false\" /> that JS can update client-side, OR use a <details>/<summary> element to keep the state entirely in the DOM. Must NOT have :show_advanced in socket assigns. Must NOT have a \"toggle_advanced\" handle_event.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/show_more_form_live.ex"],
+    "must_contain": [
+      "<.form",
+      "<details"
+    ],
+    "must_not_contain": [
+      ":show_advanced",
+      "def handle_event(\"toggle_advanced\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "no_server_round_trip_for_ui_toggle",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires recognizing the server-round-trip anti-pattern and applying a client-side solution.",
+  "research_citation": "John Elm Labs top-3 form mistakes #1",
+  "calibration": null
+}

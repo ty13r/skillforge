@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-29",
+  "tier": "easy",
+  "title": "Extract a stateless card from inline markup",
+  "prompt": "Write lib/my_app_web/components/card.ex (module MyAppWeb.Card) with a function component card/1. Attrs: :class (string, default nil), :rest (:global). Slot: :inner_block (required). Render <div class={[\"card\", @class]} {@rest}>{render_slot(@inner_block)}</div>. This is a component extraction — no events, no state.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/card.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :class",
+      "attr :rest, :global",
+      "slot :inner_block",
+      "render_slot(@inner_block)"
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component",
+      "handle_event"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "function_component_extracted",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single-step decomposition into a wrapping card. Canonical slotted component.",
+  "calibration": null
+}

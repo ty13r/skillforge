@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-20",
+  "tier": "easy",
+  "title": "Add action: :validate so form errors display",
+  "prompt": "Write lib/my_app_web/live/profile_live.ex (module MyAppWeb.ProfileLive) that handles handle_event(\"validate\", %{\"profile\" => params}, socket) by building a changeset with MyApp.Profiles.change_profile/2, piping it through Map.put(:action, :validate), and wrapping with to_form/1. Assign the result as :form. mount/3 returns {:ok, assign(socket, :form, to_form(MyApp.Profiles.change_profile(%MyApp.Profiles.Profile{})))}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/profile_live.ex"],
+    "must_contain": [
+      "Map.put(:action, :validate)",
+      "to_form",
+      "def handle_event(\"validate\""
+    ],
+    "must_not_contain": [
+      "Map.put(changeset, :errors"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "validate_action_set",
+    "weight": 0.25
+  },
+  "tier_rationale": "Canonical validate-and-re-form cycle. Single correctness fix.",
+  "research_citation": "John Elm Labs top-3 form mistakes #3 (Map.merge anti-pattern)",
+  "calibration": null
+}

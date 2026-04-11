@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-02",
+  "tier": "legendary",
+  "title": "Full nested invoice form with cast_assoc + on_replace",
+  "prompt": "Write lib/my_app_web/live/invoice_live/edit.ex (module MyAppWeb.InvoiceLive.Edit). Requirements: (1) <.inputs_for :let={li} field={@form[:line_items]}>, (2) hidden sort input inside the inputs_for: name=\"invoice[line_items_sort][]\" value={li.index}, (3) drop button inside inputs_for: name=\"invoice[line_items_drop][]\" value={li.index}, (4) add button AFTER the inputs_for: name=\"invoice[line_items_sort][]\" value=\"new\", (5) handle_event validate re-runs changeset with action :validate, (6) no Map.put on changeset, (7) save branches {:ok, _} and {:error, changeset}. The fixture test_fixtures/nested_invoice_form.ex shows the broken form.",
+  "fixture_files": ["test_fixtures/nested_invoice_form.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/invoice_live/edit.ex"],
+    "must_contain": [
+      "<.inputs_for",
+      ":let={li}",
+      "field={@form[:line_items]}",
+      "line_items_sort",
+      "line_items_drop",
+      "value=\"new\"",
+      "to_form",
+      "action: :validate",
+      "{:error, changeset}"
+    ],
+    "must_not_contain": [
+      "Ecto.Changeset.put_assoc(:line_items",
+      "handle_event(\"add_line\"",
+      "Map.put(changeset"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["anti-patterns-catalog"],
+    "criterion": "full_nested_form",
+    "weight": 0.5
+  },
+  "tier_rationale": "Full adversarial nested-form fix. Requires sort_param/drop_param + button positioning + validate cycle + no manual mutation. Many pieces to get right.",
+  "research_citation": "Arrowsmith Labs nested forms post",
+  "calibration": null
+}

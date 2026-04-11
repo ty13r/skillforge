@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-hard-25",
+  "tier": "hard",
+  "title": "URL-driven filter with connected? subscribe and stream reset",
+  "prompt": "Write lib/my_app_web/live/issues_live.ex (module MyAppWeb.IssuesLive). It must: (1) mount/3 subscribe via connected?/1 to \"issues:project:#{project_id}\" and initialize stream(:issues, []), (2) handle_params/3 reads %{\"status\" => status, \"assignee\" => assignee} and stream(:issues, loaded, reset: true), (3) handle_info({:issue_updated, issue}, socket) calls stream_insert, (4) a filter form uses <.link patch={~p\"/issues?status=#{status}\"}>. All four pieces must land.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/issues_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"issues:project:",
+      "def handle_params",
+      "stream(socket, :issues",
+      "reset: true",
+      "def handle_info({:issue_updated",
+      "<.link patch="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["streams-and-collections", "pubsub-and-realtime", "navigation-patterns"],
+    "criterion": "full_filter_live_view",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-concept composite challenge. Four pieces must all land correctly.",
+  "calibration": null
+}

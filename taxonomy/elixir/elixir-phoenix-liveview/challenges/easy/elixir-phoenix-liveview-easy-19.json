@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-19",
+  "tier": "easy",
+  "title": "Use <.link patch> instead of push_patch for a filter",
+  "prompt": "Write lib/my_app_web/live/tasks_live.ex (module MyAppWeb.TasksLive) that has three <.link patch={~p\"/tasks?filter=#{filter}\"}> links for the filters \"all\", \"open\", and \"done\". Do not use push_patch/2 for these links and do not use <%= live_patch %>. Use :for over a filter list.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/tasks_live.ex"],
+    "must_contain": [
+      "<.link patch=",
+      "~p\"/tasks",
+      ":for="
+    ],
+    "must_not_contain": [
+      "live_patch",
+      "live_redirect",
+      "Routes."
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "link_patch_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single replacement of deprecated helper. Canonical <.link patch=> usage.",
+  "calibration": null
+}

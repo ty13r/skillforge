@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-hard-28",
+  "tier": "hard",
+  "title": "Multi-level authz: on_mount + scope + per-event",
+  "prompt": "Write lib/my_app_web/live/admin_users_live.ex (module MyAppWeb.AdminUsersLive). Required: (1) on_mount {MyAppWeb.UserAuth, :ensure_authenticated}, (2) on_mount {MyAppWeb.UserAuth, :ensure_admin}, (3) mount assigns :scope as %MyApp.Scope{user: current_user}, (4) handle_params calls MyApp.Accounts.list_users(scope) which is scope-aware, (5) handle_event(\"promote\", %{\"id\" => id}, socket) re-checks admin role AND verifies the target user is in the admin's org. Three layers of defense.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/admin_users_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_authenticated}",
+      "on_mount {MyAppWeb.UserAuth, :ensure_admin}",
+      "%MyApp.Scope{user:",
+      "MyApp.Accounts.list_users",
+      "def handle_event(\"promote\"",
+      "role == :admin"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["architectural-stance", "event-handlers-and-handle-info"],
+    "criterion": "three_layer_authz",
+    "weight": 0.4
+  },
+  "tier_rationale": "Three-layer security with scope-aware queries. Full Phoenix 1.8+ pattern.",
+  "calibration": null
+}

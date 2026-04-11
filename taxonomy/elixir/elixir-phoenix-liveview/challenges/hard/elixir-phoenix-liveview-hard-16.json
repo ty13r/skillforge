@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-hard-16",
+  "tier": "hard",
+  "title": "Build a reusable table component with slots and <.link> actions",
+  "prompt": "Write lib/my_app_web/components/table.ex (module MyAppWeb.Components.Table). Declare table/1 with attr :rows (list, required), attr :row_id (any, default nil), attr :row_click (any, default nil), and slot :col (required, takes attr :label). Additionally, slot :action (takes attr :label). Render <table> with <thead> showing @col.label and <tbody> iterating @rows, each row rendering each :col slot and a trailing :action column. The <tr> must include phx-click binding if @row_click is set.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/table.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :rows",
+      "slot :col",
+      "slot :action",
+      "attr :label",
+      "render_slot"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": [],
+    "criterion": "reusable_table_with_slots",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-slot component with slot attrs. Complex composition pattern.",
+  "research_citation": "Phoenix.Component docs slot section",
+  "calibration": null
+}

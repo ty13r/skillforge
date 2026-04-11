@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-35",
+  "tier": "easy",
+  "title": "Decompose: extract a sidebar from a LiveView",
+  "prompt": "Write lib/my_app_web/components/sidebar.ex (module MyAppWeb.Sidebar). Define a function component sidebar/1 with attrs :items (list, required) and :active (string, required), and render <aside> with <.link :for={item <- @items} navigate={item.path} class={[\"nav-item\", item.slug == @active && \"active\"]}>{item.label}</.link></aside>. This is a stateless decomposition — no events.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/sidebar.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :items",
+      "attr :active",
+      "def sidebar(assigns)",
+      "<.link :for=",
+      "navigate="
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "stateless_sidebar_extracted",
+    "weight": 0.2
+  },
+  "tier_rationale": "One-step extraction of a stateless navigation component.",
+  "calibration": null
+}

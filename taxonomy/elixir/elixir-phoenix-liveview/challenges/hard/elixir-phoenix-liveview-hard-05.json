@@ -1,0 +1,32 @@
+{
+  "id": "elixir-phoenix-liveview-hard-05",
+  "tier": "hard",
+  "title": "Nested invoice form with sort_param/drop_param",
+  "prompt": "The fixture test_fixtures/nested_invoice_form.ex has a broken inputs_for implementation. Produce lib/my_app_web/live/invoice_live/edit.ex (module MyAppWeb.InvoiceLive.Edit): (1) use <.inputs_for :let={li} field={@form[:line_items]}>, (2) include a hidden sort input inside the inputs_for: <input type=\"hidden\" name=\"invoice[line_items_sort][]\" value={li.index} />, (3) a remove button that uses name=\"invoice[line_items_drop][]\" value={li.index}, (4) an \"Add line\" button AFTER the inputs_for with name=\"invoice[line_items_sort][]\" value=\"new\", (5) use to_form and action :validate in the handle_event validate. Button position matters — 'add' must come AFTER the list.",
+  "fixture_files": ["test_fixtures/nested_invoice_form.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/invoice_live/edit.ex"],
+    "must_contain": [
+      "<.inputs_for",
+      ":let={li}",
+      "field={@form[:line_items]}",
+      "line_items_sort",
+      "line_items_drop",
+      "to_form",
+      "action: :validate"
+    ],
+    "must_not_contain": [
+      "Ecto.Changeset.put_assoc(:line_items",
+      "handle_event(\"add_line\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "inputs_for_with_sort_drop",
+    "weight": 0.4
+  },
+  "tier_rationale": "sort_param/drop_param mechanic is not widely known. Multi-piece change to get right.",
+  "research_citation": "Arrowsmith Labs nested forms post",
+  "calibration": null
+}

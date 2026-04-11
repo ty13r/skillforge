@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-hard-31",
+  "tier": "hard",
+  "title": "Introduce start_async for DB loading on filter change",
+  "prompt": "Write lib/my_app_web/live/product_search_live.ex (module MyAppWeb.ProductSearchLive). On search event, use start_async(:search, fn -> MyApp.Catalog.search(query) end) instead of blocking the LiveView. handle_async(:search, {:ok, results}, socket) streams the results with reset: true. A :loading assign is set true when search starts and false on completion. Use phx-debounce=\"300\" on the input.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/product_search_live.ex"],
+    "must_contain": [
+      "start_async(",
+      ":search",
+      "def handle_async(:search",
+      "MyApp.Catalog.search",
+      "stream(",
+      "reset: true",
+      "phx-debounce=\"300\"",
+      ":loading"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["streams-and-collections", "form-handling"],
+    "criterion": "start_async_search",
+    "weight": 0.4
+  },
+  "tier_rationale": "start_async + stream reset combo is modern and non-trivial.",
+  "calibration": null
+}

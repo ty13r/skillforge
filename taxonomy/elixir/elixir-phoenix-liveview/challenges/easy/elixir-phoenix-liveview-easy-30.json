@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-30",
+  "tier": "easy",
+  "title": "Decide LiveView vs component for a page-level view",
+  "prompt": "Write lib/my_app_web/live/posts_live.ex (module MyAppWeb.PostsLive) as a LiveView (not a LiveComponent). It must own its own URL — use `use MyAppWeb, :live_view`. mount/3 returns {:ok, stream(socket, :posts, [])}. handle_params loads MyApp.Posts.list_posts into the stream. The render/1 uses @streams.posts. A page-level view is a LiveView, not a LiveComponent.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/posts_live.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_view",
+      "stream(socket, :posts",
+      "def handle_params",
+      "@streams.posts"
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component",
+      "use Phoenix.LiveComponent"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["streams-and-collections"],
+    "criterion": "page_level_is_live_view",
+    "weight": 0.2
+  },
+  "tier_rationale": "Decide LiveView vs LiveComponent based on page-level scope. Canonical rule.",
+  "research_citation": "georgeguimaraes/claude-code-elixir: 'LiveViews: Full page, owns URL, top-level state'",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-phoenix-liveview-easy-37",
+  "tier": "easy",
+  "title": "Demote a stateless LiveComponent (stats panel)",
+  "prompt": "Write lib/my_app_web/components/stats_panel.ex (module MyAppWeb.StatsPanel). It must be a function component (Phoenix.Component), not a LiveComponent. stats_panel/1 with attrs :stats (list, required) and :title (string, default \"Stats\"). Render <section><h2>{@title}</h2><div :for={s <- @stats} class=\"stat\">{s.label}: {s.value}</div></section>. No handle_event, no mount.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/stats_panel.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "def stats_panel(assigns)",
+      "attr :stats",
+      "attr :title"
+    ],
+    "must_not_contain": [
+      "use MyAppWeb, :live_component",
+      "use Phoenix.LiveComponent",
+      "def handle_event"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["function-components-and-slots"],
+    "criterion": "stateless_function_component",
+    "weight": 0.2
+  },
+  "tier_rationale": "One-step demotion of a stateless component. Canonical rule.",
+  "calibration": null
+}

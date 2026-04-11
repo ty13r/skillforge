@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-hard-33",
+  "tier": "hard",
+  "title": "Fix live_component with duplicate state across parent",
+  "prompt": "Write lib/my_app_web/components/filter_panel_component.ex (module MyAppWeb.FilterPanelComponent) as a Phoenix.LiveComponent. Critical: it must NOT keep a local :filter copy that drifts from the parent. update/2 always writes the incoming assigns, replacing any previous state. The component's own events are scoped to @myself (phx-target={@myself}), and on change it sends the new value to the parent via send(self(), {:filter_change, new_filter}) — the parent is the source of truth, which will re-invoke update/2 with the new assigns.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/filter_panel_component.ex"],
+    "must_contain": [
+      "use MyAppWeb, :live_component",
+      "def update(",
+      "phx-target={@myself}",
+      "send(",
+      "{:filter_change"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["architectural-stance"],
+    "criterion": "no_duplicate_state_in_lc",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires understanding LC update lifecycle and not persisting local state across updates.",
+  "calibration": null
+}

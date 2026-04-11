@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-medium-25",
+  "tier": "medium",
+  "title": "Author a <.input> custom wrapper with slot for field description",
+  "prompt": "Write lib/my_app_web/components/field.ex (module MyAppWeb.Field). Define field/1 as a Phoenix.Component with attrs :field (FormField, required), :label (string, required), :type (string, default \"text\"), :rest (:global). Declare slot :description. Render <div><label>{@label}</label><.input field={@field} type={@type} {@rest} /><p :if={@description != []} class=\"help\">{render_slot(@description)}</p></div>. The point is to wrap the core <.input> with an optional description slot.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/field.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :field",
+      "slot :description",
+      "render_slot(@description)",
+      "<.input field={@field}"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": ["form-handling"],
+    "criterion": "component_with_input_and_slot",
+    "weight": 0.3
+  },
+  "tier_rationale": "Component that composes another component + an optional slot. Multi-piece.",
+  "calibration": null
+}

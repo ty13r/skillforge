@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-easy-36",
+  "tier": "easy",
+  "title": "Use stream_insert with at: 0 on broadcast",
+  "prompt": "Write lib/my_app_web/live/notifications_live.ex (module MyAppWeb.NotificationsLive). mount/3 returns {:ok, stream(socket, :notifications, [])}. handle_info({:notification, n}, socket) must call stream_insert(socket, :notifications, n, at: 0) and return {:noreply, ...}. Render <div id=\"notifications\" phx-update=\"stream\"> with :for iteration.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/notifications_live.ex"],
+    "must_contain": [
+      "stream_insert(socket, :notifications",
+      "at: 0",
+      "phx-update=\"stream\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["pubsub-and-realtime"],
+    "criterion": "stream_insert_at_zero",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single-line stream insert with known at: 0 positional.",
+  "calibration": null
+}

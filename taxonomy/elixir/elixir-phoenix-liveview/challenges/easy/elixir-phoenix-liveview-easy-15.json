@@ -1,0 +1,26 @@
+{
+  "id": "elixir-phoenix-liveview-easy-15",
+  "tier": "easy",
+  "title": "Add an ownership check inside a single handle_event",
+  "prompt": "Write lib/my_app_web/live/note_live.ex (module MyAppWeb.NoteLive) that has a handle_event(\"delete\", %{\"id\" => id}, socket) which looks up the note via MyApp.Notes.get_note!/1 and only deletes it if note.user_id == socket.assigns.current_user.id. On mismatch, return {:noreply, put_flash(socket, :error, \"Not authorized\")}. mount/3 returns {:ok, assign(socket, :current_user, %{id: 1})}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/note_live.ex"],
+    "must_contain": [
+      "def handle_event(\"delete\"",
+      "socket.assigns.current_user.id",
+      "put_flash(socket, :error",
+      "Not authorized"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": [],
+    "criterion": "handle_event_authz",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical server-side auth check in a single event. Iron law application.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix iron law: 'Authorize in every LiveView handle_event'",
+  "calibration": null
+}

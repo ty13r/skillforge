@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-medium-16",
+  "tier": "medium",
+  "title": "Add handle_info for PubSub broadcast + stream_insert",
+  "prompt": "Write lib/my_app_web/live/activity_feed_live.ex (module MyAppWeb.ActivityFeedLive). mount/3 gates a PubSub.subscribe to \"activity:org:#{org_id}\" on connected? and initializes stream(:activities, []). handle_info({:activity, event}, socket) inserts into the stream at position 0 with stream_insert. handle_params/3 loads initial activity via MyApp.Activity.list(org_id) and streams with reset: true. mount takes %{\"org_id\" => org_id} from session.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/activity_feed_live.ex"],
+    "must_contain": [
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "\"activity:org:",
+      "stream(socket, :activities",
+      "stream_insert",
+      "at: 0",
+      "def handle_info({:activity"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "pubsub-and-realtime",
+    "secondary_capabilities": ["streams-and-collections", "mount-and-lifecycle"],
+    "criterion": "pubsub_stream_wiring",
+    "weight": 0.3
+  },
+  "tier_rationale": "Multi-concept combo: scoped topic + connected gate + stream wiring + handle_info routing.",
+  "calibration": null
+}

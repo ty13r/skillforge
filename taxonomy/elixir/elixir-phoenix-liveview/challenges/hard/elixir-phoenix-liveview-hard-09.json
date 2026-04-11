@@ -1,0 +1,37 @@
+{
+  "id": "elixir-phoenix-liveview-hard-09",
+  "tier": "hard",
+  "title": "Convert 1.6 template full-stack + move queries to handle_params",
+  "prompt": "The fixture test_fixtures/pre_1_7_user_list.ex has both 1.6 template idioms AND queries in mount. Produce lib/my_app_web/live/user_list_live.ex (module MyAppWeb.UserListLive): (1) convert ALL route helpers to ~p, (2) convert live_patch/live_link/live_redirect to <.link>, (3) convert ~L to ~H with :for/:if, (4) move Accounts.list_users out of mount into handle_params, (5) replace push_redirect with push_navigate, (6) convert the full :for loop to use :for attribute.",
+  "fixture_files": ["test_fixtures/pre_1_7_user_list.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/user_list_live.ex"],
+    "must_contain": [
+      "~p\"/users",
+      "<.link navigate=",
+      ":for=",
+      ":if=",
+      "~H\"\"\"",
+      "push_navigate",
+      "def handle_params",
+      "Accounts.list_users"
+    ],
+    "must_not_contain": [
+      "Routes.user_path",
+      "live_link",
+      "live_patch",
+      "live_redirect",
+      "<%= for ",
+      "push_redirect",
+      "~L\"\"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": ["mount-and-lifecycle", "navigation-patterns"],
+    "criterion": "full_1_7_migration_with_lifecycle",
+    "weight": 0.4
+  },
+  "tier_rationale": "Seven coordinated migrations. Sonnet typically completes the template but leaves the query in mount or one helper unchanged.",
+  "calibration": null
+}

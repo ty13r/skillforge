@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-medium-41",
+  "tier": "medium",
+  "title": "Use stream reset: true on filter change",
+  "prompt": "Write lib/my_app_web/live/filtered_items_live.ex (module MyAppWeb.FilteredItemsLive). mount/3 streams an empty :items list. handle_params/3 reads %{\"tag\" => tag} and calls stream(socket, :items, MyApp.Shop.items_by_tag(tag), reset: true). Filter change via <.link patch={~p\"/shop?tag=#{tag}\"}>. Must use reset: true so the stream fully resets between filter changes.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/filtered_items_live.ex"],
+    "must_contain": [
+      "stream(socket, :items",
+      "reset: true",
+      "def handle_params",
+      "<.link patch="
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "stream_reset_on_filter",
+    "weight": 0.3
+  },
+  "tier_rationale": "reset: true is a specific flag developers often omit.",
+  "calibration": null
+}

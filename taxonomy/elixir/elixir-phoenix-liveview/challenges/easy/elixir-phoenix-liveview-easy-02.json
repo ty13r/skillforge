@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-easy-02",
+  "tier": "easy",
+  "title": "Convert an <%= for %> block to a HEEx :for attribute",
+  "prompt": "Convert the body of the render/1 function to use the :for attribute instead of an <%= for item <- @items %> block. Write the result to lib/my_app_web/live/simple_list_live.ex. Target module MyAppWeb.SimpleListLive. Keep a <li> per item.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/simple_list_live.ex"],
+    "must_contain": [
+      ":for=",
+      "~H\"\"\"",
+      "MyAppWeb.SimpleListLive"
+    ],
+    "must_not_contain": [
+      "<%= for ",
+      "~L\"\"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "heex-and-verified-routes",
+    "secondary_capabilities": [],
+    "criterion": "heex_directives_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Single-syntax swap with a known replacement. One of the most frequent 1.6->1.7 patterns.",
+  "calibration": null
+}

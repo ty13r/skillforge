@@ -1,0 +1,24 @@
+{
+  "id": "elixir-phoenix-liveview-easy-26",
+  "tier": "easy",
+  "title": "Use phx-throttle on a rapid-fire button",
+  "prompt": "Write lib/my_app_web/live/like_live.ex (module MyAppWeb.LikeLive) that renders <button phx-click=\"like\" phx-throttle=\"1000\">Like</button> and has a handle_event(\"like\", _params, socket) that increments the @likes assign. mount/3 returns {:ok, assign(socket, :likes, 0)}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/like_live.ex"],
+    "must_contain": [
+      "phx-throttle=\"1000\"",
+      "phx-click=\"like\"",
+      "def handle_event(\"like\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": [],
+    "criterion": "phx_throttle_used",
+    "weight": 0.2
+  },
+  "tier_rationale": "Canonical throttle attribute for a rapid-fire button.",
+  "calibration": null
+}

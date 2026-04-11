@@ -1,0 +1,27 @@
+{
+  "id": "elixir-phoenix-liveview-medium-29",
+  "tier": "medium",
+  "title": "Author a flash component with :if gating",
+  "prompt": "Write lib/my_app_web/components/flash.ex (module MyAppWeb.Components.Flash). flash/1 attrs: :flash (map, required), :kind (string, required values [\"info\", \"error\", \"success\"]). Render <div :if={message = Phoenix.Flash.get(@flash, String.to_atom(@kind))} class={[\"flash\", \"flash-#{@kind}\"]} role=\"alert\">{message}</div>. Use the `:if={x = ...}` binding pattern to avoid rendering when no message is present.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/flash.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :flash",
+      "attr :kind",
+      ":if={message = ",
+      "Phoenix.Flash.get",
+      "role=\"alert\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "flash_component_if_binding",
+    "weight": 0.3
+  },
+  "tier_rationale": "Uses the `:if={x = }` binding pattern which is a lesser-known HEEx idiom.",
+  "calibration": null
+}

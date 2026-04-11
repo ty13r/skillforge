@@ -1,0 +1,28 @@
+{
+  "id": "elixir-phoenix-liveview-easy-10",
+  "tier": "easy",
+  "title": "Wire up to_form/2 with <.form> for a single-field form",
+  "prompt": "Write lib/my_app_web/live/name_live.ex (module MyAppWeb.NameLive) that renders a one-field form for a user's name. mount/3 must build the form with to_form(%{\"name\" => \"\"}) and assign it as :form. The <.form> must bind phx-change=\"validate\" and phx-submit=\"save\". Use <.input field={@form[:name]} label=\"Name\" />.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/name_live.ex"],
+    "must_contain": [
+      "to_form",
+      "<.form",
+      "phx-change=\"validate\"",
+      "phx-submit=\"save\"",
+      "<.input field={@form[:name]"
+    ],
+    "must_not_contain": [
+      "text_input(f,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": [],
+    "criterion": "uses_to_form",
+    "weight": 0.2
+  },
+  "tier_rationale": "Canonical one-field to_form/2 + <.form> idiom. Single pattern from Phoenix LiveView form-bindings docs.",
+  "calibration": null
+}

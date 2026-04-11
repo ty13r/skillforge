@@ -1,0 +1,33 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-04",
+  "tier": "legendary",
+  "title": "Full 4-bug lifecycle fix: mount + assign_new + handle_params + temporary_assigns",
+  "prompt": "Write lib/my_app_web/live/ultimate_live.ex (module MyAppWeb.UltimateLive). A LiveView that previously had four interacting lifecycle bugs: (a) queries in mount (duplicated per reconnect), (b) assign_new misused for :items which should be freshly computed every reconnect, (c) URL params read in mount instead of handle_params, (d) temporary_assigns: [items: []] with the template trying to Enum.count(@items). Produce a cleaned version that: (1) mount only sets up defaults + scope + stream(:items, []), (2) handle_params reads %{\"filter\" => filter} and loads items, (3) assign the count separately from the stream (because streams are not enumerable), (4) use stream(:items, ..., reset: true), (5) no temporary_assigns, (6) no assign_new for :items.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/ultimate_live.ex"],
+    "must_contain": [
+      "def mount",
+      "def handle_params",
+      "stream(socket, :items",
+      "reset: true",
+      ":item_count",
+      "assign(socket, :item_count"
+    ],
+    "must_not_contain": [
+      "temporary_assigns:",
+      "assign_new(socket, :items",
+      "Enum.count(@streams",
+      "def mount(%{\"filter\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["streams-and-collections", "anti-patterns-catalog"],
+    "criterion": "four_lifecycle_bugs_fixed",
+    "weight": 0.5
+  },
+  "tier_rationale": "Four interacting lifecycle bugs requiring comprehensive understanding of the LV lifecycle + streams.",
+  "research_citation": "oliver-kriska + Binary Noggin lifecycle post",
+  "calibration": null
+}

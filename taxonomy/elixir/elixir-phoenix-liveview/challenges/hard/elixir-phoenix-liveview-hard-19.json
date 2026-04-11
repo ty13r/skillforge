@@ -1,0 +1,25 @@
+{
+  "id": "elixir-phoenix-liveview-hard-19",
+  "tier": "hard",
+  "title": "Secure LiveView against <.link navigate=> bypass",
+  "prompt": "Write lib/my_app_web/live/admin_live.ex (module MyAppWeb.AdminLive). Mount-level auth must be done in on_mount (not just in the router plug chain) — because <.link navigate={...}> bypasses the plug chain. Use on_mount {MyAppWeb.UserAuth, :ensure_admin} at the top of the module. mount/3 additionally double-checks socket.assigns.current_user.role == :admin and halts with {:ok, redirect(socket, to: ~p\"/\")} otherwise. Plus a per-event check in handle_event(\"promote\") that re-validates admin role.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/admin_live.ex"],
+    "must_contain": [
+      "on_mount {MyAppWeb.UserAuth, :ensure_admin}",
+      "current_user.role == :admin",
+      "def handle_event(\"promote\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["navigation-patterns"],
+    "criterion": "on_mount_plus_event_auth",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires understanding that live-navigation bypasses plugs. Must apply auth in both places.",
+  "research_citation": "Phoenix LiveView security considerations: 'live_redirects don\\'t go through the plug pipeline'",
+  "calibration": null
+}
