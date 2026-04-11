@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-10",
+  "tier": "medium",
+  "title": "Worker that uses {:cancel, reason} when the target no longer exists",
+  "prompt": "Write `MyApp.Workers.WebhookRetryWorker` (queue `:webhooks`, max_attempts 10). perform/1 takes `%{\"webhook_id\" => id}`. Call `MyApp.Webhooks.get(id)`. If the webhook is not found, return `{:cancel, :webhook_deleted}` — there's no point retrying a deleted target. If found, call `MyApp.Webhooks.deliver(webhook)`. On `{:error, :rate_limited, retry_after}`, return `{:snooze, retry_after}`. On any other `{:error, reason}`, return `{:error, reason}`. On `:ok`, return `:ok`. Write to `lib/my_app/workers/webhook_retry_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/webhook_retry_worker.ex"],
+    "must_contain": [
+      "{:cancel, :webhook_deleted}",
+      "{:snooze, retry_after}",
+      "{:error, reason}",
+      "MyApp.Webhooks.get",
+      "MyApp.Webhooks.deliver"
+    ],
+    "must_not_contain": [
+      "{:discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy", "worker-philosophy"],
+    "criterion": "full_return_protocol",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full return-value ladder with the `:cancel` on deletion — tests that the author recognizes 'target gone' as a cancel condition, not an error.",
+  "calibration": null
+}

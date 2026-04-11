@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-21",
+  "tier": "medium",
+  "title": "Worker with idempotency key in args + database check",
+  "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 takes `%{\"idempotency_key\" => key, \"url\" => url, \"body\" => body}`. The worker must: (1) check `MyApp.Webhooks.find_delivery(key)` — if a record exists with status `:sent`, return `:ok` immediately without re-sending; (2) if no record or status is `:pending`, POST to the url with `MyApp.HTTP.post(url, body)`; (3) on success, call `MyApp.Webhooks.mark_sent(key)` and return `:ok`; (4) on `{:error, reason}`, return `{:error, reason}` so Oban retries. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/webhook_delivery_worker.ex"],
+    "must_contain": [
+      "\"idempotency_key\" => key",
+      "MyApp.Webhooks.find_delivery",
+      ":sent",
+      "MyApp.Webhooks.mark_sent",
+      "MyApp.HTTP.post"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1",
+      "%{idempotency_key: key"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["args-serialization", "return-values"],
+    "criterion": "idempotency_key_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full idempotency-key pattern with a database short-circuit. Cleanly frames the philosophical difference between 'redo work' and 'ensure work happened exactly once'.",
+  "calibration": null
+}

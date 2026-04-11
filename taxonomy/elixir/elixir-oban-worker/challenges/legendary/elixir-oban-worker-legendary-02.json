@@ -1,0 +1,33 @@
+{
+  "id": "elixir-oban-worker-legendary-02",
+  "tier": "legendary",
+  "title": "Fix a self-rescheduling worker with both retry amplification AND timezone bugs",
+  "prompt": "Design a complete, correct implementation of a per-user daily digest that: (1) delivers around 9am in each user's local timezone (not UTC), (2) self-reschedules without retry amplification, (3) is idempotent across retries. Write `MyApp.Workers.LocalDigestWorker` where: (a) perform/1 has TWO function-head clauses — the first matches `%Oban.Job{attempt: 1, args: %{\"user_id\" => id}}` and, BEFORE doing any work, computes the next delivery time using `DateTime.now!(user.timezone)` (requires `tz`) shifted to the next day at 9am, then enqueues the next job with `scheduled_at:` that DateTime, THEN runs the digest. The second clause matches any other attempt and ONLY runs the digest (no reschedule). (b) The digest execution checks `MyApp.Digests.already_sent_today?(user_id, date)` and short-circuits to `:ok` if already sent. (c) A `@moduledoc` must cite (i) Sorentwo's reschedule-first pattern and (ii) the `tz` dependency requirement. Write to `lib/my_app/workers/local_digest_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/local_digest_worker.ex"],
+    "must_contain": [
+      "def perform(%Oban.Job{attempt: 1",
+      "DateTime.now!",
+      "scheduled_at:",
+      "Oban.insert",
+      "def perform(%Oban.Job{args: %{\"user_id\"",
+      "MyApp.Digests.already_sent_today?",
+      "@moduledoc",
+      "tz",
+      "Sorentwo"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["cron-scheduling", "worker-philosophy", "retry-strategy"],
+    "criterion": "full_localized_recurring_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "Four distinct correctness conditions must all be present: attempt-1 clause, reschedule-first, idempotency short-circuit, tz dependency. Missing any one is wrong, and missing multiple is the default Sonnet output.",
+  "calibration": null,
+  "research_citation": "Sorentwo 'Oban Recipes Part 3: Reliable Scheduling' + Oban.Plugins.Cron HexDocs ':timezone' requirement."
+}

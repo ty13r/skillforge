@@ -1,0 +1,34 @@
+{
+  "id": "elixir-oban-worker-hard-01",
+  "tier": "hard",
+  "title": "Fix a unique constraint with a partial :states list that crashes the queue",
+  "prompt": "The worker in `test_fixtures/broken_unique_states_worker.ex` excludes `:available` from its `:states` list. Per Parker Selbert (Oban maintainer, Elixir Forum thread 69648), partial state lists that omit `:available` have caused production queues to crash by spawning 'hundreds of producers for the same queue.' Rewrite the unique config to use the full Oban-maintainer-recommended state list: `[:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]`. Add a `@moduledoc` that cites the forum thread warning: 'Selbert recommends :successful, :incomplete, or the full list; partial state lists that exclude :available are unsafe.' Keep perform/1 logic unchanged. Write to `lib/my_app/workers/conversation_update_worker.ex`.",
+  "fixture_files": ["test_fixtures/broken_unique_states_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/conversation_update_worker.ex"],
+    "must_contain": [
+      "unique:",
+      ":available",
+      ":scheduled",
+      ":executing",
+      ":retryable",
+      ":completed",
+      ":cancelled",
+      ":discarded",
+      "@moduledoc",
+      "Selbert"
+    ],
+    "must_not_contain": [
+      "states: [:scheduled, :executing, :retryable]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "full_safe_states_and_cite",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing both the correct full state list AND the maintainer's warning — information only available in a specific Elixir Forum thread. Vanilla Sonnet almost never emits the full list.",
+  "calibration": null,
+  "research_citation": "Elixir Forum thread 69648: 'Oban unique constraint crashes the queue' — thiagogsr: 'the available state was not included... crashed the queue and started creating hundreds of producers'."
+}

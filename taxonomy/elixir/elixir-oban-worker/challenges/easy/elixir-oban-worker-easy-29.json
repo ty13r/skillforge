@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-29",
+  "tier": "easy",
+  "title": "Cron: run a worker every hour at minute 0 (UTC)",
+  "prompt": "Write an Oban config snippet for `config/config.exs` that includes a `Oban.Plugins.Cron` plugin running `MyApp.Workers.HourlyReportWorker` at minute 0 of every hour (`\"0 * * * *\"`). Use the default UTC timezone. The snippet must include the repo and at least the `:reports` queue. Write to `config/config.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/config.exs"],
+    "must_contain": [
+      "Oban.Plugins.Cron",
+      "\"0 * * * *\"",
+      "MyApp.Workers.HourlyReportWorker",
+      "reports:"
+    ],
+    "must_not_contain": [
+      "\"* * * * * *\"",
+      "timezone: \"America/"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["queues-and-priority"],
+    "criterion": "hourly_cron_expression",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single cron entry with 5-field expression; no subtlety.",
+  "calibration": null
+}

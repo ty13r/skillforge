@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-31",
+  "tier": "medium",
+  "title": "Replace Process.sleep retry loop with Oban-native retries + backoff",
+  "prompt": "The worker in `test_fixtures/sleep_retry_worker.ex` hand-rolls a retry loop with `Process.sleep` and `max_attempts: 1`. This blocks the worker slot, ignores backoff, and defeats Oban's retry semantics. Rewrite it: set `max_attempts: 5`, remove the `do_sync/2` recursion, and let perform/1 call `ExternalAPI.sync/1` once — on `{:error, :timeout}` or any other `{:error, reason}`, return `{:error, reason}`. Override `backoff/1` to return `attempt * 30` (linear 30s/60s/90s/...). Write to `lib/my_app/workers/sync_worker.ex`.",
+  "fixture_files": ["test_fixtures/sleep_retry_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/sync_worker.ex"],
+    "must_contain": [
+      "max_attempts: 5",
+      "def backoff(",
+      "attempt * 30",
+      "ExternalAPI.sync",
+      "{:error, reason}"
+    ],
+    "must_not_contain": [
+      "Process.sleep",
+      "do_sync(id, attempt + 1)",
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["worker-philosophy", "return-values"],
+    "criterion": "native_retry_with_backoff",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires re-architecting the worker around Oban's retry engine rather than sleeping. Multi-edit.",
+  "calibration": null
+}

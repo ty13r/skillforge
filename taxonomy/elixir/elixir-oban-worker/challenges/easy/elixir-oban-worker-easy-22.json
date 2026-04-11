@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-22",
+  "tier": "easy",
+  "title": "Read attempt number from Oban.Job and log progress",
+  "prompt": "Write `MyApp.Workers.LongFetchWorker` (queue `:external_api`, max_attempts 5). perform/1 should destructure `attempt` from the `%Oban.Job{}` and log `Logger.info(\"attempt #{attempt}\")`. Then call `MyApp.ExternalAPI.fetch(id)` where `id` comes from `%{\"id\" => id}` in args. Return `:ok` on success, `{:error, reason}` otherwise. Write to `lib/my_app/workers/long_fetch_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/long_fetch_worker.ex"],
+    "must_contain": [
+      "%Oban.Job{attempt: attempt",
+      "\"id\" => id",
+      "Logger.info",
+      "use Oban.Worker"
+    ],
+    "must_not_contain": [
+      "def perform(%{id: id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "perform_reads_attempt",
+    "weight": 1.0
+  },
+  "tier_rationale": "Basic introspection of the Job struct; tests that `perform/1` receives the struct, not a bare args map.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-07",
+  "tier": "easy",
+  "title": "Return :snooze instead of raising on rate-limit",
+  "prompt": "The worker in `test_fixtures/rate_limited_worker.ex` raises a string exception when Stripe responds with a 429. Raising wastes an attempt and pollutes the error tracker. Rewrite the 429 clause to return `{:snooze, retry_after}` using the retry_after value from the error struct. Keep the happy path and other error branches as-is. Write the result to `lib/my_app/workers/stripe_sync_worker.ex`.",
+  "fixture_files": ["test_fixtures/rate_limited_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/stripe_sync_worker.ex"],
+    "must_contain": [
+      "{:snooze, retry_after}",
+      "status: 429",
+      "use Oban.Worker"
+    ],
+    "must_not_contain": [
+      "raise \"stripe rate limited",
+      "raise \"stripe rate"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "snooze_over_raise",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single clause rewrite once `{:snooze, seconds}` is known; the idiom is documented in Oban.Worker's recipe section.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'When a worker receives a 429 (rate limited) status code, it should return {:snooze, calculate_backoff(attempt)}.'"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "elixir-oban-worker-medium-04",
+  "tier": "medium",
+  "title": "Attach telemetry handlers for all three Oban job events",
+  "prompt": "Write a `MyApp.Application.start/2` function that attaches telemetry handlers for all three Oban job lifecycle events — `[:oban, :job, :start]`, `[:oban, :job, :stop]`, and `[:oban, :job, :exception]` — via a single `:telemetry.attach_many/4` call. The handler function lives in `MyApp.ObanHandler.handle_event/4` and should pattern-match on the three event names. Log starts at debug level, stops at debug with duration, exceptions at error level with worker/kind/reason. The `start/2` function also starts `MyApp.Repo` and `Oban` as children. Write both modules to `lib/my_app/application.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/application.ex"],
+    "must_contain": [
+      ":telemetry.attach_many",
+      "[:oban, :job, :start]",
+      "[:oban, :job, :stop]",
+      "[:oban, :job, :exception]",
+      "MyApp.ObanHandler.handle_event",
+      "Supervisor.start_link"
+    ],
+    "must_not_contain": [
+      "[:oban, :worker, :exception]",
+      "[:oban_job_exception]",
+      ":telemetry.attach(\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "attach_many_three_events",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the exact tuples (all three, not two), the `attach_many` form (not a loop of `attach`), and placement in `start/2`, not `perform/1`. Mid-depth knowledge.",
+  "calibration": null,
+  "research_citation": "Oban.Telemetry HexDocs — '[:oban, :job, :start], [:oban, :job, :stop], [:oban, :job, :exception].'"
+}

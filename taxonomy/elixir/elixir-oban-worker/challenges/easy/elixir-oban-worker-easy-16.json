@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-16",
+  "tier": "easy",
+  "title": "Use Oban.insert/2 in an Ecto.Multi (transactional enqueue)",
+  "prompt": "Refactor `test_fixtures/two_call_enqueue_context.ex` so that `MyApp.Accounts.register_user/1` inserts the user and enqueues `MyApp.Workers.WelcomeEmailWorker` inside a single `Ecto.Multi` transaction. Use `Oban.insert/3` with a multi key of `:welcome_email` and pass a function that receives the Multi context and builds the job from `user.id`. Use string-keyed args. Return `{:ok, user}` on success or `{:error, changeset}` on user-insert failure. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/two_call_enqueue_context.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Ecto.Multi.insert(:user",
+      "Oban.insert(:welcome_email",
+      "\"user_id\" => user.id",
+      "Repo.transaction"
+    ],
+    "must_not_contain": [
+      "Repo.insert(changeset)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["worker-philosophy", "args-serialization"],
+    "criterion": "multi_with_oban_insert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Well-documented pattern; the two-call bug is obvious once stated and the fix is a single Multi chain.",
+  "calibration": null,
+  "research_citation": "Oban module HexDocs — 'Enqueue a job along with other database changes, ensuring that everything is committed or rolled back atomically.'"
+}

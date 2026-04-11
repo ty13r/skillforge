@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-28",
+  "tier": "easy",
+  "title": "Write an Oban worker that returns {:snooze, seconds}",
+  "prompt": "Write `MyApp.Workers.RateAwareWorker` (queue `:api`, max_attempts 20). perform/1 takes `%{\"endpoint\" => ep}` and calls `MyApp.API.call(ep)`. If the result is `{:error, :rate_limited, retry_after}`, return `{:snooze, retry_after}`. Otherwise `:ok` or `{:error, reason}`. Write to `lib/my_app/workers/rate_aware_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/rate_aware_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "{:snooze, retry_after}",
+      "{:error, :rate_limited",
+      "max_attempts: 20"
+    ],
+    "must_not_contain": [
+      "Process.sleep",
+      "raise "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "snooze_return",
+    "weight": 1.0
+  },
+  "tier_rationale": "One branch, one symbol — the canonical snooze pattern.",
+  "calibration": null
+}

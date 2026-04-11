@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-10",
+  "tier": "easy",
+  "title": "Enqueue a job with schedule_in for a delayed task",
+  "prompt": "Write a public function `MyApp.Scheduler.send_reminder/2` that takes a `user_id` and `delay_seconds` and enqueues `MyApp.Workers.ReminderWorker` with `schedule_in: delay_seconds` and string-keyed args `%{\"user_id\" => user_id}`. The function should return the result of `Oban.insert/1` (a `{:ok, job}` tuple). Write to `lib/my_app/scheduler.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/scheduler.ex"],
+    "must_contain": [
+      "MyApp.Workers.ReminderWorker.new",
+      "\"user_id\" => user_id",
+      "schedule_in: delay_seconds",
+      "Oban.insert"
+    ],
+    "must_not_contain": [
+      "%{user_id: user_id}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "schedule_in_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Standard Oban scheduling idiom; no overlap risk to reason about.",
+  "calibration": null
+}

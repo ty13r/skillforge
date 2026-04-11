@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-06",
+  "tier": "easy",
+  "title": "Add a unique constraint to prevent duplicate daily reports",
+  "prompt": "The worker in `test_fixtures/no_unique_report_worker.ex` has no uniqueness configuration, so clicking 'Generate report' twice enqueues two identical jobs. Add a `unique:` block that dedupes on `report_id` and `date` for 24 hours (`period: 86_400`). Include the full safe `:states` list that matches Oban's recommended default (keeping `:available` in the list). Otherwise keep the module unchanged. Write the result to `lib/my_app/workers/daily_report_worker.ex`.",
+  "fixture_files": ["test_fixtures/no_unique_report_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/daily_report_worker.ex"],
+    "must_contain": [
+      "unique:",
+      "period: 86_400",
+      ":report_id",
+      ":date",
+      ":available"
+    ],
+    "must_not_contain": [
+      "period: 60,",
+      "period: 60\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "unique_period_and_keys",
+    "weight": 1.0
+  },
+  "tier_rationale": "Adding a single `unique:` block with named keys is a one-line change once you know the option exists.",
+  "calibration": null,
+  "research_citation": "Oban unique_jobs HexDocs — 'You should always specify a period, otherwise Oban will default to 60 seconds.'"
+}

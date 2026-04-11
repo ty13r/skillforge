@@ -1,0 +1,33 @@
+{
+  "id": "elixir-oban-worker-hard-14",
+  "tier": "hard",
+  "title": "Worker that handles a large map of arguments safely",
+  "prompt": "Write `MyApp.Workers.DocumentProcessor` (queue `:documents`, max_attempts 5). perform/1 accepts a nested args map: `%{\"doc_id\" => id, \"metadata\" => %{\"title\" => title, \"tags\" => tags, \"updated_at\" => updated_at_iso}}`. Extract each field with string keys. Parse `updated_at_iso` with `DateTime.from_iso8601/1` and handle both success and error cases (return `{:cancel, :invalid_date}` on parse failure). Tags is a list of strings; validate all members are strings with `Enum.all?/2` and return `{:cancel, :invalid_tags}` if not. Then call `MyApp.Documents.process(id, title, tags, updated_at)`. Write to `lib/my_app/workers/document_processor.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/document_processor.ex"],
+    "must_contain": [
+      "\"doc_id\" => id",
+      "\"metadata\" =>",
+      "\"title\" => title",
+      "\"tags\" => tags",
+      "\"updated_at\" => updated_at_iso",
+      "DateTime.from_iso8601",
+      "{:cancel, :invalid_date}",
+      "{:cancel, :invalid_tags}",
+      "Enum.all?"
+    ],
+    "must_not_contain": [
+      "metadata: %{title:",
+      "%{tags:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["args-serialization", "return-values"],
+    "criterion": "nested_string_keys_and_validation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Nested string-keyed destructuring + multi-branch validation + ISO datetime parse. Many moving parts.",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-17",
+  "tier": "easy",
+  "title": "Handle :ok and {:error, reason} return values",
+  "prompt": "Write a worker `MyApp.Workers.FetchUserDataWorker` (queue `:external_api`, max_attempts 5) whose perform/1 accepts `%{\"user_id\" => id}` and calls `MyApp.ExternalAPI.fetch(id)`. On `{:ok, data}` it calls `MyApp.Users.store(id, data)` and returns `:ok`. On `{:error, :not_found}` it should `{:cancel, :user_gone}`. On any other `{:error, reason}` it returns `{:error, reason}`. Write to `lib/my_app/workers/fetch_user_data_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/fetch_user_data_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "queue: :external_api",
+      "{:cancel, :user_gone}",
+      "{:error, reason}",
+      ":ok"
+    ],
+    "must_not_contain": [
+      "{:discard,",
+      "raise"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "full_return_protocol",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical worker with three return branches — tests each symbol of the return-value protocol individually.",
+  "calibration": null
+}

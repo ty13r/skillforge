@@ -1,0 +1,133 @@
+{
+  "methodology": "heuristic",
+  "calibration_deferred": true,
+  "deferred_reason": "See taxonomy/elixir/SEEDING-PLAN.md item 4 \u2014 empirical Haiku+Sonnet calibration is a future workstream",
+  "calibrated_date": null,
+  "spec_version": "2.1",
+  "tier_distribution": {
+    "easy": 35,
+    "medium": 35,
+    "hard": 22,
+    "legendary": 8
+  },
+  "capability_coverage": {
+    "args-serialization": {
+      "primary_count": 9,
+      "secondary_count": 25,
+      "tier_breakdown": {
+        "easy": 4,
+        "medium": 3,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "cron-scheduling": {
+      "primary_count": 8,
+      "secondary_count": 2,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 3
+      }
+    },
+    "perform-callback-basics": {
+      "primary_count": 6,
+      "secondary_count": 22,
+      "tier_breakdown": {
+        "easy": 4,
+        "medium": 1,
+        "hard": 1
+      }
+    },
+    "queues-and-priority": {
+      "primary_count": 7,
+      "secondary_count": 7,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 3,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "recurring-jobs-vs-cron": {
+      "primary_count": 8,
+      "secondary_count": 5,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "retry-strategy": {
+      "primary_count": 7,
+      "secondary_count": 16,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 2,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "return-values": {
+      "primary_count": 10,
+      "secondary_count": 12,
+      "tier_breakdown": {
+        "easy": 5,
+        "medium": 4,
+        "hard": 1
+      }
+    },
+    "telemetry-and-observability": {
+      "primary_count": 6,
+      "secondary_count": 1,
+      "tier_breakdown": {
+        "easy": 1,
+        "medium": 4,
+        "hard": 1
+      }
+    },
+    "testing-workers": {
+      "primary_count": 12,
+      "secondary_count": 0,
+      "tier_breakdown": {
+        "easy": 4,
+        "medium": 5,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "transactional-jobs": {
+      "primary_count": 8,
+      "secondary_count": 7,
+      "tier_breakdown": {
+        "easy": 1,
+        "medium": 3,
+        "hard": 3,
+        "legendary": 1
+      }
+    },
+    "unique-constraints": {
+      "primary_count": 10,
+      "secondary_count": 4,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 4,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "worker-philosophy": {
+      "primary_count": 9,
+      "secondary_count": 37,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 3,
+        "legendary": 1
+      }
+    }
+  },
+  "tier_rubric_link": "../../SEEDING-PLAN.md#heuristic-tier-rubric",
+  "notes": "Generated from the family's actual challenge pool state after the overnight drafting run. Tier methodology is heuristic per SEEDING-PLAN.md item 4 (empirical Haiku+Sonnet calibration deferred)."
+}

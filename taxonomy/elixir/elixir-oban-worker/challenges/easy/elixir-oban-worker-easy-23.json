@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-23",
+  "tier": "easy",
+  "title": "Cancel a non-retryable error (4xx) vs retrying 5xx",
+  "prompt": "Write `MyApp.Workers.GithubFetchWorker` (queue `:github`, max_attempts 5). perform/1 takes `%{\"repo\" => repo}` and calls `MyApp.Github.fetch_issues(repo)`. On `{:error, %{status: status}}` where status is 400..499 (except 429), return `{:cancel, {:client_error, status}}`. On 429 return `{:snooze, 60}`. On 5xx or network errors return `{:error, reason}`. Happy path returns `:ok`. Write to `lib/my_app/workers/github_fetch_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/github_fetch_worker.ex"],
+    "must_contain": [
+      "{:cancel, {:client_error",
+      "{:snooze, 60}",
+      "{:error, reason}",
+      "status: 429"
+    ],
+    "must_not_contain": [
+      "{:discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "discriminated_returns",
+    "weight": 1.0
+  },
+  "tier_rationale": "Needs the full return-value ladder plus the 4xx vs 5xx distinction, but each branch is one line.",
+  "calibration": null
+}

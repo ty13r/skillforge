@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-31",
+  "tier": "easy",
+  "title": "Never set max_attempts: 1 for a real worker",
+  "prompt": "The worker in `test_fixtures/sleep_retry_worker.ex` sets `max_attempts: 1` (defeating Oban's retry semantics) and reinvents retries with `Process.sleep`. Rewrite it so max_attempts is 5, the Process.sleep loop is removed, and perform/1 returns `{:error, reason}` on transient failures so Oban can retry via its own backoff. Keep the module name and queue. Write to `lib/my_app/workers/sync_worker.ex`.",
+  "fixture_files": ["test_fixtures/sleep_retry_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/sync_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "max_attempts: 5",
+      "{:error, reason}",
+      "MyApp.ExternalAPI.sync"
+    ],
+    "must_not_contain": [
+      "Process.sleep",
+      "max_attempts: 1",
+      "do_sync(id, attempt + 1)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["worker-philosophy", "return-values"],
+    "criterion": "trust_native_retry",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-file refactor: delete the sleep loop, return an error tuple, raise max_attempts. Standard Oban refactor.",
+  "calibration": null,
+  "research_citation": "Oban error_handling HexDocs — 'By default, jobs are retried up to 20 times. The retry delay has an exponential backoff with jitter.'"
+}

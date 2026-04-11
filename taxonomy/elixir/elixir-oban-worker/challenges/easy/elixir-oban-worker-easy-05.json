@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-05",
+  "tier": "easy",
+  "title": "Write a minimal Oban worker for user-delete cleanup",
+  "prompt": "Write a new Oban worker `MyApp.Workers.UserCleanupWorker` for the `:default` queue. Its perform/1 should accept args with `\"user_id\"` (string key) and call `MyApp.Accounts.hard_delete_user(user_id)`, returning `:ok` on success and `{:error, reason}` otherwise. Include `@impl Oban.Worker`. Write the output to `lib/my_app/workers/user_cleanup_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/user_cleanup_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "queue: :default",
+      "@impl Oban.Worker",
+      "def perform(%Oban.Job{args: %{\"user_id\"",
+      "MyApp.Accounts.hard_delete_user"
+    ],
+    "must_not_contain": [
+      "%{user_id:",
+      "def perform(%{user_id:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "canonical_perform_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical greenfield worker — any single-file Oban example in the docs looks like this.",
+  "calibration": null
+}

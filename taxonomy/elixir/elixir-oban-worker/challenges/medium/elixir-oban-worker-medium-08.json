@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-08",
+  "tier": "medium",
+  "title": "Move leaking telemetry attach from perform/1 to application.ex",
+  "prompt": "The worker in `test_fixtures/telemetry_bad_handler.ex` attaches a new telemetry handler inside `perform/1` on every execution, leaking handlers indefinitely. Also it uses the wrong event name `[:oban, :worker, :exception]`. Rewrite: (1) remove the attach from `perform/1`, (2) move a single `:telemetry.attach_many/4` call to `MyApp.Application.start/2`, (3) use the correct event `[:oban, :job, :exception]`, (4) the handler is in `MyApp.ObanHandler` module. perform/1 should remain minimal: load the report and generate it. Write both files: `lib/my_app/workers/report_worker.ex` and `lib/my_app/application.ex`.",
+  "fixture_files": ["test_fixtures/telemetry_bad_handler.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/report_worker.ex", "lib/my_app/application.ex"],
+    "must_contain": [
+      ":telemetry.attach_many",
+      "[:oban, :job, :exception]",
+      "MyApp.ObanHandler",
+      "Reports.generate"
+    ],
+    "must_not_contain": [
+      "[:oban, :worker, :exception]",
+      ":telemetry.attach(\"oban-error"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "handler_moved_and_renamed",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two bugs (leak + wrong event name) in one file, fix requires touching two files. Sonnet often fixes one and misses the other.",
+  "calibration": null,
+  "research_citation": "Oban.Telemetry HexDocs — '[:oban, :job, :start], [:oban, :job, :stop], [:oban, :job, :exception].'"
+}

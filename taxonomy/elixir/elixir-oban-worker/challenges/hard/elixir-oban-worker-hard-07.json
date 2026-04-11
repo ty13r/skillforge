@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-07",
+  "tier": "hard",
+  "title": "Worker that uses perform/1 with {attempt, max_attempts} aware error handling",
+  "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 destructures `%Oban.Job{attempt: attempt, max_attempts: max_attempts, args: %{\"webhook_id\" => id}}`. Logic: (1) call `Webhooks.deliver(id)`, (2) on success return `:ok`, (3) on `{:error, :rate_limited, retry_after}` return `{:snooze, retry_after}`, (4) on `{:error, reason}` — if `attempt == max_attempts`, log a `Logger.error/1` tagged as 'final attempt' and return `{:cancel, {:giving_up, reason}}`; otherwise return `{:error, reason}`. This gives Oban one last chance to log the permanent failure distinctly. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/webhook_delivery_worker.ex"],
+    "must_contain": [
+      "attempt: attempt",
+      "max_attempts: max_attempts",
+      "attempt == max_attempts",
+      "{:cancel, {:giving_up",
+      "{:snooze, retry_after}",
+      "final attempt"
+    ],
+    "must_not_contain": [
+      "{:discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["return-values", "perform-callback-basics"],
+    "criterion": "attempt_aware_branching",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines Oban.Job field introspection, return-value protocol, and a last-attempt escape hatch. Three concepts woven together.",
+  "calibration": null
+}

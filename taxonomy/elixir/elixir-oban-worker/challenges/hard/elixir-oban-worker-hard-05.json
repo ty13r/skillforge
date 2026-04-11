@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-hard-05",
+  "tier": "hard",
+  "title": "Refactor struct args to dehydrate/rehydrate around perform/1",
+  "prompt": "The worker in `test_fixtures/struct_args_worker.ex` passes `%User{}` and `%DateTime{}` directly into args. Rewrite using a 'dehydrate/rehydrate' helper module `MyApp.Workers.NotificationArgs`: (1) a `dehydrate/2` function that takes a user and deliver_at and returns a string-keyed map, (2) a `rehydrate/1` function that takes the map and returns `{user, deliver_at}` by loading the user via `Accounts.get_user!/1` and parsing the DateTime. The worker's enqueue helper calls `dehydrate/2`, and perform/1 calls `rehydrate/1`. Both functions live in `lib/my_app/workers/notification_args.ex`. The worker lives in `lib/my_app/workers/notification_worker.ex`. Write both files.",
+  "fixture_files": ["test_fixtures/struct_args_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/notification_args.ex", "lib/my_app/workers/notification_worker.ex"],
+    "must_contain": [
+      "def dehydrate(",
+      "def rehydrate(",
+      "DateTime.to_iso8601",
+      "DateTime.from_iso8601",
+      "Accounts.get_user!",
+      "\"user_id\" =>"
+    ],
+    "must_not_contain": [
+      "%{user:",
+      "%User{} = user"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics", "worker-philosophy"],
+    "criterion": "dehydrate_rehydrate_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires factoring out the serialization boundary into a named helper module — an architectural answer beyond the naive fix. Tests the author's framing of the problem.",
+  "calibration": null,
+  "research_citation": "Michał Łępicki: 'Using structs for Oban worker arguments' — describes the exact round-trip problem and common pitfalls."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "elixir-oban-worker-legendary-03",
+  "tier": "legendary",
+  "title": "End-to-end transactional user-registration flow with three atomic jobs",
+  "prompt": "Write `MyApp.Accounts.register_user/1` that transactionally creates a user and enqueues three related jobs, all in ONE Ecto.Multi with full idempotency and error handling. Requirements: (1) insert the user via a changeset, (2) enqueue `MyApp.Workers.WelcomeEmailWorker` with `unique: [period: 86_400, keys: [:user_id], states: [:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]]` (full safe state list), (3) enqueue `MyApp.Workers.OnboardingSeedWorker` with `schedule_in: 300` (5 minute delay), (4) enqueue `MyApp.Workers.CrmSyncWorker` with `priority: 9` (lowest priority). Each `Oban.insert/3` call must be a function that reads `user` from Multi context and returns a Worker.new/2 call with string-keyed args. Run with `Repo.transaction/1`. Return `{:ok, user}` or `{:error, failed_step, failed_value, _}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Ecto.Multi.insert(:user",
+      "Oban.insert(:welcome_email",
+      "Oban.insert(:onboarding_seed",
+      "Oban.insert(:crm_sync",
+      "unique:",
+      ":available",
+      "schedule_in: 300",
+      "priority: 9",
+      "fn %{user: user}",
+      "\"user_id\" => user.id",
+      "Repo.transaction"
+    ],
+    "must_not_contain": [
+      "Repo.insert(user_changeset)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["unique-constraints", "queues-and-priority", "recurring-jobs-vs-cron", "args-serialization"],
+    "criterion": "four_concept_composition",
+    "weight": 1.0
+  },
+  "tier_rationale": "Every aspect of the binary family must be present and correct: Multi + unique (with full states) + priority inversion + schedule_in + string keys. A single oversight drops the score.",
+  "calibration": null,
+  "research_citation": "Oban module HexDocs: 'Ecto.Multi.new() |> Oban.insert(...) |> MyApp.Repo.transaction()'; Elixir Forum thread 69648 on partial state lists."
+}

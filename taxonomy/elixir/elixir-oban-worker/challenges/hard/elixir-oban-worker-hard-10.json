@@ -1,0 +1,32 @@
+{
+  "id": "elixir-oban-worker-hard-10",
+  "tier": "hard",
+  "title": "Compose a transactional user-creation flow with three Oban jobs",
+  "prompt": "Write `MyApp.Accounts.register_user/1` that atomically: (1) inserts the User, (2) enqueues `MyApp.Workers.WelcomeEmailWorker` with schedule_in 0 (immediate), (3) enqueues `MyApp.Workers.DigestWorker` with schedule_in 24*60*60 (delayed 24h), (4) enqueues `MyApp.Workers.AnalyticsSyncWorker` with priority 9 (lowest). All three jobs reference the new user's id. Use `Ecto.Multi` with `Oban.insert/3` functions that read the user from Multi context. If the user insert fails, none of the jobs should be enqueued. Return `{:ok, user}` or `{:error, failed_step, failed_value, changes_so_far}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Ecto.Multi.new",
+      "Ecto.Multi.insert(:user",
+      "Oban.insert(:welcome_email",
+      "Oban.insert(:digest",
+      "Oban.insert(:analytics_sync",
+      "schedule_in:",
+      "priority: 9",
+      "fn %{user: user}",
+      "\"user_id\" => user.id"
+    ],
+    "must_not_contain": [
+      "Repo.insert(user_changeset)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["args-serialization", "queues-and-priority", "recurring-jobs-vs-cron"],
+    "criterion": "three_job_transactional_flow",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three jobs with different semantics (immediate, delayed, low-priority) all chained off a Multi. Tests integration of several concepts.",
+  "calibration": null
+}

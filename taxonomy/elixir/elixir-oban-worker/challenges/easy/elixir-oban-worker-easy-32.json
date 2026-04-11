@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-32",
+  "tier": "easy",
+  "title": "Insert an Oban job with a specific schedule_at",
+  "prompt": "Write `MyApp.Reminders.schedule_for/2` that takes a `user_id` and a `%DateTime{}` and enqueues `MyApp.Workers.ReminderWorker` to run at exactly that DateTime using `scheduled_at:` (not `schedule_in:`). Use string-keyed args `%{\"user_id\" => user_id}`. Return the insert result. Write to `lib/my_app/reminders.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/reminders.ex"],
+    "must_contain": [
+      "scheduled_at:",
+      "\"user_id\" => user_id",
+      "MyApp.Workers.ReminderWorker.new",
+      "Oban.insert"
+    ],
+    "must_not_contain": [
+      "user_id: user_id",
+      "Oban.Plugins.Cron"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "scheduled_at_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Standard Oban scheduling alternative to schedule_in; recognises that absolute datetime → scheduled_at, not cron.",
+  "calibration": null
+}

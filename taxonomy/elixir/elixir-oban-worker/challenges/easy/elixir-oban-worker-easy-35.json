@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-35",
+  "tier": "easy",
+  "title": "Cron: run cleanup every Monday at 04:30 UTC",
+  "prompt": "Add a single cron entry to an Oban plugin config: run `MyApp.Workers.WeeklyCleanupWorker` every Monday at 04:30 UTC. The crontab entry uses the 5-field format. Include the full `config :my_app, Oban` block with `repo: MyApp.Repo`, a `cleanup:` queue at concurrency 2, and the `Oban.Plugins.Cron` plugin. Write to `config/config.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/config.exs"],
+    "must_contain": [
+      "\"30 4 * * 1\"",
+      "MyApp.Workers.WeeklyCleanupWorker",
+      "Oban.Plugins.Cron",
+      "cleanup: 2"
+    ],
+    "must_not_contain": [
+      "timezone: \"America/"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["queues-and-priority"],
+    "criterion": "weekly_cron_expression",
+    "weight": 1.0
+  },
+  "tier_rationale": "5-field cron with a day-of-week digit; no timezone complication.",
+  "calibration": null
+}

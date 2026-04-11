@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-13",
+  "tier": "easy",
+  "title": "Add a cron entry to Oban.Plugins.Cron config",
+  "prompt": "Write an Oban configuration snippet for `config/runtime.exs` that sets up `Oban.Plugins.Cron` with a single entry: run `MyApp.Workers.NightlyCleanup` at 3:00 AM every day. Do not override the default timezone (stay on Etc/UTC to avoid the tz dependency). Include the repo and a single `:default` queue with concurrency 10. Write to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "Oban.Plugins.Cron",
+      "\"0 3 * * *\"",
+      "MyApp.Workers.NightlyCleanup",
+      "repo: MyApp.Repo"
+    ],
+    "must_not_contain": [
+      "timezone: \"America/",
+      "timezone: \"Europe/"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["queues-and-priority"],
+    "criterion": "cron_entry_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single crontab entry in UTC; no timezone dependency to reason about.",
+  "calibration": null
+}

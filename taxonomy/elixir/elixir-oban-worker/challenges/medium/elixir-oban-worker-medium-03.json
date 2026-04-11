@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-03",
+  "tier": "medium",
+  "title": "Fix a worker that stores a Decimal in Oban args",
+  "prompt": "The worker in `test_fixtures/decimal_args_worker.ex` passes a `%Decimal{}` through Oban args and pattern-matches on `%Decimal{}` inside perform/1. Decimal has no native JSON representation — Jason encodes it but does not round-trip back to the struct. Rewrite the module so the enqueue helper calls `Decimal.to_string/1` before insert, the args use string keys (`\"account_id\"`, `\"amount\"`, `\"currency\"`), and perform/1 calls `Decimal.new/1` on the amount string before passing it to `Ledger.credit/2`. Write to `lib/my_app/workers/ledger_worker.ex`.",
+  "fixture_files": ["test_fixtures/decimal_args_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/ledger_worker.ex"],
+    "must_contain": [
+      "Decimal.to_string(amount)",
+      "Decimal.new(",
+      "\"account_id\" => account_id",
+      "\"amount\" =>",
+      "\"currency\" => \"USD\""
+    ],
+    "must_not_contain": [
+      "%Decimal{} = amount",
+      "%{account_id: account_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "decimal_stringified",
+    "weight": 1.0
+  },
+  "tier_rationale": "Specific to Decimal — requires knowing the type is unsafe for direct JSON and reaching for `Decimal.to_string/1`. Sonnet often picks `Jason.encode!/1` or assumes the struct survives.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'Because args are always encoded as JSON, you must also ensure that all values are serializable, otherwise you'll have encoding errors when inserting jobs.'"
+}

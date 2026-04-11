@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-14",
+  "tier": "easy",
+  "title": "Document the idempotency contract in @moduledoc",
+  "prompt": "Write a new worker module `MyApp.Workers.SendInvoiceEmailWorker`. Its `@moduledoc` must explicitly document that the worker is idempotent, that it tracks `sent_at` on the invoice record to short-circuit retries, and that Oban may call it more than once per logical invoice. The perform/1 accepts `%{\"invoice_id\" => id}`, checks `invoice.sent_at`, and returns `:ok` without re-sending if already set. Otherwise send the email via `MyApp.Mailer.send_invoice(invoice)` and call `MyApp.Billing.mark_sent(invoice)`. Write to `lib/my_app/workers/send_invoice_email_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/send_invoice_email_worker.ex"],
+    "must_contain": [
+      "@moduledoc",
+      "idempotent",
+      "invoice.sent_at",
+      "MyApp.Mailer.send_invoice",
+      "MyApp.Billing.mark_sent"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "idempotency_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical greenfield worker with an explicit contract statement — tests that the philosophy framing shows up in the module's own docs.",
+  "calibration": null,
+  "research_citation": "Jonny Eberhardt, 'Keep Calm and Let Oban Handle Your Elixir Background Jobs' — 'Design your workers so that executing the same job multiple times does not produce adverse effects.'"
+}

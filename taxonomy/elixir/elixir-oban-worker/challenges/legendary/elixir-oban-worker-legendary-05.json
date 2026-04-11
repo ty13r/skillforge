@@ -1,0 +1,34 @@
+{
+  "id": "elixir-oban-worker-legendary-05",
+  "tier": "legendary",
+  "title": "Worker that handles a mixed-type tuple list through custom serialization",
+  "prompt": "Write `MyApp.Workers.BatchCalcWorker` (queue `:calc`). Its enqueue helper takes a list of `{id :: integer, amount :: Decimal.t(), currency :: String.t()}` tuples. Tuples are NOT JSON-safe in general (Jason emits them as arrays, losing the arity information) and `Decimal` is also not round-trippable. Design a custom serialization: the helper must transform the list into `%{\"entries\" => [%{\"id\" => id, \"amount\" => Decimal.to_string(amount), \"currency\" => currency}, ...]}` (a list of maps, not a list of tuples). perform/1 destructures `%{\"entries\" => entries}`, iterates with `Enum.map/2`, rebuilds each tuple as `{id, Decimal.new(amount), currency}`, then passes to `MyApp.Calc.batch/1`. Include a `@moduledoc` explaining that tuples and Decimal must be converted to JSON-safe forms. Write to `lib/my_app/workers/batch_calc_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/batch_calc_worker.ex"],
+    "must_contain": [
+      "\"entries\" =>",
+      "Decimal.to_string",
+      "Decimal.new",
+      "Enum.map",
+      "\"id\" => id",
+      "\"amount\" =>",
+      "\"currency\" =>",
+      "@moduledoc",
+      "tuples"
+    ],
+    "must_not_contain": [
+      "%{id: id",
+      "{id, amount, currency}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics", "worker-philosophy"],
+    "criterion": "custom_serialization_layer",
+    "weight": 1.0
+  },
+  "tier_rationale": "Custom serialization layer for a mixed-type payload. The author must recognize TWO unsafe types (tuples + Decimal) and design the transformation. Legendary because it's both rare in training data and requires first-principles reasoning.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'Because args are always encoded as JSON, you must also ensure that all values are serializable.'"
+}

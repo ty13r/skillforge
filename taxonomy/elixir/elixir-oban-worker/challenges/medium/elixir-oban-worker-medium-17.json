@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-17",
+  "tier": "medium",
+  "title": "Add unique constraint with multiple keys for a per-project-per-day lock",
+  "prompt": "Write `MyApp.Workers.ProjectReportWorker` (queue `:reports`). Add a unique block that dedupes on BOTH `project_id` AND `date` for 24 hours (`period: 86_400`). Use the full safe `:states` list. perform/1 takes `%{\"project_id\" => pid, \"date\" => date_str}` and calls `MyApp.Reports.build_project_report(pid, Date.from_iso8601!(date_str))`. Write to `lib/my_app/workers/project_report_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/project_report_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "unique:",
+      "period: 86_400",
+      ":project_id",
+      ":date",
+      ":available",
+      "Date.from_iso8601!"
+    ],
+    "must_not_contain": [
+      "period: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "multi_key_unique",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-key unique requires knowing that `:keys` takes a list and both keys must be in the args. Test combines uniqueness + date serialization.",
+  "calibration": null
+}
