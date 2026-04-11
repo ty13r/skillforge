@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-26",
+  "tier": "medium",
+  "title": "Worker that handles :snooze with attempt-aware backoff",
+  "prompt": "Write `MyApp.Workers.TwitterPostWorker` (queue `:social`, max_attempts 25). perform/1 takes `%{\"post_id\" => id}` and calls `MyApp.Twitter.publish(post_id)`. On `{:error, :rate_limited, retry_after}`, return `{:snooze, retry_after}`. On `{:error, :dry_run_mode}`, return `{:cancel, :dry_run}` (not an error; the job shouldn't run in dry-run). On `{:error, reason}`, return `{:error, reason}`. Write to `lib/my_app/workers/twitter_post_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/twitter_post_worker.ex"],
+    "must_contain": [
+      "{:snooze, retry_after}",
+      "{:cancel, :dry_run}",
+      "{:error, reason}",
+      "max_attempts: 25",
+      "queue: :social"
+    ],
+    "must_not_contain": [
+      "{:discard,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["retry-strategy"],
+    "criterion": "tri_branch_return",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-way return protocol discrimination: snooze vs cancel vs error. Tests that the author uses the right symbol for each semantic class.",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-03",
+  "tier": "hard",
+  "title": "Configure cron in America/New_York with proper tz dependency note",
+  "prompt": "The config in `test_fixtures/cron_config_example.exs` uses `timezone: \"America/New_York\"` but does not document that this requires the `tz` (or `tzdata`) library as a separate dependency. On app boot, Oban crashes with a cryptic 'unknown time zone' error because the core Elixir `Calendar.ISO` module has no non-UTC zones. Rewrite `config/runtime.exs` so: (1) the timezone remains `America/New_York`, (2) the sub-minute cron entry `\"*/30 * * * * *\"` is removed (Oban cron has 1-minute resolution), (3) a comment at the top of the config block explicitly states: 'Requires `{:tz, \"~> 0.26\"}` in mix.exs deps and `Calendar.put_time_zone_database(Tz.TimeZoneDatabase)` in application.ex.start/2'. Keep the other entries. Write to `config/runtime.exs`.",
+  "fixture_files": ["test_fixtures/cron_config_example.exs"],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "timezone: \"America/New_York\"",
+      "{:tz",
+      "Tz.TimeZoneDatabase",
+      "\"0 3 * * *\""
+    ],
+    "must_not_contain": [
+      "\"*/30 * * * * *\"",
+      "*/30 * * * *"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "tz_dependency_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires niche knowledge of Elixir time zone support + Oban plugin requirements. Most Sonnet outputs leave the tz dependency implicit and never mention `put_time_zone_database/1`.",
+  "calibration": null,
+  "research_citation": "Oban.Plugins.Cron HexDocs — 'To use a timezone other than the default of Etc/UTC you must have a timezone database like tz installed and configured.'"
+}

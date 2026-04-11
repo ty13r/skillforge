@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-04",
+  "tier": "hard",
+  "title": "Refactor a non-idempotent invoice worker using an idempotency ledger",
+  "prompt": "The worker in `test_fixtures/non_idempotent_worker.ex` charges a customer and sends a receipt on every retry. Even after adding a `charged_at` timestamp check, there's still a race: if `charge_card` succeeds but the process crashes before `mark_charged`, a retry will double-charge. Rewrite using the idempotency-ledger pattern: (1) perform/1 takes `%{\"invoice_id\" => id, \"idempotency_key\" => key}` (the key is generated at enqueue time), (2) before charging, check `MyApp.Billing.find_charge_attempt(key)` — if a record exists with status `:succeeded`, return `:ok`; if `:pending`, proceed with the charge; (3) mark the attempt as `:pending` BEFORE calling the external API, then `:succeeded` after, (4) use `Ecto.Multi` to wrap the mark_pending and charge together. Write to `lib/my_app/workers/invoice_worker.ex`.",
+  "fixture_files": ["test_fixtures/non_idempotent_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/invoice_worker.ex"],
+    "must_contain": [
+      "\"idempotency_key\" => key",
+      "MyApp.Billing.find_charge_attempt",
+      ":succeeded",
+      "Ecto.Multi",
+      "mark_pending"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["transactional-jobs", "args-serialization"],
+    "criterion": "full_idempotency_ledger",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full idempotency-ledger pattern including the mark-pending-first ordering. Multi-hop reasoning about crash windows and retry semantics.",
+  "calibration": null,
+  "research_citation": "DZone: 'Idempotency in AI Tools: The Most Expensive Mistake' — 'A network timeout during a large language model API call that triggers a retry can result in paying twice.'"
+}

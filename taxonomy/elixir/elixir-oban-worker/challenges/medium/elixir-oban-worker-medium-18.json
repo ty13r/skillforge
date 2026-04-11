@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-medium-18",
+  "tier": "medium",
+  "title": "Move Application.get_env out of `use Oban.Worker`",
+  "prompt": "The worker in `test_fixtures/compile_time_queue_worker.ex` calls `Application.get_env/2` inside its `use Oban.Worker` options. Because `use` is a macro, these values freeze at compile time — test and prod configurations collide. Rewrite the module: the `use Oban.Worker` line should specify a static queue (`:exports`) and max_attempts (3). Move the dynamic lookup into a new `enqueue/1` helper that reads `Application.get_env/3` at runtime and passes `queue:` and `max_attempts:` as options to `new/2`. Write to `lib/my_app/workers/export_worker.ex`.",
+  "fixture_files": ["test_fixtures/compile_time_queue_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/export_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker, queue: :exports",
+      "max_attempts: 3",
+      "Application.get_env",
+      "def enqueue",
+      "queue: queue",
+      "new("
+    ],
+    "must_not_contain": [
+      "use Oban.Worker,\n    queue: Application.get_env",
+      "queue: Application.get_env(:my_app"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "compile_vs_runtime_split",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires understanding that `use` runs at compile time and that runtime options live on `new/2`. The docs warn about this explicitly but Sonnet often reproduces the pattern verbatim.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'Like all use macros, options are defined at compile time. Avoid using Application.get_env/2 to define worker options.'"
+}

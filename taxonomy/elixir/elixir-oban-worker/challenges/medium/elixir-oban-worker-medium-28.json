@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-28",
+  "tier": "medium",
+  "title": "Worker that dedupes with replace option to update args on collision",
+  "prompt": "Write `MyApp.Workers.SearchIndexWorker` (queue `:search`). Add a unique constraint so only one reindex per `document_id` runs within 5 minutes. Include `replace: [args: [:updated_at]]` so that when a second enqueue collides, the existing job's `args.updated_at` is overwritten with the newer timestamp. perform/1 takes `%{\"document_id\" => id, \"updated_at\" => at}` and calls `MyApp.Search.reindex(id, at)`. Write to `lib/my_app/workers/search_index_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/search_index_worker.ex"],
+    "must_contain": [
+      "unique:",
+      "period: 300",
+      ":document_id",
+      "replace:",
+      "MyApp.Search.reindex"
+    ],
+    "must_not_contain": [
+      "period: 60,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "replace_on_collision",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces the `replace:` option which is a less-known feature of unique constraints. Requires reading beyond the minimum example.",
+  "calibration": null
+}

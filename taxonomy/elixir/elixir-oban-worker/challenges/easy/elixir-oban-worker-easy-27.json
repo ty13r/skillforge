@@ -1,0 +1,27 @@
+{
+  "id": "elixir-oban-worker-easy-27",
+  "tier": "easy",
+  "title": "Configure testing mode :manual in config/test.exs",
+  "prompt": "Write a `config/test.exs` snippet that sets the Oban testing mode to `:manual` for `:my_app`. This is required so `assert_enqueued/1` can inspect the database without jobs executing. Include `import Config` and the `testing: :manual` key on the Oban config. Write to `config/test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/test.exs"],
+    "must_contain": [
+      "import Config",
+      "config :my_app, Oban",
+      "testing: :manual"
+    ],
+    "must_not_contain": [
+      "testing: :inline",
+      "testing: :disabled"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["queues-and-priority"],
+    "criterion": "manual_testing_mode",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single config line; only trap is confusing `:manual` with `:inline`.",
+  "calibration": null
+}

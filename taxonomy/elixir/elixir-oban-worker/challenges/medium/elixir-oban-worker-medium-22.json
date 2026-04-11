@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-22",
+  "tier": "medium",
+  "title": "Enqueue with priority and queue override at runtime",
+  "prompt": "Write `MyApp.Jobs.enqueue_with_priority/2` that takes a `worker` module and a `priority` integer (0..9). It should call `worker.new(%{}, queue: :priority_lane, priority: priority)` and pipe to `Oban.insert/1`. Include `@type priority :: 0..9` as a typespec on the function. Write to `lib/my_app/jobs.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/jobs.ex"],
+    "must_contain": [
+      "queue: :priority_lane",
+      "priority: priority",
+      "@type priority :: 0..9",
+      "worker.new",
+      "Oban.insert"
+    ],
+    "must_not_contain": [
+      "priority :: 1..10"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "priority_range_typespec",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the 0..9 priority range + runtime override via `new/2`. The typespec forces the author to state the valid range.",
+  "calibration": null
+}

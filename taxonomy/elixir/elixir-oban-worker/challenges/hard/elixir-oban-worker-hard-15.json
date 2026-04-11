@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-15",
+  "tier": "hard",
+  "title": "Worker that enforces at-most-once semantics via database unique index",
+  "prompt": "Write a pair of files: (1) an Ecto migration `priv/repo/migrations/20260401_create_job_executions.exs` that creates a `job_executions` table with columns `job_identifier (string, unique)`, `completed_at (utc_datetime_usec)`, `timestamps()`. (2) A worker `MyApp.Workers.IdempotentEventWorker` in `lib/my_app/workers/idempotent_event_worker.ex` that takes `%{\"event_id\" => id}`. On each execution, it wraps the side effect in an `Ecto.Multi` that (a) inserts a row into `job_executions` with `job_identifier: \"event:#{id}\"` using `Multi.insert/3` on an unmarked changeset — on unique violation, return `{:error, :already_done}`, (b) runs the side effect via `MyApp.Events.process(id)`, (c) updates `completed_at`. If `{:error, :already_done}` bubbles up, perform/1 returns `:ok`. Otherwise return `:ok` or `{:error, reason}`. Write both files.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260401_create_job_executions.exs", "lib/my_app/workers/idempotent_event_worker.ex"],
+    "must_contain": [
+      "create table(:job_executions",
+      "unique_index",
+      "Ecto.Multi",
+      "job_identifier",
+      "\"event:",
+      "{:error, :already_done}"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["transactional-jobs", "args-serialization"],
+    "criterion": "database_enforced_idempotency",
+    "weight": 1.0
+  },
+  "tier_rationale": "Database-level idempotency with a dedicated ledger table + Multi handling of the unique-violation race. Production-grade pattern.",
+  "calibration": null,
+  "research_citation": "DZone: 'Idempotency in AI Tools: The Most Expensive Mistake' — 'Retrying a request three times without idempotency guarantees potentially triples what should have been one operation.'"
+}

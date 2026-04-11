@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-32",
+  "tier": "medium",
+  "title": "Write an Oban worker whose args include a list of ids (JSON-safe)",
+  "prompt": "Write `MyApp.Workers.BulkNotificationWorker` (queue `:notifications`, max_attempts 5). perform/1 takes `%{\"user_ids\" => ids, \"template\" => template}` where `ids` is a list of integer user ids and template is a string. It should iterate with `Enum.each/2`, calling `MyApp.Notifier.send(id, template)` for each. Include a comment that lists and strings are JSON-safe (unlike tuples, structs, or atoms). Write to `lib/my_app/workers/bulk_notification_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/bulk_notification_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "\"user_ids\" => ids",
+      "\"template\" => template",
+      "Enum.each",
+      "JSON-safe"
+    ],
+    "must_not_contain": [
+      "user_ids: ids",
+      "%{user_ids:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "json_safe_types_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests affirmative knowledge of what IS JSON-safe. The comment surfaces the philosophy explicitly.",
+  "calibration": null
+}

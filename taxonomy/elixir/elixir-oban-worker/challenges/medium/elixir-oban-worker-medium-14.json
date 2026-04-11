@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-medium-14",
+  "tier": "medium",
+  "title": "Refactor a broken unique constraint that uses the partial :states list",
+  "prompt": "The worker in `test_fixtures/broken_unique_states_worker.ex` has a unique config that excludes `:available` from `:states`, which per the Oban docs and multiple Elixir Forum threads can crash the queue. Rewrite the unique block to use the FULL safe state list: `[:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]`. Keep the rest of the module (queue, perform/1) intact. Add a short `@moduledoc` referencing that partial state lists are unsafe. Write to `lib/my_app/workers/conversation_update_worker.ex`.",
+  "fixture_files": ["test_fixtures/broken_unique_states_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/conversation_update_worker.ex"],
+    "must_contain": [
+      "unique:",
+      ":available",
+      ":scheduled",
+      ":executing",
+      ":retryable",
+      ":completed",
+      "@moduledoc"
+    ],
+    "must_not_contain": [
+      "states: [:scheduled, :executing, :retryable]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "full_safe_states",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing that partial state lists that exclude `:available` are documented as unsafe by both the docs and the maintainer. Sonnet rarely catches this without priming.",
+  "calibration": null,
+  "research_citation": "Elixir Forum thread 69648: 'As you can see, the available state was not included… crashed the queue and started creating hundreds of producers for the same queue.'"
+}

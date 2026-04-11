@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-01",
+  "tier": "easy",
+  "title": "Fix atom-key args in a welcome-email worker",
+  "prompt": "The worker in `test_fixtures/atom_keys_worker.ex` uses atom keys both when building args and when pattern-matching on them in perform/1. Oban JSON-serializes args on insert, so all keys are strings at perform-time — the current pattern match will never match and the job will fail with FunctionClauseError on retry. Rewrite the full module to use string keys everywhere (enqueue helper and perform/1). Keep the module name, queue, and alias structure intact. Write the output to `lib/my_app/workers/welcome_email_worker.ex`.",
+  "fixture_files": ["test_fixtures/atom_keys_worker.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/welcome_email_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "\"user_id\" =>",
+      "\"template\" =>",
+      "def perform(%Oban.Job{args: %{\"user_id\""
+    ],
+    "must_not_contain": [
+      "user_id: user.id",
+      "%{user_id:",
+      "%{template:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "string_keys_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step transformation of a small, well-known anti-pattern. Sonnet typically one-shots it once given a clear prompt.",
+  "calibration": null,
+  "research_citation": "oliver-kriska/claude-elixir-phoenix Iron Laws — 'atom keys instead of strings in job arguments'"
+}

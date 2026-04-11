@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-19",
+  "tier": "easy",
+  "title": "Write a worker with priority 0 (highest)",
+  "prompt": "Create `MyApp.Workers.CriticalPaymentWorker` (queue `:payments`) that runs at priority 0 (highest priority in Oban's 0..9 scale). It accepts `%{\"payment_id\" => id}` and calls `MyApp.Payments.process(id)`. Include a comment on the priority line noting that 0 is highest, 9 is lowest. Write to `lib/my_app/workers/critical_payment_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/critical_payment_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "queue: :payments",
+      "priority: 0",
+      "0 is highest",
+      "MyApp.Payments.process"
+    ],
+    "must_not_contain": [
+      "priority: 9,",
+      "priority: 10"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "priority_inverted_correctly",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single option on the `use` call + a correct comment; tests the inverted 0=highest intuition.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'Integer from 0 (highest priority) to 9 (lowest priority). Defaults to 0.'"
+}

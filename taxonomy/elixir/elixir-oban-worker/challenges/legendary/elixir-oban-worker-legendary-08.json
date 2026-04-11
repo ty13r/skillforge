@@ -1,0 +1,32 @@
+{
+  "id": "elixir-oban-worker-legendary-08",
+  "tier": "legendary",
+  "title": "Design a custom error-aware backoff that uses the unsaved_error",
+  "prompt": "Write `MyApp.Workers.SmartRetryWorker` (queue `:external_api`, max_attempts 20). Override `backoff/1` so it branches on the exact error type captured in `%Oban.Job{unsaved_error: unsaved_error}`. Logic: (1) if `unsaved_error` contains a `%HTTPoison.Error{reason: :timeout}`-like struct, return `attempt * 30` (30s/60s/90s, linear — network issues don't need exponential), (2) if it contains `%{status: status}` where status is in 500..599, return `trunc(:math.pow(2, attempt) * 30)` (exponential — server had a fault), (3) if it contains a reason `:rate_limited`, return `5 * 60` (5 minutes — respect rate limits), (4) otherwise delegate to `Oban.Worker.backoff(job)` for the default exponential. perform/1 takes `%{\"endpoint\" => ep}` and calls `MyApp.Client.call(ep)`. Include a `@moduledoc` explaining the three error classes and why each has a different retry strategy. Write to `lib/my_app/workers/smart_retry_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/smart_retry_worker.ex"],
+    "must_contain": [
+      "def backoff(%Oban.Job{unsaved_error:",
+      ":timeout",
+      ":rate_limited",
+      "attempt * 30",
+      ":math.pow(2, attempt)",
+      "5 * 60",
+      "Oban.Worker.backoff",
+      "@moduledoc"
+    ],
+    "must_not_contain": [
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "retry-strategy",
+    "secondary_capabilities": ["worker-philosophy", "return-values"],
+    "criterion": "error_class_backoff_branches",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the full `unsaved_error` shape + multi-clause backoff + delegation fallback. The docs only sketch this pattern; a correct answer requires filling in all three branches plus the @moduledoc rationale.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'The unsaved error map can be used by backoff/1 to calculate a custom backoff based on the exact error that failed the job.'"
+}

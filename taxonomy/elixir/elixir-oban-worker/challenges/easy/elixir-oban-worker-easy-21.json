@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-21",
+  "tier": "easy",
+  "title": "Enqueue a job with a unique period inside a Multi",
+  "prompt": "Write `MyApp.Notifications.schedule_welcome/1` that takes a `user_id` integer and inserts `MyApp.Workers.WelcomeNotificationWorker` into Oban with `unique: [period: 3600, keys: [:user_id]]` at enqueue time. Use string-keyed args `%{\"user_id\" => user_id}` and `Oban.insert/1`. Return the job tuple. Write to `lib/my_app/notifications.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/notifications.ex"],
+    "must_contain": [
+      "MyApp.Workers.WelcomeNotificationWorker.new",
+      "unique:",
+      "period: 3600",
+      "keys: [:user_id]",
+      "\"user_id\" => user_id",
+      "Oban.insert"
+    ],
+    "must_not_contain": [
+      "%{user_id:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "runtime_unique_override",
+    "weight": 1.0
+  },
+  "tier_rationale": "Enqueue-time override of the unique config using `new/2`. Common idiom.",
+  "calibration": null
+}

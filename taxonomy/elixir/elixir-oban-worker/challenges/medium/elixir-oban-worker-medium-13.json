@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-13",
+  "tier": "medium",
+  "title": "Schedule a daily 3am UTC cron job + document the UTC choice",
+  "prompt": "Write an Oban config for `config/runtime.exs` that runs `MyApp.Workers.NightlyCleanup` every day at 3:00 AM UTC. Include a comment on the plugin config line explaining WHY UTC is chosen: to avoid requiring the `tz` (or `tzdata`) dependency that Oban would need for any non-UTC timezone. Also configure a single `:maintenance` queue at concurrency 2. Write to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "Oban.Plugins.Cron",
+      "\"0 3 * * *\"",
+      "MyApp.Workers.NightlyCleanup",
+      "tz",
+      "maintenance: 2"
+    ],
+    "must_not_contain": [
+      "timezone: \"America/",
+      "timezone: \"Europe/"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "utc_documented",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires actively avoiding the timezone trap and documenting the choice — two decisions rather than one.",
+  "calibration": null,
+  "research_citation": "Oban.Plugins.Cron HexDocs — ':timezone — to use a timezone other than the default of Etc/UTC you must have a timezone database like tz installed and configured.'"
+}

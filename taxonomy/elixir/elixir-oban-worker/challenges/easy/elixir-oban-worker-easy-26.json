@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-26",
+  "tier": "easy",
+  "title": "Enqueue an image-processing job with string-keyed args",
+  "prompt": "Write `MyApp.Images.enqueue_thumbnail/2` that takes an `image_id` and a `size` (integer). It should build `MyApp.Workers.ThumbnailWorker.new(%{\"image_id\" => image_id, \"size\" => size})` and insert it via `Oban.insert/1`. Return the result of `Oban.insert/1`. Write to `lib/my_app/images.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/images.ex"],
+    "must_contain": [
+      "MyApp.Workers.ThumbnailWorker.new",
+      "\"image_id\" => image_id",
+      "\"size\" => size",
+      "Oban.insert"
+    ],
+    "must_not_contain": [
+      "image_id: image_id",
+      "size: size"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "string_keys_enqueue",
+    "weight": 1.0
+  },
+  "tier_rationale": "Minimal enqueue helper — tests that the author reaches for string keys by default.",
+  "calibration": null
+}

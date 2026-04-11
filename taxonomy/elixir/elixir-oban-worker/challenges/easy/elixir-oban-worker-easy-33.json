@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-33",
+  "tier": "easy",
+  "title": "Write an Oban worker with a brief @moduledoc stating idempotency guarantees",
+  "prompt": "Write `MyApp.Workers.PaymentRefundWorker` (queue `:payments`, max_attempts 8). The `@moduledoc` must state in plain English that the worker is idempotent via `refund_id` lookup and that Oban retries are safe. perform/1 takes `%{\"refund_id\" => id}`, looks up the refund with `MyApp.Payments.get_refund!(id)`, short-circuits with `:ok` if `refund.processed_at` is set, otherwise calls `MyApp.Payments.process_refund(refund)`. Write to `lib/my_app/workers/payment_refund_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/payment_refund_worker.ex"],
+    "must_contain": [
+      "@moduledoc",
+      "idempotent",
+      "refund.processed_at",
+      "MyApp.Payments.process_refund",
+      "queue: :payments"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "idempotency_contract_in_doc",
+    "weight": 1.0
+  },
+  "tier_rationale": "Standard worker with an additional @moduledoc requirement — tests that the philosophy surfaces in documentation, not just code.",
+  "calibration": null
+}

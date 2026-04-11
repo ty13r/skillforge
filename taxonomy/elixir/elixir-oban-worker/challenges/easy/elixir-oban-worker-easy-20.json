@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-easy-20",
+  "tier": "easy",
+  "title": "Write an Oban worker with args validation in perform/1",
+  "prompt": "Write `MyApp.Workers.ExportWorker` (queue `:exports`, max_attempts 3). perform/1 should destructure `%{\"export_id\" => id, \"format\" => format}` from `%Oban.Job{}` and validate that `format` is one of `\"csv\"`, `\"json\"`, or `\"xlsx\"`. If not, return `{:cancel, {:invalid_format, format}}`. Otherwise call `MyApp.Exports.run(id, format)` and return its result. Write to `lib/my_app/workers/export_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/export_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "%Oban.Job{args: %{\"export_id\"",
+      "\"csv\"",
+      "\"json\"",
+      "\"xlsx\"",
+      "{:cancel,"
+    ],
+    "must_not_contain": [
+      "{:discard,",
+      "export_id: id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "perform-callback-basics",
+    "secondary_capabilities": ["return-values", "args-serialization"],
+    "criterion": "perform_with_validation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Standard args destructuring + list membership check + modern return form.",
+  "calibration": null
+}

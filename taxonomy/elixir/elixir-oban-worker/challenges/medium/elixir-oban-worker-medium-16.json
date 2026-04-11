@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-16",
+  "tier": "medium",
+  "title": "Handle a NaiveDateTime correctly through Oban args",
+  "prompt": "Write `MyApp.Workers.AuditLogWorker` (queue `:audit`). Its enqueue helper `enqueue/2` takes an `actor_id` and a `%NaiveDateTime{}` timestamp. Because NaiveDateTime has no stable JSON representation, the helper must call `NaiveDateTime.to_iso8601/1` before inserting. Args use string keys `\"actor_id\"` and `\"at\"`. perform/1 destructures string keys, parses `at` with `NaiveDateTime.from_iso8601!/1`, and calls `MyApp.Audit.record(actor_id, at)`. Write to `lib/my_app/workers/audit_log_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/audit_log_worker.ex"],
+    "must_contain": [
+      "NaiveDateTime.to_iso8601",
+      "NaiveDateTime.from_iso8601!",
+      "\"actor_id\" => actor_id",
+      "\"at\" =>",
+      "MyApp.Audit.record"
+    ],
+    "must_not_contain": [
+      "%NaiveDateTime{} = at",
+      "%{actor_id: actor_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "naivedatetime_round_trip",
+    "weight": 1.0
+  },
+  "tier_rationale": "Same pattern as Decimal, different type. Tests the general rule: non-JSON-native types need explicit serialization.",
+  "calibration": null
+}

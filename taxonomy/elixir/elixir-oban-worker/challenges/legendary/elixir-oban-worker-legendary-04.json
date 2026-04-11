@@ -1,0 +1,42 @@
+{
+  "id": "elixir-oban-worker-legendary-04",
+  "tier": "legendary",
+  "title": "Build a worker that survives every known iron-law failure mode",
+  "prompt": "Write `MyApp.Workers.OrderFulfillmentWorker` — a production-grade worker that must defeat every iron-law trap: (1) Non-idempotent: store `fulfilled_at` in the Order record and short-circuit on retry. (2) Atom keys in args: use string keys in both enqueue helper AND perform/1 destructuring. (3) Storing structs: do NOT pass `%Order{}` or `%User{}` in args — pass `%{\"order_id\" => order.id}` and load inside perform/1. (4) Also handle: rate-limited payment gateway with `{:snooze, retry_after}`, permanent failures with `{:cancel, reason}`, transient errors with `{:error, reason}`, proper `backoff/1` override that uses `unsaved_error` to detect rate-limit errors, and a unique constraint `[period: 3600, keys: [:order_id], states: [:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]]`. perform/1 must use an `Ecto.Multi` to atomically update `fulfilled_at` and write the fulfillment record. Add a `@moduledoc` that enumerates each iron law and how this worker defends against it. Write to `lib/my_app/workers/order_fulfillment_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/order_fulfillment_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "unique:",
+      ":available",
+      "period: 3600",
+      "\"order_id\" => order.id",
+      "def perform(%Oban.Job{args: %{\"order_id\"",
+      "order.fulfilled_at",
+      "{:snooze, retry_after}",
+      "{:cancel,",
+      "def backoff(",
+      "unsaved_error",
+      "Ecto.Multi",
+      "@moduledoc",
+      "idempotent",
+      "iron law"
+    ],
+    "must_not_contain": [
+      "%{order_id:",
+      "{:discard,",
+      "Process.sleep",
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["args-serialization", "unique-constraints", "retry-strategy", "return-values", "transactional-jobs"],
+    "criterion": "iron_law_gauntlet",
+    "weight": 1.0
+  },
+  "tier_rationale": "The ultimate integration check — every identified failure mode in the research dossier must be absent AND every correct pattern must be present. Designed so any one omission drops the score below 0.9.",
+  "calibration": null,
+  "research_citation": "oliver-kriska/claude-elixir-phoenix Iron Laws: 'Jobs must be idempotent. Args use string keys. Never store structs in args.'"
+}

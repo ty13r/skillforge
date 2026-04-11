@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-20",
+  "tier": "hard",
+  "title": "Write test helpers for Oban.Testing with_testing_mode",
+  "prompt": "Write a shared test helper `MyApp.ObanTestHelpers` with two functions: (1) `with_inline/1` — takes a function and runs it with `Oban.Testing.with_testing_mode/2` set to `:inline` (jobs execute synchronously, bypassing the database). (2) `with_manual/1` — runs the function with `:manual` mode. Document in `@moduledoc` that `with_testing_mode/2` allows per-test overrides of the global config (useful when most tests want `:manual` but a few integration tests need `:inline`). Also include a convenience function `inline_drain/1` that wraps `with_inline/1` around `Oban.drain_queue/2` for a given queue. Write to `test/support/oban_test_helpers.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/oban_test_helpers.ex"],
+    "must_contain": [
+      "Oban.Testing.with_testing_mode",
+      ":inline",
+      ":manual",
+      "with_inline",
+      "with_manual",
+      "@moduledoc",
+      "Oban.drain_queue"
+    ],
+    "must_not_contain": [
+      "Application.put_env(:my_app, Oban, testing:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "with_testing_mode_wrapper",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces the less-documented `with_testing_mode/2` helper. Tests that the author reaches for the right scoping primitive.",
+  "calibration": null
+}

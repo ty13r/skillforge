@@ -1,0 +1,31 @@
+{
+  "id": "elixir-oban-worker-medium-33",
+  "tier": "medium",
+  "title": "Configure Oban with multiple queues and per-queue priority lanes",
+  "prompt": "Write a `config/runtime.exs` snippet that sets up Oban with three queues: `default: 10`, `mailers: 20`, and a critical lane `urgent: [limit: 5, paused: false]`. Include the repo and disable all plugins (set `plugins: false`). Add a comment explaining that `urgent: [limit: 5]` is an alternative spelling for `urgent: 5` that allows adding further queue options like `:paused`. Write to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "config :my_app, Oban",
+      "repo: MyApp.Repo",
+      "default: 10",
+      "mailers: 20",
+      "urgent: [limit: 5",
+      "plugins: false"
+    ],
+    "must_not_contain": [
+      "plugins: [\n    {Oban.Plugins.Cron"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "queues-and-priority",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "queue_options_spelling",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the less-common keyword-list queue spelling (required for passing further options).",
+  "calibration": null,
+  "research_citation": "Oban module HexDocs — 'The :queues option is a keyword list where the keys are queue names and the values are the concurrency setting or a keyword list of queue options.'"
+}

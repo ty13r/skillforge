@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-23",
+  "tier": "medium",
+  "title": "Idempotent worker using Ecto.Multi for the side-effect-and-mark-done dance",
+  "prompt": "Write `MyApp.Workers.ChargeWorker` (queue `:billing`, max_attempts 8). perform/1 takes `%{\"charge_id\" => id}`. It should use an `Ecto.Multi` to: (1) load the charge with `Multi.run/3`, returning `{:error, :already_charged}` if `charge.processed_at` is set (so Multi halts), (2) call the external charge API, (3) update the charge record with `processed_at`. On a `{:error, :already_charged}` result, return `:ok` (not an error — the job was already successful). Run the Multi with `Repo.transaction/1`. Return `:ok` on success, `{:error, reason}` otherwise. Write to `lib/my_app/workers/charge_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/charge_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "Ecto.Multi",
+      "Multi.run",
+      "charge.processed_at",
+      "{:error, :already_charged}",
+      "Repo.transaction"
+    ],
+    "must_not_contain": [
+      "max_attempts: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "worker-philosophy",
+    "secondary_capabilities": ["transactional-jobs", "return-values"],
+    "criterion": "multi_idempotency_dance",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines the idempotency philosophy with Ecto.Multi for transactional atomicity on the side effect itself. Multi-concept.",
+  "calibration": null
+}

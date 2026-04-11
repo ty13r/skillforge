@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-hard-12",
+  "tier": "hard",
+  "title": "Test a worker's retry behavior with perform_job and multiple attempts",
+  "prompt": "Write a test `MyApp.Workers.PaymentRetryTest` that verifies `MyApp.Workers.PaymentWorker` correctly returns `{:error, reason}` on the first attempt and `{:cancel, :giving_up}` on the final attempt (attempt 5 of max_attempts 5). Use `perform_job/3` and pass explicit `attempt:` option. The test should: (1) first assert that with `[attempt: 1]` and a simulated transient error, the result is `{:error, _}`; (2) then assert that with `[attempt: 5]` and the same simulated error, the result is `{:cancel, :giving_up}`. Use `use Oban.Testing, repo: MyApp.Repo`. Write to `test/my_app/workers/payment_retry_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/payment_retry_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "perform_job(MyApp.Workers.PaymentWorker",
+      "attempt: 1",
+      "attempt: 5",
+      "{:cancel, :giving_up}"
+    ],
+    "must_not_contain": [
+      "testing: :inline",
+      "%Oban.Job{attempt: 1}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["retry-strategy", "return-values"],
+    "criterion": "attempt_option_in_test",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests the `perform_job/3` option list — specifically the `attempt:` override, which is non-obvious.",
+  "calibration": null,
+  "research_citation": "Oban.Testing HexDocs — 'perform_* executes jobs locally without touching the database for unit testing.'"
+}

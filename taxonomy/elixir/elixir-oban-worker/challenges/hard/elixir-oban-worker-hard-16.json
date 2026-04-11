@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-16",
+  "tier": "hard",
+  "title": "Worker that explicitly handles the :snooze path under load",
+  "prompt": "Write `MyApp.Workers.ThrottledAPIWorker` (queue `:external_api`, max_attempts 30). The API has a sliding-window rate limit: 100 requests per minute per account. perform/1 takes `%{\"account_id\" => id}`. Before calling the API, it checks `MyApp.RateLimiter.request_token(id)` which returns either `:ok` or `{:throttled, wait_seconds}`. On `:throttled`, return `{:snooze, wait_seconds}` — this puts the job back in the scheduled state for exactly wait_seconds, which is better than raising (wastes an attempt) and better than sleeping (blocks the worker slot). On `:ok`, call `MyApp.API.fetch(id)` and return `:ok` or `{:error, reason}`. Write to `lib/my_app/workers/throttled_api_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/throttled_api_worker.ex"],
+    "must_contain": [
+      "max_attempts: 30",
+      "MyApp.RateLimiter.request_token",
+      "{:throttled, wait_seconds}",
+      "{:snooze, wait_seconds}",
+      "MyApp.API.fetch"
+    ],
+    "must_not_contain": [
+      "Process.sleep",
+      "raise "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "return-values",
+    "secondary_capabilities": ["worker-philosophy", "retry-strategy"],
+    "criterion": "snooze_on_throttle",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines a pre-check pattern with the snooze return — tests that the author avoids sleeping AND raising.",
+  "calibration": null
+}

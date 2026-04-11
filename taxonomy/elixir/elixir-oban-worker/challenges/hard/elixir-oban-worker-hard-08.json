@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-08",
+  "tier": "hard",
+  "title": "Integrate Sentry error reporting via Oban's official integration",
+  "prompt": "Write `MyApp.Application.start/2` that configures Sentry error reporting for Oban. Use `Sentry.Integrations.Oban.ErrorReporter.attach/0` (the official integration, not a custom telemetry handler) from the `sentry` package — this is the idiomatic solution. Also add a `Sentry.Integrations.Oban.Cron.attach/0` to instrument cron plugin events. Include a comment explaining why using the official integration is preferred over a custom `:telemetry.attach/4` handler: the official version handles Oban's internal event names and metadata shapes correctly across Oban versions, and it uses a single handler id so it's not re-attached if the app restarts. Write to `lib/my_app/application.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/application.ex"],
+    "must_contain": [
+      "Sentry.Integrations.Oban.ErrorReporter.attach",
+      "Sentry.Integrations.Oban.Cron.attach",
+      "Supervisor.start_link",
+      "official integration"
+    ],
+    "must_not_contain": [
+      ":telemetry.attach(\"sentry-oban",
+      ":telemetry.attach(\"oban-sentry"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "official_sentry_integration",
+    "weight": 1.0
+  },
+  "tier_rationale": "Specific knowledge of the Sentry package's Oban integration modules — a real-world production need. Vanilla Sonnet reaches for custom handlers.",
+  "calibration": null,
+  "research_citation": "Oban Ready for Production HexDocs — 'Some libraries like AppSignal, ErrorTracker or Sentry automatically handle these events without requiring any extra code on your application.'"
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-medium-24",
+  "tier": "medium",
+  "title": "Telemetry handler that distinguishes errors by worker name",
+  "prompt": "Write `MyApp.ObanTelemetry` with a `handle_event/4` function that pattern-matches on `[:oban, :job, :exception]` and extracts `metadata.worker` (a binary/string). For `\"MyApp.Workers.PaymentWorker\"` errors, call `MyApp.Alerting.page_oncall(metadata)` in addition to logging. For all other workers, just log via `Logger.error/1`. Also include an `attach/0` function that calls `:telemetry.attach/4` with a static handler id `\"oban-error-handler\"`. Write to `lib/my_app/oban_telemetry.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/oban_telemetry.ex"],
+    "must_contain": [
+      "[:oban, :job, :exception]",
+      ":telemetry.attach",
+      "\"oban-error-handler\"",
+      "MyApp.Alerting.page_oncall",
+      "Logger.error"
+    ],
+    "must_not_contain": [
+      "[:oban, :worker, :exception]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "telemetry-and-observability",
+    "secondary_capabilities": ["worker-philosophy"],
+    "criterion": "worker_specific_handler",
+    "weight": 1.0
+  },
+  "tier_rationale": "Event dispatch by worker name inside the handler — a realistic monitoring pattern that combines telemetry + pattern matching.",
+  "calibration": null
+}

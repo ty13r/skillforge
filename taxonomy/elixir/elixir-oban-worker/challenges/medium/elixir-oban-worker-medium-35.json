@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-medium-35",
+  "tier": "medium",
+  "title": "Worker that chains follow-up jobs from a successful perform",
+  "prompt": "Write `MyApp.Workers.OrderConfirmationWorker` (queue `:orders`, max_attempts 5). perform/1 takes `%{\"order_id\" => id}` and calls `MyApp.Orders.confirm(id)`. On `{:ok, order}`, it must enqueue two follow-up jobs atomically: `MyApp.Workers.InventoryReserveWorker.new(%{\"order_id\" => order.id})` and `MyApp.Workers.EmailConfirmationWorker.new(%{\"order_id\" => order.id})`. Use `Oban.insert_all/1` with a LIST of changesets (not insert_all with args, note this is the plural form for multiple jobs). Return `:ok` on success, `{:error, reason}` on failure. Write to `lib/my_app/workers/order_confirmation_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/order_confirmation_worker.ex"],
+    "must_contain": [
+      "use Oban.Worker",
+      "Oban.insert_all",
+      "MyApp.Workers.InventoryReserveWorker.new",
+      "MyApp.Workers.EmailConfirmationWorker.new",
+      "\"order_id\" => order.id"
+    ],
+    "must_not_contain": [
+      "Repo.insert_all",
+      "order_id: order.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "transactional-jobs",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "insert_all_chain",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests knowledge of `Oban.insert_all/1` for bulk insert of pre-built jobs — a distinct API from `insert/2`.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-oban-worker-easy-18",
+  "tier": "easy",
+  "title": "Enqueue a job and assert it was enqueued",
+  "prompt": "Write an ExUnit test `MyApp.OrdersTest` that uses `Oban.Testing` to verify that calling `MyApp.Orders.place_order(1, 99)` enqueues `MyApp.Workers.OrderFulfillmentWorker` with args `%{\"order_id\" => 1, \"quantity\" => 99}`. Assume `:testing` mode is `:manual` in test config. The test should call `assert_enqueued/1` with `worker:` and `args:` options. Write to `test/my_app/orders_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/orders_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "assert_enqueued",
+      "worker: MyApp.Workers.OrderFulfillmentWorker",
+      "\"order_id\" => 1",
+      "\"quantity\" => 99"
+    ],
+    "must_not_contain": [
+      "order_id: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["args-serialization"],
+    "criterion": "assert_enqueued_usage",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical `assert_enqueued/1` usage; the trap is again atom vs string keys.",
+  "calibration": null
+}

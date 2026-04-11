@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-hard-11",
+  "tier": "hard",
+  "title": "Worker with conditional reschedule based on result",
+  "prompt": "Write `MyApp.Workers.DataFetchWorker` (queue `:ingest`, max_attempts 5). perform/1 takes `%{\"source_id\" => id, \"cursor\" => cursor}`. It calls `MyApp.Ingest.fetch_page(id, cursor)` which returns either `{:ok, :done}` (all pages fetched), `{:ok, {:more, next_cursor}}` (another page available), or `{:error, reason}`. Logic: (1) on `{:ok, :done}` return `:ok` (no reschedule), (2) on `{:ok, {:more, next_cursor}}` enqueue a new job with `schedule_in: 60` and args `%{\"source_id\" => id, \"cursor\" => next_cursor}`, then return `:ok`, (3) on `{:error, reason}` return `{:error, reason}` so Oban retries the SAME cursor. Do NOT reschedule inside an error branch. Write to `lib/my_app/workers/data_fetch_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/data_fetch_worker.ex"],
+    "must_contain": [
+      "\"source_id\" => id",
+      "\"cursor\" => cursor",
+      "{:ok, :done}",
+      "{:ok, {:more, next_cursor}}",
+      "schedule_in: 60",
+      "\"cursor\" => next_cursor"
+    ],
+    "must_not_contain": [
+      "schedule_in: 60, cursor: cursor"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recurring-jobs-vs-cron",
+    "secondary_capabilities": ["return-values", "retry-strategy"],
+    "criterion": "conditional_reschedule",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tests both the reschedule-on-success-only pattern and the return-value discrimination for pagination. Rare combination.",
+  "calibration": null
+}

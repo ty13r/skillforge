@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-easy-25",
+  "tier": "easy",
+  "title": "Pattern-match perform/1 head on string keys, not atoms",
+  "prompt": "Rewrite the following broken perform/1 clause so it matches on string keys:\n\n```elixir\ndef perform(%Oban.Job{args: %{user_id: id, action: action}}) do\n  MyApp.Actions.run(id, action)\nend\n```\n\nThe full corrected module should be `MyApp.Workers.ActionWorker`, queue `:default`. Keep the behavior (calling `MyApp.Actions.run/2`) identical, only change the pattern match to use `\"user_id\"` and `\"action\"`. Write to `lib/my_app/workers/action_worker.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workers/action_worker.ex"],
+    "must_contain": [
+      "def perform(%Oban.Job{args: %{\"user_id\"",
+      "\"action\"",
+      "use Oban.Worker",
+      "MyApp.Actions.run"
+    ],
+    "must_not_contain": [
+      "%{user_id:",
+      "%{action:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "args-serialization",
+    "secondary_capabilities": ["perform-callback-basics"],
+    "criterion": "pattern_match_string_keys",
+    "weight": 1.0
+  },
+  "tier_rationale": "Literal find-and-replace once the rule is known. The most common Oban bug in Claude output.",
+  "calibration": null,
+  "research_citation": "Oban.Worker HexDocs — 'The args map provided to perform/1 will always have string keys, regardless of the key type when the job was enqueued.'"
+}

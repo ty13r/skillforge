@@ -1,0 +1,29 @@
+{
+  "id": "elixir-oban-worker-legendary-07",
+  "tier": "legendary",
+  "title": "Worker test that exposes atom-key bug in a perform/1 pattern match",
+  "prompt": "Write a test `MyApp.Workers.BrokenWorkerTest` that demonstrates WHY `perform_job/3` is critical: it auto-converts args to string keys before calling perform/1, so a worker that incorrectly pattern-matches on atom keys will fail the test (not appear to pass). The test uses `Oban.Testing` and `perform_job(BrokenWorker, %{user_id: 1})` (note: atom key in the args passed in). Assert that the test fails with a `FunctionClauseError` if `BrokenWorker.perform/1` matches on `%{user_id: _}` (atoms), OR passes with `:ok` if `BrokenWorker.perform/1` matches on `%{\"user_id\" => _}` (strings). Include a short `@moduledoc` citing the Oban.Testing docs that the helper 'automatically converts args to string keys before calling perform/1, ensuring that perform clauses aren't erroneously trying to match atom keys.' Write to `test/my_app/workers/broken_worker_test.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/workers/broken_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing",
+      "perform_job(",
+      "FunctionClauseError",
+      "\"automatically converts args to string keys\"",
+      "@moduledoc"
+    ],
+    "must_not_contain": [
+      "testing: :inline"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "testing-workers",
+    "secondary_capabilities": ["args-serialization", "perform-callback-basics"],
+    "criterion": "exposes_atom_key_bug",
+    "weight": 1.0
+  },
+  "tier_rationale": "Meta-level test that uses Oban.Testing's own string-key conversion to prove a worker is broken. Requires understanding the helper's role as a guardrail.",
+  "calibration": null,
+  "research_citation": "Oban.Testing HexDocs — 'it automatically converts args to string keys before calling perform/1, ensuring that perform clauses aren't erroneously trying to match atom keys.'"
+}

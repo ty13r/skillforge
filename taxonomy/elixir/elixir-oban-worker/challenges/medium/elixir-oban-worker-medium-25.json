@@ -1,0 +1,30 @@
+{
+  "id": "elixir-oban-worker-medium-25",
+  "tier": "medium",
+  "title": "Fix a cron entry that uses seconds precision",
+  "prompt": "The config in `test_fixtures/cron_config_example.exs` has a cron entry `\"*/30 * * * * *\"` (6 fields — seconds precision), which Oban does NOT support (minimum resolution is one minute). Rewrite the file: (1) remove the seconds entry, (2) replace with a self-rescheduling pattern note in a comment — explain that sub-minute intervals should be implemented with a worker that reschedules itself. Also fix the timezone issue: change `timezone: \"America/New_York\"` to UTC and document that non-UTC timezones require the `tz` dependency. Keep the other cron entries. Write to `config/runtime.exs`.",
+  "fixture_files": ["test_fixtures/cron_config_example.exs"],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "Oban.Plugins.Cron",
+      "\"0 3 * * *\"",
+      "\"0 * * * *\"",
+      "tz",
+      "reschedule"
+    ],
+    "must_not_contain": [
+      "\"*/30 * * * * *\"",
+      "timezone: \"America/New_York\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cron-scheduling",
+    "secondary_capabilities": ["recurring-jobs-vs-cron"],
+    "criterion": "fix_subminute_and_tz",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two distinct cron traps (sub-minute precision + timezone dep) in one file. Medium because each is a well-documented gotcha.",
+  "calibration": null,
+  "research_citation": "Oban.Plugins.Cron HexDocs — ':timezone… you must have a timezone database like tz installed and configured.'"
+}
