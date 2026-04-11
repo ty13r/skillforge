@@ -1,0 +1,41 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-11",
+  "tier": "legendary",
+  "title": "Extract a bloated LiveView into LiveView + LiveComponent + function components",
+  "prompt": "Refactor test_fixtures/multi_antipattern_liveview.ex into a clean 3-layer architecture. Output three files: (1) lib/my_app_web/live/project_board_live.ex (MyAppWeb.ProjectBoardLive, Phoenix.LiveView) — handles mount, handle_params, handle_info for real-time updates, and top-level state. (2) lib/my_app_web/live/project_board_live/task_card.ex (MyAppWeb.ProjectBoardLive.TaskCard, Phoenix.LiveComponent) — stateful per-task state, handles its own phx-click events for status changes. (3) lib/my_app_web/components/project_board_header.ex (MyAppWeb.Components.ProjectBoardHeader) — stateless function component with attr declarations for the page header. The LiveView must NOT contain DB calls in mount, must use streams for tasks, and must use connected?/1 before subscribing to \"project:#{@project_id}\". The LiveComponent handles its own phx-click=\"mark_done\" and updates state via send_update. The function component uses attr declarations for :title and :user_count.",
+  "fixture_files": ["test_fixtures/multi_antipattern_liveview.ex"],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app_web/live/project_board_live.ex",
+      "lib/my_app_web/live/project_board_live/task_card.ex",
+      "lib/my_app_web/components/project_board_header.ex"
+    ],
+    "must_contain": [
+      "MyAppWeb.ProjectBoardLive",
+      "MyAppWeb.ProjectBoardLive.TaskCard",
+      "MyAppWeb.Components.ProjectBoardHeader",
+      "use Phoenix.LiveView",
+      "use Phoenix.LiveComponent",
+      "use Phoenix.Component",
+      "attr :title, :string",
+      "stream(socket, :tasks",
+      "if connected?(socket)",
+      "<.live_component",
+      "send_update("
+    ],
+    "must_not_contain": [
+      "Repo.all\n    |> assign",
+      "def mount(_params, _session, socket) do\n    Phoenix.PubSub.subscribe",
+      "<%= for task",
+      "live_link"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "architectural-stance",
+    "secondary_capabilities": ["anti-patterns-catalog", "live-components-stateful", "function-components-and-slots", "streams-and-collections"],
+    "criterion": "three_layer_refactor",
+    "weight": 0.95
+  },
+  "tier_rationale": "The broadest refactor in the family. Touches 5 capabilities: architectural decomposition, anti-pattern removal, LiveComponent extraction, function component extraction, stream conversion. Single challenge spans 3 files. Sonnet rarely gets the full 3-layer decomposition right — typically either leaves too much in the LiveView or extracts to flat helper modules.",
+  "calibration": null
+}

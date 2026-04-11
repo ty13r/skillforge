@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-06",
+  "tier": "legendary",
+  "title": "Polymorphic card function component with typed slots and :global",
+  "prompt": "Write a Phoenix 1.7+ function component module at lib/my_app_web/components/card.ex (module MyAppWeb.Components.Card). Export a single function card/1 that takes: attr :variant, :string, values: [\"info\", \"warning\", \"danger\"], default: \"info\"; attr :class, :string, default: nil; attr :rest, :global; slot :header; slot :body, required: true; slot :footer. The rendered markup must include a class attribute that combines \"card\", \"card-#{@variant}\", and @class. Pass @rest onto the outer <div>. Render header/footer conditionally via :if={Enum.any?(@header)} and :if={Enum.any?(@footer)} — the slot may be empty. Do NOT use phx-value-. NOT a LiveComponent.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/card.ex"],
+    "must_contain": [
+      "use Phoenix.Component",
+      "attr :variant, :string",
+      "attr :rest, :global",
+      "slot :header",
+      "slot :body, required: true",
+      "slot :footer",
+      "render_slot(@body",
+      ":if={Enum.any?(@header)}",
+      ":if={Enum.any?(@footer)}",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "Phoenix.LiveComponent",
+      "handle_event",
+      "def update("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-components-and-slots",
+    "secondary_capabilities": ["heex-and-verified-routes"],
+    "criterion": "polymorphic_component_with_slots",
+    "weight": 0.8
+  },
+  "tier_rationale": "Requires full function-component surface: attr with value constraints + :rest :global + named slots with required/optional + slot emptiness check. Sonnet usually forgets the :global pass-through or the Enum.any? slot check.",
+  "calibration": null
+}

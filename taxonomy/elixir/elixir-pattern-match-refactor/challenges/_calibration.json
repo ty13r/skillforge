@@ -8,48 +8,52 @@
     "easy": 35,
     "medium": 47,
     "hard": 38,
-    "legendary": 0
+    "legendary": 10
   },
   "capability_coverage": {
     "binary-pattern-matching-basic": {
-      "primary_count": 8,
+      "primary_count": 9,
       "secondary_count": 0,
       "tier_breakdown": {
         "easy": 2,
         "medium": 3,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "cond-and-if-reduction": {
-      "primary_count": 6,
+      "primary_count": 7,
       "secondary_count": 19,
       "tier_breakdown": {
         "easy": 3,
         "medium": 2,
-        "hard": 1
+        "hard": 1,
+        "legendary": 1
       }
     },
     "defensive-nil-checks-elimination": {
-      "primary_count": 14,
-      "secondary_count": 17,
+      "primary_count": 15,
+      "secondary_count": 18,
       "tier_breakdown": {
         "easy": 6,
         "medium": 5,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "enum-vs-recursion-choice": {
-      "primary_count": 13,
-      "secondary_count": 7,
+      "primary_count": 14,
+      "secondary_count": 8,
       "tier_breakdown": {
         "easy": 3,
         "medium": 7,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "function-head-pattern-matching": {
       "primary_count": 8,
-      "secondary_count": 42,
+      "secondary_count": 51,
       "tier_breakdown": {
         "easy": 3,
         "medium": 3,
@@ -57,57 +61,63 @@
       }
     },
     "guard-clauses": {
-      "primary_count": 10,
-      "secondary_count": 11,
+      "primary_count": 11,
+      "secondary_count": 14,
       "tier_breakdown": {
         "easy": 3,
         "medium": 4,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "map-and-struct-destructuring": {
-      "primary_count": 7,
-      "secondary_count": 24,
+      "primary_count": 8,
+      "secondary_count": 26,
       "tier_breakdown": {
         "easy": 3,
         "medium": 2,
-        "hard": 2
+        "hard": 2,
+        "legendary": 1
       }
     },
     "pipe-operator-flows": {
-      "primary_count": 12,
-      "secondary_count": 12,
+      "primary_count": 13,
+      "secondary_count": 13,
       "tier_breakdown": {
         "easy": 4,
         "medium": 7,
-        "hard": 1
+        "hard": 1,
+        "legendary": 1
       }
     },
     "recursive-functions": {
-      "primary_count": 9,
-      "secondary_count": 5,
+      "primary_count": 10,
+      "secondary_count": 7,
       "tier_breakdown": {
         "easy": 3,
         "medium": 3,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "refactor-philosophy": {
-      "primary_count": 16,
-      "secondary_count": 20,
+      "primary_count": 17,
+      "secondary_count": 22,
       "tier_breakdown": {
         "easy": 2,
         "medium": 4,
-        "hard": 10
+        "hard": 10,
+        "legendary": 1
       }
     },
     "with-expressions": {
-      "primary_count": 17,
-      "secondary_count": 2,
+      "primary_count": 18,
+      "secondary_count": 4,
       "tier_breakdown": {
         "easy": 3,
         "medium": 7,
-        "hard": 7
+        "hard": 7,
+        "legendary": 1
       }
     }
   },

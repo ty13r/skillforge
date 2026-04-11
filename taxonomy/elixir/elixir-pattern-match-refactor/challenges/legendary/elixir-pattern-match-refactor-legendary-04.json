@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-04",
+  "tier": "legendary",
+  "title": "Collapse a 5-branch cond into function heads with guards",
+  "prompt": "Refactor MyApp.Pricing.tier_for/1 in test_fixtures/cond_role_router.ex into lib/my_app/pricing.ex. The current implementation is a 5-branch cond that returns a tier atom based on user attributes (spend, age_days, invited_by, churned?, trial_ends_at). Replace the cond with multiple def tier_for(user) clauses, each using a when guard to narrow. Guards must compose with and/or — use is_nil/1, Date comparisons via Date.compare/2 (in a function body if necessary; but prefer simpler guards). The order of function heads must reflect the priority of the original cond branches — most-specific first. Keep the same public signature and return values: :enterprise, :premium, :retention, :trial, :free.",
+  "fixture_files": ["test_fixtures/cond_role_router.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/pricing.ex"],
+    "must_contain": [
+      "def tier_for(",
+      " when ",
+      ":enterprise",
+      ":premium",
+      ":retention",
+      ":trial",
+      ":free"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "cond ",
+      "if user.spend"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses"],
+    "criterion": "cond_to_function_heads",
+    "weight": 0.85
+  },
+  "tier_rationale": "Requires recognizing that cond branches with simple predicates collapse to function-head guards, understanding the ordering semantics, and composing multi-predicate guards without reaching for Date/Enum functions that aren't allowed in guards. Sonnet typically keeps a case or collapses to fewer heads than needed.",
+  "calibration": null
+}

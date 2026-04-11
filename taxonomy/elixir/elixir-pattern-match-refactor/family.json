@@ -24,12 +24,12 @@
     "defensive-nil-checks-elimination"
   ],
   "challenges": {
-    "total": 120,
+    "total": 130,
     "by_tier": {
       "easy": 35,
       "medium": 47,
       "hard": 38,
-      "legendary": 0
+      "legendary": 10
     },
     "held_out_ids": [
       "elixir-pattern-match-refactor-easy-04",
@@ -51,7 +51,10 @@
       "elixir-pattern-match-refactor-hard-16",
       "elixir-pattern-match-refactor-hard-22",
       "elixir-pattern-match-refactor-hard-28",
-      "elixir-pattern-match-refactor-hard-34"
+      "elixir-pattern-match-refactor-hard-34",
+      "elixir-pattern-match-refactor-legendary-03",
+      "elixir-pattern-match-refactor-legendary-06",
+      "elixir-pattern-match-refactor-legendary-09"
     ]
   },
   "evaluation": {
@@ -61,8 +64,8 @@
   },
   "seeded_at": "2026-04-11",
   "tier_methodology": "heuristic",
-  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Known gap: legendary tier has 0 challenges (drafting agent was cut off before writing the legendary tier).",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Legendary tier augmented post-hoc from 0 to 10 challenges covering 7 of the 10 capabilities.",
   "known_gaps": {
-    "legendary_tier_empty": "Legendary tier has 0 challenges vs 30 target (drafting agent cut off). One orphaned legendary golden reference exists (legendary-01.ex) but no corresponding challenge JSON."
+    "legendary_tier_short": "Legendary tier has 10 challenges vs 30 target — still below target but all 10 new legendaries cover distinct capabilities (refactor-philosophy, with-expressions, binary-pattern-matching-basic, cond-and-if-reduction, defensive-nil-checks-elimination, recursive-functions, pipe-operator-flows, map-and-struct-destructuring, enum-vs-recursion-choice, guard-clauses). New legendaries do not have golden reference files yet (except the orphaned legendary-01.ex which exists but is unused — can be repurposed)."
   }
 }

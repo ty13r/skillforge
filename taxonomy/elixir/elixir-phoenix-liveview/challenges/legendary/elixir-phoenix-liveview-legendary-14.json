@@ -1,0 +1,39 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-14",
+  "tier": "legendary",
+  "title": "File upload flow with allow_upload, progress, and consume_uploaded_entries",
+  "prompt": "Write lib/my_app_web/live/photo_upload_live.ex (module MyAppWeb.PhotoUploadLive). The LiveView lets users upload up to 5 photos (.png, .jpg, .jpeg) with max_file_size: 5 * 1024 * 1024. In mount/3 call allow_upload(socket, :photos, accept: [\".png\", \".jpg\", \".jpeg\"], max_entries: 5, max_file_size: 5_242_880, progress: &handle_progress/3). Define handle_progress/3 that logs entry name on completion. Define handle_event(\"validate\", _, socket) returning {:noreply, socket} (required for live validation). Define handle_event(\"save\", _, socket) that calls consume_uploaded_entries(socket, :photos, fn %{path: path}, entry -> ... copy to uploads dir ... {:ok, final_path} end) and assigns the resulting paths to @uploaded_paths. The template must include <.live_file_input upload={@uploads.photos} />, progress bars using @uploads.photos.entries with :for, and cancel buttons using phx-click=\"cancel\" phx-value-ref={entry.ref}. On cancel, handle_event(\"cancel\", %{\"ref\" => ref}, socket) calls cancel_upload(socket, :photos, ref).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/photo_upload_live.ex"],
+    "must_contain": [
+      "MyAppWeb.PhotoUploadLive",
+      "allow_upload(socket, :photos",
+      "accept: [\".png\", \".jpg\", \".jpeg\"]",
+      "max_entries: 5",
+      "progress: &handle_progress/3",
+      "def handle_progress(",
+      "def handle_event(\"validate\"",
+      "def handle_event(\"save\"",
+      "consume_uploaded_entries(socket, :photos",
+      "<.live_file_input upload={@uploads.photos}",
+      "cancel_upload(socket, :photos",
+      ":for={entry <- @uploads.photos.entries}",
+      "phx-value-ref={entry.ref}"
+    ],
+    "must_not_contain": [
+      "Plug.Upload",
+      "multipart/form-data",
+      "<%= for entry"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "form-handling",
+    "secondary_capabilities": ["event-handlers-and-handle-info", "function-components-and-slots"],
+    "criterion": "allow_upload_full_flow",
+    "weight": 0.95
+  },
+  "tier_rationale": "The full upload API surface: allow_upload with 4 options + progress callback + live_file_input + consume_uploaded_entries + cancel_upload. Sonnet typically mixes old Plug.Upload patterns with new LiveView uploads or forgets the progress callback.",
+  "research_citation": "Phoenix LiveView uploads docs",
+  "calibration": null
+}

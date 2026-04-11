@@ -1,0 +1,36 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-08",
+  "tier": "legendary",
+  "title": "10k-message inbox with stream, throttled filter, and live insert",
+  "prompt": "Write lib/my_app_web/live/inbox_live.ex (module MyAppWeb.InboxLive). Mount loads 10,000 existing messages from MyApp.Inbox.list_messages/0 into a stream (not assign). On connect (connected?/1), subscribe to Phoenix.PubSub topic \"inbox:\" <> user_id. handle_info({:new_message, msg}, socket) must stream_insert at position 0 so new messages appear at the top. Template has a filter input with phx-change=\"filter\" phx-debounce=\"300\" that updates @query assign; the stream is NOT re-assigned on filter (it stays full) — instead use phx-no-format + :for with a client-side data-hidden={not match?(@query, msg.body)} approach. Render with <div id=\"messages\" phx-update=\"stream\">. The stream DOM ID must be explicit via :id={dom_id}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/inbox_live.ex"],
+    "must_contain": [
+      "MyAppWeb.InboxLive",
+      "stream(socket, :messages",
+      "if connected?(socket)",
+      "Phoenix.PubSub.subscribe",
+      "stream_insert(socket, :messages",
+      "at: 0",
+      "phx-update=\"stream\"",
+      "phx-debounce=\"300\"",
+      "def handle_info({:new_message",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "assign(socket, :messages,",
+      "Enum.filter(@messages",
+      "def mount(_params, _session, socket) do\n    Phoenix.PubSub.subscribe"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "streams-and-collections",
+    "secondary_capabilities": ["pubsub-and-realtime", "mount-and-lifecycle", "event-handlers-and-handle-info"],
+    "criterion": "stream_insert_throttled_filter",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires: stream vs assign choice, stream_insert position, connected? guard before subscribe, throttled phx-change, live filter without re-loading, phx-update=stream. Touches 4 capabilities simultaneously. Sonnet typically re-assigns the full list on filter (breaking the stream) or subscribes during disconnected mount.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'Lists >100 items must use stream/3'; oliver-kriska: 'Always connected?/1 before subscribe'",
+  "calibration": null
+}

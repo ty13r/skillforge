@@ -1,0 +1,40 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-12",
+  "tier": "legendary",
+  "title": "Eight-anti-pattern catalog fix (distinct from legendary-01)",
+  "prompt": "Refactor test_fixtures/db_in_mount_dashboard.ex — a LiveView that demonstrates EIGHT distinct anti-patterns — into a clean version at lib/my_app_web/live/dashboard_live.ex. The anti-patterns to remove: (1) Repo.all in mount, (2) Phoenix.PubSub.subscribe without connected? guard, (3) string-interpolated route via string concatenation, (4) assign_new used for a time-sensitive value (System.system_time/0), (5) <%= for %> instead of :for, (6) live_patch instead of <.link navigate={...}>, (7) a form built from raw changeset instead of to_form, (8) handle_event(\"delete\") that calls Repo.delete! without checking ownership. All 8 must be fixed in the output. Use the fixed versions: handle_params for DB loads behind connected? guard, ~p sigil, fresh timestamp computed each render, :for, <.link>, to_form/2 with phx-change validate cycle, and an ownership check in handle_event.",
+  "fixture_files": ["test_fixtures/db_in_mount_dashboard.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/dashboard_live.ex"],
+    "must_contain": [
+      "MyAppWeb.DashboardLive",
+      "if connected?(socket)",
+      "def handle_params(",
+      "~p\"/",
+      ":for=",
+      "<.link navigate={~p",
+      "to_form(",
+      "<.form",
+      "socket.assigns.current_user.id"
+    ],
+    "must_not_contain": [
+      "def mount(_params, _session, socket) do\n    users = Repo.all",
+      "Phoenix.PubSub.subscribe(MyApp.PubSub, \"feed\")",
+      "\"/users/\" <>",
+      "assign_new(socket, :now",
+      "<%= for ",
+      "live_patch",
+      "Routes.dashboard_path",
+      "Repo.delete!(post)\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "anti-patterns-catalog",
+    "secondary_capabilities": ["mount-and-lifecycle", "pubsub-and-realtime", "heex-and-verified-routes", "navigation-patterns", "form-handling", "auth-and-authz"],
+    "criterion": "eight_antipattern_fix",
+    "weight": 1.0
+  },
+  "tier_rationale": "Eight distinct iron-laws must be fixed in a single pass across one file. Requires complete knowledge of the anti-pattern catalog. Sonnet typically catches 4-5 of the 8 on one attempt. This is the canonical 'learn the catalog' challenge.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix: full iron-law catalog v2.3.0",
+  "calibration": null
+}

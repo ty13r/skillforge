@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-06",
+  "tier": "legendary",
+  "title": "Tail-recursive tree walker with pattern-matched base cases",
+  "prompt": "Write lib/my_app/tree/walker.ex (module MyApp.Tree.Walker). It walks a binary tree represented as {:leaf, value} | {:node, left, right, value} and returns a list of values in-order. Implement walk/1 using ONLY multi-clause function heads — no case, no cond, no if. Base case: walk({:leaf, v}) returns [v]. Internal case: walk({:node, left, right, v}) returns walk(left) ++ [v] ++ walk(right). Also implement walk/2 with an accumulator for tail-recursion: walk(tree, acc). Its two heads handle :leaf (append to acc) and :node (recurse right first, then v, then left reversed — since tail-recursion builds backward). Finally implement in_order/1 that calls walk(tree, []) and reverses the result.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tree/walker.ex"],
+    "must_contain": [
+      "MyApp.Tree.Walker",
+      "def walk({:leaf,",
+      "def walk({:node,",
+      "def walk(",
+      "def in_order(",
+      "Enum.reverse("
+    ],
+    "must_not_contain": [
+      "case ",
+      "cond ",
+      "if ",
+      "is_nil("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "tail_recursive_tree_walk",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires understanding tail-recursion semantics + the 'build backward, reverse at end' idiom + dispatching via function heads on tagged tuples. Sonnet typically writes a non-tail-recursive version or falls back to Enum.reduce that misses the tree structure.",
+  "calibration": null
+}

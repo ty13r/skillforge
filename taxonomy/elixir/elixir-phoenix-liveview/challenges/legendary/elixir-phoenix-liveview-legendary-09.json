@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-09",
+  "tier": "legendary",
+  "title": "Event routing with phx-value-* and handle_info debounce",
+  "prompt": "Write lib/my_app_web/live/sortable_table_live.ex (module MyAppWeb.SortableTableLive). The template renders clickable column headers with phx-click=\"sort\" phx-value-column={col} phx-value-direction={next_direction(col)}. handle_event(\"sort\", %{\"column\" => column, \"direction\" => direction}, socket) pattern-matches BOTH phx-value-* keys and pushes a handle_info(:reload, _) message via send(self(), :reload). handle_info(:reload, socket) reloads from MyApp.Table.query(socket.assigns.column, socket.assigns.direction) — but ONLY if the socket is connected?/1 (silently no-op on disconnected). Use to_form for the search input. The reload must be debounced: if another :reload arrives within 300ms, the first is dropped via Process.cancel_timer/1 on a timer reference stored in socket assigns.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/sortable_table_live.ex"],
+    "must_contain": [
+      "MyAppWeb.SortableTableLive",
+      "phx-click=\"sort\"",
+      "phx-value-column=",
+      "phx-value-direction=",
+      "def handle_event(\"sort\", %{\"column\" =>",
+      "def handle_info(:reload,",
+      "if connected?(socket)",
+      "Process.cancel_timer(",
+      "Process.send_after(",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "phx-click=\"sort_asc\"",
+      "phx-click=\"sort_desc\"",
+      "send(self(), {:reload,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "event-handlers-and-handle-info",
+    "secondary_capabilities": ["mount-and-lifecycle", "form-handling"],
+    "criterion": "phx_value_debounced_reload",
+    "weight": 0.85
+  },
+  "tier_rationale": "Combines phx-value-* multi-key routing with a send-to-self + debounced handle_info pattern. The timer cancel/reschedule dance is subtle. Sonnet typically picks per-direction event names (phx-click=sort_asc) or never debounces.",
+  "calibration": null
+}
