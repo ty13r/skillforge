@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-06",
+  "tier": "medium",
+  "title": "Pagination: offset to cursor refactor",
+  "prompt": "`MyApp.Blog.Feed.feed/1` in `test_fixtures/offset_pagination_slow.ex` uses offset pagination. At page 1000 this is O(N). Rewrite the function to use cursor pagination: it should take an optional `{published_at, id}` tuple as a cursor and return the next 20 posts older than the cursor. Order by `(published_at desc, id desc)` for deterministic sorting; handle the `nil` cursor as the first page. Write to `lib/my_app/blog/feed.ex`.",
+  "fixture_files": ["test_fixtures/offset_pagination_slow.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/feed.ex"],
+    "must_contain": [
+      "order_by: [desc: p.published_at, desc: p.id]",
+      "limit:",
+      "p.published_at < ^",
+      "p.published_at == ^"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "cursor_with_tiebreak",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must recognize the O(N) problem AND know the row-wise tuple comparison for deterministic cursors. Sonnet typically produces a non-deterministic cursor (only `published_at`).",
+  "research_citation": "Jack Marchant: 'Query execution time grows proportionally to the number of rows you need to skip with offset-based pagination'",
+  "calibration": null
+}

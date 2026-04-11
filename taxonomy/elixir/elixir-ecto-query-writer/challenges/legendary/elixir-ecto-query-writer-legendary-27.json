@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-27",
+  "tier": "legendary",
+  "title": "Conditional join + preload with shared binding",
+  "prompt": "Write `MyApp.Blog.search_with_optional_preloads/1` that takes opts with `:include_author` and `:include_category` booleans. Start from `from(p in Post, as: :post)`. If `:include_author` is true, join author `as: :author` + thread into preload. If `:include_category` is true, join category `as: :category` + thread into preload. Both can be set, either can be set, neither can be set. Return the queryable. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "as: :post",
+      "assoc(p, :author)",
+      "assoc(p, :category)",
+      "preload: [author:",
+      "preload: [category:",
+      "Keyword.get"
+    ],
+    "must_not_contain": [
+      "if Keyword.get(opts, :include_author) and Keyword.get(opts, :include_category)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins", "dynamic-query-builder"],
+    "criterion": "conditional_join_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Conditional joins + threaded preloads — two optional branches where the preload ONLY works if the join was added. Fragile composition.",
+  "calibration": null
+}

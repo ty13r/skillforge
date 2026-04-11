@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-15",
+  "tier": "legendary",
+  "title": "Union all across two queries with same select shape",
+  "prompt": "Write `MyApp.Notifications.all_events/1` that takes a user id and unions two streams: (a) posts authored by the user as `{type: \"post\", id, inserted_at, title}`, (b) comments by the user as `{type: \"comment\", id, inserted_at, body}`. Use `union_all/2` to combine them, then order the combined result by `inserted_at desc`. Both subqueries must have identical column shape (rename `body` to `title` for comments via select). Write to `lib/my_app/notifications.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/notifications.ex"],
+    "must_contain": [
+      "union_all",
+      "type:",
+      "\"post\"",
+      "\"comment\"",
+      "^user_id",
+      "order_by:"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["basic-where-select-order", "pin-operator-safety"],
+    "criterion": "union_same_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Ecto `union_all` requires exact column shape match across branches. Non-obvious and rarely used.",
+  "calibration": null
+}

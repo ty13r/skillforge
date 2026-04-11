@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-hard-23",
+  "tier": "hard",
+  "title": "Dynamic query combining 3 filters with explicit case-match",
+  "prompt": "Write `MyApp.Blog.Search.filter/1` that takes a keyword list like `[role: \"admin\", active: true, team_id: 5]`. All are optional. Use `Enum.reduce/3` over the keyword list with an explicit case-match on `{key, value}` pairs: `:role`, `:active`, `:team_id`. Skip unknown keys with an `_` catch-all branch. Return the queryable (don't call Repo.all). Write to `lib/my_app/blog/search.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/search.ex"],
+    "must_contain": [
+      "Enum.reduce",
+      "dynamic(true)",
+      "{:role, value}",
+      "{:active, value}",
+      "{:team_id, value}",
+      "_, acc ->"
+    ],
+    "must_not_contain": [
+      "if Keyword.get"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "case_match_reducer",
+    "weight": 1.0
+  },
+  "tier_rationale": "Tuple-destructure case matching inside Enum.reduce with explicit catchall is the most idiomatic but non-obvious pattern.",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-11",
+  "tier": "legendary",
+  "title": "Post-query Enum restructure for deep nested preloads",
+  "prompt": "Write `MyApp.Blog.category_tree/0` that returns categories with nested posts, each post with nested comments, each comment with author. Use deeply nested struct preloads: `preload: [posts: [comments: [:author]]]`. Avoid N+1 at every level — one query per association tier (4 queries total). Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/category.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "preload: [posts: [comments: [:author]]]",
+      "from(c in Category"
+    ],
+    "must_not_contain": [
+      "Repo.preload",
+      "Enum.map"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "three_level_nested_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Deep nested struct preload syntax; easy to get the list/keyword structure wrong at 3+ levels.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-12",
+  "tier": "medium",
+  "title": "Top-N users by comment count",
+  "prompt": "Write `MyApp.Blog.top_n_commenters/1` that takes an integer `n` and returns the top-N users by comment count. Return a list of maps `%{id, name, comment_count}`. Use a left join on comments (so users with 0 comments are considered), group by user id+name, order by `count desc`, and limit to `^n`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "left_join: c in assoc(u, :comments)",
+      "group_by: [u.id, u.name]",
+      "order_by: [desc: count(c.id)]",
+      "limit: ^n",
+      "select: %{"
+    ],
+    "must_not_contain": [
+      "inner_join: c"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins", "pin-operator-safety"],
+    "criterion": "top_n_aggregate",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-clause with join + aggregate + ordered limit + pinned variable. Several things to get right at once.",
+  "calibration": null
+}

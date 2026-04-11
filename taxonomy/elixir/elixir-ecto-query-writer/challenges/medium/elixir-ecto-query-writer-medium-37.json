@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-medium-37",
+  "tier": "medium",
+  "title": "Left join preload on has_one",
+  "prompt": "Write `MyApp.Accounts.users_with_profile_data/0` that returns all users with their `:profile` (a has_one) preloaded. Since has_one is single-row-per-parent, a left_join_preload is appropriate and produces one query. Use `left_join: pr in assoc(u, :profile), preload: [profile: pr]`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/profile.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "left_join: pr in assoc(u, :profile)",
+      "preload: [profile: pr]"
+    ],
+    "must_not_contain": [
+      "preload: [:profile]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins"],
+    "criterion": "has_one_join_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Reinforces the has_one preload nuance — unlike has_many, has_one benefits from the single-query join approach.",
+  "calibration": null
+}

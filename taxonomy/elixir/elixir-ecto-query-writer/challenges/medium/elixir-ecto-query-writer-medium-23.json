@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-23",
+  "tier": "medium",
+  "title": "Dynamic filter composing and/or",
+  "prompt": "Write `MyApp.Accounts.flexible_search/1` that takes a map with optional `:team_id` (include) and `:exclude_ids` (exclude). The result should be users where `(team_id matches) AND (id not in exclude_ids)`. Use two dynamic fragments, one for each filter, composed with `and` inside a single `where: ^dyn`. Both filters are optional; start with `dynamic(true)`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "dynamic(true)",
+      "^acc and",
+      "u.team_id == ^",
+      "u.id not in ^",
+      "where: ^"
+    ],
+    "must_not_contain": [
+      "if params["
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "composed_dynamics",
+    "weight": 1.0
+  },
+  "tier_rationale": "Composing two optional dynamics with `and`. Requires knowing that `^acc and ...` is the composition pattern inside a dynamic body.",
+  "calibration": null
+}

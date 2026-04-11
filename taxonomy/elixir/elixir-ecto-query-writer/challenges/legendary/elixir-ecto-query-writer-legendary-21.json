@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-21",
+  "tier": "legendary",
+  "title": "Cross-schema query builder with reusable joins",
+  "prompt": "Write `MyApp.Blog.PostQueries` with composable builders. `base/0` returns `from(p in Post, as: :post)`. `with_author_active/1` joins author `as: :author` + filters active. `with_published_category/1` joins category `as: :category` + filters on publishable categories. `ordered/1` orders by inserted_at desc. Then write `MyApp.Blog.feed/0` that composes `base |> with_author_active |> with_published_category |> ordered |> Repo.all`. All composers must accept a queryable and return a queryable. Named bindings must work across composer boundaries. Write to `lib/my_app/blog/post_queries.ex` and `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/post_queries.ex", "lib/my_app/blog.ex"],
+    "must_contain": [
+      "defmodule MyApp.Blog.PostQueries",
+      "as: :post",
+      "as: :author",
+      "as: :category",
+      "def base",
+      "def with_author_active(query",
+      "def with_published_category(query",
+      "|> PostQueries"
+    ],
+    "must_not_contain": [
+      "def base(query)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["joins", "preloads"],
+    "criterion": "cross_schema_composition",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full composable pattern across multiple schemas with proper named bindings at every level. Final exam for the foundation dimension.",
+  "calibration": null
+}

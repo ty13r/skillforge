@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-16",
+  "tier": "easy",
+  "title": "Basic cursor pagination with a deterministic tie-breaker",
+  "prompt": "Write `MyApp.Blog.feed_first_page/1` that takes a `page_size` integer and returns the first page of published posts ordered by `(published_at desc, id desc)`. The `id` secondary sort is the unique tie-breaker. Use `limit: ^page_size`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "order_by: [desc: p.published_at, desc: p.id]",
+      "limit: ^page_size",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "order_by: [desc: p.published_at]\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "deterministic_order",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces deterministic sort concept but only asks for the ordering clause — no cursor filtering yet.",
+  "research_citation": "duffelhq/paginator: 'This method requires a deterministic sort order'",
+  "calibration": null
+}

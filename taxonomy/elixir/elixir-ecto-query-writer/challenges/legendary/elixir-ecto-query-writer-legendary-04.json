@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-04",
+  "tier": "legendary",
+  "title": "Dynamic composition with conditional joins and pinned values",
+  "prompt": "Write `MyApp.Blog.Search.full_search/1` that takes a params map with up to 6 optional filters: `\"title_like\"`, `\"published_after\"` (DateTime), `\"category_name\"` (requires category join), `\"author_email\"` (requires author join), `\"min_comments\"` (requires left_join + group_by + having), `\"tag_names\"` (list — requires many_to_many join). Dynamically add the required joins AND the filters using a combination of `Enum.reduce` + `dynamic/2`. All joins must be added conditionally so simple queries don't pay the cost. Write to `lib/my_app/blog/search.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex", "test_fixtures/schemas/comment.ex", "test_fixtures/schemas/tag.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/search.ex"],
+    "must_contain": [
+      "dynamic(",
+      "assoc(p, :category)",
+      "assoc(p, :author)",
+      "assoc(p, :comments)",
+      "assoc(p, :tags)",
+      "ilike(",
+      "group_by:",
+      "having:"
+    ],
+    "must_not_contain": [
+      "if params[\"title_like\"] and params[\"category_name\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["joins", "pin-operator-safety"],
+    "criterion": "six_filter_dynamic_joins",
+    "weight": 1.0
+  },
+  "tier_rationale": "Six filters, four join types, conditional application, proper pin and dynamic usage. The most demanding dynamic-query scenario.",
+  "calibration": null
+}

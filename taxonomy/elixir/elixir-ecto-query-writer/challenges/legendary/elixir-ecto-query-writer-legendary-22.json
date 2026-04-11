@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-22",
+  "tier": "legendary",
+  "title": "Where with OR across multiple joined tables",
+  "prompt": "Write `MyApp.Search.find_by_any_field/1` that takes a string and returns Users matching on `u.name` OR `u.email` OR their team's `t.name`. Inner-join team, use `dynamic([u, t], ilike(u.name, ^pattern) or ilike(u.email, ^pattern) or ilike(t.name, ^pattern))` for the OR composition. Pin the pattern once. Write to `lib/my_app/search.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/team.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/search.ex"],
+    "must_contain": [
+      "join: t in assoc(u, :team)",
+      "dynamic(",
+      "ilike(u.name",
+      "ilike(u.email",
+      "ilike(t.name",
+      " or "
+    ],
+    "must_not_contain": [
+      "where: ilike(u.name"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["joins", "basic-where-select-order"],
+    "criterion": "or_across_joined",
+    "weight": 1.0
+  },
+  "tier_rationale": "OR across joined tables inside dynamic/2 is a fiddly pattern — binding list must include both.",
+  "calibration": null
+}

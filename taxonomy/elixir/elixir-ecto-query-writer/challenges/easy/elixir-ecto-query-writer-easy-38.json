@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-38",
+  "tier": "easy",
+  "title": "Simple window rank ordered by score",
+  "prompt": "Write `MyApp.Blog.ranked_by_score/0` that selects each post with a `rank` field using `rank() |> over(order_by: [desc: p.score])`. Do NOT use fragment. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "rank()",
+      "|> over(",
+      "order_by: [desc: p.score]"
+    ],
+    "must_not_contain": [
+      "fragment(\"rank()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "typed_rank",
+    "weight": 1.0
+  },
+  "tier_rationale": "Typed rank, no partition. Canonical single-step.",
+  "calibration": null
+}

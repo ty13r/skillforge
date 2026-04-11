@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-14",
+  "tier": "easy",
+  "title": "Pin a datetime value in a where clause",
+  "prompt": "Write `MyApp.Blog.posts_since/1` that takes a `DateTime` and returns published posts with `published_at >= ^since`. Pin the datetime. Order by `published_at desc`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "p.published_at >= ^since",
+      "order_by: [desc: p.published_at]",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "p.published_at >= since"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "datetime_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical `^var` usage for a DateTime comparison.",
+  "calibration": null
+}

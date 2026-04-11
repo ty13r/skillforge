@@ -1,0 +1,103 @@
+{
+  "family_slug": "elixir-ecto-query-writer",
+  "capabilities": {
+    "query-composition-style": {
+      "weight": 0.08,
+      "objectives": {
+        "composable_builders": {"weight": 0.35, "description": "Query functions accept + return queryables"},
+        "named_bindings": {"weight": 0.35, "description": "Base queries use `as: :atom` for reuse across joins"},
+        "pipe_or_keyword_consistency": {"weight": 0.30, "description": "Pipe and keyword styles used consistently"}
+      }
+    },
+    "basic-where-select-order": {
+      "weight": 0.06,
+      "objectives": {
+        "clauses_present": {"weight": 0.40, "description": "Required where/select/order_by clauses present"},
+        "nil_safe": {"weight": 0.30, "description": "Uses is_nil/1 instead of `== nil`"},
+        "correct_select_shape": {"weight": 0.30, "description": "map/struct/partial select shapes used correctly"}
+      }
+    },
+    "joins": {
+      "weight": 0.09,
+      "objectives": {
+        "uses_assoc_helper": {"weight": 0.35, "description": "Uses `assoc/2` when joining schema associations"},
+        "named_bindings_used": {"weight": 0.35, "description": "Named `as:` bindings on joins for downstream reference"},
+        "correct_join_type": {"weight": 0.30, "description": "inner/left/outer join semantics preserved"}
+      }
+    },
+    "preloads": {
+      "weight": 0.14,
+      "objectives": {
+        "struct_preload_hasmany": {"weight": 0.40, "description": "has_many uses struct (separate-query) preload"},
+        "join_preload_belongsto": {"weight": 0.25, "description": "belongs_to/has_one may use join-preload"},
+        "no_n_plus_one": {"weight": 0.20, "description": "Preload at query time, no Repo.preload in loops"},
+        "binding_threaded": {"weight": 0.15, "description": "Join-preloads thread the binding: `preload: [assoc: binding]`"}
+      }
+    },
+    "aggregates-and-group-by": {
+      "weight": 0.07,
+      "objectives": {
+        "group_by_matches_select": {"weight": 0.35, "description": "Every selected field is grouped or aggregated"},
+        "typed_aggregate_helpers": {"weight": 0.35, "description": "count/2, sum, avg used (not fragments)"},
+        "having_vs_where": {"weight": 0.30, "description": "Aggregates filtered via having, not where"}
+      }
+    },
+    "subqueries": {
+      "weight": 0.08,
+      "objectives": {
+        "subquery_helper_used": {"weight": 0.40, "description": "Typed subquery/1 used (not raw SQL)"},
+        "parent_as_correlation": {"weight": 0.30, "description": "parent_as/1 used for correlated subqueries"},
+        "select_shape_defined": {"weight": 0.30, "description": "Subqueries used as sources have explicit select"}
+      }
+    },
+    "dynamic-query-builder": {
+      "weight": 0.08,
+      "objectives": {
+        "reduce_composition": {"weight": 0.45, "description": "Enum.reduce(params, dynamic(true), ...) pattern"},
+        "acc_pinned_in_compose": {"weight": 0.30, "description": "`^acc and ...` used inside dynamic body"},
+        "no_if_chaining": {"weight": 0.25, "description": "No imperative if/where chaining for optional filters"}
+      }
+    },
+    "pin-operator-safety": {
+      "weight": 0.14,
+      "objectives": {
+        "runtime_vars_pinned": {"weight": 0.55, "description": "All runtime variables in filters use ^"},
+        "compile_constants_unpinned": {"weight": 0.25, "description": "Compile-time constants NOT pinned when plan-cache matters"},
+        "correct_coercion": {"weight": 0.20, "description": "Parse before pin when type mismatch risks exist"}
+      }
+    },
+    "pagination-patterns": {
+      "weight": 0.07,
+      "objectives": {
+        "deterministic_order": {"weight": 0.40, "description": "Sort has a unique tie-breaker column"},
+        "cursor_over_offset": {"weight": 0.35, "description": "Cursor keyset used when offset would be slow"},
+        "cursor_vars_pinned": {"weight": 0.25, "description": "Cursor values pinned with ^"}
+      }
+    },
+    "raw-sql-fragment": {
+      "weight": 0.07,
+      "objectives": {
+        "no_string_interpolation": {"weight": 0.45, "description": "Fragments use ? placeholders, not #{} interpolation"},
+        "typed_equivalent_preferred": {"weight": 0.35, "description": "Typed Ecto functions used when they exist"},
+        "correct_placeholder_count": {"weight": 0.20, "description": "? placeholders match number of values passed"}
+      }
+    },
+    "window-functions": {
+      "weight": 0.06,
+      "objectives": {
+        "typed_window_form": {"weight": 0.50, "description": "`row_number() |> over(...)` typed form used"},
+        "no_fragment_window": {"weight": 0.30, "description": "No fragment-based window function anti-pattern"},
+        "named_windows_for_reuse": {"weight": 0.20, "description": "`windows:` clause used when windows repeated"}
+      }
+    },
+    "upserts-and-on-conflict": {
+      "weight": 0.06,
+      "objectives": {
+        "conflict_target_set": {"weight": 0.35, "description": "conflict_target is always specified for insert_all"},
+        "targeted_replace": {"weight": 0.35, "description": "Uses {:replace, [...]} not :replace_all for partial updates"},
+        "not_null_safe": {"weight": 0.30, "description": "All NOT NULL columns supplied per insert row"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

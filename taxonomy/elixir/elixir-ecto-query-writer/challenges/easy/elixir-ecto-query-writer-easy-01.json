@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-easy-01",
+  "tier": "easy",
+  "title": "Add missing pin operators to a 3-filter query module",
+  "prompt": "The `MyApp.Accounts` module in `test_fixtures/missing_pin_filter.ex` has three query functions that each filter by a runtime variable (`email`, `team_id`, `role`) but forget the pin operator `^`. Rewrite the module so every runtime variable is pinned. Preserve function names, arities, and return types exactly. Write your corrected module to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/missing_pin_filter.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "^email",
+      "^team_id",
+      "^role",
+      "defmodule MyApp.Accounts",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "u.email == email",
+      "u.team_id == team_id",
+      "u.role == role"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "all_runtime_vars_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single mechanical transformation — add `^` before each runtime variable in a where clause. No prior context required, pattern is well-documented, vanilla Sonnet should one-shot this.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix Iron Law: 'Always pinning values with ^ in queries' (most-enforced Claude rule)",
+  "calibration": null
+}

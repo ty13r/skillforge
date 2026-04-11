@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-09",
+  "tier": "legendary",
+  "title": "Window function + aggregates + correlated subquery in one query",
+  "prompt": "Write `MyApp.Blog.ranked_posts_with_comment_totals/0` that returns each post with: (1) a `rank` computed by `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])`, (2) a correlated subquery column `comment_count` using `parent_as(:post).id`, (3) filtered to posts in the top-3 per category. Uses named binding `:post` on the outer query. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "row_number()",
+      "|> over(",
+      "partition_by: p.category_id",
+      "subquery(",
+      "parent_as(:post)",
+      "as: :post"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number",
+      "Enum.filter"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["subqueries", "aggregates-and-group-by"],
+    "criterion": "window_plus_correlated",
+    "weight": 1.0
+  },
+  "tier_rationale": "Window + correlated subquery + filter by window result. Multi-feature synthesis.",
+  "calibration": null
+}

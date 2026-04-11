@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-28",
+  "tier": "legendary",
+  "title": "Rank with ties + partition + filter by rank",
+  "prompt": "Write `MyApp.Shop.top_customers_with_ties/0` that returns the top 5 customers by total order amount per month, preserving ties (rank 5 can include multiple customers). Use `rank() |> over(partition_by: month, order_by: [desc: total])` — rank (not row_number) preserves ties. Use `fragment(\"date_trunc('month', ?)\", o.placed_at)` for the month bucket. Filter the outer query to `rank <= 5`. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "rank()",
+      "|> over(",
+      "partition_by:",
+      "date_trunc('month'",
+      "r.rank <= 5",
+      "subquery("
+    ],
+    "must_not_contain": [
+      "row_number()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["subqueries", "aggregates-and-group-by"],
+    "criterion": "rank_with_ties_filtered",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must distinguish `rank()` (ties preserved) from `row_number()` (ties broken arbitrarily) AND combine with a partition + filter — advanced understanding of window semantics.",
+  "calibration": null
+}

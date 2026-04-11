@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-25",
+  "tier": "legendary",
+  "title": "Efficient bulk count of distinct authors per category",
+  "prompt": "Write `MyApp.Blog.distinct_authors_per_category/0` that returns `{category_id, category_name, distinct_author_count}` for each category. Use a subquery that selects `distinct: [c.id, p.user_id]` to dedupe author-category pairs, then aggregate over the subquery. Or alternatively use `count(p.user_id, :distinct)` directly in a group-by query. Produce the most efficient form. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/category.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "count(p.user_id, :distinct)",
+      "group_by: [c.id, c.name]",
+      "join: p in assoc(c, :posts)"
+    ],
+    "must_not_contain": [
+      "fragment(\"COUNT(DISTINCT"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins"],
+    "criterion": "count_distinct_efficient",
+    "weight": 1.0
+  },
+  "tier_rationale": "`count/2 :distinct` is the right tool; subquery approach is worse. Must know the typed distinct aggregate.",
+  "calibration": null
+}

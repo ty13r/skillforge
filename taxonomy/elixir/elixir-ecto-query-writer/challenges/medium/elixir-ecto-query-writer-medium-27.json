@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-medium-27",
+  "tier": "medium",
+  "title": "Timestamp-aware upsert for atomic increment",
+  "prompt": "Write `MyApp.Accounts.touch_last_login/1` that takes a user id. Update that user's `last_login_at` to now. Use `Repo.update_all/3` with `set:` for a direct UPDATE without loading the record. Pin `id` and `now`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Repo.update_all",
+      "set: [",
+      "last_login_at: ^",
+      "u.id == ^id",
+      "DateTime.utc_now"
+    ],
+    "must_not_contain": [
+      "Repo.get",
+      "Repo.update("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "update_all_with_set",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical `update_all` + `set:` pattern with pinned id and timestamp. Requires knowing it bypasses changesets.",
+  "calibration": null
+}

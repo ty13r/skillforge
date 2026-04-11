@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-30",
+  "tier": "medium",
+  "title": "Ecto `like` with escaped user input",
+  "prompt": "Write `MyApp.Accounts.search_by_name/1` that takes a user-provided string and does a case-insensitive partial match on `name`. Use the safe pattern: build `\"%\" <> query <> \"%\"` outside the query, then pass via `ilike(u.name, ^pattern)`. Do NOT interpolate the raw query string into the SQL. Pin the pattern. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "ilike(u.name, ^pattern)",
+      "\"%\" <>",
+      "<> \"%\""
+    ],
+    "must_not_contain": [
+      "fragment(\"ilike",
+      "\"#{query}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "typed_ilike_safe",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must know the typed `ilike` function plus safe pattern-building. Non-obvious that a typed function exists.",
+  "calibration": null
+}

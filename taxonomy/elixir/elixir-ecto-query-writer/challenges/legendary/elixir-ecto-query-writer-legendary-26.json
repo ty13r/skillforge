@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-26",
+  "tier": "legendary",
+  "title": "Preload with dynamic query and post-preload sort",
+  "prompt": "Write `MyApp.Accounts.user_with_recent_active_posts/2` that takes a `user_id` and a `cutoff_datetime`. Returns the User with preloaded `:posts` filtered to `inserted_at > cutoff_datetime`, ordered by `published_at desc`. Use query-tuple preload: `preload: [posts: ^posts_query]` where posts_query is parameterized by the cutoff. Pin BOTH `user_id` and `cutoff_datetime`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "posts_query",
+      "^cutoff_datetime",
+      "^user_id",
+      "preload: [posts: ^",
+      "order_by: [desc:",
+      "u.id == ^user_id"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style", "pin-operator-safety"],
+    "criterion": "dynamic_preload_query_tuple",
+    "weight": 1.0
+  },
+  "tier_rationale": "Building a dynamic preload query with pinned params and threading it through a query-tuple preload. Rare combination.",
+  "calibration": null
+}

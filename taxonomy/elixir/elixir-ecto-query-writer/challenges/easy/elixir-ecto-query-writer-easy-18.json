@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-18",
+  "tier": "easy",
+  "title": "Preload a belongs_to association at query time",
+  "prompt": "Write `MyApp.Blog.list_posts_with_authors/0`. Query all posts and preload `:author` (a belongs_to). Since this is belongs_to (single row per post), a join-preload is fine — use `join: u in assoc(p, :author), preload: [author: u]`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: u in assoc(p, :author)",
+      "preload: [author: u]",
+      "from(p in Post"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins"],
+    "criterion": "join_preload_belongs_to",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces the 'belongs_to CAN use join-preload' nuance, but the pattern itself is mechanical.",
+  "research_citation": "georgeguimaraes/claude-code-elixir ecto-thinking: 'Join preloads suit Belongs-to, has-one (single query)'",
+  "calibration": null
+}

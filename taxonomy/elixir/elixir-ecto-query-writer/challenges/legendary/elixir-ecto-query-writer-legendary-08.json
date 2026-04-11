@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-08",
+  "tier": "legendary",
+  "title": "Race-safe get_or_insert with on_conflict returning",
+  "prompt": "Write `MyApp.Blog.Tags.get_or_insert_tag/1` that takes a tag name and returns `{:ok, tag_struct}`. It must be race-safe: two concurrent callers with the same name must both receive the same tag row. Use `Repo.insert/2` with the changeset, `on_conflict: :nothing`, `conflict_target: :slug`, `returning: true`. Handle the case where `:nothing` returns `%Tag{id: nil}` (already existed) by re-querying via slug. Write to `lib/my_app/blog/tags.ex`.",
+  "fixture_files": ["test_fixtures/schemas/tag.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/tags.ex"],
+    "must_contain": [
+      "Repo.insert",
+      "on_conflict: :nothing",
+      "conflict_target: :slug",
+      "returning: true",
+      "id: nil",
+      "Repo.get_by"
+    ],
+    "must_not_contain": [
+      "Repo.get_by(Tag, slug"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "race_safe_get_or_insert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Knowing that :nothing returns a stub struct with id: nil (vs a full row on successful insert) and handling that case explicitly is a rare + critical pattern.",
+  "research_citation": "Ecto constraints-and-upserts hexdocs: 'If two posts are submitted at the same time with a similar tag, there is a chance we will check if the tag exists at the same time, leading both submissions to believe there is no such tag'",
+  "calibration": null
+}

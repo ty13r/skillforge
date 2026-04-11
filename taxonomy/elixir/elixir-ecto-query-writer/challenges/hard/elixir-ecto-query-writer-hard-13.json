@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-13",
+  "tier": "hard",
+  "title": "Pin-operator diagnosis: compile-time constant de-pinning for performance",
+  "prompt": "Given this query: `@active_statuses [\"approved\", \"published\"]; from p in Post, where: p.status in ^@active_statuses`. Explain in a code comment what tradeoff pinning the module attribute creates for Postgres query planning (parameterized value prevents index selectivity optimization), and rewrite it to NOT pin the compile-time list so the query is statically `WHERE status IN ('approved', 'published')`. Write the rewritten function to `lib/my_app/blog.ex` with a comment that documents the reasoning. Use `Enum.map` + unquote or the `^` -> bare list approach via `where: fragment(?, ...)` alternative, or just inline the list literal in the query — whatever produces a static WHERE clause.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "@active_statuses",
+      "# ",
+      "p.status in ["
+    ],
+    "must_not_contain": [
+      "p.status in ^@active_statuses"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "depinned_compile_time_list",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires understanding WHEN to AVOID the pin, which is the inverse of the usual rule. Only applies to compile-time constants; tricky nuance.",
+  "research_citation": "hubertlepicki Elixir Forum: 'Without the pin the query should not use a parameter for the @active_statuses, but include the value in the query itself. The change to not using the pin operator has a profound overall impact on the performance.'",
+  "calibration": null
+}

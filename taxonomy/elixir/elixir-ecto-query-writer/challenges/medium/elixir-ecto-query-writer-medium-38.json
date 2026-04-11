@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-38",
+  "tier": "medium",
+  "title": "Dynamic preload selection",
+  "prompt": "Write `MyApp.Accounts.get_user/2` that takes an id and a keyword list of options. If `include: :posts` is in the options, preload `:posts`. If `include: :profile` is in the options, preload `:profile`. If neither, don't preload. Use a base query and conditionally add preloads — either by building a list of preloads or by piping through conditional `preload/2` calls. Pin id. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/profile.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "preload:",
+      "u.id == ^id",
+      "Keyword.get",
+      "Repo.one"
+    ],
+    "must_not_contain": [
+      "u.id == id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["dynamic-query-builder"],
+    "criterion": "conditional_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines preload + dynamic selection. Less common pattern.",
+  "calibration": null
+}

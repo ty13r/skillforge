@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-19",
+  "tier": "medium",
+  "title": "Named window via the windows: clause",
+  "prompt": "Write `MyApp.Blog.posts_with_named_window/0` that uses a named window specification in the `windows:` clause. Define one window `w` with `partition_by: :category_id, order_by: [desc: :inserted_at]`, then reference it twice: once as `row_number() |> over(:w)` and once as `rank() |> over(:w)`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "windows: [",
+      "partition_by:",
+      "over(:w)",
+      "row_number()",
+      "rank()"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": [],
+    "criterion": "named_window_clause",
+    "weight": 1.0
+  },
+  "tier_rationale": "The `windows:` clause is the advanced form; Claude rarely uses it and tends to inline partition_by into each window function.",
+  "calibration": null
+}

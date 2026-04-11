@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-24",
+  "tier": "easy",
+  "title": "Pipe-style compose: where then order then limit",
+  "prompt": "Write `MyApp.Blog.recent_published_posts/1` that takes a `limit` integer. Start from `Post`, pipe through `where` (published = true), `order_by` (inserted_at desc), `limit` (pinned), then `Repo.all`. Use pipe syntax only. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "|> where",
+      "|> order_by",
+      "|> limit",
+      "|> Repo.all",
+      "^limit"
+    ],
+    "must_not_contain": [
+      "from(p in Post, where"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["pin-operator-safety", "basic-where-select-order"],
+    "criterion": "pipe_chain_with_pin",
+    "weight": 1.0
+  },
+  "tier_rationale": "Chained pipe composition. One-shot for anyone comfortable with Elixir pipes.",
+  "calibration": null
+}

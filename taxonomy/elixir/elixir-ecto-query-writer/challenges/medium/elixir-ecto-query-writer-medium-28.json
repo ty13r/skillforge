@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-28",
+  "tier": "medium",
+  "title": "Compose a query with 4 pipe steps using shared binding",
+  "prompt": "Write `MyApp.Accounts.find_verified_active_in_team/1` as a pipe chain starting from `User`. Pipe: `where([u], u.active == true)`, `where([u], not is_nil(u.email_verified_at))`, `where([u], u.team_id == ^team_id)`, `order_by([u], asc: u.name)`, then `Repo.all`. Use pipe syntax exclusively. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "|> where([u], u.active == true)",
+      "|> where([u], not is_nil(u.email_verified_at))",
+      "|> where([u], u.team_id == ^team_id)",
+      "|> order_by([u], asc: u.name)",
+      "|> Repo.all()"
+    ],
+    "must_not_contain": [
+      "from(u in User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["basic-where-select-order", "pin-operator-safety"],
+    "criterion": "pipe_chain_all_steps",
+    "weight": 1.0
+  },
+  "tier_rationale": "Four-step pipe chain with pinned variable. Moderate if comfortable, fiddly if not.",
+  "calibration": null
+}

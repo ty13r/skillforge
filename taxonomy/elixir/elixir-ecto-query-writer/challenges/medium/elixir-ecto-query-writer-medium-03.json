@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-03",
+  "tier": "medium",
+  "title": "Fix an upsert that missing conflict_target and clobbers columns",
+  "prompt": "`MyApp.Accounts.Sync.sync_names/1` in `test_fixtures/upsert_replace_all_bug.ex` uses `on_conflict: :replace_all` without a `conflict_target`, which (1) raises a cryptic SQL error and (2) would silently NULL out `email`, `age`, and `last_login_at` for any row whose incoming payload only carries `name`. Rewrite it so: (a) `conflict_target: :email` (the unique index), (b) `on_conflict: {:replace, [:name, :updated_at]}` targets only the fields actually being refreshed. Write to `lib/my_app/accounts/sync.ex`.",
+  "fixture_files": ["test_fixtures/upsert_replace_all_bug.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/sync.ex"],
+    "must_contain": [
+      "conflict_target: :email",
+      "{:replace, [:name, :updated_at]}",
+      "Repo.insert_all"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "targeted_replace",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two related bugs (missing target + overzealous replace strategy). Knowledge that `{:replace, [...]}` is the right tool is non-obvious; `:replace_all` is the first thing Claude reaches for.",
+  "research_citation": "elixir-ecto/ecto#3334: 'insert(on_conflict: :replace_all)'s documentation should warn that it writes nil for non-present properties'",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-30",
+  "tier": "hard",
+  "title": "Self-join for siblings",
+  "prompt": "Write `MyApp.Accounts.users_with_same_team/0` that returns pairs of users who share a team, excluding self-pairs and duplicates (each pair appears once). Self-join on User via the team_id column, filter `u1.id < u2.id` to dedupe pairs. Select `{u1.name, u2.name, u1.team_id}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "from(u1 in User",
+      "join: u2 in User",
+      "u1.team_id == u2.team_id",
+      "u1.id < u2.id"
+    ],
+    "must_not_contain": [
+      "u1.id != u2.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "self_join_with_dedupe",
+    "weight": 1.0
+  },
+  "tier_rationale": "Self-joins require explicit variable naming (u1, u2). Pair deduplication via `<` is a subtle SQL pattern.",
+  "calibration": null
+}

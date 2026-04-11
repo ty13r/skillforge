@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-18",
+  "tier": "medium",
+  "title": "Many_to_many join via assoc/2",
+  "prompt": "Write `MyApp.Blog.posts_tagged_with/1` that takes a list of tag names and returns posts that have ANY of those tags. Use `join: t in assoc(p, :tags)` for the many_to_many relation. Filter via `t.name in ^names`. Return distinct posts. Pin the names list. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/tag.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: t in assoc(p, :tags)",
+      "t.name in ^names",
+      "distinct: true"
+    ],
+    "must_not_contain": [
+      "posts_tags"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "many_to_many_join",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing that `assoc/2` handles many_to_many transparently (no manual join-through table).",
+  "calibration": null
+}

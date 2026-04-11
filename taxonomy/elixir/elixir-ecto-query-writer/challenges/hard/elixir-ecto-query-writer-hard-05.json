@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-05",
+  "tier": "hard",
+  "title": "Hybrid preload strategy: join for belongs_to, struct for has_many",
+  "prompt": "Write `MyApp.Blog.posts_with_mixed_preloads/0` that returns all published posts with: (1) `:author` preloaded via join-preload (belongs_to, single row each, join is efficient), and (2) `:comments` preloaded via struct-preload (has_many, can explode memory, separate query is safer). Use a single `from(...)` with both strategies: `join: u in assoc(p, :author), preload: [author: u, comments: :whatever]` — note the nested list must include the `author: u` binding AND a struct-preload for `:comments`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: u in assoc(p, :author)",
+      "preload: [author: u",
+      ":comments",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "join: c in assoc(p, :comments)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins"],
+    "criterion": "hybrid_preload_strategy",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires understanding both preload strategies and combining them in one query. Most advanced preload pattern — the iron law nuance 'separate for has_many, join for belongs_to' applied simultaneously.",
+  "research_citation": "georgeguimaraes/claude-code-elixir ecto-thinking: 'Separate preloads work best for Has-many... while Join preloads suit Belongs-to'",
+  "calibration": null
+}

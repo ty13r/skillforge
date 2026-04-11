@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-15",
+  "tier": "easy",
+  "title": "Pin a binary in a string filter",
+  "prompt": "Write `MyApp.Accounts.find_by_slug/1` that finds a single user by a string slug (pretend `slug` is a field on User for this challenge — use `u.name == ^slug`). Return the result via `Repo.one/1`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.name == ^slug",
+      "Repo.one",
+      "def find_by_slug(slug)"
+    ],
+    "must_not_contain": [
+      "u.name == slug"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": [],
+    "criterion": "binary_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Trivial single-clause pin. One-shot.",
+  "calibration": null
+}

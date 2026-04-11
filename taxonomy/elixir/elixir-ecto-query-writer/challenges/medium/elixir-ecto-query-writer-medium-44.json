@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-medium-44",
+  "tier": "medium",
+  "title": "Pin operator: correct list parameterization",
+  "prompt": "Write `MyApp.Accounts.except_ids/1` that takes a list of ids to exclude and returns all other users. Use `where: u.id not in ^exclude_ids` with the list properly pinned. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.id not in ^exclude_ids",
+      "def except_ids(exclude_ids"
+    ],
+    "must_not_contain": [
+      "u.id not in exclude_ids"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "not_in_list_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "`not in ^list` is a specific form; tests that `^` applies to the whole list correctly.",
+  "calibration": null
+}

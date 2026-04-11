@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-45",
+  "tier": "medium",
+  "title": "Partition by with multi-column",
+  "prompt": "Write `MyApp.Blog.ranked_within_team_and_category/0` that ranks posts using `row_number() |> over(partition_by: [p.category_id, u.team_id], order_by: [desc: p.view_count])`. Join on the author to get `u.team_id`. Select `{p.id, p.title, rank}`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "partition_by: [p.category_id, u.team_id]",
+      "row_number()",
+      "|> over(",
+      "join: u in assoc(p, :author)"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["joins"],
+    "criterion": "multi_partition_columns",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-column partition with a joined binding. Non-obvious that `partition_by:` takes a list.",
+  "calibration": null
+}

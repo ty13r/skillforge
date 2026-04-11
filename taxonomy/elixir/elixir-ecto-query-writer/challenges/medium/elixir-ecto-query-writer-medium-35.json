@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-35",
+  "tier": "medium",
+  "title": "Insert_all with placeholders for repeated values",
+  "prompt": "Write `MyApp.Analytics.log_events/2` that bulk-inserts a list of event rows into an `events` table. Each event row should have a `created_at` field — use `Repo.insert_all/3` with the `placeholders:` option to interpolate `DateTime.utc_now()` once and reference it via `{:placeholder, :now}` in every row. This avoids generating N identical timestamps. Use raw `\"events\"` (no schema). Write to `lib/my_app/analytics.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/analytics.ex"],
+    "must_contain": [
+      "Repo.insert_all",
+      "placeholders:",
+      "{:placeholder, :now}",
+      "DateTime.utc_now"
+    ],
+    "must_not_contain": [
+      "Enum.map(events, fn"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "placeholders_option",
+    "weight": 1.0
+  },
+  "tier_rationale": "The `placeholders:` option is documented but rarely-used. Non-obvious pattern.",
+  "calibration": null
+}

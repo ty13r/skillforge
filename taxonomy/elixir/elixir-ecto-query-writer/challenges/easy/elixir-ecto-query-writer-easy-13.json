@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-13",
+  "tier": "easy",
+  "title": "Filter users by a pinned id list",
+  "prompt": "Write `MyApp.Accounts.list_users/1` that takes a list of user ids and returns the matching User structs. Use `u.id in ^ids` with the pin operator to parameterize the list. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.id in ^ids",
+      "def list_users(ids",
+      "Repo.all"
+    ],
+    "must_not_contain": [
+      "u.id in ids"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "in_list_pin",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step: `in ^ids` is the canonical parameterized list form. One-shot mechanics.",
+  "calibration": null
+}

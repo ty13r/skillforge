@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-26",
+  "tier": "hard",
+  "title": "Compile-time pin diagnosis with profile evidence",
+  "prompt": "Given this query in `MyApp.Profile.active_records/0`: `@active_states [\"open\", \"active\", \"running\"]; from(r in Record, where: r.state in ^@active_states)`. The @-pin causes Postgres to treat the list as a parameter, which prevents index selectivity on a state column. Rewrite to: a) use a module function that splices the list via `unquote_splicing` or b) just inline the list literal without `^`. Document the tradeoff in a code comment. Write to `lib/my_app/profile.ex`. (Pretend a `Record` schema exists.)",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/profile.ex"],
+    "must_contain": [
+      "@active_states",
+      "# ",
+      "r.state in ["
+    ],
+    "must_not_contain": [
+      "r.state in ^@active_states"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "inline_compile_constant",
+    "weight": 1.0
+  },
+  "tier_rationale": "Same nuance as 13 but for a string-list. Claude defaults to pinning.",
+  "research_citation": "Elixir Forum: 'Ecto query often timing out when using a pin next to module attribute'",
+  "calibration": null
+}

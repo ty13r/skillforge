@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-24",
+  "tier": "medium",
+  "title": "Distinct on with order_by",
+  "prompt": "Write `MyApp.Blog.latest_post_per_user/0` that returns one post per author — the latest one. Use `distinct: [desc: p.user_id]` combined with `order_by: [asc: p.user_id, desc: p.inserted_at]`. PostgreSQL's DISTINCT ON picks the first row per `user_id` group in the order specified. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "distinct:",
+      "p.user_id",
+      "order_by:",
+      "desc: p.inserted_at"
+    ],
+    "must_not_contain": [
+      "row_number()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "distinct_on_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "DISTINCT ON is a PostgreSQL feature Ecto supports but Claude rarely knows. Alternative `row_number() <= 1` window form works but is more code.",
+  "calibration": null
+}

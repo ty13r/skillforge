@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-18",
+  "tier": "hard",
+  "title": "Fragment: replace COALESCE with typed coalesce + sum",
+  "prompt": "Given `fragment(\"COALESCE(SUM(?), 0)\", o.total)` in a query, rewrite it using Ecto's typed composition: `coalesce(sum(o.total), 0)`. Build a complete function `MyApp.Shop.totals_per_customer/0` that groups orders by user_id, selects `{u.id, u.name, coalesce(sum(o.total), 0)}` via left_join. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "coalesce(sum(o.total), 0)",
+      "left_join: o",
+      "group_by: [u.id, u.name]"
+    ],
+    "must_not_contain": [
+      "fragment(\"COALESCE",
+      "fragment(\"SUM"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "typed_coalesce_sum",
+    "weight": 1.0
+  },
+  "tier_rationale": "Replacing fragments with typed equivalents requires knowing what typed Ecto functions exist. `coalesce` + `sum` inside an aggregate is non-obvious.",
+  "calibration": null
+}

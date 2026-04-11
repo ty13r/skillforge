@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-26",
+  "tier": "medium",
+  "title": "Lag window function for period-over-period delta",
+  "prompt": "Write `MyApp.Blog.view_count_deltas/0` that returns each post with a `delta` column showing the difference between its `view_count` and the previous post's `view_count` (ordered by `inserted_at asc`). Use `lag(p.view_count) |> over(order_by: [asc: p.inserted_at])`. Handle the first row (where lag is NULL) via `coalesce`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "lag(",
+      "|> over(",
+      "order_by: [asc: p.inserted_at]",
+      "coalesce"
+    ],
+    "must_not_contain": [
+      "fragment(\"lag("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "typed_lag",
+    "weight": 1.0
+  },
+  "tier_rationale": "Lag is less common than row_number; must handle NULL first-row via coalesce.",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-21",
+  "tier": "medium",
+  "title": "Fragment with JSON extraction",
+  "prompt": "Write `MyApp.Blog.posts_by_metadata/1` that takes a metadata key string and returns posts where a PostgreSQL JSONB `metadata` column contains that key. Use `fragment(\"? \\\\? ?\", p.metadata, ^key)` — the `\\?` is how you escape `?` in an Ecto fragment to avoid it being treated as a placeholder. Pin the key. Write to `lib/my_app/blog.ex`. (Assume a `metadata` jsonb field exists on Post for the purpose of this challenge.)",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(",
+      "p.metadata",
+      "^key"
+    ],
+    "must_not_contain": [
+      "\"#{key}\"",
+      "fragment(\"p.metadata"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "json_fragment_with_pin",
+    "weight": 1.0
+  },
+  "tier_rationale": "JSON fragment with escaped `?` and a pinned value. Moderate because the escape mechanism is non-obvious.",
+  "calibration": null
+}

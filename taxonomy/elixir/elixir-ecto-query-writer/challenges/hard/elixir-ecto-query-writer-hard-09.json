@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-09",
+  "tier": "hard",
+  "title": "Join preload with named binding threading through where",
+  "prompt": "Write `MyApp.Blog.active_authors_recent_posts/1` that: (a) joins posts with their author via named binding `as: :author`, (b) filters to authors with `u.active == true` using the named binding, (c) filters posts to the last 30 days, (d) preloads `:author` via the threaded binding `preload: [author: u]`, (e) orders by `inserted_at desc`. The binding name must work both in the where clause AND in the preload. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: u in assoc(p, :author)",
+      "as: :author",
+      "u.active == true",
+      "preload: [author: u]",
+      "order_by: [desc: p.inserted_at]"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["preloads", "query-composition-style"],
+    "criterion": "named_binding_full_threading",
+    "weight": 1.0
+  },
+  "tier_rationale": "The named binding has to carry through where, preload, and order_by simultaneously — several places to lose the thread.",
+  "calibration": null
+}

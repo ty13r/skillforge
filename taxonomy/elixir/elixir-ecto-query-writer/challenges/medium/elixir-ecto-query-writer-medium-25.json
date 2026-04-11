@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-medium-25",
+  "tier": "medium",
+  "title": "Compose four pipe steps with shared named binding",
+  "prompt": "Write `MyApp.Blog.PostQueries` module with four builders: `base/0` (returns `from(p in Post, as: :post)`), `published/1`, `in_category/2`, `with_author/1` (the last one `join: u in assoc(p, :author), as: :author`), and `by_recency/1`. Each takes and returns an `Ecto.Queryable`. Write a top-level `MyApp.Blog.recent_published_in_category/1` that chains them all. Write to `lib/my_app/blog/post_queries.ex` and `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/post_queries.ex", "lib/my_app/blog.ex"],
+    "must_contain": [
+      "defmodule MyApp.Blog.PostQueries",
+      "def base do",
+      "as: :post",
+      "as: :author",
+      "[post: p]",
+      "|> PostQueries"
+    ],
+    "must_not_contain": [
+      "def recent_published_in_category(category_id) do\n    from"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["joins"],
+    "criterion": "multi_builder_composition",
+    "weight": 1.0
+  },
+  "tier_rationale": "Four distinct builders with named bindings + composition in a caller. Requires getting the `as:` conventions right for downstream references.",
+  "calibration": null
+}

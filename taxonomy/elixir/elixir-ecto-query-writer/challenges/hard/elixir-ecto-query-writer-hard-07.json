@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-07",
+  "tier": "hard",
+  "title": "Conditional upsert: only update if newer",
+  "prompt": "Write `MyApp.Accounts.conditional_upsert/1` that inserts a User record, but on conflict only updates if the incoming `updated_at` is STRICTLY NEWER than the existing one. Use `insert_all/3` with `on_conflict: (from u in User, update: [set: [...]], where: fragment(\"EXCLUDED.updated_at > ?\", u.updated_at))` + `conflict_target: :email`. EXCLUDED is PostgreSQL's pseudo-table for the incoming row. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "on_conflict:",
+      "update: [set:",
+      "fragment(\"EXCLUDED",
+      "conflict_target: :email"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "conditional_upsert_excluded",
+    "weight": 1.0
+  },
+  "tier_rationale": "Dynamic `on_conflict` with update + where clause is advanced. Most Claude attempts hit `on_conflict: :replace_all` or similar.",
+  "research_citation": "elixir-ecto/ecto issue #2382: 'Upsert has unexpected effects on timestamps'",
+  "calibration": null
+}

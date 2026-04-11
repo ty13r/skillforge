@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-21",
+  "tier": "easy",
+  "title": "Subquery: users whose id is in a list of commenter ids",
+  "prompt": "Write `MyApp.Accounts.active_commenters/0` that returns users whose id appears in the subquery `from c in Comment, distinct: true, select: c.user_id`. Use `where: u.id in subquery(q)` — NOT a raw list round-trip. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "subquery(",
+      "u.id in subquery",
+      "distinct: true",
+      "select: c.user_id"
+    ],
+    "must_not_contain": [
+      "Repo.all(commenter_ids)",
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "subquery_helper_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces `subquery/1`; single-step and well-documented.",
+  "calibration": null
+}

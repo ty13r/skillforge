@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-hard-32",
+  "tier": "hard",
+  "title": "Preload ordering via query-tuple",
+  "prompt": "Write `MyApp.Accounts.users_with_recent_comments_first/0` that returns users with `:comments` preloaded AND each user's comments ordered by `inserted_at desc`. Use query-tuple preload syntax: `preload: [comments: ^ordered_comments_query]` where `ordered_comments_query` is `from(c in Comment, order_by: [desc: c.inserted_at])`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "ordered_comments",
+      "order_by: [desc: c.inserted_at]",
+      "preload: [comments: ^"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "ordered_preload_query_tuple",
+    "weight": 1.0
+  },
+  "tier_rationale": "Query-tuple preload with ordering — niche but valuable when preloads need to be ordered.",
+  "calibration": null
+}

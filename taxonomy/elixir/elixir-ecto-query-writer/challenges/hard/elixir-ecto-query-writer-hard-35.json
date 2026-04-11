@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-35",
+  "tier": "hard",
+  "title": "Cursor pagination over aggregated feed",
+  "prompt": "Write `MyApp.Blog.aggregated_cursor_page/1` that returns a cursor-paginated list of `{category, post_count}` ordered by `post_count desc`, with `category_id` as unique tie-breaker. The cursor is `{post_count, category_id}`. Use a group_by + count query as the base, then keyset-filter. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "count(p.id)",
+      "group_by: [c.id, c.name]",
+      "having:",
+      "order_by: [desc: count(p.id), desc: c.id]"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "aggregated_cursor",
+    "weight": 1.0
+  },
+  "tier_rationale": "Cursor over an aggregated column is the hardest pagination scenario — must use HAVING for the cursor filter.",
+  "calibration": null
+}

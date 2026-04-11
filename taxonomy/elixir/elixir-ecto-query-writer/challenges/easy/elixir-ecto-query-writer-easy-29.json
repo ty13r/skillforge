@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-29",
+  "tier": "easy",
+  "title": "Fragment with placeholders and pinned values",
+  "prompt": "Write `MyApp.Blog.title_ilike/1` that takes a search term and returns posts whose title matches case-insensitively. Use a fragment with a `?` placeholder and pin the pattern: `fragment(\"? ILIKE ?\", p.title, ^pattern)`. Build the pattern string outside the fragment. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(\"? ILIKE ?\"",
+      "p.title",
+      "^pattern"
+    ],
+    "must_not_contain": [
+      "\"#{term}",
+      "\"#{q}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "placeholder_fragment",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical safe-fragment pattern.",
+  "calibration": null
+}

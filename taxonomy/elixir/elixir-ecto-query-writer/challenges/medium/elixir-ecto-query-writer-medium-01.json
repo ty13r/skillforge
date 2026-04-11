@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-01",
+  "tier": "medium",
+  "title": "Switch from join-preload to struct-preload on has_many",
+  "prompt": "`MyApp.Blog.Feed.users_with_posts/0` in `test_fixtures/join_preload_hasmany.ex` uses a join-preload for `has_many :posts`, which consumes roughly 10x more memory than a separate-query preload because the Cartesian product materializes in the result set. Rewrite the function to use a struct-preload (`preload: [:posts]`) instead. Keep the same behavior (all active users with their posts). Write the corrected module to `lib/my_app/blog/feed.ex`.",
+  "fixture_files": ["test_fixtures/join_preload_hasmany.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/feed.ex"],
+    "must_contain": [
+      "preload: [:posts]",
+      "where: u.active == true",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "join: p in assoc(u, :posts)",
+      "preload: [posts: p]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "struct_preload_on_has_many",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the `has_many -> struct preload` vs `belongs_to -> join preload` heuristic. Claude defaults to join-preload for all associations; this is the single most-enforced iron law in community plugins.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix: 'Separate queries for has_many, JOIN for belongs_to.'",
+  "calibration": null
+}

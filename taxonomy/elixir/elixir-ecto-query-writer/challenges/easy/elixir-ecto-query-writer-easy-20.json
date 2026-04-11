@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-20",
+  "tier": "easy",
+  "title": "Aggregate sum across a has_many join",
+  "prompt": "Write `MyApp.Shop.total_spend_per_user/0` that joins users with their orders, groups by user id, and selects `{u.id, u.name, sum(o.total)}`. Use coalesce with 0 for users with no orders (`coalesce(sum(o.total), 0)`). Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "sum(o.total)",
+      "coalesce",
+      "group_by: [u.id, u.name]",
+      "left_join: o"
+    ],
+    "must_not_contain": [
+      "select: {u.id, u.name, sum(o.total)}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins"],
+    "criterion": "coalesced_sum",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical sum-with-coalesce pattern; easy once the user has seen the idiom.",
+  "calibration": null
+}

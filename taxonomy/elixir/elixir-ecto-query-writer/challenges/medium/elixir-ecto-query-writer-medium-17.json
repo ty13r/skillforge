@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-17",
+  "tier": "medium",
+  "title": "Three-table inner join with named bindings",
+  "prompt": "Write `MyApp.Blog.posts_authored_in_team/1` that takes a `team_id` and returns posts authored by users in that team, along with the category name. Chain three tables: Post -> User -> (filter by team_id) -> join Category. Use named bindings `:post`, `:author`, `:category`, and reference them in select: `{p.title, u.name, c.name}`. Pin `team_id`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "as: :post",
+      "as: :author",
+      "as: :category",
+      "u.team_id == ^team_id",
+      "select: {p.title, u.name, c.name}"
+    ],
+    "must_not_contain": [
+      "u.team_id == team_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["pin-operator-safety", "query-composition-style"],
+    "criterion": "three_way_named_join",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three joins with three named bindings in a select. Moderate complexity.",
+  "calibration": null
+}

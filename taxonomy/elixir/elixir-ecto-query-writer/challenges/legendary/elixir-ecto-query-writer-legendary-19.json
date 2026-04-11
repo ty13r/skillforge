@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-19",
+  "tier": "legendary",
+  "title": "Full-text search via fragment with rank",
+  "prompt": "Write `MyApp.Blog.fulltext_search/1` that takes a query string and uses PostgreSQL's to_tsvector/to_tsquery for full-text search on Post.body. Return posts ordered by match rank descending. Use: `fragment(\"to_tsvector('english', ?) @@ to_tsquery('english', ?)\", p.body, ^term)` for the where clause and `fragment(\"ts_rank(to_tsvector('english', ?), to_tsquery('english', ?))\", p.body, ^term)` for the rank. Pin the term. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(\"to_tsvector",
+      "@@",
+      "to_tsquery",
+      "^term",
+      "ts_rank",
+      "order_by:"
+    ],
+    "must_not_contain": [
+      "\"to_tsvector('english', #{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "tsvector_fulltext",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full-text search fragment with proper placeholders for both WHERE and ORDER BY. Advanced PostgreSQL feature Claude often botches.",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-28",
+  "tier": "easy",
+  "title": "Replace a typed function with a typed equivalent",
+  "prompt": "Given a query that uses `fragment(\"COALESCE(?, 0)\", sum(o.total))`, rewrite it to use Ecto's typed `coalesce(sum(o.total), 0)`. Build a complete `MyApp.Shop.total_revenue/0` that returns the total revenue. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "coalesce(sum(o.total), 0)",
+      "from(o in Order"
+    ],
+    "must_not_contain": [
+      "fragment(\"COALESCE"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "typed_coalesce",
+    "weight": 1.0
+  },
+  "tier_rationale": "Simple swap to the typed function; single-step.",
+  "research_citation": "Jonny Eberhardt: 'Excessive use of fragment/1 can reduce the portability and maintainability of your code'",
+  "calibration": null
+}

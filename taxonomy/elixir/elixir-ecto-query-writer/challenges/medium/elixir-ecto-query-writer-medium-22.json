@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-22",
+  "tier": "medium",
+  "title": "Subquery as join source",
+  "prompt": "Write `MyApp.Accounts.users_joined_to_top_commenters/0` that joins users with a subquery returning `top_commenters` (user_id + total_count). The subquery counts comments grouped by user_id and filters `having count(c.id) >= 10`. The outer query uses `join: tc in subquery(top_commenters_query)` and selects `{u.id, u.name, tc.total_count}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "subquery(",
+      "join:",
+      "in subquery(",
+      "having:",
+      "group_by:"
+    ],
+    "must_not_contain": [
+      "Repo.all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by", "joins"],
+    "criterion": "subquery_as_join_source",
+    "weight": 1.0
+  },
+  "tier_rationale": "Subquery-as-join-source pattern is distinct from subquery-in-where. Requires both an inner aggregate and an outer join.",
+  "calibration": null
+}

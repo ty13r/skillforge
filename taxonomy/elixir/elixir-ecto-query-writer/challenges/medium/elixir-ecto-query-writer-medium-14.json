@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-14",
+  "tier": "medium",
+  "title": "Dynamic order_by with direction parameter",
+  "prompt": "Write `MyApp.Blog.posts_sorted/1` that takes a keyword list like `[by: :published_at, dir: :desc]` and returns posts ordered accordingly. Only `:title`, `:published_at`, and `:view_count` are valid sort fields; only `:asc` and `:desc` are valid directions. Use Ecto's `order_by` with a dynamic direction tuple — `order_by: ^[{dir, field}]`. Validate inputs or default to safe values. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "order_by: ^",
+      "[{",
+      "def posts_sorted"
+    ],
+    "must_not_contain": [
+      "Enum.reduce(opts, query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "dynamic_order_by",
+    "weight": 1.0
+  },
+  "tier_rationale": "Dynamic ordering via pinned keyword list is documented but uncommon. Must validate inputs and handle default fallback.",
+  "calibration": null
+}

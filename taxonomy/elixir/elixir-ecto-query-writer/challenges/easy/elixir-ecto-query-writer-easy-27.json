@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-27",
+  "tier": "easy",
+  "title": "Select subset as map",
+  "prompt": "Write `MyApp.Accounts.id_name_pairs/0` that returns a list of maps `%{id: ..., name: ...}` for all users. Use `select: map(u, [:id, :name])`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "select: map(u, [:id, :name])",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "select: [:id, :name]",
+      "select: struct"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": [],
+    "criterion": "map_helper_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "The `select: map(u, [:id, :name])` helper is documented but non-obvious; still a single-step call once known.",
+  "research_citation": "Ecto.Query hexdocs: 'for maps use select: map(p, [:name])'",
+  "calibration": null
+}

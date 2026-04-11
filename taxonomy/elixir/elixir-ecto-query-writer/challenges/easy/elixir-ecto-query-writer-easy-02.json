@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-02",
+  "tier": "easy",
+  "title": "Fix N+1 by preloading :posts at query time",
+  "prompt": "`MyApp.Accounts.ReportGenerator` in `test_fixtures/n_plus_one_comments.ex` iterates over all users and accesses `user.posts` per iteration, triggering an N+1. Fix it by preloading `:posts` at query-build time using `Ecto.Query.preload/3`. Do NOT use `Ecto.Repo.preload/2` in a loop. Write the fix to `lib/my_app/accounts/report_generator.ex`.",
+  "fixture_files": ["test_fixtures/n_plus_one_comments.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/report_generator.ex"],
+    "must_contain": [
+      "preload: [:posts]",
+      "from(u in User",
+      "Enum.map"
+    ],
+    "must_not_contain": [
+      "Repo.preload(users",
+      "Enum.map(users, fn user -> Repo"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "preload_at_query_time",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step fix: move preload from runtime iteration to query-build time. A widely known N+1 remedy — pattern appears in the first chapter of every Ecto preload tutorial.",
+  "research_citation": "AppSignal: 'An N+1 query with 200 users and 200 roles takes 20 seconds; using preload, 600 milliseconds'",
+  "calibration": null
+}

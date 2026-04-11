@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-42",
+  "tier": "medium",
+  "title": "Build Enum.map report from preloaded users",
+  "prompt": "Build a complete report function `MyApp.Reports.user_activity/0`. Load all active users with `:posts` and `:comments` preloaded in a single call (struct preload since both are has_many). Then use `Enum.map/2` to produce `%{name, post_count, comment_count}` for each. No N+1 — preload at query time. Write to `lib/my_app/reports.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports.ex"],
+    "must_contain": [
+      "preload: [:posts, :comments]",
+      "Enum.map",
+      "length(user.posts)",
+      "length(user.comments)"
+    ],
+    "must_not_contain": [
+      "Repo.preload",
+      "Enum.count"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "multi_preload_at_query",
+    "weight": 1.0
+  },
+  "tier_rationale": "End-to-end report with multi-assoc preload. Canonical pattern but requires knowing to preload both in one call.",
+  "calibration": null
+}

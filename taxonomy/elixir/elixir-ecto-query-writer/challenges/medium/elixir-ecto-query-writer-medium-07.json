@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-07",
+  "tier": "medium",
+  "title": "Fix a non-deterministic cursor pagination",
+  "prompt": "`MyApp.Blog.FeedCursor.feed/1` in `test_fixtures/cursor_non_deterministic.ex` paginates by `published_at` alone, which is not unique — pages can drop or duplicate rows at ties. Add `id` as a secondary sort + cursor field. The cursor should be a `{ts, last_id}` tuple, and the where clause should use the row-wise comparison pattern `(published_at < ^ts) or (published_at == ^ts and id < ^last_id)`. Write to `lib/my_app/blog/feed_cursor.ex`.",
+  "fixture_files": ["test_fixtures/cursor_non_deterministic.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/feed_cursor.ex"],
+    "must_contain": [
+      "order_by: [desc: p.published_at, desc: p.id]",
+      "p.published_at == ^",
+      "p.id < ^",
+      "p.published_at < ^"
+    ],
+    "must_not_contain": [
+      "order_by: [desc: p.published_at]\n      )"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "tuple_cursor_comparison",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing the non-unique-ts bug AND writing the compound comparison correctly. Easy to miss the `==` case that handles ties.",
+  "research_citation": "duffelhq/paginator README: 'This method requires a deterministic sort order; if the columns you are currently using for sorting don't match that definition, just add any unique column'",
+  "calibration": null
+}

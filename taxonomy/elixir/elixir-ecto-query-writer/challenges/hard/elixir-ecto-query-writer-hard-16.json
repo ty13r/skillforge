@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-16",
+  "tier": "hard",
+  "title": "Aggregate-preserving join to retain parent rows",
+  "prompt": "Write `MyApp.Accounts.users_with_recent_post_counts/0` that returns every user (INCLUDING those with no recent posts) with the count of their posts from the last 7 days. The left_join's filter (last 7 days) MUST be inside the `on:` clause, not in the `where:`, or users with zero recent posts will disappear. Use `coalesce(count(p.id), 0)` and group by user fields. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "left_join: p in assoc(u, :posts)",
+      "on:",
+      "p.inserted_at >",
+      "group_by: [u.id, u.name]",
+      "coalesce"
+    ],
+    "must_not_contain": [
+      "where: p.inserted_at >"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "filter_in_on_clause_preserves_outer",
+    "weight": 1.0
+  },
+  "tier_rationale": "Subtle semantic bug (where-vs-on on left join) that most Claude attempts miss. Also combines aggregate + coalesce.",
+  "calibration": null
+}

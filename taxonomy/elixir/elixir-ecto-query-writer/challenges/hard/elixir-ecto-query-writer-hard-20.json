@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-hard-20",
+  "tier": "hard",
+  "title": "Window sum running total",
+  "prompt": "Write `MyApp.Shop.running_revenue/0` that selects orders with a running total column (cumulative revenue over time). Use `sum(o.total) |> over(order_by: [asc: o.placed_at])` as the running sum window. Select `{o.id, o.placed_at, o.total, running_total}`. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "sum(o.total)",
+      "|> over(",
+      "order_by: [asc: o.placed_at]"
+    ],
+    "must_not_contain": [
+      "fragment(\"sum"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "running_sum_window",
+    "weight": 1.0
+  },
+  "tier_rationale": "Running aggregates via window sum — different from group_by sum. Requires knowing both APIs.",
+  "calibration": null
+}

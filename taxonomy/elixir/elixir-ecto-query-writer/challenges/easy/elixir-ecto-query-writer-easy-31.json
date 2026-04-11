@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-31",
+  "tier": "easy",
+  "title": "Having clause for filtered groups",
+  "prompt": "Write `MyApp.Blog.prolific_authors/0` that returns authors with more than 5 posts. Use `group_by` on user id, then `having: count(p.id) > 5` to filter groups. Select `{u.id, u.name, count(p.id)}`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "having: count(p.id) > 5",
+      "group_by: [u.id, u.name]",
+      "join: p in assoc(u, :posts)"
+    ],
+    "must_not_contain": [
+      "where: count(p.id)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins"],
+    "criterion": "having_clause",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical `having` usage. Single clause, well-documented.",
+  "calibration": null
+}

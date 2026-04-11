@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-06",
+  "tier": "legendary",
+  "title": "Pin-operator: precise compile-time vs runtime distinction across a mixed query",
+  "prompt": "Write `MyApp.Blog.mixed_pin_query/2` that takes `user_id` and `min_score`, uses a module attribute `@allowed_statuses [\"published\", \"featured\"]` that SHOULD NOT be pinned (for query-plan performance), and filters: `p.user_id == ^user_id` (runtime, pinned), `p.score >= ^min_score` (runtime, pinned), `p.status in @allowed_statuses` (compile-time, NOT pinned so PostgreSQL can inline the list literal and pick a selective index). Add a code comment explaining why the status list is NOT pinned. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "@allowed_statuses",
+      "p.user_id == ^user_id",
+      "p.score >= ^min_score",
+      "p.status in [",
+      "# "
+    ],
+    "must_not_contain": [
+      "p.status in ^@allowed_statuses"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "mixed_pin_correct",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing BOTH sides of the pin rule — runtime = pin, compile-time = no pin, and the PG query plan reason. Subtle and rare.",
+  "research_citation": "hubertlepicki: 'The change to not using the pin operator has a profound overall impact on the performance'",
+  "calibration": null
+}

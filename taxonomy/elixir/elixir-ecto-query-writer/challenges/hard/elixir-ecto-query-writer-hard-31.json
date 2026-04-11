@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-31",
+  "tier": "hard",
+  "title": "Aggregate with FILTER clause via fragment",
+  "prompt": "Write `MyApp.Blog.per_category_published_count/0` that returns each category with two counts: `total_posts` (all posts) AND `published_posts` (only published). Use PostgreSQL FILTER: `fragment(\"COUNT(?) FILTER (WHERE ?)\", p.id, p.published)` for the filtered count. Group by category. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "count(p.id)",
+      "fragment(\"COUNT(?) FILTER",
+      "p.published",
+      "group_by: [c.id, c.name]"
+    ],
+    "must_not_contain": [
+      "where: p.published == true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "filtered_aggregate",
+    "weight": 1.0
+  },
+  "tier_rationale": "FILTER clause has no typed Ecto equivalent — must use fragment. Getting BOTH counts in one query avoids a second round-trip.",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-31",
+  "tier": "medium",
+  "title": "Count distinct with group_by",
+  "prompt": "Write `MyApp.Blog.unique_commenters_per_post/0` that returns each post with a count of distinct commenters. Group by post id+title, then select `{p.id, p.title, count(c.user_id, :distinct)}`. Use `count/2` with `:distinct` as the second argument — NOT `count(fragment(\"DISTINCT ...\"))`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "count(c.user_id, :distinct)",
+      "group_by: [p.id, p.title]",
+      "left_join: c"
+    ],
+    "must_not_contain": [
+      "fragment(\"DISTINCT",
+      "fragment(\"COUNT(DISTINCT"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins"],
+    "criterion": "count_distinct_typed",
+    "weight": 1.0
+  },
+  "tier_rationale": "Typed `count/2 :distinct` is easy to miss; Claude often reaches for fragment.",
+  "calibration": null
+}

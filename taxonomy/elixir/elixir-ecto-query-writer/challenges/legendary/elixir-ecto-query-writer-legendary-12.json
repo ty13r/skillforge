@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-12",
+  "tier": "legendary",
+  "title": "Fragment-required window with custom SQL function",
+  "prompt": "Write `MyApp.Blog.weighted_score_ranking/0` that computes a weighted rank using `rank() |> over(order_by: ...)` where the order clause is a complex expression `p.view_count * 0.7 + p.score * 0.3`. Since Ecto's typed API cannot express this inside order_by, use `fragment(\"(? * 0.7 + ? * 0.3)\", p.view_count, p.score)` referenced via `order_by: [desc: fragment(...)]`. The `rank()` remains typed. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "rank()",
+      "|> over(",
+      "order_by: [desc: fragment(",
+      "p.view_count",
+      "p.score"
+    ],
+    "must_not_contain": [
+      "fragment(\"rank"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "fragment_inside_typed_window",
+    "weight": 1.0
+  },
+  "tier_rationale": "Mixing typed window + fragment for expression is advanced — requires knowing where typing ends and fragments start.",
+  "calibration": null
+}

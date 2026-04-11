@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-easy-34",
+  "tier": "easy",
+  "title": "Compose two query functions via pipe",
+  "prompt": "Define two query builders: `MyApp.Accounts.active_users/1` which filters `active: true`, and `MyApp.Accounts.by_team/2` which filters by `team_id`. Both take and return an `Ecto.Queryable`. Write a caller `MyApp.Accounts.active_in_team/1` that composes them via pipe. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "def active_users(query",
+      "def by_team(query",
+      "|> active_users()",
+      "|> by_team(",
+      "^team_id"
+    ],
+    "must_not_contain": [
+      "def active_users do",
+      "def by_team(team_id) do"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "composable_builders",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical composable-builder pattern; single file, one level of composition.",
+  "calibration": null
+}

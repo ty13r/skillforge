@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-hard-38",
+  "tier": "hard",
+  "title": "Dynamic + subquery composition",
+  "prompt": "Write `MyApp.Accounts.Search.with_filters_and_subqueries/1` that takes opts with optional `:name` and `:has_posts` (boolean). If `:name` present, filter by ilike on name. If `:has_posts == true`, add `where: exists(subquery(posts_by_user))`. Both optional. Both use dynamic/2 for composition. Write to `lib/my_app/accounts/search.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/search.ex"],
+    "must_contain": [
+      "dynamic(true)",
+      "dynamic(",
+      "ilike(u.name",
+      "exists(",
+      "subquery(",
+      "parent_as"
+    ],
+    "must_not_contain": [
+      "if Keyword.get"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["subqueries"],
+    "criterion": "dynamic_with_subquery",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combining dynamic with exists+subquery is non-trivial; `exists` inside a dynamic requires care.",
+  "calibration": null
+}

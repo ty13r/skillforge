@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-29",
+  "tier": "medium",
+  "title": "Left join preload on belongs_to + filter",
+  "prompt": "Write `MyApp.Blog.published_posts_with_authors/0` that returns published posts with their author preloaded via join-preload (because `belongs_to :author` is single-row, join-preload is appropriate). Filter `published: true`. Use `left_join: u in assoc(p, :author)` and thread the binding into `preload: [author: u]`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "left_join: u in assoc(p, :author)",
+      "preload: [author: u]",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "preload: [:author]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins"],
+    "criterion": "belongs_to_join_preload_threaded",
+    "weight": 1.0
+  },
+  "tier_rationale": "Reinforces the belongs_to preload policy + binding threading. Nuanced enough to be medium.",
+  "calibration": null
+}

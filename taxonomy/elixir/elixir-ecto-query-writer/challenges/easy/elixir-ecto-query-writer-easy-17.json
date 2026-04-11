@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-17",
+  "tier": "easy",
+  "title": "Inner join two tables with named bindings",
+  "prompt": "Write `MyApp.Blog.posts_with_category_named/0` that inner-joins posts with their category and names both bindings: `as: :post` on the base and `as: :category` on the join. Return `select: {p.title, c.name}`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "as: :post",
+      "as: :category",
+      "join: c in assoc(p, :category)",
+      "select: {p.title, c.name}"
+    ],
+    "must_not_contain": [
+      "on: c.id == p.category_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "named_bindings_used",
+    "weight": 1.0
+  },
+  "tier_rationale": "Mechanical application of `as:` on both sides of a simple inner-join.",
+  "calibration": null
+}
