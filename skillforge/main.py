@@ -64,6 +64,7 @@ from skillforge.db.database import init_db
 from skillforge.db.queries import mark_zombie_runs
 from skillforge.db.seed_loader import load_seeds
 from skillforge.db.taxonomy_seeds import load_taxonomy
+from skillforge.seeds.mock_run_loader import load_mock_runs
 
 logger = logging.getLogger("skillforge")
 
@@ -77,6 +78,10 @@ async def lifespan(app: FastAPI):
     """
     await init_db()
     await load_seeds()
+    try:
+        await load_mock_runs()
+    except Exception as exc:  # pragma: no cover - fail-soft on mock run load
+        logger.exception("Mock run loader failed: %s", exc)
     try:
         taxonomy_diag = await load_taxonomy()
         logger.info(
