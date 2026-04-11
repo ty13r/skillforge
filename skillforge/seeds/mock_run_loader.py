@@ -256,13 +256,22 @@ async def _load_one(path: Path) -> None:
     if run.best_skill is not None:
         best_skill_id = run.best_skill.id
 
-    # 5. Variants — FK to skill_genomes.
+    # 5. Variant evolutions — variants.evolution_id FKs here, so vevos first.
+    # Save vevos with winner_variant_id=NULL so the variant's FK to vevo
+    # resolves; we'll re-save vevos after variants to set winner_variant_id.
+    raw_vevos = document.get("variant_evolutions", [])
+    for vevo_dict in raw_vevos:
+        vevo_stub = VariantEvolution.from_dict(vevo_dict)
+        vevo_stub.winner_variant_id = None
+        await save_variant_evolution(vevo_stub)
+
+    # 6. Variants — FK to skill_genomes + variant_evolutions.
     for var_dict in document.get("variants", []):
         variant = Variant.from_dict(var_dict)
         await save_variant(variant)
 
-    # 6. Variant evolutions — FK to variants + run.
-    for vevo_dict in document.get("variant_evolutions", []):
+    # 6b. Re-save vevos with their winner_variant_id now that variants exist.
+    for vevo_dict in raw_vevos:
         vevo = VariantEvolution.from_dict(vevo_dict)
         await save_variant_evolution(vevo)
 
