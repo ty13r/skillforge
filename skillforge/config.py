@@ -200,6 +200,10 @@ MODEL_DEFAULTS: dict[str, str] = {
     "judge_attribution": DEFAULT_MODEL,
     "l2_trigger": DEFAULT_MODEL,
     "spec_assistant": DEFAULT_MODEL,
+    # v2.0 — structured-output agents for atomic variant evolution
+    "taxonomist": DEFAULT_MODEL,
+    "scientist": DEFAULT_MODEL,
+    "engineer": DEFAULT_MODEL,
 }
 
 
@@ -221,6 +225,7 @@ ANTHROPIC_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
 
 # --- Startup diagnostic (all constants now defined) ---------------------------
 import logging as _logging
+
 _logging.getLogger("skillforge.config").info(
     "gating_disabled=%s codes_loaded=%d backend=%s api_key=%s",
     GATING_DISABLED, len(INVITE_CODES), COMPETITOR_BACKEND,

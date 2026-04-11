@@ -64,6 +64,10 @@ export default function SpecializationInput() {
   const [populationSize, setPopulationSize] = useState(5);
   const [numGenerations, setNumGenerations] = useState(3);
   const [budget, setBudget] = useState(10);
+  // v2.0 — Auto lets the Taxonomist decide; Atomic and Classic force the mode.
+  const [evolutionMode, setEvolutionMode] = useState<"auto" | "atomic" | "molecular">(
+    "auto",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upload, setUpload] = useState<UploadResponse | null>(null);
@@ -133,13 +137,18 @@ export default function SpecializationInput() {
             }),
           });
         } else {
-          const body: EvolveRequest & { invite_code?: string } = {
+          const body: EvolveRequest & {
+            invite_code?: string;
+            evolution_mode?: string;
+          } = {
             mode: "domain",
             specialization,
             population_size: populationSize,
             num_generations: numGenerations,
             max_budget_usd: budget,
             invite_code: inviteCode ?? undefined,
+            // "auto" maps to undefined so the Taxonomist decides server-side
+            evolution_mode: evolutionMode === "auto" ? undefined : evolutionMode,
           };
           res = await fetch("/api/evolve", {
             method: "POST",
@@ -407,6 +416,56 @@ export default function SpecializationInput() {
           </div>
         </div>
       )}
+
+      {/* Evolution mode (v2.0) */}
+      <div className="mt-6">
+        <p className="mb-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+          Evolution Mode
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              {
+                value: "auto",
+                label: "Auto",
+                hint: "Taxonomist picks atomic vs molecular per spec",
+              },
+              {
+                value: "atomic",
+                label: "Atomic",
+                hint: "Decompose into per-dimension variants then assemble",
+              },
+              {
+                value: "molecular",
+                label: "Classic",
+                hint: "Evolve the whole skill as one unit (v1.x pipeline)",
+              },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setEvolutionMode(opt.value)}
+              className={`flex-1 rounded-xl border px-4 py-3 text-left transition-all ${
+                evolutionMode === opt.value
+                  ? "border-primary bg-primary/10"
+                  : "border-outline-variant bg-surface-container-lowest hover:border-primary/40"
+              }`}
+            >
+              <div
+                className={`font-medium ${
+                  evolutionMode === opt.value
+                    ? "text-primary"
+                    : "text-on-surface"
+                }`}
+              >
+                {opt.label}
+              </div>
+              <div className="mt-1 text-xs text-on-surface-dim">{opt.hint}</div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Parameters */}
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">

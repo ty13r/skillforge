@@ -56,6 +56,20 @@ def _int_or_none(v: bool | int | None) -> int | None:
     return int(v)
 
 
+def _row_get(row: aiosqlite.Row, column: str, default=None):
+    """Defensive column lookup on an aiosqlite.Row.
+
+    `aiosqlite.Row` does not implement `dict.get()` and indexing a missing
+    column raises `IndexError`. We use this on v2.0 columns that may be
+    absent on legacy databases that haven't migrated yet (init_db
+    handles the migration but tests sometimes pre-build a partial schema).
+    """
+    try:
+        return row[column]
+    except (IndexError, KeyError):
+        return default
+
+
 # ---------------------------------------------------------------------------
 # Challenge
 # ---------------------------------------------------------------------------
@@ -134,8 +148,9 @@ async def save_genome(
                  mutations, mutation_rationale, maturity, generations_survived,
                  deterministic_scores, trigger_precision, trigger_recall,
                  behavioral_signature, pareto_objectives, is_pareto_optimal,
-                 trait_attribution, trait_diagnostics, consistency_score)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 trait_attribution, trait_diagnostics, consistency_score,
+                 variant_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 maturity=excluded.maturity,
                 generations_survived=excluded.generations_survived,
@@ -147,7 +162,8 @@ async def save_genome(
                 is_pareto_optimal=excluded.is_pareto_optimal,
                 trait_attribution=excluded.trait_attribution,
                 trait_diagnostics=excluded.trait_diagnostics,
-                consistency_score=excluded.consistency_score
+                consistency_score=excluded.consistency_score,
+                variant_id=excluded.variant_id
             """,
             (
                 d["id"],
@@ -172,6 +188,7 @@ async def save_genome(
                 json.dumps(d["trait_attribution"]),
                 json.dumps(d["trait_diagnostics"]),
                 d["consistency_score"],
+                d.get("variant_id"),
             ),
         )
         await conn.commit()
@@ -226,6 +243,7 @@ def _row_to_genome(row: aiosqlite.Row) -> SkillGenome:
         "trait_attribution": json.loads(row["trait_attribution"]),
         "trait_diagnostics": json.loads(row["trait_diagnostics"]),
         "consistency_score": row["consistency_score"],
+        "variant_id": _row_get(row, "variant_id"),
     }
     return SkillGenome.from_dict(d)
 
@@ -429,8 +447,9 @@ async def save_run(
             INSERT OR REPLACE INTO evolution_runs
                 (id, mode, specialization, population_size, num_generations,
                  status, created_at, completed_at, total_cost_usd, max_budget_usd,
-                 learning_log, pareto_front_ids, best_skill_id, failure_reason)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 learning_log, pareto_front_ids, best_skill_id, failure_reason,
+                 family_id, evolution_mode)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 d["id"],
@@ -447,6 +466,8 @@ async def save_run(
                 json.dumps(pareto_front_ids),
                 None,  # best_skill_id deferred — set after genomes are saved
                 d.get("failure_reason"),
+                d.get("family_id"),
+                d.get("evolution_mode", "molecular"),
             ),
         )
         await conn.commit()
@@ -515,6 +536,10 @@ async def get_run(
         "generations": [g.to_dict() for g in generations],
         "best_skill": best_skill.to_dict() if best_skill is not None else None,
         "pareto_front": [s.to_dict() for s in pareto_front],
+        # v2.0 columns — present in fresh installs and on upgraded DBs after
+        # the additive migration in init_db.
+        "family_id": _row_get(row, "family_id"),
+        "evolution_mode": _row_get(row, "evolution_mode") or "molecular",
     }
     return EvolutionRun.from_dict(run_dict)
 

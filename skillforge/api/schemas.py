@@ -32,6 +32,10 @@ class EvolveRequest(BaseModel):
     num_generations: int = Field(default=DEFAULT_GENS, ge=1, le=10)
     max_budget_usd: float = Field(default=DEFAULT_BUDGET_USD, gt=0)
     invite_code: str | None = None
+    # v2.0 — explicit evolution mode override. ``None`` (default) → auto-detect
+    # via the Taxonomist. Caller can force a specific mode by passing
+    # ``"atomic"`` or ``"molecular"``.
+    evolution_mode: str | None = None
 
 
 class EvolveResponse(BaseModel):
