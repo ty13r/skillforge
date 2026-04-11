@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-05",
+  "tier": "easy",
+  "title": "User schema + migration with unique email",
+  "prompt": "Design MyApp.Accounts.User with required email and name, and ensure email is globally unique. Write BOTH the schema and the migration. In the changeset, validate format of email, set length bounds on name, and use unique_constraint(:email). In the migration, create unique_index(:users, [:email]) — the changeset constraint does nothing without the DB-level index. Schema at lib/my_app/accounts/user.ex, migration at priv/repo/migrations/20260411000000_create_users.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "priv/repo/migrations/20260411000000_create_users.exs"
+    ],
+    "must_contain": [
+      "unique_constraint(:email",
+      "unique_index(:users, [:email])",
+      "validate_format(:email",
+      "MyApp.Accounts.User",
+      "validate_required"
+    ],
+    "must_not_contain": [
+      "add :email, :integer",
+      ":float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["migrations", "validations-basic"],
+    "criterion": "unique_index_matches_constraint",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two-file output with a well-known idiom. Easy tier because the pair (unique_index + unique_constraint) is the canonical pattern; no trick.",
+  "research_citation": "Arrowsmith Labs: 'unique_constraint/3 only achieves anything if your database actually has a uniqueness constraint on the given column.'",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-07",
+  "tier": "medium",
+  "title": "Preload associations before cast_assoc",
+  "prompt": "The file test_fixtures/user_no_cast_assoc_preload.ex calls cast_assoc(:posts) on a user that may not have posts preloaded — this raises at runtime. Fix the code so that cast_assoc always sees a preloaded posts list. Provide a helper function `update_user_with_posts/2` that preloads posts first via Ecto.Repo.preload/2 before building the changeset. Write to lib/my_app/blog/user_with_posts.ex.",
+  "fixture_files": ["test_fixtures/user_no_cast_assoc_preload.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/user_with_posts.ex"],
+    "must_contain": [
+      "Repo.preload",
+      "cast_assoc(:posts",
+      "def update_user_with_posts",
+      "MyApp.Blog.UserWithPosts"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["associations"],
+    "criterion": "preload_before_cast_assoc",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing the preload-before-cast_assoc runtime error and fixing with an explicit helper. Sonnet often stops at `with:` option tuning without touching the preload.",
+  "research_citation": "Dashbit — Working with Ecto associations and embeds: 'Attempting to cast or change an association that was not loaded will result in a runtime error.'",
+  "calibration": null
+}

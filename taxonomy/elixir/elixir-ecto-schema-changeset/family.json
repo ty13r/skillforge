@@ -1,0 +1,66 @@
+{
+  "slug": "elixir-ecto-schema-changeset",
+  "name": "Elixir Ecto Schema & Changeset",
+  "language": "elixir",
+  "tier": "A",
+  "curve": "binary",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "data",
+    "focus": "ecto-orm",
+    "language": "elixir"
+  },
+  "foundation_dimension": "schema-organization",
+  "capability_dimensions": [
+    "field-types-and-decimal",
+    "associations",
+    "embedded-schemas",
+    "validations-basic",
+    "validations-custom",
+    "unique-constraints-and-indexes",
+    "cast-and-allowed-fields",
+    "migrations",
+    "polymorphic-associations",
+    "soft-deletes-and-timestamps",
+    "multi-tenant-schemas"
+  ],
+  "challenges": {
+    "total": 100,
+    "by_tier": {
+      "easy": 35,
+      "medium": 35,
+      "hard": 22,
+      "legendary": 8
+    },
+    "held_out_ids": [
+      "elixir-ecto-schema-changeset-easy-07",
+      "elixir-ecto-schema-changeset-easy-13",
+      "elixir-ecto-schema-changeset-easy-18",
+      "elixir-ecto-schema-changeset-easy-20",
+      "elixir-ecto-schema-changeset-easy-25",
+      "elixir-ecto-schema-changeset-easy-29",
+      "elixir-ecto-schema-changeset-easy-34",
+      "elixir-ecto-schema-changeset-medium-02",
+      "elixir-ecto-schema-changeset-medium-09",
+      "elixir-ecto-schema-changeset-medium-15",
+      "elixir-ecto-schema-changeset-medium-22",
+      "elixir-ecto-schema-changeset-medium-29",
+      "elixir-ecto-schema-changeset-medium-31",
+      "elixir-ecto-schema-changeset-medium-34",
+      "elixir-ecto-schema-changeset-hard-01",
+      "elixir-ecto-schema-changeset-hard-09",
+      "elixir-ecto-schema-changeset-hard-17",
+      "elixir-ecto-schema-changeset-hard-22",
+      "elixir-ecto-schema-changeset-legendary-03",
+      "elixir-ecto-schema-changeset-legendary-06"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-11",
+  "tier": "easy",
+  "title": "Create a users table migration with UTC timestamps",
+  "prompt": "Write an Ecto migration that creates a `users` table with email (not null), name (not null), and UTC timestamps. Also create a unique_index on email in the same migration. Write to priv/repo/migrations/20260411200000_create_users.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411200000_create_users.exs"],
+    "must_contain": [
+      "create table(:users)",
+      "add :email, :string, null: false",
+      "add :name, :string, null: false",
+      "timestamps(type: :utc_datetime)",
+      "create unique_index(:users, [:email])"
+    ],
+    "must_not_contain": [
+      "timestamps()\n  end",
+      "timestamps([])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": ["unique-constraints-and-indexes"],
+    "criterion": "users_table_migration",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical create_table migration with two correct defaults (utc_datetime, separate unique_index). Easy but catches the common-default failures.",
+  "calibration": null
+}

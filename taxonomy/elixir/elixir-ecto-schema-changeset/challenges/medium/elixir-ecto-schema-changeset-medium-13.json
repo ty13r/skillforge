@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-13",
+  "tier": "medium",
+  "title": "Alter table: add non-null column with default",
+  "prompt": "Write a migration that adds a `status` column (Ecto.Enum serialized as string) to the existing `users` table. The column must be non-null and default to \"active\". In Ecto, add with `add :status, :string, null: false, default: \"active\"`. Write to priv/repo/migrations/20260412300000_add_status_to_users.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260412300000_add_status_to_users.exs"],
+    "must_contain": [
+      "alter table(:users)",
+      "add :status, :string",
+      "null: false",
+      "default: \"active\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": [],
+    "criterion": "alter_add_non_null_default",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single alter_table with multiple column options. Medium because the null+default combo is what makes it safe.",
+  "calibration": null
+}

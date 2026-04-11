@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-23",
+  "tier": "easy",
+  "title": "Ecto.Enum for status field",
+  "prompt": "Replace the stringly-typed `:status` field in MyApp.Tasks.Task (test_fixtures/stringly_typed_status.ex) with an Ecto.Enum of values [:pending, :in_progress, :done, :cancelled]. Also replace `:priority` with Ecto.Enum of [:low, :medium, :high]. Remove the now-redundant validate_inclusion calls. Write to lib/my_app/tasks/task.ex.",
+  "fixture_files": ["test_fixtures/stringly_typed_status.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/tasks/task.ex"],
+    "must_contain": [
+      "field :status, Ecto.Enum",
+      "field :priority, Ecto.Enum",
+      "values: [:pending, :in_progress, :done, :cancelled]",
+      "values: [:low, :medium, :high]"
+    ],
+    "must_not_contain": [
+      "validate_inclusion(:status",
+      "validate_inclusion(:priority"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "ecto_enum_over_validate_inclusion",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single field-type upgrade. Easy but shows the idiomatic Elixir preference for compile-time-safe enums.",
+  "calibration": null
+}

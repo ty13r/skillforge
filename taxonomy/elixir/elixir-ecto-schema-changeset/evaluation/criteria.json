@@ -1,0 +1,103 @@
+{
+  "family_slug": "elixir-ecto-schema-changeset",
+  "capabilities": {
+    "schema-organization": {
+      "weight": 0.1,
+      "objectives": {
+        "module_name_correct": {"weight": 0.2, "description": "Module declaration matches the prompt-requested name"},
+        "file_at_expected_path": {"weight": 0.3, "description": "Expected output file exists at the requested path"},
+        "structural_patterns": {"weight": 0.5, "description": "Required patterns present (schema/embedded_schema, separate changesets, context independence)"}
+      }
+    },
+    "field-types-and-decimal": {
+      "weight": 0.14,
+      "objectives": {
+        "decimal_for_money": {"weight": 0.5, "description": "Money-named fields (price/amount/total/balance/cost/salary) use :decimal, never :float"},
+        "utc_datetime_timestamps": {"weight": 0.2, "description": "timestamps(type: :utc_datetime) used, not default naive_datetime"},
+        "required_contains": {"weight": 0.2, "description": "Required field-type patterns present"},
+        "absent_antipatterns": {"weight": 0.1, "description": "No :float for money fields anywhere in output"}
+      }
+    },
+    "associations": {
+      "weight": 0.1,
+      "objectives": {
+        "direction_correct": {"weight": 0.4, "description": "has_many/belongs_to direction matches the FK ownership"},
+        "required_contains": {"weight": 0.4, "description": "Required association patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No reversed-direction or missing-references patterns"}
+      }
+    },
+    "embedded-schemas": {
+      "weight": 0.08,
+      "objectives": {
+        "embedded_schema_form": {"weight": 0.4, "description": "embeds_one/embeds_many with matching embedded_schema block"},
+        "cast_embed_usage": {"weight": 0.3, "description": "cast_embed used on the parent changeset"},
+        "required_contains": {"weight": 0.3, "description": "Required embed patterns present"}
+      }
+    },
+    "validations-basic": {
+      "weight": 0.08,
+      "objectives": {
+        "validate_required_accurate": {"weight": 0.3, "description": "validate_required list matches the prompt's required fields"},
+        "required_contains": {"weight": 0.5, "description": "Required validation patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No anti-patterns (copy-pasted cast list into validate_required)"}
+      }
+    },
+    "validations-custom": {
+      "weight": 0.07,
+      "objectives": {
+        "nil_safe": {"weight": 0.2, "description": "Custom validators guard on nil or changeset.valid?"},
+        "required_contains": {"weight": 0.6, "description": "Required custom-validator patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No direct operator comparisons where Ecto helpers should be used"}
+      }
+    },
+    "unique-constraints-and-indexes": {
+      "weight": 0.1,
+      "objectives": {
+        "index_matches_constraint": {"weight": 0.5, "description": "unique_index in migration matches unique_constraint in changeset (name or columns)"},
+        "required_contains": {"weight": 0.3, "description": "Required unique patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No dangling constraint-without-index"}
+      }
+    },
+    "cast-and-allowed-fields": {
+      "weight": 0.13,
+      "objectives": {
+        "no_is_admin_in_public_cast": {"weight": 0.4, "description": "Public changeset cast list never contains privileged fields like :is_admin or :role"},
+        "split_by_operation": {"weight": 0.3, "description": "Distinct changeset functions for distinct operations"},
+        "required_contains": {"weight": 0.2, "description": "Required cast patterns present"},
+        "absent_antipatterns": {"weight": 0.1, "description": "No mass-assignment anti-patterns"}
+      }
+    },
+    "migrations": {
+      "weight": 0.09,
+      "objectives": {
+        "references_with_on_delete": {"weight": 0.4, "description": "FK columns use references/2 with explicit on_delete"},
+        "required_contains": {"weight": 0.4, "description": "Required migration patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No :integer FK columns or missing on_delete"}
+      }
+    },
+    "polymorphic-associations": {
+      "weight": 0.06,
+      "objectives": {
+        "no_rails_pattern": {"weight": 0.5, "description": "No imageable_type/imageable_id or _type+_id columns"},
+        "required_contains": {"weight": 0.3, "description": "Required join-table or polymorphic_embed patterns present"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No Rails-style polymorphic columns"}
+      }
+    },
+    "soft-deletes-and-timestamps": {
+      "weight": 0.03,
+      "objectives": {
+        "partial_unique_index": {"weight": 0.3, "description": "Partial unique_index with where: deleted_at IS NULL when applicable"},
+        "active_scope_helper": {"weight": 0.3, "description": "Query scope function filtering is_nil(deleted_at)"},
+        "required_contains": {"weight": 0.4, "description": "Required soft-delete patterns present"}
+      }
+    },
+    "multi-tenant-schemas": {
+      "weight": 0.02,
+      "objectives": {
+        "required_contains": {"weight": 0.8, "description": "Required multi-tenant patterns present (@schema_prefix, prefix: option)"},
+        "absent_antipatterns": {"weight": 0.2, "description": "No global-scope leaks"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

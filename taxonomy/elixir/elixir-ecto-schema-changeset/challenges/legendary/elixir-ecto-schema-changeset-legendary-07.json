@@ -1,0 +1,34 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-07",
+  "tier": "legendary",
+  "title": "Changeset pipeline with preceding-validation-aware custom validator",
+  "prompt": "Build MyApp.Scheduling.Appointment with fields :patient_id, :doctor_id, :starts_at (:utc_datetime), :ends_at (:utc_datetime), :chief_complaint. In the changeset, pipe: cast, validate_required, validate_format on chief_complaint, then a custom validator validate_duration_within_bounds/1 that checks ends_at > starts_at AND that the duration is at most 3 hours. The custom validator MUST bail out gracefully if changeset.valid? is already false (because preceding required validations may have failed) — do not crash on nil. Write to lib/my_app/scheduling/appointment.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/scheduling/appointment.ex"],
+    "must_contain": [
+      "field :starts_at, :utc_datetime",
+      "field :ends_at, :utc_datetime",
+      "defp validate_duration_within_bounds",
+      "changeset.valid?",
+      "get_field(changeset, :starts_at)",
+      "get_field(changeset, :ends_at)",
+      "DateTime.diff",
+      "add_error",
+      "is_nil",
+      "MyApp.Scheduling.Appointment"
+    ],
+    "must_not_contain": [
+      "field :starts_at, :naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": ["validations-basic", "field-types-and-decimal"],
+    "criterion": "custom_validator_valid_aware",
+    "weight": 1.0
+  },
+  "tier_rationale": "Legendary because it requires understanding that preceding-validation failures don't short-circuit subsequent custom validators — Claude must explicitly guard on changeset.valid? or on nil values.",
+  "research_citation": "dev.to — How To Write A Custom Elixir Schema Validation.",
+  "calibration": null
+}

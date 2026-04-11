@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-08",
+  "tier": "easy",
+  "title": "Validate required fields and number bounds on Product",
+  "prompt": "Build MyApp.Catalog.Product with name (string), sku (string), price (decimal), stock_quantity (integer). In the changeset: mark name, sku, price, stock_quantity as required; validate price > 0; validate stock_quantity >= 0. Write to lib/my_app/catalog/product.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/catalog/product.ex"],
+    "must_contain": [
+      "field :price, :decimal",
+      "validate_number(:price, greater_than: 0)",
+      "validate_number(:stock_quantity, greater_than_or_equal_to: 0)",
+      "validate_required"
+    ],
+    "must_not_contain": [
+      "field :price, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "validate_number_bounds",
+    "weight": 1.0
+  },
+  "tier_rationale": "Basic validation combinators. Easy because each rule maps directly to a single Ecto.Changeset function.",
+  "calibration": null
+}

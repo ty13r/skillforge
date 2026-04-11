@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-05",
+  "tier": "medium",
+  "title": "Fix reversed Post/Comment association direction",
+  "prompt": "The file test_fixtures/post_comment_wrong_direction.ex has the foreign-key side flipped: Post has belongs_to :comment and Comment has has_many :posts. Fix so that Post has has_many :comments and Comment has belongs_to :post (the FK lives on the comments table, which is the many side). Also add a migration that creates the comments table with a references(:posts, on_delete: :delete_all) foreign key. Write Post to lib/my_app/blog/post.ex, Comment to lib/my_app/blog/comment.ex, migration to priv/repo/migrations/20260411900000_create_comments.exs.",
+  "fixture_files": ["test_fixtures/post_comment_wrong_direction.ex"],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/blog/post.ex",
+      "lib/my_app/blog/comment.ex",
+      "priv/repo/migrations/20260411900000_create_comments.exs"
+    ],
+    "must_contain": [
+      "has_many :comments, MyApp.Blog.Comment",
+      "belongs_to :post, MyApp.Blog.Post",
+      "references(:posts, on_delete: :delete_all)",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "belongs_to :comment, MyApp.Blog.Comment",
+      "has_many :posts, MyApp.Blog.Post"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["migrations", "schema-organization"],
+    "criterion": "fix_association_direction",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing the FK-side invariant and inverting both ends of the relationship. Sonnet often fixes only one side.",
+  "research_citation": "Ecto.Schema docs: 'Indicates a one-to-one or many-to-one association with another schema. You should use belongs_to in the table that contains the foreign key.'",
+  "calibration": null
+}

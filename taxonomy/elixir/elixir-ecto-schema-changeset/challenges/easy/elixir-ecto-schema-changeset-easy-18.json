@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-18",
+  "tier": "easy",
+  "title": "schema_prefix for tenant scoping",
+  "prompt": "Add `@schema_prefix \"tenant_default\"` to MyApp.Tenant.Product (in test_fixtures/multi_tenant_unscoped.ex). This tells Ecto to look for the products table inside the tenant_default Postgres schema. Write the updated module to lib/my_app/tenant/product.ex.",
+  "fixture_files": ["test_fixtures/multi_tenant_unscoped.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/tenant/product.ex"],
+    "must_contain": [
+      "@schema_prefix \"tenant_default\"",
+      "MyApp.Tenant.Product",
+      "field :price, :decimal"
+    ],
+    "must_not_contain": [
+      "field :price, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "multi-tenant-schemas",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "schema_prefix_attribute",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single module attribute. Easy because the pattern comes straight from the Ecto multi-tenancy guide.",
+  "calibration": null
+}

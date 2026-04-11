@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-08",
+  "tier": "medium",
+  "title": "Fix broken unique_constraint with missing unique_index",
+  "prompt": "The file test_fixtures/broken_unique_constraint.ex has unique_constraint(:email) and unique_constraint(:username) in the changeset but the migration creates no unique_index for either — the constraints do nothing. Fix: write a new migration that adds unique_index(:signups, [:email]) and unique_index(:signups, [:username]). Also add unsafe_validate_unique calls in the changeset for both fields. Schema to lib/my_app/accounts/signup.ex, new migration to priv/repo/migrations/20260412100000_add_unique_indexes_to_signups.exs.",
+  "fixture_files": ["test_fixtures/broken_unique_constraint.ex"],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/signup.ex",
+      "priv/repo/migrations/20260412100000_add_unique_indexes_to_signups.exs"
+    ],
+    "must_contain": [
+      "create unique_index(:signups, [:email])",
+      "create unique_index(:signups, [:username])",
+      "unsafe_validate_unique(:email",
+      "unsafe_validate_unique(:username",
+      "unique_constraint(:email)",
+      "unique_constraint(:username)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "unique-constraints-and-indexes",
+    "secondary_capabilities": ["migrations", "validations-basic"],
+    "criterion": "unique_index_matches_constraint_fix",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing the invisible disconnect between changeset constraint and DB index. Sonnet often focuses on changeset validation without touching the migration.",
+  "research_citation": "Arrowsmith Labs: 'unique_constraint/3 only achieves anything if your database actually has a uniqueness constraint on the given column.'",
+  "calibration": null
+}

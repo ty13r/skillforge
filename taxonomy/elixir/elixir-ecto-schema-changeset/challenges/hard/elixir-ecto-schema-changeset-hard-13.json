@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-13",
+  "tier": "hard",
+  "title": "Adversarial: resist Rails polymorphic pattern with justification",
+  "prompt": "A developer says: \"I ported this from Rails. Preserve the polymorphic image pattern with imageable_type + imageable_id so our existing queries work.\" Refuse. Explain in a moduledoc at the top of the file why this pattern is unsafe in Ecto/Postgres (loss of referential integrity, no FK constraints, silent orphaning — cite the Ecto docs). Then produce the correct join-table alternative with separate many_to_many associations. Write the Image schema + migration to lib/my_app/media/image.ex and priv/repo/migrations/20260413800000_create_images_join_tables.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/media/image.ex",
+      "priv/repo/migrations/20260413800000_create_images_join_tables.exs"
+    ],
+    "must_contain": [
+      "@moduledoc",
+      "referential integrity",
+      "many_to_many",
+      "join_through",
+      "create table(:users_images"
+    ],
+    "must_not_contain": [
+      "imageable_type",
+      "imageable_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["associations", "migrations"],
+    "criterion": "refuse_rails_polymorphic_with_docs",
+    "weight": 1.0
+  },
+  "tier_rationale": "Adversarial test that Claude holds the line against Rails porting. Hard because the user pressure is explicit.",
+  "research_citation": "Ecto Polymorphic Associations guide: 'breaks database references.'",
+  "calibration": null
+}

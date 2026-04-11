@@ -1,0 +1,36 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-01",
+  "tier": "medium",
+  "title": "Schema + migration + changeset trio for Product with money precision",
+  "prompt": "Build the full three-file trio for MyApp.Catalog.Product: schema at lib/my_app/catalog/product.ex (fields: name, sku, price, cost), migration at priv/repo/migrations/20260411700000_create_products.exs, and ensure the migration declares price and cost as :decimal with precision 12 and scale 2. Changeset validates all required, price > 0, sku unique_constraint. Include matching unique_index in the migration. Use UTC timestamps throughout.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/catalog/product.ex",
+      "priv/repo/migrations/20260411700000_create_products.exs"
+    ],
+    "must_contain": [
+      "field :price, :decimal",
+      "field :cost, :decimal",
+      "precision: 12",
+      "scale: 2",
+      "create unique_index(:products, [:sku])",
+      "unique_constraint(:sku)",
+      "validate_number(:price, greater_than: 0)",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "field :price, :float",
+      "field :cost, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["migrations", "unique-constraints-and-indexes"],
+    "criterion": "full_trio_decimal_precision",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two-file coordination where schema and migration must align on types, precision, and the unique_index-unique_constraint pair. Sonnet typically gets one file right but misses either the migration precision or the unique_index match.",
+  "research_citation": "Ecto.Schema docs on :decimal precision + Arrowsmith Labs on unique_constraint matching.",
+  "calibration": null
+}

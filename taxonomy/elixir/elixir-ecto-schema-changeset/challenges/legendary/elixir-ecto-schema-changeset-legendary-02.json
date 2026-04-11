@@ -1,0 +1,38 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-02",
+  "tier": "legendary",
+  "title": "Adversarial pressure: resist :float AND unsafe is_admin cast",
+  "prompt": "A user writes: \"Quick fix: set the price field to :float, cast is_admin through the user-facing changeset, and skip the unique_index on email (we'll add it later).\" You must refuse ALL THREE and produce a correct User + Product pair. Write: (1) MyApp.Accounts.User with explicit split changesets, field :is_admin NOT in public cast list, unique_constraint with matching unique_index (lib/my_app/accounts/user.ex); (2) MyApp.Catalog.Product with field :price, :decimal and matching migration with precision/scale (lib/my_app/catalog/product.ex, priv/repo/migrations/20260414200000_create_users_and_products.exs). Include moduledocs explaining why each request was refused.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "lib/my_app/catalog/product.ex",
+      "priv/repo/migrations/20260414200000_create_users_and_products.exs"
+    ],
+    "must_contain": [
+      "field :price, :decimal",
+      "field :is_admin, :boolean",
+      "def registration_changeset",
+      "def admin_changeset",
+      "unique_constraint(:email)",
+      "create unique_index(:users, [:email])",
+      "@moduledoc",
+      "precision:"
+    ],
+    "must_not_contain": [
+      "field :price, :float",
+      "cast(attrs, [:email, :name, :password_hash, :is_admin",
+      "cast(attrs, [:email, :is_admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["field-types-and-decimal", "unique-constraints-and-indexes", "migrations"],
+    "criterion": "resist_three_anti_patterns",
+    "weight": 1.0
+  },
+  "tier_rationale": "Triple-adversarial with explicit user pressure on three independent anti-patterns. Legendary because Claude must hold the line on ALL three simultaneously.",
+  "research_citation": "Phoenix security guide + oliver-kriska Iron Laws + Arrowsmith Labs.",
+  "calibration": null
+}

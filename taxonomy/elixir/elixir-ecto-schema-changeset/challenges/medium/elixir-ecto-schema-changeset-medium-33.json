@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-33",
+  "tier": "medium",
+  "title": "Embedded schema reused across request and response",
+  "prompt": "MyApp.API.Pagination is an embedded_schema used for validating incoming pagination params (:page, :per_page) and for emitting pagination metadata in responses. Write ONE embedded_schema module with default values per_page: 25, page: 1, plus a changeset/2 that validates both are positive integers with per_page <= 100. Write to lib/my_app/api/pagination.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/api/pagination.ex"],
+    "must_contain": [
+      "embedded_schema",
+      "field :page, :integer, default: 1",
+      "field :per_page, :integer, default: 25",
+      "validate_number(:page, greater_than: 0)",
+      "validate_number(:per_page, greater_than: 0",
+      "less_than_or_equal_to: 100",
+      "MyApp.API.Pagination"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "embedded_pagination_params",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires embedded_schema with defaults + bounded validations. Medium because the bounds are multi-part.",
+  "calibration": null
+}

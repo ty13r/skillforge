@@ -1,0 +1,34 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-03",
+  "tier": "legendary",
+  "title": "Context-scoped polymorphic replacement via sum-type enum field",
+  "prompt": "Design a NotificationDelivery schema that records delivery attempts for notifications sent via three channels (email, sms, push). Do NOT use Rails polymorphic fields. Do NOT use the polymorphic_embed library (pretend it's not available). Instead, use: (1) a channel field of Ecto.Enum values [:email, :sms, :push]; (2) three nullable channel-specific fields (email_address, sms_number, push_device_token); (3) a custom validator that asserts exactly one channel-specific field is set and it matches the channel. Write to lib/my_app/notifications/delivery.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/notifications/delivery.ex"],
+    "must_contain": [
+      "field :channel, Ecto.Enum",
+      "values: [:email, :sms, :push]",
+      "field :email_address, :string",
+      "field :sms_number, :string",
+      "field :push_device_token, :string",
+      "defp validate_channel_fields",
+      "add_error",
+      "MyApp.Notifications.Delivery"
+    ],
+    "must_not_contain": [
+      "field :channel_type, :string",
+      "imageable",
+      "polymorphic_embeds"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["validations-custom", "field-types-and-decimal"],
+    "criterion": "sum_type_channel_with_validator",
+    "weight": 1.0
+  },
+  "tier_rationale": "Legendary because it requires synthesizing Ecto.Enum + cross-field validation + refusing both Rails and polymorphic_embed escape hatches. Sonnet typically falls back to one of the rejected patterns.",
+  "research_citation": "Ecto Polymorphic Associations guide + Elixir Forum polymorphism discussion.",
+  "calibration": null
+}

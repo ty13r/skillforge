@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-32",
+  "tier": "medium",
+  "title": "foreign_key_constraint for graceful FK error handling",
+  "prompt": "In MyApp.Blog.Comment.changeset/2, add `foreign_key_constraint(:post_id)` so that if a client submits a post_id that doesn't exist in the posts table, the insert returns a friendly changeset error instead of a raw Postgres exception. Write to lib/my_app/blog/comment.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/comment.ex"],
+    "must_contain": [
+      "foreign_key_constraint(:post_id)",
+      "MyApp.Blog.Comment",
+      "belongs_to :post"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "foreign_key_constraint_usage",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single foreign_key_constraint call, but Sonnet often skips it entirely, letting raw Postgres exceptions reach the client.",
+  "calibration": null
+}

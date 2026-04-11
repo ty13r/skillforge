@@ -1,0 +1,36 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-04",
+  "tier": "legendary",
+  "title": "Soft-delete cascade with has_many children that should also be soft-deleted",
+  "prompt": "A User has_many Posts, and Posts have soft-delete (deleted_at) support. When a User is soft-deleted, all their Posts should also be soft-deleted (but NOT hard-deleted). Write: (1) User schema with deleted_at (lib/my_app/accounts/user.ex), (2) Post schema with deleted_at + belongs_to user (lib/my_app/blog/post.ex), (3) an MyApp.Accounts.soft_delete_user/1 function that uses Ecto.Multi to soft-delete the user AND all non-deleted posts in one transaction — using an update_all query for efficiency (lib/my_app/accounts.ex).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/user.ex",
+      "lib/my_app/blog/post.ex",
+      "lib/my_app/accounts.ex"
+    ],
+    "must_contain": [
+      "field :deleted_at, :utc_datetime",
+      "Ecto.Multi.new",
+      "Ecto.Multi.update",
+      "update_all",
+      "def soft_delete_user",
+      "Repo.transaction",
+      "is_nil(p.deleted_at)"
+    ],
+    "must_not_contain": [
+      "Repo.delete",
+      "Repo.delete_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": ["associations", "cast-and-allowed-fields"],
+    "criterion": "soft_delete_cascade_multi",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires Ecto.Multi orchestration + update_all + soft-delete semantics + preventing hard deletes. Legendary because the coordination is non-obvious.",
+  "research_citation": "Dashbit — Soft deletes with Ecto: 'error prone, especially once you consider foreign keys cascade and deletion rules.'",
+  "calibration": null
+}

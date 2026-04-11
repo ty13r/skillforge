@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-20",
+  "tier": "hard",
+  "title": "Money-aware changeset with decimal validation",
+  "prompt": "Build MyApp.Billing.Invoice with required subtotal, tax, total fields (all :decimal). In the changeset, add a custom validator that checks total == subtotal + tax using Decimal.add and Decimal.equal?. Handle the case where fields are missing (use get_field and skip validation if any is nil). Use the correct arithmetic — never + or ==. Write to lib/my_app/billing/invoice.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/billing/invoice.ex"],
+    "must_contain": [
+      "field :subtotal, :decimal",
+      "field :tax, :decimal",
+      "field :total, :decimal",
+      "Decimal.add",
+      "Decimal.equal?",
+      "is_nil",
+      "MyApp.Billing.Invoice"
+    ],
+    "must_not_contain": [
+      "field :subtotal, :float",
+      "subtotal + tax",
+      "total == (subtotal + tax)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": ["validations-custom"],
+    "criterion": "decimal_add_equal_validator",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires Decimal API and nil-handling. Hard because Sonnet often uses + or ==.",
+  "research_citation": "Ecto Issue #2473 + elixirmoney/money README.",
+  "calibration": null
+}

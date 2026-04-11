@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-24",
+  "tier": "medium",
+  "title": "Embed for ephemeral form vs persisted data",
+  "prompt": "An HTTP API wants to validate a SearchParams struct (query string + filters + sort) before running a query. This data is NEVER persisted. Use `embedded_schema` (not `schema`) so no DB table is created. Module: MyApp.Search.SearchParams with fields :query (string), :filter (string), :sort (string). Write to lib/my_app/search/search_params.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/search/search_params.ex"],
+    "must_contain": [
+      "embedded_schema do",
+      "field :query, :string",
+      "MyApp.Search.SearchParams",
+      "use Ecto.Schema"
+    ],
+    "must_not_contain": [
+      "schema \"search_params\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "embedded_schema_for_ephemeral",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires choosing embedded_schema over schema for non-persisted data. Sonnet often creates a backing table.",
+  "research_citation": "georgeguimaraes plugin: 'Standard schema/2 for database tables; embedded_schema/1 for form validation only.'",
+  "calibration": null
+}

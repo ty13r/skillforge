@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-34",
+  "tier": "easy",
+  "title": "has_many :through association",
+  "prompt": "Build MyApp.Blog.User which has_many :posts and has_many :comments through posts. The :comments association should use the `through:` macro: `has_many :comments, through: [:posts, :comments]`. Write to lib/my_app/blog/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/user.ex"],
+    "must_contain": [
+      "has_many :posts",
+      "has_many :comments, through: [:posts, :comments]",
+      "MyApp.Blog.User"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": [],
+    "criterion": "has_many_through",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single through-association declaration. Easy because the syntax is one line.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-21",
+  "tier": "medium",
+  "title": "Decimal comparison via Decimal.equal?/2",
+  "prompt": "Write a helper module MyApp.Pricing.Compare with a public function `same_price?/2` that takes two Decimal values and returns true iff they are numerically equal (so Decimal.new(9) and Decimal.new(\"9.000\") count as same). Use Decimal.equal?/2, NOT ==. Write to lib/my_app/pricing/compare.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/pricing/compare.ex"],
+    "must_contain": [
+      "Decimal.equal?",
+      "def same_price?",
+      "MyApp.Pricing.Compare"
+    ],
+    "must_not_contain": [
+      "a == b",
+      "a === b"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": [],
+    "criterion": "decimal_equal_not_eq",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the Decimal comparison gotcha (documented in Ecto #2473). Sonnet often reaches for ==.",
+  "research_citation": "Ecto Issue #2473: 'I'm pretty sure the reason for this is that decimals can't be compared with ==.'",
+  "calibration": null
+}

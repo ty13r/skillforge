@@ -1,0 +1,33 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-07",
+  "tier": "hard",
+  "title": "Derive virtual total field from embedded line items",
+  "prompt": "Build an embedded_schema MyApp.Checkout.Cart with a list of embedded LineItem (unit_price :decimal, quantity :integer) via embeds_many. Also add a virtual :total :decimal field derived from the sum of each line's unit_price * quantity. In the cart changeset, after cast_embed(:items), compute total via put_change using Decimal.add and Decimal.mult (NOT + or *). Write to lib/my_app/checkout/cart.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/checkout/cart.ex"],
+    "must_contain": [
+      "embedded_schema",
+      "embeds_many :items, MyApp.Checkout.LineItem",
+      "field :total, :decimal, virtual: true",
+      "field :unit_price, :decimal",
+      "Decimal.add",
+      "Decimal.mult",
+      "put_change(:total",
+      "cast_embed(:items"
+    ],
+    "must_not_contain": [
+      "field :unit_price, :float",
+      "total = total +",
+      "* quantity"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["field-types-and-decimal", "validations-custom"],
+    "criterion": "embedded_virtual_decimal_derived",
+    "weight": 1.0
+  },
+  "tier_rationale": "Synthesis of embeds_many + virtual field + Decimal arithmetic + put_change. Hard because the Decimal API is non-obvious.",
+  "calibration": null
+}

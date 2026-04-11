@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-25",
+  "tier": "medium",
+  "title": "Fix god-schema into split changesets",
+  "prompt": "Refactor test_fixtures/god_schema_user.ex so that the monolithic `changeset/2` is split into at least three functions: `registration_changeset/2` (public fields only: email, name, password_hash), `profile_changeset/2` (user-mutable: name, phone, bio, avatar_url), and `admin_changeset/2` (admin-only: is_admin, role, subscription_tier, credit_balance). No function leaks privileged fields to public input. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": ["test_fixtures/god_schema_user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "def registration_changeset",
+      "def profile_changeset",
+      "def admin_changeset",
+      "cast(attrs, [:email, :name, :password_hash])",
+      "cast(attrs, [:is_admin, :role"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :phone, :bio, :avatar_url, :is_admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "split_god_schema_changesets",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-way split with distinct allow-lists. Medium because each split is straightforward individually but the coordination is the test.",
+  "calibration": null
+}

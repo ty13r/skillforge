@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-18",
+  "tier": "hard",
+  "title": "Change the on_delete behavior of an existing FK",
+  "prompt": "An existing foreign key on :comments.post_id was created with `on_delete: :nothing`. Change it to :delete_all without losing data. Postgres requires dropping the constraint and re-adding it; Ecto's `modify :post_id, references(...)` is the approved pattern. Write a single migration at priv/repo/migrations/20260413900000_change_comments_post_id_on_delete.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260413900000_change_comments_post_id_on_delete.exs"],
+    "must_contain": [
+      "alter table(:comments)",
+      "modify :post_id, references(:posts, on_delete: :delete_all)",
+      "from: references(:posts, on_delete: :nothing)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": ["associations"],
+    "criterion": "modify_fk_on_delete",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the from: option on modify references. Hard because the pattern is niche.",
+  "research_citation": "Ecto Issue #722 + Ecto.Migration docs.",
+  "calibration": null
+}

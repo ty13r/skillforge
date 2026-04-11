@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-12",
+  "tier": "medium",
+  "title": "Custom cross-field validator for booking dates",
+  "prompt": "The Booking schema in test_fixtures/booking_validate_dates.ex needs a custom validation: end_date must be on or after start_date. Write a private `validate_end_after_start/1` function that uses get_field to read both dates, calls Date.compare, and adds an error with add_error(:end_date, \"must be after start date\") if end_date is before start_date. Handle nil values gracefully (no crash). Call it from changeset/2. Write to lib/my_app/bookings/booking.ex.",
+  "fixture_files": ["test_fixtures/booking_validate_dates.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/bookings/booking.ex"],
+    "must_contain": [
+      "defp validate_end_after_start",
+      "get_field(changeset, :start_date)",
+      "get_field(changeset, :end_date)",
+      "Date.compare",
+      "add_error(changeset, :end_date",
+      "is_nil"
+    ],
+    "must_not_contain": [
+      "end_date > start_date"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": [],
+    "criterion": "cross_field_date_validator",
+    "weight": 1.0
+  },
+  "tier_rationale": "Custom validator with nil-handling, requires get_field and add_error. Sonnet often forgets the nil guard or uses comparison operators on dates.",
+  "research_citation": "dev.to — How To Write A Custom Elixir Schema Validation: 'A caveat is that preceding validations in the pipeline are not automatically recognized by a custom validation.'",
+  "calibration": null
+}

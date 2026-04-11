@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-03",
+  "tier": "medium",
+  "title": "Fix mass-assignment: split User into registration + profile + admin changesets",
+  "prompt": "The file test_fixtures/user_mass_assignment_vulnerable.ex has a single changeset/2 function that casts :is_admin and :role — the canonical Phoenix-security-guide mass-assignment vulnerability. Split this into three changeset functions on MyApp.Accounts.User: `registration_changeset/2` (casts [:email, :name, :password_hash]), `profile_changeset/2` (casts [:name]), and `admin_changeset/2` (casts [:is_admin, :role] — admin-only). Keep the schema fields identical. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": ["test_fixtures/user_mass_assignment_vulnerable.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "def registration_changeset",
+      "def profile_changeset",
+      "def admin_changeset",
+      "cast(attrs, [:email, :name, :password_hash])",
+      "cast(attrs, [:is_admin, :role])",
+      "unique_constraint(:email)"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :is_admin, :role])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "split_by_operation_fix_mass_assignment",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-function refactor requiring recognition of the mass-assignment anti-pattern and splitting into three distinct allow-lists. Sonnet often keeps :is_admin in registration by habit.",
+  "research_citation": "Phoenix security guide: 'The design of Ecto in Phoenix takes the risk of mass assignment into consideration, because you have to explicitly define what parameters are allowed to be set from user supplied data.'",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-33",
+  "tier": "easy",
+  "title": "Separate registration and profile changesets",
+  "prompt": "Split MyApp.Accounts.User (fields: email, name, password_hash, bio) into two changeset functions: `registration_changeset/2` that casts [:email, :name, :password_hash] and marks all three required; and `profile_changeset/2` that casts only [:name, :bio]. Both should return an Ecto changeset. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "def registration_changeset",
+      "def profile_changeset",
+      "cast(attrs, [:email, :name, :password_hash])",
+      "cast(attrs, [:name, :bio])"
+    ],
+    "must_not_contain": [
+      ":is_admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cast-and-allowed-fields",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "split_changesets_by_operation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two named changeset functions. Easy because the split is described explicitly.",
+  "research_citation": "georgeguimaraes plugin: 'Different operations = different changesets.'",
+  "calibration": null
+}

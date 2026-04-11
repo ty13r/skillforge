@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-06",
+  "tier": "hard",
+  "title": "Refactor hybrid hard-delete to soft-delete with preserved constraints",
+  "prompt": "An existing Posts table uses hard delete. Migrate it to soft-delete while preserving the unique constraint on slug. Produce: (1) a migration adding deleted_at column (priv/repo/migrations/20260413400000_add_deleted_at_to_posts.exs), (2) a migration dropping the old unique_index and creating a partial one `where: \"deleted_at IS NULL\"` (priv/repo/migrations/20260413500000_update_posts_slug_index.exs), (3) an updated Post schema adding the deleted_at field and providing `active_query/0` helper (lib/my_app/blog/post.ex).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "priv/repo/migrations/20260413400000_add_deleted_at_to_posts.exs",
+      "priv/repo/migrations/20260413500000_update_posts_slug_index.exs",
+      "lib/my_app/blog/post.ex"
+    ],
+    "must_contain": [
+      "add :deleted_at, :utc_datetime",
+      "drop unique_index(:posts, [:slug]",
+      "create unique_index(:posts, [:slug]",
+      "where: \"deleted_at IS NULL\"",
+      "def active_query",
+      "is_nil(p.deleted_at)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": ["migrations", "unique-constraints-and-indexes"],
+    "criterion": "migrate_to_soft_delete_with_partial_index",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-file refactor that must preserve unique constraint semantics through a partial index. Hard because the drop+create sequence is easy to miss.",
+  "research_citation": "Dashbit — Soft deletes with Ecto and PostgreSQL.",
+  "calibration": null
+}

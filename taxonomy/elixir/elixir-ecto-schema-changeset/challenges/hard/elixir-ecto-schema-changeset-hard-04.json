@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-04",
+  "tier": "hard",
+  "title": "Circular association with foreign_key disambiguation",
+  "prompt": "Build MyApp.Users.Friendship where one user invites another — the same User schema is on both sides of the relationship. Schema: inviter_id, invitee_id, status (Ecto.Enum). Use belongs_to :inviter, MyApp.Accounts.User, foreign_key: :inviter_id AND belongs_to :invitee, MyApp.Accounts.User, foreign_key: :invitee_id. Both disambiguated by explicit foreign_key: option. Also write the migration with two references to users and a unique_index on (inviter_id, invitee_id). Schema to lib/my_app/users/friendship.ex, migration to priv/repo/migrations/20260413300000_create_friendships.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/users/friendship.ex",
+      "priv/repo/migrations/20260413300000_create_friendships.exs"
+    ],
+    "must_contain": [
+      "belongs_to :inviter, MyApp.Accounts.User",
+      "foreign_key: :inviter_id",
+      "belongs_to :invitee, MyApp.Accounts.User",
+      "foreign_key: :invitee_id",
+      "field :status, Ecto.Enum",
+      "create unique_index(:friendships, [:inviter_id, :invitee_id])",
+      "references(:users, on_delete: :delete_all)"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["migrations", "unique-constraints-and-indexes"],
+    "criterion": "circular_self_reference_disambig",
+    "weight": 1.0
+  },
+  "tier_rationale": "Self-referential circular association requires explicit foreign_key disambiguation. Hard because the duplication pitfalls are many.",
+  "calibration": null
+}

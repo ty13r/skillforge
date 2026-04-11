@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-31",
+  "tier": "medium",
+  "title": "polymorphic_embed library for flexible type dispatch",
+  "prompt": "A Notification can carry one of: EmailPayload, SmsPayload, or PushPayload — different embedded_schemas with different fields. Instead of separate associations or :imageable_type columns, use the polymorphic_embed library. In the Notification schema, declare `polymorphic_embeds_one :payload, types: [email: EmailPayload, sms: SmsPayload, push: PushPayload]`. Write the notification and its three payload embedded schemas to lib/my_app/notifications/notification.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/notifications/notification.ex"],
+    "must_contain": [
+      "polymorphic_embeds_one :payload",
+      "types:",
+      "email: ",
+      "sms: ",
+      "push: ",
+      "embedded_schema",
+      "MyApp.Notifications.Notification"
+    ],
+    "must_not_contain": [
+      "field :payload_type, :string",
+      "field :imageable"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "polymorphic-associations",
+    "secondary_capabilities": ["embedded-schemas"],
+    "criterion": "polymorphic_embed_library_usage",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires knowing the polymorphic_embed library exists and its API. Sonnet often falls back to Rails-style type columns.",
+  "research_citation": "polymorphic_embed library README: 'brings support for polymorphic/dynamic embedded schemas in Ecto.'",
+  "calibration": null
+}

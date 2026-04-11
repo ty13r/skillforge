@@ -1,0 +1,42 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-01",
+  "tier": "legendary",
+  "title": "Full God-schema reshape: core + embed + 4 operation-specific changesets",
+  "prompt": "Reshape test_fixtures/god_schema_user.ex into a production-quality MyApp.Accounts.User. Requirements: (1) extract profile fields (bio, avatar_url, phone) into embedded MyApp.Accounts.Profile with its own changeset; (2) keep core fields (email, name, password_hash, is_admin, role, subscription_tier, credit_balance) on User; (3) embeds_one :profile with on_replace: :update; (4) FOUR separate changesets on User: registration_changeset/2 (email, name, password_hash), profile_changeset/2 (name + cast_embed profile), admin_changeset/2 (is_admin, role, subscription_tier), credit_balance_changeset/2 (credit_balance); (5) UTC timestamps; (6) validate credit_balance >= 0; (7) Decimal type preserved; (8) unique_constraint email; (9) validate_format email. Write to lib/my_app/accounts/user.ex.",
+  "fixture_files": ["test_fixtures/god_schema_user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "MyApp.Accounts.Profile",
+      "MyApp.Accounts.User",
+      "embedded_schema",
+      "embeds_one :profile, MyApp.Accounts.Profile, on_replace: :update",
+      "def registration_changeset",
+      "def profile_changeset",
+      "def admin_changeset",
+      "def credit_balance_changeset",
+      "cast(attrs, [:email, :name, :password_hash])",
+      "cast(attrs, [:is_admin, :role, :subscription_tier])",
+      "cast(attrs, [:credit_balance])",
+      "cast_embed(:profile",
+      "field :credit_balance, :decimal",
+      "validate_number(:credit_balance, greater_than_or_equal_to: 0)",
+      "unique_constraint(:email)",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :phone, :bio, :avatar_url, :is_admin",
+      "field :credit_balance, :float",
+      "timestamps()\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["embedded-schemas", "cast-and-allowed-fields", "field-types-and-decimal"],
+    "criterion": "full_god_schema_reshape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Maximum-complexity refactor requiring all four capability skills in concert: schema decomposition, embedding, changeset splitting, and field-type discipline. Legendary because any single gap breaks the whole.",
+  "research_citation": "georgeguimaraes plugin + Phoenix security guide + oliver-kriska Iron Laws.",
+  "calibration": null
+}

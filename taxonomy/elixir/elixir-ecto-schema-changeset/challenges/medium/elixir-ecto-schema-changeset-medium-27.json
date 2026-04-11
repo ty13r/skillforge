@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-27",
+  "tier": "medium",
+  "title": "Three-level has_many :through",
+  "prompt": "Build MyApp.Accounts.Organization which has_many :teams, and Team which has_many :members. On Organization, add `has_many :all_members, through: [:teams, :members]` so you can fetch all members of an org without joining manually. Module files to lib/my_app/accounts/organization.ex and lib/my_app/accounts/team.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/accounts/organization.ex",
+      "lib/my_app/accounts/team.ex"
+    ],
+    "must_contain": [
+      "has_many :teams, MyApp.Accounts.Team",
+      "has_many :all_members, through: [:teams, :members]",
+      "has_many :members, MyApp.Accounts.Member",
+      "belongs_to :organization, MyApp.Accounts.Organization"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": [],
+    "criterion": "three_level_through",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the multi-hop through macro syntax. Sonnet often uses through: [:teams] instead of the full path.",
+  "calibration": null
+}

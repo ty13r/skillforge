@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-14",
+  "tier": "medium",
+  "title": "Two many_to_many with different join tables for distinct Image parents",
+  "prompt": "Build MyApp.Blog.Post with many_to_many :tags through posts_tags AND many_to_many :contributors (User module) through posts_contributors. Each has its own join table. Write the schema to lib/my_app/blog/post.ex and the migration for both join tables to priv/repo/migrations/20260412400000_create_post_joins.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/blog/post.ex",
+      "priv/repo/migrations/20260412400000_create_post_joins.exs"
+    ],
+    "must_contain": [
+      "many_to_many :tags, MyApp.Blog.Tag",
+      "many_to_many :contributors, MyApp.Accounts.User",
+      "join_through: \"posts_tags\"",
+      "join_through: \"posts_contributors\"",
+      "create table(:posts_tags",
+      "create table(:posts_contributors"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["migrations"],
+    "criterion": "multiple_many_to_many_distinct_joins",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires coordinating two many_to_many declarations plus two migrations. Sonnet sometimes combines them into one.",
+  "calibration": null
+}

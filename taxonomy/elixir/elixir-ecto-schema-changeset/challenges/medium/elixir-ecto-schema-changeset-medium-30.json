@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-30",
+  "tier": "medium",
+  "title": "Alter column type via drop/re-add pattern",
+  "prompt": "An existing products table has `price :float`. Write a migration that converts it to `:decimal`. Since alter modify on a float→decimal conversion can fail silently in Postgres for some values, use the safe pattern: add a new column `price_decimal`, execute/1 a backfill (`execute \"UPDATE products SET price_decimal = price::decimal\"`), then in a later migration rename. For this challenge, just write the first migration that adds `price_decimal` and backfills. Write to priv/repo/migrations/20260412800000_add_price_decimal_to_products.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260412800000_add_price_decimal_to_products.exs"],
+    "must_contain": [
+      "alter table(:products)",
+      "add :price_decimal, :decimal",
+      "execute",
+      "precision:",
+      "scale:"
+    ],
+    "must_not_contain": [
+      "modify :price, :decimal"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "migrations",
+    "secondary_capabilities": ["field-types-and-decimal"],
+    "criterion": "safe_type_conversion_pattern",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the add-column-then-backfill pattern rather than in-place modify. Sonnet often just writes modify.",
+  "research_citation": "Hashrocket — Ecto Migrations: Simple to Complex.",
+  "calibration": null
+}

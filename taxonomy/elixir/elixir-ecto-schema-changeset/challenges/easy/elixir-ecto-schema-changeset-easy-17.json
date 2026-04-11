@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-17",
+  "tier": "easy",
+  "title": "User has_one Profile — correct has_one direction",
+  "prompt": "Build MyApp.Accounts.User (fields: email, name) with a has_one association to MyApp.Accounts.Profile (fields: bio, avatar_url). Foreign key user_id lives on the profile side (Profile has belongs_to :user). Write both modules to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "has_one :profile, MyApp.Accounts.Profile",
+      "belongs_to :user, MyApp.Accounts.User",
+      "MyApp.Accounts.User",
+      "MyApp.Accounts.Profile"
+    ],
+    "must_not_contain": [
+      "belongs_to :profile, MyApp.Accounts.Profile",
+      "has_one :user, MyApp.Accounts.User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "has_one_direction",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single has_one/belongs_to pair, direction obvious from context.",
+  "calibration": null
+}

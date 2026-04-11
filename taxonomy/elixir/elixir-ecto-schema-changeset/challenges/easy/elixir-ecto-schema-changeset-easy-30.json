@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-30",
+  "tier": "easy",
+  "title": "validate_number for positive quantity",
+  "prompt": "In MyApp.Inventory.StockItem (fields: sku, quantity :integer), add a changeset that requires sku and quantity, and validates quantity >= 0. Write to lib/my_app/inventory/stock_item.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/inventory/stock_item.ex"],
+    "must_contain": [
+      "validate_number(:quantity, greater_than_or_equal_to: 0)",
+      "validate_required([:sku, :quantity])",
+      "MyApp.Inventory.StockItem"
+    ],
+    "must_not_contain": [
+      "field :quantity, :float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-basic",
+    "secondary_capabilities": [],
+    "criterion": "validate_number_non_negative",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single validate_number call. Trivial but useful for baseline pool coverage.",
+  "calibration": null
+}

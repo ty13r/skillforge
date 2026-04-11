@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-09",
+  "tier": "hard",
+  "title": "Multi-tenant mixed shared + tenant schemas",
+  "prompt": "In a multi-tenant app, most business tables live in per-tenant Postgres schemas but shared reference data (e.g. currency codes, supported languages) live in a main schema. Write: (1) MyApp.Tenants.Order with `@schema_prefix \"tenant_data\"` (lib/my_app/tenants/order.ex), (2) MyApp.Shared.Currency with `@schema_prefix \"main\"` (lib/my_app/shared/currency.ex). Both have minimal fields plus UTC timestamps.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/tenants/order.ex",
+      "lib/my_app/shared/currency.ex"
+    ],
+    "must_contain": [
+      "@schema_prefix \"tenant_data\"",
+      "@schema_prefix \"main\"",
+      "MyApp.Tenants.Order",
+      "MyApp.Shared.Currency",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      "@schema_prefix \"\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "multi-tenant-schemas",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "mixed_shared_tenant_schemas",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two schemas with distinct @schema_prefix values. Hard because recognizing the shared/tenant split requires domain reasoning.",
+  "research_citation": "Ecto Multi-tenancy guide: 'schema_prefix where shared data can be stored in a main prefix.'",
+  "calibration": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-22",
+  "tier": "easy",
+  "title": "Soft delete column in migration",
+  "prompt": "Write an Ecto migration that adds a `deleted_at` column of type :utc_datetime to the existing `members` table. No default value. Write to priv/repo/migrations/20260411400000_add_deleted_at_to_members.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["priv/repo/migrations/20260411400000_add_deleted_at_to_members.exs"],
+    "must_contain": [
+      "alter table(:members)",
+      "add :deleted_at, :utc_datetime"
+    ],
+    "must_not_contain": [
+      "add :deleted_at, :naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": ["migrations"],
+    "criterion": "soft_delete_column_migration",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-column alter_table. Easy — pure templated migration.",
+  "calibration": null
+}

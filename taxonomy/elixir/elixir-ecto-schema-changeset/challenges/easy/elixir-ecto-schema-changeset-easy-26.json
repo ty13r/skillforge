@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-26",
+  "tier": "easy",
+  "title": "Separate schema per bounded context — no cross-context belongs_to",
+  "prompt": "MyApp.Accounts.User has id. MyApp.Billing.Invoice belongs to a user, but the Accounts and Billing contexts must stay independent. Model Invoice with a plain integer `user_id` field rather than `belongs_to :user, MyApp.Accounts.User` — so Billing doesn't import Accounts. Write the Invoice schema to lib/my_app/billing/invoice.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/billing/invoice.ex"],
+    "must_contain": [
+      "field :user_id, :integer",
+      "MyApp.Billing.Invoice"
+    ],
+    "must_not_contain": [
+      "belongs_to :user, MyApp.Accounts.User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["associations"],
+    "criterion": "cross_context_id_only",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-schema output with a specific architectural rule. Easy because the rule is explicit in the prompt.",
+  "research_citation": "georgeguimaraes plugin: 'Query through the context, not across associations. Keeps contexts independent and testable.'",
+  "calibration": null
+}

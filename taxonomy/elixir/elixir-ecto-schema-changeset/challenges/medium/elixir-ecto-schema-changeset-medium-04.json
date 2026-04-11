@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-04",
+  "tier": "medium",
+  "title": "many_to_many Posts and Tags with join table",
+  "prompt": "Build a many_to_many association: MyApp.Blog.Post has many tags, and MyApp.Blog.Tag has many posts, joined by a `posts_tags` table. Use `many_to_many :tags, MyApp.Blog.Tag, join_through: \"posts_tags\"`. Also write the migration for the posts_tags join table (no primary key, references to both parents with cascade delete, and a unique index on the pair). Schema files to lib/my_app/blog/post.ex and lib/my_app/blog/tag.ex; migration to priv/repo/migrations/20260411800000_create_posts_tags.exs.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/blog/post.ex",
+      "lib/my_app/blog/tag.ex",
+      "priv/repo/migrations/20260411800000_create_posts_tags.exs"
+    ],
+    "must_contain": [
+      "many_to_many :tags, MyApp.Blog.Tag",
+      "many_to_many :posts, MyApp.Blog.Post",
+      "join_through: \"posts_tags\"",
+      "create table(:posts_tags, primary_key: false)",
+      "references(:posts, on_delete: :delete_all)",
+      "references(:tags, on_delete: :delete_all)",
+      "create unique_index(:posts_tags, [:post_id, :tag_id])"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "associations",
+    "secondary_capabilities": ["migrations", "unique-constraints-and-indexes"],
+    "criterion": "many_to_many_with_join_table",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-file coordination with a named join table. Sonnet often forgets the primary_key: false, or the unique_index, or the cascading references.",
+  "calibration": null
+}

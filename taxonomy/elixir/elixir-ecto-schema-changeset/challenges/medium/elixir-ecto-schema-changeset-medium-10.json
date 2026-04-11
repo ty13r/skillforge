@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-10",
+  "tier": "medium",
+  "title": "Soft-delete query scope function",
+  "prompt": "Building on test_fixtures/soft_delete_missing_scope.ex, add a query-scope helper `active_query/0` that returns a query excluding rows where deleted_at is not nil. Also add a `soft_delete/1` function that takes a member and updates its deleted_at. Write to lib/my_app/accounts/member.ex.",
+  "fixture_files": ["test_fixtures/soft_delete_missing_scope.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/member.ex"],
+    "must_contain": [
+      "def active_query",
+      "where: is_nil(m.deleted_at)",
+      "def soft_delete",
+      "DateTime.utc_now",
+      "MyApp.Accounts.Member"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "soft-deletes-and-timestamps",
+    "secondary_capabilities": [],
+    "criterion": "active_query_plus_soft_delete_fn",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two helper functions with Ecto.Query import + DateTime handling. Medium because queries must use is_nil, not deleted_at == nil.",
+  "research_citation": "Dashbit — Soft deletes with Ecto and PostgreSQL.",
+  "calibration": null
+}

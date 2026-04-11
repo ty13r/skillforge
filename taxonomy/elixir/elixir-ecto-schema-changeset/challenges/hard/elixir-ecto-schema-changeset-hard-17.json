@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-hard-17",
+  "tier": "hard",
+  "title": "Custom validator composed into a pipeline",
+  "prompt": "Write a reusable custom validator `validate_non_overlapping_ranges/3` that takes a changeset, a start field name, and an end field name, and adds an error if end is strictly before start. It must handle nil values without crashing and compose correctly in a changeset pipeline via `|>`. Then apply it to a Reservation schema with :check_in and :check_out fields. Write to lib/my_app/reservations/reservation.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/reservations/reservation.ex"],
+    "must_contain": [
+      "defp validate_non_overlapping_ranges",
+      "get_field(changeset, start_field)",
+      "get_field(changeset, end_field)",
+      "is_nil",
+      "add_error",
+      "validate_non_overlapping_ranges(:check_in, :check_out)",
+      "MyApp.Reservations.Reservation"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": [],
+    "criterion": "reusable_nil_safe_custom_validator",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires a reusable parameterized validator with nil-handling. Hard because the API design matters.",
+  "calibration": null
+}

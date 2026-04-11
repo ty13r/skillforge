@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-15",
+  "tier": "easy",
+  "title": "Password confirmation with virtual field",
+  "prompt": "Add password confirmation to MyApp.Accounts.User. Declare `:password` and `:password_confirmation` as virtual fields, then use `validate_confirmation(:password)` in the changeset. (Virtual fields live on the struct but are not persisted.) Write the full schema to lib/my_app/accounts/user.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "field :password, :string, virtual: true",
+      "field :password_confirmation, :string, virtual: true",
+      "validate_confirmation(:password)",
+      "MyApp.Accounts.User"
+    ],
+    "must_not_contain": [
+      "field :password, :string\n    field"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "validate_confirmation_virtual",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical virtual+confirmation pair. Easy but catches the common failure of declaring password_confirmation without the virtual flag.",
+  "calibration": null
+}

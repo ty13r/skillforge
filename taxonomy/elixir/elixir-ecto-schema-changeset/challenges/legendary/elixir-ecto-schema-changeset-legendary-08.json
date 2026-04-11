@@ -1,0 +1,48 @@
+{
+  "id": "elixir-ecto-schema-changeset-legendary-08",
+  "tier": "legendary",
+  "title": "End-to-end schema family: Product, LineItem, Order, Invoice with full discipline",
+  "prompt": "Build a four-schema e-commerce family applying ALL the family's rules at once: (1) MyApp.Catalog.Product (:decimal price with precision/scale, unique SKU, utc timestamps) (lib/my_app/catalog/product.ex); (2) MyApp.Orders.LineItem as embedded_schema embedded in Order with unit_price (:decimal) + quantity + product_id (lib/my_app/orders/line_item.ex); (3) MyApp.Orders.Order (embeds_many :line_items, :customer_email, status Ecto.Enum, has custom validator for at-least-one-item) (lib/my_app/orders/order.ex); (4) MyApp.Billing.Invoice with plain :order_id (NOT belongs_to — Billing is a separate context from Orders), subtotal/tax/total as :decimal, custom validator total == Decimal.add(subtotal, tax) using Decimal.equal? (lib/my_app/billing/invoice.ex). All four must use UTC timestamps. No :float anywhere.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app/catalog/product.ex",
+      "lib/my_app/orders/line_item.ex",
+      "lib/my_app/orders/order.ex",
+      "lib/my_app/billing/invoice.ex"
+    ],
+    "must_contain": [
+      "MyApp.Catalog.Product",
+      "MyApp.Orders.LineItem",
+      "MyApp.Orders.Order",
+      "MyApp.Billing.Invoice",
+      "field :price, :decimal",
+      "field :unit_price, :decimal",
+      "field :subtotal, :decimal",
+      "field :tax, :decimal",
+      "field :total, :decimal",
+      "embedded_schema",
+      "embeds_many :line_items, MyApp.Orders.LineItem",
+      "field :order_id, :integer",
+      "field :status, Ecto.Enum",
+      "Decimal.add",
+      "Decimal.equal?",
+      "unique_constraint(:sku)",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      ":float",
+      "belongs_to :order, MyApp.Orders.Order",
+      "timestamps()\n  end"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["field-types-and-decimal", "embedded-schemas", "cast-and-allowed-fields", "validations-custom"],
+    "criterion": "four_schema_family_full_discipline",
+    "weight": 1.0
+  },
+  "tier_rationale": "Maximum-scope synthesis of the entire family's rules across four coordinated schemas. Legendary because any single discipline break contaminates the whole.",
+  "research_citation": "georgeguimaraes plugin + oliver-kriska Iron Laws + Ecto embedded schemas guide.",
+  "calibration": null
+}

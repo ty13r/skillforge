@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-schema-changeset-medium-11",
+  "tier": "medium",
+  "title": "put_change for derived slug field",
+  "prompt": "Add a slug field to MyApp.Blog.Post that's derived from the title. In the changeset, use put_change to set slug = title |> String.downcase |> String.replace(\" \", \"-\") whenever title is in the changes map. Do not allow slug to be set directly from external input — it must not appear in the cast list. Write to lib/my_app/blog/post.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/post.ex"],
+    "must_contain": [
+      "put_change(:slug",
+      "String.downcase",
+      "MyApp.Blog.Post",
+      "field :slug, :string"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:title, :body, :slug])",
+      "cast(attrs, [:slug"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "validations-custom",
+    "secondary_capabilities": ["cast-and-allowed-fields"],
+    "criterion": "put_change_derived_slug",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing put_change is the right tool for derived fields AND that slug must not be in the cast allowlist. Sonnet often casts the slug.",
+  "calibration": null
+}

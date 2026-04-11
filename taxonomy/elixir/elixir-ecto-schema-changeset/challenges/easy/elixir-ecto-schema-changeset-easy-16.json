@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-16",
+  "tier": "easy",
+  "title": "Flat User schema with single changeset",
+  "prompt": "Design MyApp.Accounts.Person as a flat schema with email, name, phone. Provide one `changeset/2` that casts all three, marks email and name as required, and validates email format. No splitting needed — this is a simple person record. Use UTC timestamps. Write to lib/my_app/accounts/person.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/person.ex"],
+    "must_contain": [
+      "MyApp.Accounts.Person",
+      "field :email, :string",
+      "field :name, :string",
+      "field :phone, :string",
+      "timestamps(type: :utc_datetime)",
+      "validate_format(:email"
+    ],
+    "must_not_contain": [
+      ":float"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "schema-organization",
+    "secondary_capabilities": ["validations-basic"],
+    "criterion": "flat_schema_construction",
+    "weight": 1.0
+  },
+  "tier_rationale": "Trivial flat-schema baseline. Easy because no structural decisions are needed.",
+  "calibration": null
+}

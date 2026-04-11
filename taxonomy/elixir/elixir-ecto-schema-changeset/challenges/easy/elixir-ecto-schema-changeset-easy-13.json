@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-13",
+  "tier": "easy",
+  "title": "Customer with embedded Address",
+  "prompt": "Build MyApp.CRM.Customer with fields name and email, plus an embedded single Address (fields: street, city, postal_code, country). Use embeds_one for the address. Address should be its own embedded_schema module MyApp.CRM.Address with a changeset/2 function. In Customer's changeset, call cast_embed with &Address.changeset/2. Write both modules to lib/my_app/crm/customer.ex.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/crm/customer.ex"],
+    "must_contain": [
+      "embedded_schema",
+      "embeds_one :primary_address, MyApp.CRM.Address",
+      "cast_embed(:primary_address",
+      "MyApp.CRM.Customer",
+      "MyApp.CRM.Address"
+    ],
+    "must_not_contain": [
+      "has_one :primary_address",
+      "belongs_to :primary_address"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "embedded-schemas",
+    "secondary_capabilities": ["schema-organization"],
+    "criterion": "embeds_one_with_cast_embed",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical embeds_one + cast_embed pair. Easy because the modeling call is obvious: address is single-parent and never queried independently.",
+  "calibration": null
+}

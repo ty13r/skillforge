@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-schema-changeset-easy-03",
+  "tier": "easy",
+  "title": "Fix :float on Invoice money fields",
+  "prompt": "The Invoice schema in test_fixtures/invoice_float_amount.ex has `subtotal`, `tax`, `total`, and `balance` as :float. Fix all of them to :decimal. Also change the `issued_at` field from :naive_datetime to :utc_datetime (the app serves users globally), and update `timestamps()` to use `type: :utc_datetime`. Write the fixed schema to lib/my_app/billing/invoice.ex.",
+  "fixture_files": ["test_fixtures/invoice_float_amount.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/billing/invoice.ex"],
+    "must_contain": [
+      "field :subtotal, :decimal",
+      "field :tax, :decimal",
+      "field :total, :decimal",
+      "field :balance, :decimal",
+      "field :issued_at, :utc_datetime",
+      "timestamps(type: :utc_datetime)"
+    ],
+    "must_not_contain": [
+      ":float",
+      "field :issued_at, :naive_datetime"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "field-types-and-decimal",
+    "secondary_capabilities": [],
+    "criterion": "decimal_and_utc_datetime",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-field sweep where every money field gets the same fix. Tests that Claude applies the :decimal rule consistently, not just for the first field named 'price'.",
+  "research_citation": "Ecto Issue #2683 — timestamps naive_datetime default acknowledged as historical accident",
+  "calibration": null
+}
