@@ -43,6 +43,10 @@ Top 7 families from `taxonomy/elixir/README.md` (Tier S + Tier A):
 - At least 5 challenges in the pool reference real Claude failures cited in the per-family `research.md`
 - The family's PR description includes a summary of pool stats (counts per tier, capability coverage, link to research.md)
 
+## File schemas reference
+
+All file shapes (`family.json`, `seed.json`, `challenges/*.json`, `_calibration.json`, `criteria.json`, `environment.yml`, `score.py` contract) are documented in [`SCHEMAS.md`](SCHEMAS.md). Drafting subagents read SCHEMAS.md once and follow it.
+
 ## File organization (target end state per family)
 
 ```
