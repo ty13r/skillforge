@@ -66,6 +66,9 @@ class RunDetail(BaseModel):
     # VariantBreakdown for atomic runs.
     family_id: str | None = None
     evolution_mode: str = "molecular"
+    # v2.0 Step 1b — exposes the audit trail + reconstructed integration report
+    # so the atomic run-detail page can render a narrative timeline.
+    learning_log: list[str] = Field(default_factory=list)
 
 
 class LineageNode(BaseModel):

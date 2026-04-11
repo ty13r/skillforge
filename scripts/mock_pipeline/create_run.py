@@ -1,11 +1,17 @@
 """Create an atomic EvolutionRun + VariantEvolution rows + gen-0 seed genomes.
 
-Idempotent via a stable run_id keyed on family slug: if a run already exists
-for ``<family-slug>-mock-v1``, it is reused and genomes/vevos are upserted.
+Idempotent via a stable run_id keyed on family slug. Phoenix-liveview is
+frozen at ``-mock-v1`` (pre-rebrand ID) for DB continuity; every other
+family uses ``<slug>-seed-v1``.
+
+Family-agnostic: reads family.json to derive the specialization text, works
+for every SKLD-bench lighthouse family (elixir-phoenix-liveview,
+elixir-ecto-*, elixir-oban-worker, elixir-pattern-match-refactor,
+elixir-security-linter).
 
 Usage:
     uv run python scripts/mock_pipeline/create_run.py \\
-        --family-slug elixir-phoenix-liveview
+        --family-slug elixir-ecto-sandbox-test
 
 Prints a JSON summary with the run_id, vevo ids, and seed genome ids per
 dimension. Downstream helpers consume this to drive the per-dimension loop.
@@ -66,7 +72,25 @@ def _vevo_id(family_slug: str, dimension: str) -> str:
 
 
 def _run_id(family_slug: str) -> str:
-    return f"{family_slug}-mock-v1"
+    # Phoenix-liveview shipped as `-mock-v1` before the rebrand and is frozen
+    # at that ID for DB continuity. Every new family uses the `-seed-v1` suffix.
+    if family_slug == "elixir-phoenix-liveview":
+        return f"{family_slug}-mock-v1"
+    return f"{family_slug}-seed-v1"
+
+
+def _family_display_name(family_json: dict, family_slug: str) -> str:
+    """Resolve a human-readable family name from family.json metadata.
+
+    Prefers explicit ``name`` or ``family_name`` fields; falls back to a
+    title-cased version of the slug so the specialization line reads
+    naturally for any family.
+    """
+    for key in ("name", "family_name", "title", "display_name"):
+        value = family_json.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return family_slug.replace("elixir-", "").replace("-", " ").title()
 
 
 async def _persist_seed_genome(
@@ -108,20 +132,21 @@ async def create_run(family_slug: str) -> dict:
     # best_skill to the composite.
     existing = await get_run(run_id)
     if existing is None:
+        display_name = _family_display_name(family_json, family_slug)
+        total_dims = len(seed_json["capability_variants"]) + 1
         run = EvolutionRun(
             id=run_id,
             mode="domain",
             specialization=(
-                f"Elixir Phoenix LiveView · mock pipeline run over "
-                f"{len(seed_json['capability_variants']) + 1} dimensions · "
-                "Opus 4.6 subagent orchestration"
+                f"{display_name} · seed pipeline run over {total_dims} "
+                "dimensions · Opus 4.6 subagent orchestration"
             ),
             population_size=2,
             num_generations=1,
             challenges=[],
             generations=[],
             learning_log=[
-                f"mock_pipeline: run created for {family_slug} at {_now().isoformat()}",
+                f"seed_pipeline: run created for {family_slug} at {_now().isoformat()}",
             ],
             status="running",
             created_at=_now(),

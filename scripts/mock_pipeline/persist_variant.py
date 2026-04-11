@@ -86,7 +86,7 @@ async def persist_variant(
         frontmatter=frontmatter,
         supporting_files={},
         traits=[dimension],
-        meta_strategy="mock_pipeline_winner",
+        meta_strategy="seed_pipeline_winner",
         maturity="tested",
         deterministic_scores={"l1": fitness},
         pareto_objectives={"quality": fitness},

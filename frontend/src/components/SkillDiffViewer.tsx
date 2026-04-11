@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { diffLines, type Change } from "diff";
 
+import AtomicLineageView from "./AtomicLineageView";
+import type { RunDetail, RunReport } from "../types";
+
 interface SkillDetail {
   id: string;
   generation: number;
@@ -50,8 +53,33 @@ export default function SkillDiffViewer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Atomic-mode: load the run detail + report to drive AtomicLineageView
+  // instead of the diff-based rendering. The diff viewer is only meaningful
+  // for molecular mutation chains; atomic composites are assemblies of many
+  // unrelated parents, which produces nonsense diffs.
+  const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
+  const [report, setReport] = useState<RunReport | null>(null);
+
   useEffect(() => {
     if (!runId) return;
+    fetch(`/api/runs/${runId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setRunDetail(d))
+      .catch(() => setRunDetail(null));
+  }, [runId]);
+
+  const isAtomic = runDetail?.evolution_mode === "atomic";
+
+  useEffect(() => {
+    if (!runId || !isAtomic) return;
+    fetch(`/api/runs/${runId}/report`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setReport(d))
+      .catch(() => setReport(null));
+  }, [runId, isAtomic]);
+
+  useEffect(() => {
+    if (!runId || isAtomic) return;
     fetch(`/api/runs/${runId}/lineage`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -65,7 +93,16 @@ export default function SkillDiffViewer() {
         setSelectedIdx(interesting >= 0 ? interesting : 0);
       })
       .catch((err) => setError(String(err)));
-  }, [runId]);
+  }, [runId, isAtomic]);
+
+  // Fetch lineage for the atomic view too (different state path)
+  useEffect(() => {
+    if (!runId || !isAtomic) return;
+    fetch(`/api/runs/${runId}/lineage`)
+      .then((r) => (r.ok ? r.json() : { nodes: [], edges: [] }))
+      .then(setLineage)
+      .catch(() => setLineage({ nodes: [], edges: [] }));
+  }, [runId, isAtomic]);
 
   useEffect(() => {
     if (!runId || !lineage || selectedIdx == null) return;
@@ -99,6 +136,48 @@ export default function SkillDiffViewer() {
 
   const currentEdge =
     lineage && selectedIdx != null ? lineage.edges[selectedIdx] : null;
+
+  // Atomic-mode render path: skip the diff machinery entirely and render
+  // the new AtomicLineageView that explains the 12→1 assembly without
+  // pretending to show a mutation diff.
+  if (isAtomic) {
+    return (
+      <div className="mx-auto max-w-[1400px] px-6 py-10">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-tertiary">
+              Protocol: Ancestry · Atomic Assembly
+            </p>
+            <h1 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight">
+              Lineage <span className="text-secondary">Assembly View</span>
+            </h1>
+            <p className="mt-2 text-sm text-on-surface-dim">
+              Run {runId?.slice(0, 12)} · this composite was assembled from
+              many parents rather than mutated from one, so there's no diff
+              to show — browse each parent below.
+            </p>
+          </div>
+          <Link
+            to={`/runs/${runId}`}
+            className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim hover:text-on-surface"
+          >
+            ← Back to Arena
+          </Link>
+        </div>
+        <div className="mt-8">
+          {lineage && report ? (
+            <AtomicLineageView
+              nodes={lineage.nodes}
+              edges={lineage.edges}
+              genomes={report.skill_genomes}
+            />
+          ) : (
+            <p className="text-sm text-on-surface-dim">Loading lineage…</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
