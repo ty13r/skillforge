@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import BreedingReport from "./BreedingReport";
+import AtomicRunDetail from "./AtomicRunDetail";
 import EvolutionResults from "./EvolutionResults";
 import FitnessChart from "./FitnessChart";
 import LiveFeedLog from "./LiveFeedLog";
@@ -166,8 +167,13 @@ export default function EvolutionArena() {
 
   if (!runId) return null;
 
-  // If complete, render the results screen
+  // If complete, render the results screen. Atomic-mode runs get the
+  // richer AtomicRunDetail showcase page (Step 1b); molecular runs stay on
+  // the legacy EvolutionResults layout.
   if (isComplete) {
+    if (runDetail?.evolution_mode === "atomic") {
+      return <AtomicRunDetail runId={runId} runDetail={runDetail} />;
+    }
     return <EvolutionResults runId={runId} sockState={sockState} runDetail={runDetail} />;
   }
 

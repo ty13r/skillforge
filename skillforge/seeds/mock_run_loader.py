@@ -1,15 +1,15 @@
-"""Idempotent loader for mock-pipeline run seeds.
+"""Idempotent loader for seed-pipeline run artifacts.
 
 Mirrors the seed_loader pattern: on boot, for each JSON file under
-``skillforge/seeds/mock_runs/``, check whether the run already exists in the
+``skillforge/seeds/seed_runs/``, check whether the run already exists in the
 DB with a matching content hash, and if not, replay the full row set
 (taxonomy nodes → family → genomes → run → variants → variant_evolutions →
 challenges).
 
 These runs are produced by ``scripts/mock_pipeline/export_run_to_seed.py``
-after a manual Claude-Code-subagent orchestration of the atomic pipeline.
-They exist so that production (Railway, ephemeral DB) shows real v2.1 content
-in the Registry without waiting for the full Phase 0 plumbing to land.
+after an orchestrated atomic-pipeline run. They exist so that production
+(Railway, ephemeral DB) shows real v2.1 content in the Registry without
+waiting for the full Phase 0 plumbing to land.
 
 Fail-soft: a bad JSON file is logged and skipped; it never prevents boot.
 """
@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 from pathlib import Path
 
 import aiosqlite
@@ -44,17 +45,31 @@ from skillforge.models import (
 
 logger = logging.getLogger(__name__)
 
-MOCK_RUNS_DIR = Path(__file__).parent / "mock_runs"
+SEED_RUNS_DIR = Path(__file__).parent / "seed_runs"
 
 
 def _content_hash(document: dict) -> str:
-    """Stable hash over the mock run JSON content."""
+    """Stable hash over the seed run JSON content."""
     payload = json.dumps(document, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+_MARKER_RE = re.compile(r"\s*\[(mock|seed)_v[a-f0-9]+\]\s*")
+
+
 def _hash_marker(content_hash: str) -> str:
-    return f"[mock_v{content_hash[:12]}]"
+    return f"[seed_v{content_hash[:12]}]"
+
+
+def _strip_markers(specialization: str) -> str:
+    """Remove any existing ``[mock_v...]`` or ``[seed_v...]`` markers.
+
+    The loader used to append a fresh marker on every reload without
+    removing stale ones, which led to specialization strings like
+    ``"... [mock_v...] [mock_v...] [seed_v...]"``. This helper is idempotent
+    cleanup.
+    """
+    return _MARKER_RE.sub(" ", specialization).strip()
 
 
 async def _save_run_shallow(run: EvolutionRun) -> None:
@@ -204,12 +219,12 @@ async def _load_one(path: Path) -> None:
     try:
         document = json.loads(path.read_text())
     except (json.JSONDecodeError, OSError) as e:
-        logger.warning("mock_run_loader: failed to read %s: %s", path.name, e)
+        logger.warning("seed_run_loader: failed to read %s: %s", path.name, e)
         return
 
     runs = document.get("evolution_runs", [])
     if not runs:
-        logger.info("mock_run_loader: %s has no evolution_runs, skipping", path.name)
+        logger.info("seed_run_loader: %s has no evolution_runs, skipping", path.name)
         return
 
     run_id = runs[0]["id"]
@@ -218,7 +233,7 @@ async def _load_one(path: Path) -> None:
 
     existing = await get_run(run_id)
     if existing is not None and marker in existing.specialization:
-        logger.info("mock_run_loader: %s unchanged, skipping", path.name)
+        logger.info("seed_run_loader: %s unchanged, skipping", path.name)
         return
 
     # 1. Taxonomy nodes in dependency order (domain → focus → language).
@@ -273,9 +288,13 @@ async def _load_one(path: Path) -> None:
     if run_dict.get("family_id"):
         run_dict["family_id"] = family_id_map.get(run_dict["family_id"], run_dict["family_id"])
     run = EvolutionRun.from_dict(run_dict)
-    # Inject the content-hash marker so the skip check on the next boot works.
-    if marker not in run.specialization:
-        run.specialization = f"{run.specialization} {marker}"
+    # Strip any stale `[mock_v...]` / `[seed_v...]` markers before injecting
+    # the fresh one. Replace "mock pipeline" legacy wording with "seed
+    # pipeline" on the way through so old seed files rebrand on reload.
+    cleaned = _strip_markers(run.specialization).replace(
+        "mock pipeline", "seed pipeline"
+    )
+    run.specialization = f"{cleaned} {marker}"
     await _save_run_shallow(run)
 
     # 4. Genomes — they FK to run, so they must come after the run row.
@@ -322,7 +341,7 @@ async def _load_one(path: Path) -> None:
         await _patch_best_skill_id(run_id, best_skill_id)
 
     logger.info(
-        "mock_run_loader: loaded %s → run_id=%s (%d genomes, %d variants, %d vevos, %d challenges)",
+        "seed_run_loader: loaded %s → run_id=%s (%d genomes, %d variants, %d vevos, %d challenges)",
         path.name,
         run_id,
         len(document.get("skill_genomes", [])),
@@ -333,18 +352,22 @@ async def _load_one(path: Path) -> None:
 
 
 async def load_mock_runs() -> None:
-    """Load every ``mock_runs/*.json`` into the DB. Safe to call on every boot."""
-    if not MOCK_RUNS_DIR.exists():
-        logger.info("mock_run_loader: no mock_runs dir at %s", MOCK_RUNS_DIR)
+    """Load every ``seed_runs/*.json`` into the DB. Safe to call on every boot.
+
+    Function name kept as ``load_mock_runs`` to preserve the existing import
+    in ``main.py``; it loads from the ``seed_runs/`` directory now.
+    """
+    if not SEED_RUNS_DIR.exists():
+        logger.info("seed_run_loader: no seed_runs dir at %s", SEED_RUNS_DIR)
         return
 
-    files = sorted(MOCK_RUNS_DIR.glob("*.json"))
+    files = sorted(SEED_RUNS_DIR.glob("*.json"))
     if not files:
-        logger.info("mock_run_loader: no mock run files to load")
+        logger.info("seed_run_loader: no seed run files to load")
         return
 
     for path in files:
         try:
             await _load_one(path)
         except Exception as e:  # noqa: BLE001 - fail soft, never break boot
-            logger.exception("mock_run_loader: failed to load %s: %s", path.name, e)
+            logger.exception("seed_run_loader: failed to load %s: %s", path.name, e)

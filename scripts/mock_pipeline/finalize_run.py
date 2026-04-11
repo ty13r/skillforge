@@ -96,7 +96,7 @@ async def finalize_run(
     run.total_cost_usd = total_cost_usd
     run.completed_at = _now()
     run.learning_log.append(
-        f"mock_pipeline: finalized at {_now().isoformat()} with "
+        f"seed_pipeline: finalized at {_now().isoformat()} with "
         f"{len(winners)} winning variants, avg fitness={avg_fitness:.3f}"
     )
     await save_run(run)

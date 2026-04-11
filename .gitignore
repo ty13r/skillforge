@@ -14,6 +14,10 @@ skillforge.db
 skillforge.db-journal
 /tmp/skillforge-*
 run-dumps/
+reports/
+data/reports/
+.claude/scheduled_tasks.lock
+docs/research/external-papers/
 
 # Stray artifacts from SDK debug scripts that write to cwd
 /solution.py

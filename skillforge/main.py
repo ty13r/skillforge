@@ -80,8 +80,8 @@ async def lifespan(app: FastAPI):
     await load_seeds()
     try:
         await load_mock_runs()
-    except Exception as exc:  # pragma: no cover - fail-soft on mock run load
-        logger.exception("Mock run loader failed: %s", exc)
+    except Exception as exc:  # pragma: no cover - fail-soft on seed run load
+        logger.exception("Seed run loader failed: %s", exc)
     try:
         taxonomy_diag = await load_taxonomy()
         logger.info(
@@ -154,9 +154,23 @@ def _mount_frontend_spa() -> None:
         name="assets",
     )
 
-    # SPA index for / and any unknown route (client-side router handles it)
+    # SPA index for / and any unknown route — the react-router client takes
+    # over for deep links like /runs/:runId/* and /registry.
     @app.get("/")
     async def root_spa() -> FileResponse:
+        return FileResponse(str(_FRONTEND_DIST / "index.html"))
+
+    # Catch-all: any GET that didn't match a registered API route, the
+    # /assets mount, or the explicit "/" above falls through to here and
+    # gets index.html back so the SPA router can hydrate and render the
+    # requested path. API 404s are preserved by explicitly rejecting any
+    # /api/* or /ws/* path that somehow reaches this fallback.
+    from fastapi import HTTPException
+
+    @app.get("/{full_path:path}")
+    async def spa_catchall(full_path: str) -> FileResponse:
+        if full_path.startswith(("api/", "ws", "assets/")):
+            raise HTTPException(status_code=404, detail="Not Found")
         return FileResponse(str(_FRONTEND_DIST / "index.html"))
 
 

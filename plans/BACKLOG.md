@@ -200,3 +200,69 @@ Most of this shipped in the QA session. Remaining items:
 - Streaming trace: real-time output snippets in variant cards
 - Diff view against parent skill in the skill modal
 - Full rename sweep: any remaining "Competitor" → "Variant" labels
+
+---
+
+## Ship SKLD-bench Elixir families as a Claude Code plugin
+
+**Goal**: once the 7 Elixir lighthouse families have shipped as evolved composite skills (PR #18 landed the first, `elixir-phoenix-liveview-composite`; 6 more to go), bundle ALL of them into a single distributable Claude Code plugin called `skldbench-elixir-plugin`. Users run `claude plugin install skldbench-elixir` and get the whole Elixir toolkit at once — not one skill at a time.
+
+**Why a plugin, not just skill directories**: a bare `SKILL.md` relies on passive Level 1 routing (Claude reads frontmatter descriptions and picks the best match). A plugin ships keyword-triggered hooks that AGGRESSIVELY inject skills into the conversation when the user mentions relevant terms. We confirmed this by inspecting `~/.claude/plugins/cache/vercel-vercel-plugin/0.32.0/` — the vercel plugin's `hooks/user-prompt-submit-skill-inject.mjs` (788 lines of BM25 matching) is what fires the `[vercel-plugin]` system-reminders we've seen throughout this project when we mention "deploy", "edge functions", etc. Users who install our plugin would get the same aggressive routing for Phoenix, Ecto, Oban, and security-linter keywords.
+
+**Plugin structure** (one directory ships 7 skills):
+
+```
+skldbench-elixir-plugin/
+├── .claude-plugin/
+│   ├── plugin.json                       # name, version, author, keywords
+│   └── marketplace.json                  # (optional) marketplace listing
+├── hooks/
+│   ├── hooks.json                        # registers UserPromptSubmit + PreToolUse hooks
+│   ├── user-prompt-submit-skill-inject.mjs   # lexical matcher (simplified from vercel pattern)
+│   └── pretooluse-skill-inject.mjs       # tool-call-time reminder
+├── generated/
+│   └── skill-manifest.json               # 7 skills × retrieval.{aliases, intents, entities, pathPatterns, bashPatterns}
+├── skills/
+│   ├── elixir-phoenix-liveview-composite/
+│   │   ├── SKILL.md
+│   │   ├── scripts/{validate.sh, main_helper.py}
+│   │   ├── references/{guide.md, cheatsheet.md, anti-patterns.md}
+│   │   ├── test_fixtures/*.ex
+│   │   └── assets/*.template
+│   ├── elixir-ecto-schema-changeset-composite/
+│   ├── elixir-ecto-sandbox-test-composite/
+│   ├── elixir-ecto-query-writer-composite/
+│   ├── elixir-oban-worker-composite/
+│   ├── elixir-pattern-match-refactor-composite/
+│   └── elixir-security-linter-composite/
+└── README.md                             # install instructions + keyword cheat sheet
+```
+
+**Requirements**:
+
+1. All 7 Elixir composites must be evolved (via real engine or post-hoc enrichment) and shipping a rich package (SKILL.md + scripts + references + test_fixtures + assets). First one (`elixir-phoenix-liveview-composite`) is done. 6 more to go — either via repeated mock runs (~45 min each via the current helper scripts) or via the real v2.1 engine once Phase 0 plumbing lands (see `plans/PLAN-V2.1.md`).
+
+2. A **SkillForge-native plugin emitter**: a new `scripts/emit_plugin/` helper that:
+   - Takes a list of run IDs
+   - Pulls each composite + supporting_files from the DB
+   - Generates `.claude-plugin/plugin.json` with proper metadata
+   - Generates `hooks/hooks.json` registering `UserPromptSubmit` and `PreToolUse` hooks
+   - Ships a minimal `user-prompt-submit-skill-inject.mjs` (~150-200 lines, keyword regex + session dedup — don't clone the full BM25 complexity unless it proves necessary)
+   - Generates `generated/skill-manifest.json` from each composite's frontmatter description + per-dimension traits. Possibly dispatch a Claude agent to extract `retrieval.{aliases, intents, entities}` from the composite body.
+   - Assembles the `skills/*/` directory structure from each genome's `supporting_files`
+   - Outputs a directory ready to `zip -r skldbench-elixir-plugin.zip .` and publish
+
+3. A **Claude Code plugin marketplace listing** at the end. The Vercel plugin has a `.claude-plugin/marketplace.json` — ours should too, so users can `claude plugin search skldbench` and find it.
+
+4. **End-to-end verification**: install the plugin locally via `claude plugin install <path>`, open a fresh Claude Code session in a Phoenix project, type "help me refactor this LiveView", and confirm the `elixir-phoenix-liveview-composite` skill gets auto-injected via the hook.
+
+5. **Optional SkillForge UI integration**: add a "Download as Plugin" button on the Registry page (alongside the existing "Download .zip" button per run). Each run's zip stays a single skill; the plugin button bundles multiple runs into a plugin distribution.
+
+**Blocked on**:
+- 6 more Elixir composite runs (real engine preferred over mock repeat, so this is really blocked on `plans/PLAN-V2.1.md` Phase 0 completion)
+- A decision on whether the hook script should be a minimal custom matcher (~200 lines) or a vendored + adapted version of the Vercel plugin's matcher
+- Authoritative Claude Code plugin schema docs (`claude-code-guide` agent can fetch)
+
+**Priority**: high once all 7 families exist. Low until then. This is the "grand finale" — the polished, distributable artifact that justifies the entire SKLD-bench content workstream + v2.1 engine build.
+
+**Not this**: do NOT build the plugin wrapper before all 7 composites are rich and validated. Packaging a half-done set of skills as a plugin is worse than no plugin, because it sets a quality floor and anchors user expectations to an incomplete product.

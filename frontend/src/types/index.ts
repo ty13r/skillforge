@@ -45,6 +45,8 @@ export interface RunDetail {
   // v2.0 — present so the Advanced toggle can render the VariantBreakdown
   family_id?: string | null;
   evolution_mode?: "molecular" | "atomic";
+  // v2.0 Step 1b — audit trail + reconstructed integration report
+  learning_log?: string[];
 }
 
 export interface LineageNode {
@@ -59,6 +61,125 @@ export interface LineageEdge {
   parent_id: string;
   child_id: string;
   mutation_type: string;
+}
+
+// --- v2.0 Step 1b — post-run report shape matching skillforge/engine/report.py
+
+export interface RunReportMetadata {
+  run_id: string;
+  mode: string;
+  specialization: string;
+  status: string;
+  population_size: number;
+  num_generations: number;
+  evolution_mode: string;
+  family_id: string | null;
+  total_cost_usd: number;
+  max_budget_usd: number;
+  created_at: string | null;
+  completed_at: string | null;
+  duration_sec: number | null;
+  failure_reason: string | null;
+}
+
+export interface RunReportTaxonomy {
+  family_id: string;
+  family_slug: string;
+  family_label: string;
+  decomposition_strategy: string;
+  domain: { slug: string; label: string } | null;
+  focus: { slug: string; label: string } | null;
+  language: { slug: string; label: string } | null;
+  tags: string[];
+}
+
+export interface RunReportChallenge {
+  id: string;
+  prompt: string;
+  difficulty: string;
+  verification_method: string;
+  evaluation_criteria: Record<string, unknown>;
+}
+
+export interface RunReportVariantEvolution {
+  id: string;
+  dimension: string;
+  tier: "foundation" | "capability";
+  status: string;
+  population_size: number;
+  num_generations: number;
+  winner_variant_id: string | null;
+  foundation_genome_id: string | null;
+  challenge_id: string | null;
+  created_at: string | null;
+  completed_at: string | null;
+}
+
+export interface RunReportSummary {
+  best_skill_id: string | null;
+  aggregate_fitness: number;
+  total_cost_usd: number;
+  cost_per_generation: number;
+  wall_clock_duration_sec: number | null;
+  evolution_mode: string;
+  dimensions_evolved: (string | number)[];
+  key_discoveries: string[];
+}
+
+export interface RunReportGenome {
+  id: string;
+  generation: number;
+  maturity: string;
+  meta_strategy: string;
+  parent_ids: string[];
+  traits: string[];
+  pareto_objectives: Record<string, number>;
+  deterministic_scores: Record<string, number>;
+  skill_md_content: string;
+  frontmatter: Record<string, unknown>;
+  supporting_files?: Record<string, string>;
+}
+
+// Parsed from the "[competition_scores] {...}" learning_log entry.
+export interface CompetitionMatch {
+  dimension: string;
+  tier: "foundation" | "capability";
+  challenge_ids: string[];
+  variant_1_label: string;
+  variant_2_label: string;
+  variant_1_scores: number[];
+  variant_2_scores: number[];
+  variant_1_mean: number;
+  variant_2_mean: number;
+  winner_slot: 1 | 2;
+  winning_fitness: number;
+}
+
+export interface CompetitionScoresPayload {
+  matches: CompetitionMatch[];
+  generation: number;
+  total_generations: number;
+  challenges_per_variant: number;
+  baseline_ran: boolean;
+  scorer: string;
+}
+
+export interface RunReport {
+  metadata: RunReportMetadata;
+  taxonomy: RunReportTaxonomy | null;
+  challenges: RunReportChallenge[];
+  generations: Record<string, unknown>[];
+  variant_evolutions: RunReportVariantEvolution[];
+  skill_genomes: RunReportGenome[];
+  assembly_report: {
+    family_id: string;
+    best_assembly_id: string | null;
+    active_variants: Record<string, unknown>[];
+  } | null;
+  bible_findings: unknown[];
+  learning_log: string[];
+  summary: RunReportSummary;
+  generated_at: string;
 }
 
 // --- WebSocket events --------------------------------------------------------
