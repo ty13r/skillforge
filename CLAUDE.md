@@ -7,7 +7,9 @@ An evolutionary breeding platform for Claude Agent Skills. Decomposes skills int
 
 ## Current Status
 - **v1.x** (shipped): Monolithic skill evolution — works end-to-end, deployed on Railway
-- **v2.0** (active development): Atomic variant evolution — `plans/PLAN-V2.0.md` is the active plan, start at **Wave 1-1**
+- **v2.0** (shipped): Atomic variant evolution — 5 phases landed across PRs #2-#6; feature-complete
+- **v2.1 content** (shipped): SKLD-bench controlled evaluation environments — 7 Elixir lighthouse families authored with **867 challenges** (PRs #9-#17). Families: `elixir-phoenix-liveview`, `elixir-ecto-sandbox-test`, `elixir-security-linter`, `elixir-ecto-query-writer`, `elixir-ecto-schema-changeset`, `elixir-oban-worker`, `elixir-pattern-match-refactor`. Workstream plan: `taxonomy/elixir/SEEDING-PLAN.md`. File shapes: `taxonomy/elixir/SCHEMAS.md`.
+- **v2.1 plumbing** (pending): Wire the 7 families into the evolution engine. `plans/PLAN-V2.1.md` needs writing. Next: write PLAN-V2.1.md, then execute Phase 0 (DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → sandbox env verification → live integration test).
 
 ## Tech
 - Python 3.12+, FastAPI, Claude Agent SDK, SQLite (aiosqlite), WebSockets
@@ -51,6 +53,9 @@ Core loop: `skillforge/engine/evolution.py` (molecular) + `skillforge/engine/var
 - `docs/how-skld-works.md` — **start here**: full system overview for first-time readers.
 - `plans/SPEC-V2.0.md` — v2.0 architecture spec (taxonomy, agents, variants, evaluation, data model).
 - `plans/PLAN-V2.0.md` — v2.0 implementation plan (5 phases, 15 waves, file-by-file).
+- `plans/SPEC-V2.1.md` — v2.1 architecture spec (controlled evaluation environments, tiered challenge pools, train/test separation).
+- `taxonomy/elixir/SEEDING-PLAN.md` — SKLD-bench content authoring plan for the 7 lighthouse Elixir families.
+- `taxonomy/elixir/SCHEMAS.md` — file shapes for v2.1 families (family.json, seed.json, challenges, score.py contract).
 - `docs/skills-research.md` — the definitive technical reference for Claude Agent Skills.
 - `docs/golden-template.md` — canonical gen 0 structure. Spawner uses this as its seed.
 - `docs/golden-template/` — actual template files the Spawner copies and mutates.
@@ -286,8 +291,12 @@ The journal is the only doc that's written for humans first and machines second.
 ## Plans & Progress
 
 All planning and progress documents live in `plans/`:
-- **`plans/PLAN-V2.0.md`** — **active plan**: Atomic variant evolution. 5 phases, 15 waves. Start at Wave 1-1.
-- **`plans/SPEC-V2.0.md`** — finalized spec: taxonomy, agent roster, variant architecture, evaluation strategy, data model.
+- **`plans/PLAN-V2.1.md`** — **next active plan** (needs writing): Phase 0 plumbing for v2.1 — wiring the 7 SKLD-bench Elixir families into the evolution engine. DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → live integration test.
+- **`plans/SPEC-V2.1.md`** — shipped spec: controlled evaluation environments, tiered challenge pools, train/test separation.
+- **`taxonomy/elixir/SEEDING-PLAN.md`** — shipped workstream plan: SKLD-bench content authoring for the 7 lighthouse Elixir families (867 challenges, PRs #9-#17).
+- **`taxonomy/elixir/SCHEMAS.md`** — file shapes reference for every file in a v2.1 family folder.
+- `plans/PLAN-V2.0.md` — v2.0 implementation plan (5 phases, 15 waves). Shipped.
+- `plans/SPEC-V2.0.md` — v2.0 spec: taxonomy, agent roster, variant architecture, evaluation strategy, data model.
 - `plans/BACKLOG.md` — carried-over items from v1.2 + research paper framework + SKLD rebrand.
 - `plans/PROGRESS.md` — completed work log, MVP checklist, decisions log.
 - `plans/PLAN-V1.2.md` — v1.2 plan (Managed Agents port). Shipped via PR #1.
