@@ -26,6 +26,7 @@ import aiosqlite
 from skillforge.config import DB_PATH
 from skillforge.db.queries import (
     get_family,
+    get_family_by_slug,
     get_run,
     get_taxonomy_node_by_slug,
     save_skill_family,
@@ -221,28 +222,57 @@ async def _load_one(path: Path) -> None:
         return
 
     # 1. Taxonomy nodes in dependency order (domain → focus → language).
+    #
+    # The JSON carries random taxonomy_node IDs from the source DB. On a
+    # target DB those IDs may not exist (or may exist with different values
+    # if another loader created the node first via its own seed list).
+    # Resolve everything by natural key (level + slug + parent_id) and build
+    # a map from source IDs to resolved target IDs. All subsequent FKs that
+    # point at taxonomy nodes translate through this map.
     level_order = {"domain": 0, "focus": 1, "language": 2}
     nodes_sorted = sorted(
         document.get("taxonomy_nodes", []),
         key=lambda n: level_order.get(n.get("level", "domain"), 99),
     )
+    tax_id_map: dict[str, str] = {}
     for node_dict in nodes_sorted:
-        existing_node = await get_taxonomy_node_by_slug(
-            node_dict["level"], node_dict["slug"], node_dict.get("parent_id")
-        )
-        if existing_node is None:
-            node = TaxonomyNode.from_dict(node_dict)
-            await save_taxonomy_node(node)
+        src_id = node_dict["id"]
+        src_parent = node_dict.get("parent_id")
+        resolved_parent = tax_id_map.get(src_parent) if src_parent else None
 
-    # 2. Skill families.
+        existing_node = await get_taxonomy_node_by_slug(
+            node_dict["level"], node_dict["slug"], resolved_parent
+        )
+        if existing_node is not None:
+            tax_id_map[src_id] = existing_node.id
+        else:
+            node = TaxonomyNode.from_dict(node_dict)
+            node.parent_id = resolved_parent
+            await save_taxonomy_node(node)
+            tax_id_map[src_id] = node.id
+
+    # 2. Skill families — translate the three taxonomy FKs through tax_id_map.
+    # Families are also looked up by slug (unique) rather than by source id.
+    family_id_map: dict[str, str] = {}
     for fam_dict in document.get("skill_families", []):
-        existing_fam = await get_family(fam_dict["id"])
-        if existing_fam is None:
-            family = SkillFamily.from_dict(fam_dict)
+        src_fam_id = fam_dict["id"]
+        existing_fam = await get_family_by_slug(fam_dict["slug"])
+        if existing_fam is not None:
+            family_id_map[src_fam_id] = existing_fam.id
+        else:
+            translated = dict(fam_dict)
+            for fk in ("domain_id", "focus_id", "language_id"):
+                if translated.get(fk):
+                    translated[fk] = tax_id_map.get(translated[fk], translated[fk])
+            family = SkillFamily.from_dict(translated)
             await save_skill_family(family)
+            family_id_map[src_fam_id] = family.id
 
     # 3. Evolution run shallow (no best_skill_id yet).
-    run = EvolutionRun.from_dict(runs[0])
+    run_dict = dict(runs[0])
+    if run_dict.get("family_id"):
+        run_dict["family_id"] = family_id_map.get(run_dict["family_id"], run_dict["family_id"])
+    run = EvolutionRun.from_dict(run_dict)
     # Inject the content-hash marker so the skip check on the next boot works.
     if marker not in run.specialization:
         run.specialization = f"{run.specialization} {marker}"
@@ -259,19 +289,27 @@ async def _load_one(path: Path) -> None:
     # 5. Variant evolutions — variants.evolution_id FKs here, so vevos first.
     # Save vevos with winner_variant_id=NULL so the variant's FK to vevo
     # resolves; we'll re-save vevos after variants to set winner_variant_id.
+    # Translate family_id through family_id_map.
+    def _translate_family(d: dict) -> dict:
+        out = dict(d)
+        if out.get("family_id"):
+            out["family_id"] = family_id_map.get(out["family_id"], out["family_id"])
+        return out
+
     raw_vevos = document.get("variant_evolutions", [])
-    for vevo_dict in raw_vevos:
+    translated_vevos = [_translate_family(v) for v in raw_vevos]
+    for vevo_dict in translated_vevos:
         vevo_stub = VariantEvolution.from_dict(vevo_dict)
         vevo_stub.winner_variant_id = None
         await save_variant_evolution(vevo_stub)
 
-    # 6. Variants — FK to skill_genomes + variant_evolutions.
+    # 6. Variants — FK to skill_genomes + variant_evolutions + skill_families.
     for var_dict in document.get("variants", []):
-        variant = Variant.from_dict(var_dict)
+        variant = Variant.from_dict(_translate_family(var_dict))
         await save_variant(variant)
 
     # 6b. Re-save vevos with their winner_variant_id now that variants exist.
-    for vevo_dict in raw_vevos:
+    for vevo_dict in translated_vevos:
         vevo = VariantEvolution.from_dict(vevo_dict)
         await save_variant_evolution(vevo)
 
