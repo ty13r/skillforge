@@ -372,6 +372,8 @@ async def get_run_detail(run_id: str) -> RunDetail:
             else None
         ),
         best_skill_id=run.best_skill.id if run.best_skill else None,
+        family_id=getattr(run, "family_id", None),
+        evolution_mode=getattr(run, "evolution_mode", "molecular"),
     )
 
 

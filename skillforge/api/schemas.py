@@ -62,6 +62,10 @@ class RunDetail(BaseModel):
     total_cost_usd: float
     best_fitness: float | None = None
     best_skill_id: str | None = None
+    # v2.0 — present so the frontend Advanced toggle can render the
+    # VariantBreakdown for atomic runs.
+    family_id: str | None = None
+    evolution_mode: str = "molecular"
 
 
 class LineageNode(BaseModel):

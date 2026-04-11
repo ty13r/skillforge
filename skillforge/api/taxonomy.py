@@ -1,19 +1,27 @@
 """Taxonomy + families + variants REST router (v2.0).
 
-Five read-only endpoints backed directly by the database CRUD layer:
+Read endpoints (Wave 1-4):
 - ``GET /api/taxonomy``               — flat list of every taxonomy node
 - ``GET /api/taxonomy/{node_id}``     — single node with its direct children
 - ``GET /api/families``               — list of families, filterable
 - ``GET /api/families/{family_id}``   — single family with summary
 - ``GET /api/families/{family_id}/variants`` — variants belonging to the family
+- ``GET /api/families/{family_id}/assembly`` — best assembled composite (Wave 4-3)
 
-Writes stay in the Taxonomist agent + bootstrap loader for now; the frontend
-registry only needs the read path.
+Write endpoints (Wave 5-2):
+- ``POST /api/families/{family_id}/swap-variant``    — swap the active variant
+- ``POST /api/families/{family_id}/evolve-variant``  — re-evolve a single dimension
+
+The Taxonomist agent + bootstrap loader handle the rest of the writes.
 """
 
 from __future__ import annotations
 
+import uuid
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from skillforge.api.schemas import (
     SkillFamilyResponse,
@@ -26,8 +34,10 @@ from skillforge.db import (
     get_taxonomy_tree,
     get_variants_for_family,
     list_families,
+    save_variant,
+    save_variant_evolution,
 )
-from skillforge.models import SkillFamily, TaxonomyNode, Variant
+from skillforge.models import SkillFamily, TaxonomyNode, Variant, VariantEvolution
 
 router = APIRouter(tags=["taxonomy"])
 
@@ -136,6 +146,138 @@ async def list_family_variants(
         family_id, dimension=dimension, tier=tier
     )
     return [_variant_to_response(v) for v in variants]
+
+
+class SwapVariantRequest(BaseModel):
+    dimension: str = Field(..., description="Dimension slug to swap within")
+    variant_id: str = Field(..., description="ID of the variant to mark active")
+
+
+@router.post("/api/families/{family_id}/swap-variant")
+async def swap_family_variant(
+    family_id: str, req: SwapVariantRequest
+) -> dict:
+    """Swap which variant is active for a (family, dimension) pair.
+
+    Marks every variant in the (family, dimension) as ``is_active=False``,
+    then marks the requested variant as ``is_active=True``. Returns the
+    new active variant. Wave 5-2 stub: this does NOT trigger re-assembly
+    automatically — call ``GET /api/families/{id}/assembly`` to fetch the
+    current composite, or trigger a fresh evolve run if you want a new
+    composite assembled.
+    """
+    family = await get_family(family_id)
+    if family is None:
+        raise HTTPException(status_code=404, detail=f"family not found: {family_id}")
+
+    variants = await get_variants_for_family(family_id, dimension=req.dimension)
+    if not variants:
+        raise HTTPException(
+            status_code=404,
+            detail=f"no variants for family={family_id} dimension={req.dimension}",
+        )
+
+    target = next((v for v in variants if v.id == req.variant_id), None)
+    if target is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"variant {req.variant_id} not found in family={family_id} "
+                f"dimension={req.dimension}"
+            ),
+        )
+
+    # Deactivate every variant in the dimension, then activate the target
+    for v in variants:
+        v.is_active = v.id == target.id
+        await save_variant(v)
+
+    return {
+        "family_id": family_id,
+        "dimension": req.dimension,
+        "active_variant_id": target.id,
+        "fitness_score": target.fitness_score,
+    }
+
+
+class EvolveVariantRequest(BaseModel):
+    dimension: str = Field(..., description="Dimension slug to re-evolve")
+    population_size: int = 2
+    num_generations: int = 1
+    parent_run_id: str | None = Field(
+        default=None,
+        description="Explicit parent run id; defaults to latest run for the family",
+    )
+
+
+@router.post("/api/families/{family_id}/evolve-variant")
+async def evolve_family_variant(
+    family_id: str, req: EvolveVariantRequest
+) -> dict:
+    """Schedule a fresh single-dimension mini-evolution for a family.
+
+    Wave 5-2 stub: creates a new ``VariantEvolution`` row with status
+    "pending" and returns its id. The orchestrator picks it up the next
+    time the parent run is processed. The frontend uses this to surface
+    "Re-evolve this dimension" without launching a full atomic run.
+
+    The ``parent_run_id`` is the existing run that the variant evolution
+    attaches to. If the caller doesn't pass one, we look up the most
+    recent ``evolution_runs`` row for this family. Returns 400 if neither
+    is available because the FK on ``variant_evolutions.parent_run_id``
+    requires a real run row.
+    """
+    family = await get_family(family_id)
+    if family is None:
+        raise HTTPException(status_code=404, detail=f"family not found: {family_id}")
+
+    # Resolve parent_run_id — prefer the explicit one, else find the
+    # latest evolution_run row tied to this family.
+    parent_run_id = req.parent_run_id
+    if parent_run_id is None:
+        from skillforge.db.queries import _connect
+
+        async with _connect() as conn, conn.execute(
+            "SELECT id FROM evolution_runs WHERE family_id = ? "
+            "ORDER BY created_at DESC LIMIT 1",
+            (family_id,),
+        ) as cur:
+            row = await cur.fetchone()
+        if row is None:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"no parent_run_id provided and no existing run found for "
+                    f"family={family_id}"
+                ),
+            )
+        parent_run_id = row["id"]
+
+    # Look up the existing variants in this dimension to derive the tier
+    existing = await get_variants_for_family(family_id, dimension=req.dimension)
+    tier = existing[0].tier if existing else "capability"
+
+    vevo = VariantEvolution(
+        id=f"vevo_{uuid.uuid4().hex[:12]}",
+        family_id=family_id,
+        dimension=req.dimension,
+        tier=tier,
+        parent_run_id=parent_run_id,
+        population_size=req.population_size,
+        num_generations=req.num_generations,
+        status="pending",
+        created_at=datetime.now(UTC),
+    )
+    await save_variant_evolution(vevo)
+
+    return {
+        "family_id": family_id,
+        "dimension": req.dimension,
+        "variant_evolution_id": vevo.id,
+        "status": "pending",
+        "tier": tier,
+        "parent_run_id": parent_run_id,
+    }
 
 
 @router.get("/api/families/{family_id}/assembly")
