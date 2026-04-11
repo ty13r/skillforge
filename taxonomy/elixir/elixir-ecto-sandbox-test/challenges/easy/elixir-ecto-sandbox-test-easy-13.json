@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-13",
+  "tier": "easy",
+  "title": "Explain when allow/3 is NOT needed because of $callers tracking",
+  "prompt": "Write `docs/callers_tracking.md` explaining when `Ecto.Adapters.SQL.Sandbox.allow/3` is unnecessary because of the `$callers` process dictionary tracking. Must mention: (1) processes spawned via `Task.async/1` or `Task.Supervisor.async/2` from within the test process automatically track their caller, (2) in that case allow/3 is not required, (3) allow/3 IS required when a process was started earlier and is accessed from the test after the fact.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/callers_tracking.md"],
+    "must_contain": [
+      "$callers",
+      "Task.async",
+      "allow/3",
+      "not required",
+      "caller"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "callers_explanation",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires knowing the $callers feature exists — Sonnet often doesn't. The docs are clear though.",
+  "research_citation": "\"Whenever the sandbox can track the caller using the `$callers` key in the process dictionary, it will try to use a DB connection from the caller, and no explicit allowances are needed.\" — Elixir Forum, trisolaran",
+  "calibration": null
+}

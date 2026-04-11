@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-24",
+  "tier": "medium",
+  "title": "Wire the full LiveView sandbox stack for an app",
+  "prompt": "Write a checklist doc `docs/liveview_sandbox_wiring.md` that enumerates the FIVE files/sections needed to make LiveView tests work with Ecto sandbox: (1) `config/test.exs` — enable `:sql_sandbox`, (2) `endpoint.ex` — plug `Phoenix.Ecto.SQL.Sandbox` at the top, (3) `endpoint.ex` — add `:user_agent` to socket connect_info, (4) router or LV module — add `{MyAppWeb.UserAuth, :sandbox}` on_mount hook before auth hooks, (5) `UserAuth` — implement `on_mount(:sandbox, ...)` to call allow/2. Must mention all 5 pieces.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/liveview_sandbox_wiring.md"],
+    "must_contain": [
+      "config/test.exs",
+      "endpoint.ex",
+      ":user_agent",
+      "on_mount",
+      "allow/2",
+      "router"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "liveview_wiring_checklist",
+    "weight": 0.7
+  },
+  "tier_rationale": "5-point checklist with named files. Comprehensive overview challenge.",
+  "calibration": null
+}

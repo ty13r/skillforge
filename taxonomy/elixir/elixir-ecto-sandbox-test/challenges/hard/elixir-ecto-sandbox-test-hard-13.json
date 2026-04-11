@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-13",
+  "tier": "hard",
+  "title": "Restructure to avoid allow/3 by using start_supervised",
+  "prompt": "A test starts a GenServer worker via `{:ok, pid} = start_link_unlinked()` then uses `allow/3`. Rewrite to `test/my_app/worker_test.exs`: (1) replace start_link with `start_supervised!({Worker, opts})`, (2) remove the allow/3 call — start_supervised ensures the worker is a descendant of the test process and $callers tracking handles sandbox access automatically, (3) keep `async: true`. Demonstrate that allow/3 becomes unnecessary under the restructured pattern.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/worker_test.exs"],
+    "must_contain": [
+      "start_supervised!({Worker",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow",
+      "Worker.start_link"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["connection-ownership-transfer"],
+    "criterion": "restructure_no_allow",
+    "weight": 0.7
+  },
+  "tier_rationale": "Counter-intuitive — the fix is to AVOID allow/3 by using $callers inheritance via start_supervised.",
+  "research_citation": "\"Whenever the sandbox can track the caller using the `$callers` key in the process dictionary, it will try to use a DB connection from the caller, and no explicit allowances are needed.\" — Elixir Forum, trisolaran",
+  "calibration": null
+}

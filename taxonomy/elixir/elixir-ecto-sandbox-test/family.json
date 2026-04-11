@@ -1,0 +1,73 @@
+{
+  "slug": "elixir-ecto-sandbox-test",
+  "name": "Elixir Ecto Sandbox Test",
+  "language": "elixir",
+  "tier": "S",
+  "curve": "rich",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "testing",
+    "focus": "test-isolation",
+    "language": "elixir"
+  },
+  "foundation_dimension": "test-isolation-philosophy",
+  "capability_dimensions": [
+    "sandbox-checkout-and-modes",
+    "async-test-safety-rules",
+    "allow-pattern-for-spawned-processes",
+    "connection-ownership-transfer",
+    "liveview-sandbox-integration",
+    "channels-sandbox-integration",
+    "oban-sandbox-integration",
+    "tidewave-dev-vs-test-trap",
+    "shared-mode-fallback",
+    "flaky-test-diagnosis"
+  ],
+  "challenges": {
+    "total": 151,
+    "by_tier": {
+      "easy": 37,
+      "medium": 44,
+      "hard": 43,
+      "legendary": 27
+    },
+    "held_out_ids": [
+      "elixir-ecto-sandbox-test-easy-05",
+      "elixir-ecto-sandbox-test-easy-10",
+      "elixir-ecto-sandbox-test-easy-16",
+      "elixir-ecto-sandbox-test-easy-22",
+      "elixir-ecto-sandbox-test-easy-28",
+      "elixir-ecto-sandbox-test-easy-32",
+      "elixir-ecto-sandbox-test-easy-36",
+      "elixir-ecto-sandbox-test-medium-03",
+      "elixir-ecto-sandbox-test-medium-09",
+      "elixir-ecto-sandbox-test-medium-15",
+      "elixir-ecto-sandbox-test-medium-20",
+      "elixir-ecto-sandbox-test-medium-26",
+      "elixir-ecto-sandbox-test-medium-32",
+      "elixir-ecto-sandbox-test-medium-38",
+      "elixir-ecto-sandbox-test-medium-42",
+      "elixir-ecto-sandbox-test-hard-04",
+      "elixir-ecto-sandbox-test-hard-11",
+      "elixir-ecto-sandbox-test-hard-18",
+      "elixir-ecto-sandbox-test-hard-24",
+      "elixir-ecto-sandbox-test-hard-30",
+      "elixir-ecto-sandbox-test-hard-36",
+      "elixir-ecto-sandbox-test-hard-41",
+      "elixir-ecto-sandbox-test-legendary-03",
+      "elixir-ecto-sandbox-test-legendary-08",
+      "elixir-ecto-sandbox-test-legendary-13",
+      "elixir-ecto-sandbox-test-legendary-18",
+      "elixir-ecto-sandbox-test-legendary-22",
+      "elixir-ecto-sandbox-test-legendary-25"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream."
+}

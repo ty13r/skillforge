@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-15",
+  "tier": "hard",
+  "title": "Allow a Tesla.Mock handler's spawned process to access sandbox",
+  "prompt": "A test uses `Tesla.Mock.mock/1` to stub HTTP calls; the mock handler runs in its OWN process when called from an async test. Write `test/my_app/http_mock_test.exs` that: (1) is `async: true`, (2) uses `Tesla.Mock.mock/1` with a handler function that queries `MyApp.Accounts.get_user!/1` (this is where the sandbox access matters), (3) obtains the Tesla mock process pid from the mock registry and calls `Ecto.Adapters.SQL.Sandbox.allow/3` on it.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/http_mock_test.exs"],
+    "must_contain": [
+      "async: true",
+      "Tesla.Mock.mock",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "tesla_mock_allow",
+    "weight": 0.7
+  },
+  "tier_rationale": "Niche library integration — requires knowing Tesla.Mock uses a separate process AND applying allow/3.",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-07",
+  "tier": "hard",
+  "title": "Diagnose a test that fails only when its module's prior test used shared mode",
+  "prompt": "Module `MyApp.FullTest` has 3 tests: Test A uses `mode(:shared)` for a PubSub scenario, Test B is a simple assertion, Test C is another simple assertion. Tests are NOT async. Running the module, Test A passes, Test B fails with an ownership error. Write `docs/shared_bleed.md` explaining: (1) after Test A's `mode(:shared)` call, the sandbox GenServer's state persists into Test B's setup block, (2) Test B does its own checkout but the GenServer already has Test A's owner reference, (3) fix: explicitly reset mode back to `:manual` in an on_exit or setup after calling `mode(:shared)`, OR use different DataCase modules, OR put shared-mode tests in a separate module.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_bleed.md"],
+    "must_contain": [
+      "mode(:shared)",
+      "Test A",
+      "Test B",
+      "on_exit",
+      "mode",
+      ":manual"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback", "flaky-test-diagnosis"],
+    "criterion": "shared_bleed_diagnosis",
+    "weight": 0.7
+  },
+  "tier_rationale": "Cross-test bleed diagnosis — requires understanding that sandbox mode persists across tests within a module.",
+  "calibration": null
+}

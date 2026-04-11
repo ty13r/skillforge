@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-25",
+  "tier": "legendary",
+  "title": "Write a failure-diagnosis runbook for unreliable test suites",
+  "prompt": "Write `docs/flaky_test_runbook.md` as a canonical runbook for a team debugging an unreliable Elixir test suite. Must contain EXACTLY 8 sections in order: (1) REPRODUCE — use `mix test --seed` from the failing CI run, (2) ISOLATE — run `mix test --seed N --failed` repeatedly to narrow, (3) EXAMINE THE TEST'S OWN CODE — read the failing test's create/insert path and its dependencies, (4) CHECK FOR ASYNC BLEED — look for Application.put_env, ETS, Mox global mode, (5) CHECK FOR OWNERSHIP LEAKS — look for unsupervised GenServers, on_exit DB writes, setup_all-started processes, (6) CHECK FOR PROCESS.SLEEP — any sleep longer than 50ms is a code smell to replace, (7) REJECT THE TEMPTING FIXES — no async: false, no seed data, no Tidewave-based reasoning, (8) SIGN OFF — document the fix in a code comment so the next Claude session knows why. Must include all 8 sections.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/flaky_test_runbook.md"],
+    "must_contain": [
+      "REPRODUCE",
+      "ISOLATE",
+      "EXAMINE",
+      "ASYNC BLEED",
+      "OWNERSHIP LEAKS",
+      "PROCESS.SLEEP",
+      "REJECT",
+      "SIGN OFF",
+      "Tidewave"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules", "tidewave-dev-vs-test-trap", "connection-ownership-transfer"],
+    "criterion": "eight_section_runbook",
+    "weight": 0.85
+  },
+  "tier_rationale": "8-section runbook synthesizing the entire family.",
+  "calibration": null
+}

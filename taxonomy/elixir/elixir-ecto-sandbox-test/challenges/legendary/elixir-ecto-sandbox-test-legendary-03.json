@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-03",
+  "tier": "legendary",
+  "title": "Write CLAUDE.md anti-patterns section for test debugging",
+  "prompt": "Write `CLAUDE.md` (at repo root) with a section titled '## Test Debugging Anti-Patterns' containing 7 rules: (1) Do NOT query the dev DB to reason about test failures — tests run in isolated rolled-back transactions, (2) Do NOT add seed data to DataCase setup to 'fix' missing records — the real fix is in the test's own insert path, (3) Do NOT disable async as the first fix for flaky tests — diagnose ownership leaks first, (4) Do NOT use Process.sleep to wait for async operations — use assert_receive, (5) Do NOT use Oban.drain_queue with sandbox — use perform_job instead, (6) Do NOT write Repo calls in on_exit callbacks, (7) Do NOT use shared mode without also marking async: false. Must include all 7 with numbered bullets.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["CLAUDE.md"],
+    "must_contain": [
+      "Do NOT query the dev DB",
+      "Do NOT add seed data",
+      "Do NOT disable async",
+      "Do NOT use Process.sleep",
+      "Do NOT use Oban.drain_queue",
+      "Do NOT write Repo calls in on_exit",
+      "Do NOT use shared mode"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["tidewave-dev-vs-test-trap", "async-test-safety-rules", "flaky-test-diagnosis", "oban-sandbox-integration", "connection-ownership-transfer", "shared-mode-fallback"],
+    "criterion": "seven_anti_patterns",
+    "weight": 0.85
+  },
+  "tier_rationale": "Comprehensive anti-pattern synthesis across the entire family. Must produce all 7.",
+  "calibration": null
+}

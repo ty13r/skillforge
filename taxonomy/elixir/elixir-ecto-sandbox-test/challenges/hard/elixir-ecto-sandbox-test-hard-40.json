@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-40",
+  "tier": "hard",
+  "title": "Explain why shared mode is incompatible with distributed tests",
+  "prompt": "Write `docs/shared_mode_distributed.md` explaining why shared mode is NOT compatible with distributed/multi-node tests. Must explain: (1) shared mode is scoped to a single BEAM node's sandbox GenServer, (2) a test spanning multiple nodes (via `:slave.start_link` or `Cluster` etc.) cannot propagate the sandbox allowance across node boundaries, (3) the fix is to use `allow/3` with the explicit `rpc` call to the other node, OR to run each node in its own sandbox, OR to give up on sandbox and use a real DB.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_mode_distributed.md"],
+    "must_contain": [
+      "distributed",
+      "node",
+      "BEAM",
+      "sandbox",
+      "allow/3"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["connection-ownership-transfer"],
+    "criterion": "distributed_constraint",
+    "weight": 0.6
+  },
+  "tier_rationale": "Niche but important explanation of shared-mode scoping.",
+  "calibration": null
+}

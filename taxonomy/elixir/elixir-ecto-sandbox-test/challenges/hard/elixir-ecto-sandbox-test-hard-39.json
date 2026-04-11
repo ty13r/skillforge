@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-39",
+  "tier": "hard",
+  "title": "Migrate 4 tests from shared to allow-based",
+  "prompt": "Given these 4 tests currently in shared mode, write `docs/shared_migration_plan.md` with a migration plan for each:\n\n1. `test/my_app/chat_test.exs`: shared mode for a Phoenix.PubSub subscriber\n2. `test/my_app/queue_worker_test.exs`: shared mode for a Task.Supervisor child\n3. `test/my_app/registry_test.exs`: shared mode for a Registry-owned process\n4. `test/my_app/cache_test.exs`: shared mode for a Cachex server\n\nFor each: either (a) 'migrate to allow/3' with the specific helper to call, (b) 'keep shared — no alternative'. Expected: 1=keep, 2=migrate, 3=keep, 4=migrate.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_migration_plan.md"],
+    "must_contain": [
+      "chat_test",
+      "queue_worker_test",
+      "registry_test",
+      "cache_test",
+      "allow/3",
+      "keep shared",
+      "migrate"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "migration_plan",
+    "weight": 0.7
+  },
+  "tier_rationale": "4-way classification with specific fix guidance.",
+  "calibration": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-15",
+  "tier": "medium",
+  "title": "Conditionally allow a pid only if it's not already a caller",
+  "prompt": "Write a helper at `test/support/sandbox_helpers.ex` that defines `maybe_allow/1` accepting a pid. It should: (1) check `Process.info(pid, :dictionary)` for the `$callers` key, (2) if `self()` is in the list, do nothing, (3) otherwise call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), pid)`. This lets the helper be called unconditionally without duplicate allowance errors.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/sandbox_helpers.ex"],
+    "must_contain": [
+      "def maybe_allow(pid)",
+      "$callers",
+      "Process.info",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": [],
+    "criterion": "conditional_allow",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires composing Process.info with the $callers key and the allow API.",
+  "calibration": null
+}

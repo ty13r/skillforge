@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-34",
+  "tier": "medium",
+  "title": "Audit a conversation log for Tidewave-induced test confusion",
+  "prompt": "Write `docs/conversation_audit.md` auditing this hypothetical conversation log:\n\n- Turn 1: `mix test test/subscriptions_test.exs` — fails with Ecto.NoResultsError for the 'pro' plan.\n- Turn 2: Runs Tidewave MCP query `SELECT * FROM plans` — shows 3 rows.\n- Turn 3: 'The plans table is populated. The test is broken because it expects 0 plans but there are 3.'\n- Turn 4: Adds `Repo.delete_all(Plan)` to setup.\n\nYour audit must flag: (1) Turn 3's reasoning error (conflating dev DB with test DB), (2) Turn 4's fix as wrong (it deletes rows but each test rolls back anyway), (3) the correct action (look at test_fixtures or the test's own insert path).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/conversation_audit.md"],
+    "must_contain": [
+      "Turn 3",
+      "Turn 4",
+      "dev DB",
+      "test DB",
+      "rolls back",
+      "insert path"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "audit_conversation",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-turn audit — requires identifying two distinct errors in a reasoning chain.",
+  "calibration": null
+}

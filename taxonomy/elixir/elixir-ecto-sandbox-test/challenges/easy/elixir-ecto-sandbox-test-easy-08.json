@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-08",
+  "tier": "easy",
+  "title": "Declare a test module async: true with DataCase",
+  "prompt": "Write the opening of a test module `MyApp.SimpleTest` at `test/my_app/simple_test.exs` that declares `use MyApp.DataCase, async: true`, followed by a single stub test `test \"two plus two\" do assert 2 + 2 == 4 end`. The test must be async.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/simple_test.exs"],
+    "must_contain": [
+      "defmodule MyApp.SimpleTest",
+      "use MyApp.DataCase, async: true",
+      "test \"two plus two\""
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "declares_async",
+    "weight": 0.4
+  },
+  "tier_rationale": "Boilerplate. The discriminator is that Sonnet sometimes defaults to async: false out of caution.",
+  "calibration": null
+}

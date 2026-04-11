@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-06",
+  "tier": "easy",
+  "title": "Explain the three sandbox modes in a reference doc",
+  "prompt": "Write `docs/sandbox_modes.md` that documents the three `Ecto.Adapters.SQL.Sandbox` modes: `:auto`, `:manual`, `:shared`. For each mode include: (1) the mode name, (2) a one-sentence summary of what it does, (3) when it is appropriate to use. The document must state that `:auto` is NOT appropriate for test isolation and that `:shared` requires `async: false`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/sandbox_modes.md"],
+    "must_contain": [
+      ":auto",
+      ":manual",
+      ":shared",
+      "async: false",
+      "not appropriate",
+      "isolation"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback", "async-test-safety-rules"],
+    "criterion": "modes_taxonomy",
+    "weight": 0.5
+  },
+  "tier_rationale": "Taxonomic explanation of documented modes. Sonnet reliably lists the three modes with correct guidance.",
+  "research_citation": "\"The sandbox defaults to `:auto` mode, which is essentially 'no sandboxing'.\" — Elixir Forum, LostKobrakai",
+  "calibration": null
+}

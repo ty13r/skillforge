@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-09",
+  "tier": "easy",
+  "title": "Write a commented async: false declaration for a test that touches global state",
+  "prompt": "A test module writes to `Application.put_env/3` to configure a global rate limiter and cannot be run concurrently. Write the opening of `test/my_app/rate_limiter_test.exs`: declare `use MyApp.DataCase, async: false` WITH a one-line comment above it explaining WHY (must mention 'global state' or 'Application.put_env'). This is a rare exception — most modules should be async: true.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/rate_limiter_test.exs"],
+    "must_contain": [
+      "use MyApp.DataCase, async: false",
+      "global",
+      "# "
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "commented_async_false",
+    "weight": 0.4
+  },
+  "tier_rationale": "Requires knowing that async: false should be justified with a comment — the opposite of Claude's usual reflex.",
+  "research_citation": "\"In cases where we cannot run the test asynchronously, explicitly state `async: false` with a comment.\" — Nimble: Fast and stable test suite",
+  "calibration": null
+}

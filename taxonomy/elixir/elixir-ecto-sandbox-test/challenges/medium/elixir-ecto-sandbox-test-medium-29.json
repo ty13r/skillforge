@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-29",
+  "tier": "medium",
+  "title": "Replace Oban.drain_queue with perform_job/3",
+  "prompt": "The fixture at `test_fixtures/oban_real_queue_test.exs` inserts a job via `|> Oban.insert()` then calls `Oban.drain_queue(queue: :mailers)` — a sandbox-commit-visibility trap. Rewrite to `test/my_app/mailer/digest_worker_test.exs`: import Oban.Testing via `use Oban.Testing, repo: MyApp.Repo`, and replace the insert+drain pattern with a direct `perform_job(DigestWorker, %{\"user_id\" => alice.id})` invocation. Must NOT call `Oban.drain_queue`.",
+  "fixture_files": ["test_fixtures/oban_real_queue_test.exs"],
+  "expected_outputs": {
+    "files": ["test/my_app/mailer/digest_worker_test.exs"],
+    "must_contain": [
+      "use Oban.Testing, repo: MyApp.Repo",
+      "perform_job(DigestWorker",
+      "\"user_id\""
+    ],
+    "must_not_contain": [
+      "Oban.drain_queue",
+      "Oban.insert()"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "perform_job_swap",
+    "weight": 0.7
+  },
+  "tier_rationale": "Pattern swap with explicit explanation of why the original approach fails — the sandbox commit-visibility trap.",
+  "research_citation": "\"Sandbox transactions never commit. If they never commit, then the rows are never visible to other processes, and that means they are never visible to Oban.\" — Elixir Forum, benwilson512",
+  "calibration": null
+}

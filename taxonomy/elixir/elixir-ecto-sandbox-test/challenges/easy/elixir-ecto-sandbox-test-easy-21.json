@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-21",
+  "tier": "easy",
+  "title": "Add sandbox allow to start of a Phoenix channel join/3",
+  "prompt": "Write `lib/my_app_web/channels/room_channel.ex` with a single `join/3` clause for `\"room:lobby\"` that, as its FIRST action, calls `Phoenix.Ecto.SQL.Sandbox.allow(socket.assigns.phoenix_ecto_sandbox, Ecto.Adapters.SQL.Sandbox)` and then returns `{:ok, socket}`. The allow call must come before any Repo access.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/room_channel.ex"],
+    "must_contain": [
+      "use Phoenix.Channel",
+      "Phoenix.Ecto.SQL.Sandbox.allow",
+      "phoenix_ecto_sandbox",
+      "Ecto.Adapters.SQL.Sandbox",
+      "def join(\"room:lobby\""
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "channel_join_allow",
+    "weight": 0.6
+  },
+  "tier_rationale": "Documented pattern. Sonnet produces it when prompted with the exact function.",
+  "research_citation": "\"`allow/2` needs to be manually called once for each channel, at best directly at the start of `c:Phoenix.Channel.join/3`\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-01",
+  "tier": "legendary",
+  "title": "Recover from a Tidewave-poisoned multi-turn conversation",
+  "prompt": "The fixture at `test_fixtures/tidewave_confused_turn.ex` shows a subscriptions test where a previous Claude turn used Tidewave MCP to query the dev DB, saw a `pro` plan, and added a `Repo.insert(%Plan{code: \"pro\"})` to the setup block. The test is now FAILING with `unique_constraint` because async tests collide on `plans.code`. Rewrite to `test/my_app/subscriptions_test.exs`: (1) REMOVE the setup insert entirely, (2) change the test to call `Subscriptions.ensure_plan/1` inside the test body to create its own plan, (3) keep `async: true`, (4) add a prominent removal comment citing the Tidewave trap. The test must still call `Subscriptions.create_subscription(user, %{plan_code: \"pro\"})` and assert the same outcome.",
+  "fixture_files": ["test_fixtures/tidewave_confused_turn.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/subscriptions_test.exs"],
+    "must_contain": [
+      "Subscriptions.create_subscription(user",
+      "ensure_plan",
+      "# REMOVED",
+      "Tidewave",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "{:ok, _plan} = Repo.insert(%Plan{code: \"pro\"",
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis", "async-test-safety-rules"],
+    "criterion": "full_tidewave_recovery",
+    "weight": 0.9
+  },
+  "tier_rationale": "Adversarial scenario — the previous Claude turn is the attacker. Requires recognizing the trap, removing the anti-fix, AND restructuring the test's own data creation path. Canonical BoothIQ failure.",
+  "research_citation": "\"Claude doesn't understand this. It uses Tidewave's dev DB connection and thinks it's looking at the test DB — which is always empty.\" — BoothIQ",
+  "calibration": null
+}

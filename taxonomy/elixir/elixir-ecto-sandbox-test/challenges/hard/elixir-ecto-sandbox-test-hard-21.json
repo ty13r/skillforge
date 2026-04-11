@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-21",
+  "tier": "hard",
+  "title": "Transfer ownership when the original owner must exit",
+  "prompt": "Write `test/my_app/ownership_transfer_test.exs` that: (1) the test process checks out the sandbox, (2) spawns a supervised child worker, (3) before the test returns, transfers ownership of the sandbox connection to the child via `Ecto.Adapters.SQL.Sandbox.checkin/1` followed by the child calling `Ecto.Adapters.SQL.Sandbox.checkout/2`, (4) asserts the child can continue querying. This demonstrates cross-process ownership handoff.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/ownership_transfer_test.exs"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.checkin",
+      "Ecto.Adapters.SQL.Sandbox.checkout"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": [],
+    "criterion": "ownership_handoff",
+    "weight": 0.6
+  },
+  "tier_rationale": "Obscure pattern — checkin + checkout as transfer mechanism.",
+  "research_citation": "\"The process calling `checkout/2` will own the connection until it calls `checkin/2` or until it crashes\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

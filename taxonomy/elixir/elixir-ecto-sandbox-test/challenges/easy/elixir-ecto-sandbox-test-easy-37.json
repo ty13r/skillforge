@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-37",
+  "tier": "easy",
+  "title": "Write flaky-test first-responder checklist",
+  "prompt": "Write `docs/flaky_test_checklist.md` as a first-responder checklist for when a test starts flaking in CI. The list must have exactly these 5 bullet points in this order: (1) reproduce with `mix test --seed N` matching the failing run, (2) check for Process.sleep and replace with assert_receive, (3) look for ownership errors in the log, (4) check for hard-coded test data violating unique constraints, (5) check for `on_exit` DB writes. It must NOT recommend disabling async as the first step.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/flaky_test_checklist.md"],
+    "must_contain": [
+      "--seed",
+      "Process.sleep",
+      "ownership",
+      "unique",
+      "on_exit"
+    ],
+    "must_not_contain": [
+      "disable async"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["connection-ownership-transfer", "async-test-safety-rules"],
+    "criterion": "first_responder_checklist",
+    "weight": 0.5
+  },
+  "tier_rationale": "Ordered checklist. Claude reliably produces this when all five items are enumerated in the prompt.",
+  "research_citation": "\"If tests pass with `--seed` but fail randomly, you have state leakage between tests.\" — oliver-kriska exunit-patterns.md",
+  "calibration": null
+}

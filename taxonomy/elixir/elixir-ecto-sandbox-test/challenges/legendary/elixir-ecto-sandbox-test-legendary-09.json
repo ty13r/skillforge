@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-09",
+  "tier": "legendary",
+  "title": "Distinguish Phoenix.Ecto.SQL.Sandbox.allow/2 vs Ecto.Adapters.SQL.Sandbox.allow/3",
+  "prompt": "Write `docs/allow_deep_dive.md` that clearly distinguishes the two `allow` functions at the API level AND the underlying mechanism level. Must explain: (1) `Ecto.Adapters.SQL.Sandbox.allow(repo, owner_pid, allowed_pid)` directly registers `allowed_pid` in the sandbox GenServer's state as allowed to use owner_pid's connection, (2) `Phoenix.Ecto.SQL.Sandbox.allow(metadata, adapter)` takes an HTTP-header-encoded metadata map (containing the owner pid) and looks up the current process — it's the HTTP-endpoint variant, (3) the first is for PID-to-PID allowance (tests, child processes), (4) the second is for HTTP-driven allowance (LiveView sockets, channel joins, browser driver tests with metadata in User-Agent), (5) using one in place of the other produces confusing errors.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/allow_deep_dive.md"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow/3",
+      "Phoenix.Ecto.SQL.Sandbox.allow/2",
+      "owner_pid",
+      "allowed_pid",
+      "metadata",
+      "User-Agent",
+      "HTTP"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["liveview-sandbox-integration", "channels-sandbox-integration"],
+    "criterion": "allow_deep_dive",
+    "weight": 0.8
+  },
+  "tier_rationale": "Deep API comparison — few sources explain both mechanisms in one place.",
+  "calibration": null
+}

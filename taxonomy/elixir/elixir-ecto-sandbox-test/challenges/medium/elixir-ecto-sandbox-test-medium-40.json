@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-40",
+  "tier": "medium",
+  "title": "Warn against shared mode for feature tests",
+  "prompt": "Write `docs/feature_tests_shared_warning.md` explaining when feature/end-to-end tests should NOT use shared mode. Must state: (1) feature tests often spawn browser driver processes that don't hold a sandbox allowance, (2) shared mode gives up concurrency, (3) prefer Phoenix.Ecto.SQL.Sandbox plug for browser-driven tests via metadata headers, (4) reserve shared mode for tests that truly cannot use allow/3.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/feature_tests_shared_warning.md"],
+    "must_contain": [
+      "feature tests",
+      "browser",
+      "Phoenix.Ecto.SQL.Sandbox",
+      "metadata",
+      "concurrency"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["liveview-sandbox-integration"],
+    "criterion": "feature_test_warning",
+    "weight": 0.5
+  },
+  "tier_rationale": "Reference doc with conceptually separated concerns (feature vs unit vs integration).",
+  "calibration": null
+}

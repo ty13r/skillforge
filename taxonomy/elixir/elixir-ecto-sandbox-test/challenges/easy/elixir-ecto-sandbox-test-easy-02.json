@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-02",
+  "tier": "easy",
+  "title": "Explain why a test that asserts on empty table data is actually working",
+  "prompt": "A developer reports: 'My test creates a User with `Accounts.create_user/1`, then my colleague queries the users table externally and sees it's empty. Is the test broken?' Write a short file at `docs/sandbox_rollback.md` (Markdown) explaining why this is expected behavior. Include the exact phrase 'rolled back' and the word 'transaction'. Do NOT suggest seeding the test database or turning off async tests.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/sandbox_rollback.md"],
+    "must_contain": [
+      "rolled back",
+      "transaction",
+      "isolation"
+    ],
+    "must_not_contain": [
+      "seed the test database",
+      "async: false",
+      "disable async",
+      "turn off async"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["tidewave-dev-vs-test-trap"],
+    "criterion": "rollback_explanation",
+    "weight": 0.5
+  },
+  "tier_rationale": "Narrative explanation of a well-documented pattern. Sonnet reliably produces the explanation when prompted to avoid the two named anti-fixes.",
+  "research_citation": "\"In Elixir tests, each test runs in a database transaction that rolls back at the end. Tests run async without hitting each other. No test data persists.\" — BoothIQ",
+  "calibration": null
+}

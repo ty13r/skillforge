@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-10",
+  "tier": "legendary",
+  "title": "Diagnose LiveView flake under assign_async and fix it correctly",
+  "prompt": "Write a LiveView test at `test/my_app_web/live/user_list_live_test.exs` for the fixture `test_fixtures/liveview_assign_async.ex`. The LV uses `assign_async(:users, fn -> {:ok, %{users: Accounts.list_users()}} end)`. The test must: (1) `use MyAppWeb.ConnCase, async: true`, (2) create 2 users, (3) mount the LV with `live(conn, ~p\"/users\")`, (4) assert the initial html contains 'Loading users...', (5) call `render_async(lv)` to await the assign_async, (6) assert the final html contains both users' emails, (7) assert it does NOT contain 'Loading users...'. Must include render_async and use_async_safe sandbox mechanism (start_owner in DataCase, user_agent propagation). The test's DataCase wiring must support the LV's assign_async task seeing the sandbox.",
+  "fixture_files": ["test_fixtures/liveview_assign_async.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app_web/live/user_list_live_test.exs"],
+    "must_contain": [
+      "use MyAppWeb.ConnCase, async: true",
+      "live(conn, ~p\"/users\")",
+      "render_async(lv)",
+      "Loading users...",
+      "refute html =~"
+    ],
+    "must_not_contain": [
+      "async: false",
+      "Process.sleep"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules", "connection-ownership-transfer"],
+    "criterion": "liveview_assign_async_test",
+    "weight": 0.9
+  },
+  "tier_rationale": "Full LiveView test with assign_async, render_async, sandbox propagation — the hardest LV integration scenario.",
+  "research_citation": "\"For us they were caused almost exclusively by async code spawned by liveviews...the test process finished and exited before their async tasks could finish running\" — Elixir Forum, egeersoz",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-31",
+  "tier": "easy",
+  "title": "Flag a prior agent's Tidewave query as irrelevant to test failures",
+  "prompt": "A multi-turn conversation log shows: Turn 1 runs `mix test test/subscriptions_test.exs:42` and sees `Ecto.NoResultsError`. Turn 2 runs a Tidewave MCP query showing `SELECT * FROM users LIMIT 5` returns 3 rows. Turn 3 concludes 'the test must be wrong because users do exist'. Write `docs/flag_turn_3.md` explaining why Turn 3's reasoning is incorrect. Must cite that Tidewave sees dev DB only and the test failure is about the test DB.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/flag_turn_3.md"],
+    "must_contain": [
+      "Tidewave",
+      "dev DB",
+      "test DB",
+      "Turn 3",
+      "incorrect"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "flag_tidewave_trap",
+    "weight": 0.6
+  },
+  "tier_rationale": "Asks for a named critique of a specific prior-turn reasoning error. The trap is explicitly described.",
+  "calibration": null
+}

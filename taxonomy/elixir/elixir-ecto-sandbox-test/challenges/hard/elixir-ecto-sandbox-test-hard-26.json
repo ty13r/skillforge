@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-26",
+  "tier": "hard",
+  "title": "Full LiveView + channels + sandbox wiring audit",
+  "prompt": "Write `docs/full_sandbox_wiring_audit.md` describing the complete set of files and changes required to make a NEW Phoenix project support LiveView and channel tests with Ecto sandbox. Must list all 7 files with a one-line change description each: (1) `config/test.exs` — sql_sandbox config, (2) `endpoint.ex` — plug at top, (3) `endpoint.ex` — connect_info for LV socket with :user_agent, (4) `endpoint.ex` — connect_info for channel socket with :user_agent, (5) `user_socket.ex` — decode metadata into assigns, (6) `user_auth.ex` (or equivalent) — on_mount sandbox hook, (7) `router.ex` — live_session on_mount ordering. List all 7.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/full_sandbox_wiring_audit.md"],
+    "must_contain": [
+      "config/test.exs",
+      "endpoint.ex",
+      "user_socket.ex",
+      "user_auth.ex",
+      "router.ex",
+      ":user_agent",
+      "on_mount"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "seven_file_audit",
+    "weight": 0.7
+  },
+  "tier_rationale": "Comprehensive wiring audit — must name all 7 touchpoints.",
+  "calibration": null
+}

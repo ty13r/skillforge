@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-36",
+  "tier": "hard",
+  "title": "Reject a plausible-looking setup block that fabricates plan data",
+  "prompt": "A PR description says: 'Fixed flaky subscription tests by pre-seeding the plans table in `test/support/data_case.ex` setup — now all tests see the `pro` and `enterprise` plans consistently.' Write `docs/reject_setup_seed.md` rejecting this PR with these points: (1) the setup change violates test isolation — seeded data bleeds between tests if the setup is in DataCase (though rollback reclaims it, the data is visible within each test's setup→body window), (2) the REAL flakiness source is that individual tests weren't calling their own `Subscriptions.ensure_plan/1` function, (3) the REAL fix is to make each test create the plans it needs in its OWN body, (4) the PR's fix masks bugs in `Subscriptions.ensure_plan/1`. Must NOT approve the PR.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/reject_setup_seed.md"],
+    "must_contain": [
+      "test isolation",
+      "ensure_plan",
+      "masks bugs",
+      "not approve"
+    ],
+    "must_not_contain": [
+      "LGTM",
+      "approved"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "reject_setup_seed_pr",
+    "weight": 0.7
+  },
+  "tier_rationale": "PR review rejection — requires naming four distinct objections.",
+  "calibration": null
+}

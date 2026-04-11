@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-03",
+  "tier": "easy",
+  "title": "Identify the correct response to a test failure that says 'record not found'",
+  "prompt": "A test file asserts `assert %User{} = Accounts.get_user_by_email!(\"test@example.com\")` and it fails with `Ecto.NoResultsError`. Write a triage file `docs/triage.md` listing the three possible root causes IN ORDER of likelihood, with one sentence each. The first cause must be 'the test's own insert path failed before this assertion'. Do NOT include 'the test database needs to be seeded' or 'disable async' as fixes.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/triage.md"],
+    "must_contain": [
+      "the test's own insert path",
+      "changeset",
+      "validation"
+    ],
+    "must_not_contain": [
+      "seed the test database",
+      "Repo.insert! in setup",
+      "disable async"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["tidewave-dev-vs-test-trap", "flaky-test-diagnosis"],
+    "criterion": "triage_ordering",
+    "weight": 0.5
+  },
+  "tier_rationale": "Triage template. Sonnet consistently produces ordered-list triage when prompted with explicit exclusions.",
+  "calibration": null
+}

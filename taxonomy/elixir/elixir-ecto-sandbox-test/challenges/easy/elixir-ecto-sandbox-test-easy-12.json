@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-12",
+  "tier": "easy",
+  "title": "Add Sandbox.allow/3 for a spawned Task in a test",
+  "prompt": "Write a test that spawns `Task.Supervisor.async_nolink(MyApp.TaskSupervisor, fn -> MyApp.Accounts.count_users() end)` and awaits the result. Write the test in `test/my_app/task_spawn_test.exs`. The test must call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), task.pid)` AFTER spawning the task (passing `self()` as the owner and `task.pid` as the allowed process) so the Task can use the test's sandbox connection.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/task_spawn_test.exs"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()",
+      "Task.Supervisor",
+      "task.pid"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["async-test-safety-rules", "connection-ownership-transfer"],
+    "criterion": "allow_on_task_pid",
+    "weight": 0.6
+  },
+  "tier_rationale": "Single function call with known signature — but Sonnet often reaches for :shared mode instead, so testing the reflex is meaningful.",
+  "research_citation": "\"by calling `allow/3`, we are explicitly assigning the parent's connection (i.e. the test process' connection) to the task\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

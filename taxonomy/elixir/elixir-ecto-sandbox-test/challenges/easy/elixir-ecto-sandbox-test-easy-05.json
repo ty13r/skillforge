@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-05",
+  "tier": "easy",
+  "title": "Write setup with correct checkout-then-mode ordering",
+  "prompt": "Write a `setup tags do` block inside `test/support/data_case.ex` that: (1) calls `Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)` FIRST, then (2) conditionally calls `Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})` only when the test is NOT async (use `unless tags[:async]`). The order matters: checkout must establish ownership before mode/2 can share it. Include the full module header.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/data_case.ex"],
+    "must_contain": [
+      "defmodule MyApp.DataCase",
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)",
+      "unless tags[:async]",
+      "Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, {:shared, self()})"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})\n    :ok = Ecto.Adapters.SQL.Sandbox.checkout"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["shared-mode-fallback", "async-test-safety-rules"],
+    "criterion": "correct_ordering",
+    "weight": 0.6
+  },
+  "tier_rationale": "Ordering matters but the solution is a canonical three-line pattern cited in Ecto docs.",
+  "research_citation": "\"For shared mode the checkout actually has to happen first. The checkout requests go through a GenServer which will have its state set with the owner's connection when changing the mode to shared\" — Elixir Forum, joey_the_snake",
+  "calibration": null
+}

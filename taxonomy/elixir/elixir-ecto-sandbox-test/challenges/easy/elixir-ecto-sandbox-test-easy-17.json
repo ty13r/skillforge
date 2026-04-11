@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-17",
+  "tier": "easy",
+  "title": "Write a doc explaining on_exit ownership quirks",
+  "prompt": "Write `docs/on_exit_ownership.md` explaining that `on_exit/2` callbacks execute in a process OTHER than the test process, so they do NOT have access to the test's sandbox connection. A DB write inside `on_exit` will produce `DBConnection.OwnershipError`. Must recommend: do cleanup via sandbox rollback instead (it's automatic), and avoid `Repo.*` calls in `on_exit`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/on_exit_ownership.md"],
+    "must_contain": [
+      "on_exit",
+      "different process",
+      "OwnershipError",
+      "rollback",
+      "sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "on_exit_doc",
+    "weight": 0.5
+  },
+  "tier_rationale": "Named behavior from the docs. Sonnet produces the explanation reliably.",
+  "research_citation": "\"The issue is that `on_exit` is executed in a different process than the test one, which is not the owner of the sandbox DB connection.\" — Elixir Forum, totorigolo",
+  "calibration": null
+}

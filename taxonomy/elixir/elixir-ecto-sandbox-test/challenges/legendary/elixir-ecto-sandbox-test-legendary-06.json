@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-06",
+  "tier": "legendary",
+  "title": "Audit a 30%-async-false suite and reclaim 15 modules",
+  "prompt": "Write `docs/reclaim_plan.md` for a suite where 30 of 100 test modules are `async: false`. Given this heuristic classification:\n\n- 5 modules: uses Mox.set_mox_global/0 — reclaim via set_mox_private\n- 3 modules: uses Oban.drain_queue — reclaim via perform_job\n- 4 modules: uses shared mode for a Task.Supervisor child — reclaim via allow/3\n- 2 modules: uses shared mode for Phoenix.PubSub — KEEP shared (cannot reclaim)\n- 3 modules: uses Application.put_env in setup — KEEP async: false\n- 5 modules: uses a named GenServer started at setup_all — reclaim via start_supervised per-test\n- 4 modules: uses Cachex with a global table — reclaim via unique ETS per test\n- 2 modules: uses a Wallaby feature test — KEEP async: false\n- 2 modules: unclear — defer for manual review\n\nFor each: state reclaim or keep with the specific fix. Summarize total reclaimed (expected: 21 of 30, ~70% reclaim rate).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/reclaim_plan.md"],
+    "must_contain": [
+      "Mox.set_mox_private",
+      "Oban.Testing",
+      "perform_job",
+      "allow/3",
+      "start_supervised",
+      "Cachex",
+      "Wallaby",
+      "reclaim",
+      "keep"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["oban-sandbox-integration", "shared-mode-fallback", "allow-pattern-for-spawned-processes"],
+    "criterion": "thirty_module_audit",
+    "weight": 0.9
+  },
+  "tier_rationale": "Large-scale audit spanning every capability. Requires knowing ALL the reclaim strategies.",
+  "calibration": null
+}

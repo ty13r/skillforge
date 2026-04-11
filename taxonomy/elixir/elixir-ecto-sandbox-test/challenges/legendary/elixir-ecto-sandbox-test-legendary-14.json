@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-14",
+  "tier": "legendary",
+  "title": "Debug a 3-layer LV + Task + on_mount sandbox ordering failure",
+  "prompt": "Write `docs/three_layer_lv_debug.md` diagnosing: a LiveView test fails with `DBConnection.OwnershipError` but only when the user's `on_mount({UserAuth, :mount_current_user})` hook runs BEFORE `on_mount({UserAuth, :sandbox})`. The auth hook queries `Accounts.get_user/1` which fails because the sandbox allowance hasn't been set up yet. Must explain: (1) on_mount hooks run in the declared order, (2) the auth hook queries Repo before the sandbox hook grants allowance, (3) fix: swap the order so sandbox comes first, (4) provide the corrected router.ex snippet: `on_mount: [{UserAuth, :sandbox}, {UserAuth, :mount_current_user}]`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/three_layer_lv_debug.md"],
+    "must_contain": [
+      "on_mount",
+      "sandbox",
+      "mount_current_user",
+      "order",
+      "on_mount: [{UserAuth, :sandbox}, {UserAuth, :mount_current_user}]"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["sandbox-checkout-and-modes"],
+    "criterion": "on_mount_order_debug",
+    "weight": 0.8
+  },
+  "tier_rationale": "Ordering bug diagnosis with specific router fix.",
+  "research_citation": "\"If you have other `on_mount` hooks in `live_session` defined in your router (such as authentication hooks), make sure the sandbox acceptance hook runs first\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

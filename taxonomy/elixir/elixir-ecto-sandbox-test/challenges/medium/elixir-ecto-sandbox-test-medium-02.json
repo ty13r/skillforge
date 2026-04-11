@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-02",
+  "tier": "medium",
+  "title": "Decide: seed data, fix ownership, or adjust async",
+  "prompt": "A test fails with `Ecto.NoResultsError` from `Accounts.get_user_by_email!(\"alice@example.com\")`. The previous developer proposed three fixes: (A) `Repo.insert!(%User{email: \"alice@example.com\"})` in setup, (B) wrap the failing line in `Ecto.Adapters.SQL.Sandbox.allow/3`, (C) mark the module `async: false`. The test's own body does `Accounts.create_user(%{email: \"alice@example.com\"})` before the failing assertion, and the create_user function performs an `Ecto.Changeset.validate_format/3` on email that rejects strings containing '@' if they also contain a space (a bug). Write `docs/diagnosis.md` identifying the correct fix: none of A, B, or C — the root cause is the validation bug in `create_user`. Must state that explicitly and must NOT endorse A, B, or C.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/diagnosis.md"],
+    "must_contain": [
+      "validation",
+      "create_user",
+      "insert path",
+      "not A",
+      "not B",
+      "not C"
+    ],
+    "must_not_contain": [
+      "use option A",
+      "use option B",
+      "use option C"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["flaky-test-diagnosis", "tidewave-dev-vs-test-trap"],
+    "criterion": "reject_false_options",
+    "weight": 0.7
+  },
+  "tier_rationale": "Forces the agent past three tempting-looking anti-fixes to identify the real root cause in the insert path. Direct Claude failure mode.",
+  "research_citation": "\"A test fails. Claude queries the database. Finds nothing. Thinks there's a data problem.\" — BoothIQ",
+  "calibration": null
+}

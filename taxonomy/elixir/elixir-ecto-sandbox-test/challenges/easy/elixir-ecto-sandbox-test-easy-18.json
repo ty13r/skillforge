@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-18",
+  "tier": "easy",
+  "title": "Add :user_agent to the LiveView socket connect_info",
+  "prompt": "Given this existing `socket \"/live\"` declaration in an endpoint: `socket \"/live\", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]`, rewrite it at `lib/my_app_web/endpoint.ex` to also pass `:user_agent` in connect_info. The sandbox needs `:user_agent` metadata to propagate sandbox allowances from the test's HTTP requests to the LiveView process. Preserve the session entry.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "connect_info: [:user_agent, session: @session_options]"
+    ],
+    "must_not_contain": [
+      "connect_info: [session: @session_options]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "user_agent_added",
+    "weight": 0.5
+  },
+  "tier_rationale": "Tiny edit with exact target token. Discriminator is knowing :user_agent is required for the sandbox.",
+  "research_citation": "\"To support channels, you need to make it so each channel is allowed within the sandbox. To do so, you must declare that you want to pass connection information to your socket.\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

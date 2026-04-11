@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-16",
+  "tier": "legendary",
+  "title": "Write a mount hook that handles both authenticated and guest users",
+  "prompt": "Write `lib/my_app_web/user_auth.ex` with `on_mount(:sandbox, params, session, socket)` and `on_mount({:current_user, opts}, params, session, socket)` that must coexist. The sandbox hook must run unconditionally (for both auth and guest flows) and must not halt the pipeline. The :current_user hook must query the DB for the user if `session[\"user_token\"]` is present. Must demonstrate: (1) sandbox hook first, never halts, (2) current_user hook second, uses `{:cont, socket}` or `{:halt, socket}` based on auth requirements, (3) shared get_connect_info extraction — do not duplicate the decode_metadata call. Handle the nil metadata case (production requests without sandbox header).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/user_auth.ex"],
+    "must_contain": [
+      "def on_mount(:sandbox",
+      "def on_mount({:current_user",
+      "Phoenix.LiveView.get_connect_info",
+      "Phoenix.Ecto.SQL.Sandbox.decode_metadata",
+      "Phoenix.Ecto.SQL.Sandbox.allow",
+      "{:cont, socket}",
+      "user_token"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "multi_hook_module",
+    "weight": 0.85
+  },
+  "tier_rationale": "Full auth+sandbox hook module — must coexist without conflict.",
+  "calibration": null
+}

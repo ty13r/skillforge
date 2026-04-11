@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-22",
+  "tier": "hard",
+  "title": "Fix a Phoenix.Ecto.SQL.Sandbox plug placement that's breaking LV tests",
+  "prompt": "The fixture at `test_fixtures/liveview_endpoint.ex` has `Phoenix.Ecto.SQL.Sandbox` plugged AFTER `Plug.Session`. LV tests are failing with `DBConnection.OwnershipError` on the LiveView process. Rewrite to `lib/my_app_web/endpoint.ex`: move the sandbox plug to BEFORE `Plug.Static` (the first position after `@session_options`), and also add `:user_agent` to the socket's `connect_info` option (the fixture is missing this). Preserve all other plugs.",
+  "fixture_files": ["test_fixtures/liveview_endpoint.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "Phoenix.Ecto.SQL.Sandbox",
+      "Application.compile_env(:my_app, :sql_sandbox",
+      "connect_info: [:user_agent, session: @session_options]",
+      "Plug.Session"
+    ],
+    "must_not_contain": [
+      "connect_info: [session: @session_options]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "endpoint_fix_two_issues",
+    "weight": 0.8
+  },
+  "tier_rationale": "Two distinct bugs in the same file — must fix both to pass.",
+  "research_citation": "\"It's important that this is at the top of `endpoint.ex`, before any other plugs.\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

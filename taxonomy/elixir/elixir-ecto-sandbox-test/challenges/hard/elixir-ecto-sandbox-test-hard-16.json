@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-16",
+  "tier": "hard",
+  "title": "Write an allow_via_registry helper for a Registry-registered worker",
+  "prompt": "Write `test/support/sandbox_registry_helpers.ex` with `allow_via_registry/2` taking `(registry, name)`. It must: (1) call `Registry.lookup(registry, name)` to find the pid for the given name, (2) extract the first pid from the result list (the format is `[{pid, _}]`), (3) call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), pid)`, (4) return `:ok`. Include error handling for the empty-lookup case.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/sandbox_registry_helpers.ex"],
+    "must_contain": [
+      "def allow_via_registry(registry, name)",
+      "Registry.lookup",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": [],
+    "criterion": "registry_lookup_allow",
+    "weight": 0.6
+  },
+  "tier_rationale": "Composes Registry.lookup with allow/3 and handles the lookup return shape.",
+  "calibration": null
+}

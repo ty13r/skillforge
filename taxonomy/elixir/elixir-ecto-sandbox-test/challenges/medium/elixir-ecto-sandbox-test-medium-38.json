@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-38",
+  "tier": "medium",
+  "title": "Refactor a shared-mode test to use allow/3",
+  "prompt": "A test module declares `use MyApp.DataCase, async: false` and calls `mode(MyApp.Repo, {:shared, self()})` because it spawns a single `Task.Supervisor.async` child. Rewrite to `test/my_app/report_builder_test.exs`: switch to `async: true`, remove the `mode(:shared)` call, and use `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), task.pid)` to grant the spawned task access. This reclaims concurrency.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/report_builder_test.exs"],
+    "must_contain": [
+      "async: true",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "mode(MyApp.Repo, {:shared, self()})",
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["async-test-safety-rules", "allow-pattern-for-spawned-processes"],
+    "criterion": "shared_to_allow_refactor",
+    "weight": 0.7
+  },
+  "tier_rationale": "Refactoring one pattern to another — requires understanding both mechanisms.",
+  "calibration": null
+}

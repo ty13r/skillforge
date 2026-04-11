@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-19",
+  "tier": "medium",
+  "title": "Diagnose 'fails in suite, passes alone' for a GenServer",
+  "prompt": "A test `test/my_app/counter_test.exs` passes when run alone via `mix test test/my_app/counter_test.exs` but fails with `DBConnection.OwnershipError` when run as part of `mix test`. The module starts a GenServer at `setup_all` (not `setup`), and each test issues writes through the GenServer. Write `docs/diagnosis_fails_in_suite.md` explaining: (1) `setup_all` runs ONCE for the whole module, not per test, (2) the GenServer is owned by the setup_all process which has its own sandbox checkout, (3) each individual test has a DIFFERENT sandbox owner and the GenServer's connection is the setup_all's, (4) fix: move the GenServer start to `setup` (per-test).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/diagnosis_fails_in_suite.md"],
+    "must_contain": [
+      "setup_all",
+      "setup",
+      "sandbox owner",
+      "per test",
+      "move"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "setup_all_diagnosis",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires connecting setup_all semantics with sandbox ownership. Two non-obvious concepts combined.",
+  "calibration": null
+}

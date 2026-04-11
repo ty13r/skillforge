@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-37",
+  "tier": "hard",
+  "title": "Write a debugging transcript that refuses Tidewave output",
+  "prompt": "Write `docs/debugging_transcript.md` as a debugging transcript in response to: 'My test `test/my_app/orders_test.exs` fails at line 25 with \"expected status 'paid' but got nil\". I ran Tidewave and the `orders` table has 10 rows with various statuses.' The transcript must: (1) acknowledge the Tidewave observation but explicitly IGNORE it for the test analysis, (2) ask the user to share the body of the `create_order/1` or `update_order_status/2` function being called in the test, (3) ask the user to share the test's own setup and body, (4) refuse to proceed with any 'what if the test DB is out of sync?' reasoning. Must state that the 10 rows in Tidewave are dev DB rows and not relevant.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/debugging_transcript.md"],
+    "must_contain": [
+      "Tidewave",
+      "ignore",
+      "create_order",
+      "dev DB",
+      "test DB",
+      "not relevant"
+    ],
+    "must_not_contain": [
+      "check if the test DB is out of sync"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "transcript_refuse_tidewave",
+    "weight": 0.7
+  },
+  "tier_rationale": "Behavioral test — must explicitly refuse the 'tidewave gives useful info' reasoning.",
+  "calibration": null
+}

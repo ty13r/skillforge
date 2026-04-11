@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-17",
+  "tier": "hard",
+  "title": "Diagnose allow/3 called too late — a race condition",
+  "prompt": "Write `docs/allow_race_diagnosis.md` diagnosing this bug: a test spawns `Task.Supervisor.async_nolink/2` then calls `Ecto.Adapters.SQL.Sandbox.allow/3` — but the Task sometimes queries the DB before the allow call completes, causing an intermittent `DBConnection.OwnershipError`. Must explain: (1) Task.Supervisor.async_nolink spawns the child immediately and the child begins executing in parallel, (2) the allow call happens in the test process AFTER the spawn but BEFORE the child's first Repo call in the happy path, (3) under concurrent scheduling the child can race ahead of the allow, (4) fix: call allow BEFORE triggering the child's work — either restructure the child to wait for a start signal, or use the $callers mechanism via Task.async.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/allow_race_diagnosis.md"],
+    "must_contain": [
+      "allow/3",
+      "race",
+      "Task.Supervisor.async_nolink",
+      "$callers",
+      "start signal"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["flaky-test-diagnosis", "connection-ownership-transfer"],
+    "criterion": "allow_race_explained",
+    "weight": 0.7
+  },
+  "tier_rationale": "Race condition diagnosis — requires understanding allow's timing semantics.",
+  "calibration": null
+}

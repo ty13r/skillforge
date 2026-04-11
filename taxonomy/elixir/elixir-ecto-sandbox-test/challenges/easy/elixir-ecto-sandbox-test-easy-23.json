@@ -1,0 +1,23 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-23",
+  "tier": "easy",
+  "title": "Declare connect_info: [:user_agent] on channel socket",
+  "prompt": "Update `lib/my_app_web/endpoint.ex` so the channel socket declaration for `/socket` reads `socket \"/socket\", MyAppWeb.UserSocket, websocket: [connect_info: [:user_agent]]`. Add this line as the entire contents of the endpoint (minimal endpoint with just the Phoenix.Endpoint use statement, the otp_app, and the socket line).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "socket \"/socket\", MyAppWeb.UserSocket",
+      "connect_info: [:user_agent]"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["liveview-sandbox-integration"],
+    "criterion": "channel_connect_info",
+    "weight": 0.4
+  },
+  "tier_rationale": "Trivial edit with exact target.",
+  "calibration": null
+}

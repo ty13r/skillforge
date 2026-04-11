@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-22",
+  "tier": "medium",
+  "title": "Write a LiveView test that calls render_async/1",
+  "prompt": "The fixture at `test_fixtures/liveview_assign_async.ex` is a LiveView using `assign_async(:users, ...)`. Write a test at `test/my_app_web/live/user_list_live_test.exs` that: (1) `use MyAppWeb.ConnCase, async: true`, (2) imports `Phoenix.LiveViewTest`, (3) calls `live(conn, ~p\"/users\")` to mount, (4) asserts the initial html contains 'Loading users...', (5) calls `render_async(lv)` to await the assign_async, (6) asserts the final html contains a specific email. Must include the `render_async(lv)` call.",
+  "fixture_files": ["test_fixtures/liveview_assign_async.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app_web/live/user_list_live_test.exs"],
+    "must_contain": [
+      "render_async(lv)",
+      "use MyAppWeb.ConnCase, async: true",
+      "Phoenix.LiveViewTest",
+      "Loading users...",
+      "live(conn, ~p\"/users\")"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "render_async_called",
+    "weight": 0.7
+  },
+  "tier_rationale": "Must know render_async exists and call it — Claude often asserts on the initial render and wonders why it fails silently.",
+  "calibration": null
+}

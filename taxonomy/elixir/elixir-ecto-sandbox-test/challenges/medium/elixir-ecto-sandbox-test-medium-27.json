@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-27",
+  "tier": "medium",
+  "title": "Explain why channel tests pass locally but fail in CI",
+  "prompt": "A channel test passes when run via `mix test test/my_app_web/channels/room_channel_test.exs` but fails in CI (which runs the full `mix test` suite). Write `docs/channel_flake_ci.md` identifying three possible root causes in order of likelihood: (1) missing `allow/2` in join/3 (works locally because of a side-channel sandbox leak), (2) sandbox plug not at top of endpoint.ex, (3) missing `:user_agent` in `connect_info`. Must reject 'disable async' as a fix.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/channel_flake_ci.md"],
+    "must_contain": [
+      "allow/2",
+      "endpoint",
+      ":user_agent",
+      "connect_info",
+      "top"
+    ],
+    "must_not_contain": [
+      "disable async"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "ci_flake_diagnosis",
+    "weight": 0.6
+  },
+  "tier_rationale": "Ordered diagnosis — three distinct root causes to identify.",
+  "calibration": null
+}

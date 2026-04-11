@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-04",
+  "tier": "hard",
+  "title": "Refute 'the test DB is broken' with a structured explanation",
+  "prompt": "A developer reports: 'My test DB is corrupted. I keep dropping it and recreating it but tests still say records don't exist.' Write `docs/test_db_not_corrupted.md` structured as a decision tree: (1) is the test in a sandbox transaction? (yes, always) (2) does the test's own insert path succeed? (check the code) (3) does the test pass `{:ok, _}` from its create call? (verify the match) (4) is the assertion reading from a DIFFERENT process than the insert? (check for on_exit or spawned processes) — the real root cause is ALWAYS in one of (2)(3)(4), never in a corrupted DB. Must not suggest `mix ecto.drop`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/test_db_not_corrupted.md"],
+    "must_contain": [
+      "insert path",
+      "sandbox transaction",
+      "different process",
+      "not corrupted"
+    ],
+    "must_not_contain": [
+      "mix ecto.drop",
+      "mix ecto.reset"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["tidewave-dev-vs-test-trap", "connection-ownership-transfer"],
+    "criterion": "decision_tree_triage",
+    "weight": 0.7
+  },
+  "tier_rationale": "Structured triage rejecting a plausible-but-wrong hypothesis. Requires enumeration of four alternative root causes.",
+  "calibration": null
+}

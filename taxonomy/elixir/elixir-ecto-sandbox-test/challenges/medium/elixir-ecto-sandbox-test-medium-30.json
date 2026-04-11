@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-30",
+  "tier": "medium",
+  "title": "Use Oban.Testing.with_testing_mode/2 to switch modes mid-test",
+  "prompt": "Write a test at `test/my_app/scheduled_jobs_test.exs` that normally runs with `testing: :inline` but temporarily switches to `:manual` for a specific scheduled-job assertion. Use `Oban.Testing.with_testing_mode(:manual, fn -> MyApp.Workers.ScheduledWorker.new(%{\"delay\" => 3600}) |> Oban.insert() |> then(&assert_enqueued(worker: MyApp.Workers.ScheduledWorker)) end)` inside the test body.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/scheduled_jobs_test.exs"],
+    "must_contain": [
+      "Oban.Testing.with_testing_mode(:manual",
+      "assert_enqueued(worker: MyApp.Workers.ScheduledWorker"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "with_testing_mode",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires knowing with_testing_mode/2 — obscure API.",
+  "research_citation": "Oban.Testing docs",
+  "calibration": null
+}

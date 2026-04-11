@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-11",
+  "tier": "medium",
+  "title": "Extract an async-safe helper with sandbox allowance",
+  "prompt": "Write a test helper module `MyApp.TestTaskHelpers` at `test/support/test_task_helpers.ex` that defines `allow_and_async/2` taking `(task_supervisor, fun)` and: (1) spawns `Task.Supervisor.async_nolink(task_supervisor, fun)`, (2) gets the task pid from the returned Task struct, (3) calls `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), task.pid)`, (4) returns the task. This keeps async: true safe across spawned tasks.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/test_task_helpers.ex"],
+    "must_contain": [
+      "defmodule MyApp.TestTaskHelpers",
+      "def allow_and_async(task_supervisor, fun)",
+      "Task.Supervisor.async_nolink",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()"
+    ],
+    "must_not_contain": [
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "helper_module",
+    "weight": 0.6
+  },
+  "tier_rationale": "Helper module with a specific signature and API composition.",
+  "calibration": null
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-34",
+  "tier": "hard",
+  "title": "Diagnose a fabricated-data test failure from a prior Claude turn",
+  "prompt": "Write `docs/fabricated_data_diagnosis.md` auditing: a test `test/my_app/analytics_test.exs` expected `assert Analytics.recent_events(user) |> length() == 5` but it gets 0. Git blame shows a prior commit (authored by 'Claude') that modified the test to pre-insert 5 `%Event{}` records in setup using `Repo.insert!/1`. The original test (before Claude) created the events via `Analytics.track/2` calls inside the test body. Your audit must: (1) identify that Claude's edit replaced the correct pattern with seed data, (2) recommend reverting Claude's setup changes, (3) recommend reviewing Claude's authored commits for similar anti-patterns, (4) explain WHY Claude would do this — the Tidewave dev-vs-test confusion.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/fabricated_data_diagnosis.md"],
+    "must_contain": [
+      "Analytics.track",
+      "Repo.insert!",
+      "revert",
+      "Tidewave",
+      "Claude"
+    ],
+    "must_not_contain": [
+      "keep the seed data"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "fabricated_data_audit",
+    "weight": 0.8
+  },
+  "tier_rationale": "Meta-audit of a Claude failure pattern. Must identify the anti-pattern and the root cause psychology.",
+  "research_citation": "\"I've watched Claude try to seed the test database so a test will pass.\" — BoothIQ",
+  "calibration": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-20",
+  "tier": "medium",
+  "title": "Add sandbox allow to a Phoenix channel join/3",
+  "prompt": "The fixture at `test_fixtures/channel_no_allow.ex` is a Phoenix channel `MyAppWeb.RoomChannel` whose `join/3` queries `Rooms.get_room/1` without first calling `Phoenix.Ecto.SQL.Sandbox.allow/2`. In tests, the channel process is a different pid than the test process and has no sandbox access. Rewrite to `lib/my_app_web/channels/room_channel.ex`: add `allow_ecto_sandbox(socket)` as the first call in `join/3`, and implement `allow_ecto_sandbox/1` as a private function that extracts `socket.assigns.phoenix_ecto_sandbox` metadata and calls `Phoenix.Ecto.SQL.Sandbox.allow(metadata, Ecto.Adapters.SQL.Sandbox)`.",
+  "fixture_files": ["test_fixtures/channel_no_allow.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/channels/room_channel.ex"],
+    "must_contain": [
+      "allow_ecto_sandbox(socket)",
+      "phoenix_ecto_sandbox",
+      "Phoenix.Ecto.SQL.Sandbox.allow",
+      "Ecto.Adapters.SQL.Sandbox",
+      "defp allow_ecto_sandbox"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes"],
+    "criterion": "channel_allow_helper",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-step — fix join/3 AND extract the helper function.",
+  "research_citation": "\"`allow/2` needs to be manually called once for each channel, at best directly at the start of `c:Phoenix.Channel.join/3`\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

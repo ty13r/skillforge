@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-42",
+  "tier": "hard",
+  "title": "Fix a unique-constraint collision between async tests",
+  "prompt": "A module has 5 async tests that each do `{:ok, user} = Accounts.create_user(%{email: \"test@example.com\"})`. Under concurrent execution, 2-3 tests sometimes fail with `Ecto.Changeset.unique_violation`. Rewrite `test/my_app/accounts_test.exs`: (1) for each test, use a UUID-based email via `\"user_#{Ecto.UUID.generate()}@example.com\"`, (2) preserve `async: true`, (3) explain in a comment that hard-coded unique fields do NOT work in async because the sandbox rollback happens at test end, but the uniqueness check happens DURING the test.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/accounts_test.exs"],
+    "must_contain": [
+      "async: true",
+      "Ecto.UUID.generate",
+      "#{"
+    ],
+    "must_not_contain": [
+      "\"test@example.com\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["async-test-safety-rules"],
+    "criterion": "unique_fix_comment",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires knowing the uniqueness-check timing detail, not just the fix pattern.",
+  "calibration": null
+}

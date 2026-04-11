@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-07",
+  "tier": "legendary",
+  "title": "Rewrite endpoint.ex with all sandbox requirements satisfied",
+  "prompt": "Write a complete `lib/my_app_web/endpoint.ex` that satisfies ALL these constraints: (1) `use Phoenix.Endpoint, otp_app: :my_app`, (2) defines `@session_options` as a module attribute, (3) `Phoenix.Ecto.SQL.Sandbox` plug at the very TOP (after @session_options but before any other plug, conditional on `Application.compile_env(:my_app, :sql_sandbox, false)`), (4) LiveView socket at `/live` with `connect_info: [:user_agent, session: @session_options]`, (5) channel socket at `/socket` with `connect_info: [:user_agent]`, (6) all standard plugs in correct Phoenix order (Plug.Static, RequestId, Telemetry, Parsers, MethodOverride, Head, Session), (7) `plug MyAppWeb.Router` at the end. The endpoint must work for both LiveView AND channel tests with sandbox.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "use Phoenix.Endpoint",
+      "@session_options",
+      "Phoenix.Ecto.SQL.Sandbox",
+      "Application.compile_env(:my_app, :sql_sandbox",
+      "connect_info: [:user_agent, session: @session_options]",
+      "socket \"/socket\"",
+      "connect_info: [:user_agent]",
+      "Plug.Session",
+      "plug MyAppWeb.Router"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["channels-sandbox-integration"],
+    "criterion": "full_endpoint_rewrite",
+    "weight": 0.85
+  },
+  "tier_rationale": "Full endpoint file with 9 constraints. Any missing constraint fails.",
+  "research_citation": "\"It's important that this is at the top of `endpoint.ex`, before any other plugs.\" — Phoenix.Ecto.SQL.Sandbox docs",
+  "calibration": null
+}

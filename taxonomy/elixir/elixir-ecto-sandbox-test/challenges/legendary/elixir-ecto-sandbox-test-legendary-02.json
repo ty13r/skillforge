@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-02",
+  "tier": "legendary",
+  "title": "Diagnose a test suite where shared mode bleeds across modules",
+  "prompt": "Write `docs/shared_mode_cross_module_bleed.md` diagnosing this scenario: module `IntegrationTestA` uses `mode(:shared)` in setup and is `async: false`. Module `AccountsTestB` is `async: true` and does NOT call mode. When the test run executes `A` before `B`, `B`'s first test fails with `DBConnection.OwnershipError`. Must explain: (1) `mode(MyApp.Repo, {:shared, self()})` mutates the SANDBOX GenServer's state for the ENTIRE TEST RUN, not just module A, (2) when module B starts its tests, the GenServer still reports module A's owner, (3) B's start_owner!/2 can't fully recover — shared mode is sticky, (4) fix options: (a) module A must reset mode to :manual in on_exit, (b) never use mode(:shared) in a shared DataCase, (c) put shared-mode tests in their own DataCase to isolate.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/shared_mode_cross_module_bleed.md"],
+    "must_contain": [
+      "IntegrationTestA",
+      "AccountsTestB",
+      "sandbox GenServer",
+      "mode",
+      "sticky",
+      "on_exit",
+      ":manual"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "test-isolation-philosophy",
+    "secondary_capabilities": ["shared-mode-fallback", "sandbox-checkout-and-modes"],
+    "criterion": "cross_module_shared_bleed",
+    "weight": 0.85
+  },
+  "tier_rationale": "Deep internal state diagnosis — requires understanding that sandbox state persists across modules.",
+  "calibration": null
+}

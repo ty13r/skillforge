@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-24",
+  "tier": "easy",
+  "title": "Explain why ChannelCase does not automatically handle sandbox",
+  "prompt": "Write `docs/channel_case_sandbox.md` explaining that `MyAppWeb.ChannelCase` alone is NOT sufficient for sandbox propagation — each channel must explicitly call `Phoenix.Ecto.SQL.Sandbox.allow/2` at the start of its `join/3`. The doc must state: (1) ChannelCase checks out the sandbox for the TEST process, (2) the CHANNEL process is a different pid and is not automatically granted access, (3) the fix is the allow call in join/3.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/channel_case_sandbox.md"],
+    "must_contain": [
+      "ChannelCase",
+      "join/3",
+      "allow",
+      "different pid",
+      "test process"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "channels-sandbox-integration",
+    "secondary_capabilities": ["test-isolation-philosophy"],
+    "criterion": "channel_case_doc",
+    "weight": 0.4
+  },
+  "tier_rationale": "Reference documentation. Sonnet produces the explanation when prompted with explicit points.",
+  "calibration": null
+}

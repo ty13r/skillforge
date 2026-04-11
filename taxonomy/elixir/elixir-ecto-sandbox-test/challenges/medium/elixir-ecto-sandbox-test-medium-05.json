@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-05",
+  "tier": "medium",
+  "title": "Decide checkout/2 vs start_owner!/2 for a LiveView test",
+  "prompt": "A LiveView test spawns background tasks via `assign_async/3` that may outlive the test process briefly during teardown. Write a new setup function at `test/support/live_view_case.ex` that uses `Ecto.Adapters.SQL.Sandbox.start_owner!/2` (NOT `checkout/2`) and registers an `on_exit` for `stop_owner`. Include a comment above the setup block explaining why `start_owner!` is preferred over `checkout/2` for this module (hint: unlinked processes spawned by assign_async may outlive the test process).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/live_view_case.ex"],
+    "must_contain": [
+      "start_owner!",
+      "stop_owner",
+      "on_exit",
+      "assign_async",
+      "unlinked"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": ["connection-ownership-transfer", "liveview-sandbox-integration"],
+    "criterion": "chooses_start_owner",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires knowing both APIs and making a justified choice — Sonnet often defaults to checkout.",
+  "research_citation": "\"`start_owner!/2` solves the problem of unlinked processes started in a test outliving the test process and causing ownership errors\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

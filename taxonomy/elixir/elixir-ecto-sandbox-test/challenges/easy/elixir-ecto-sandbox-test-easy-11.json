@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-11",
+  "tier": "easy",
+  "title": "Flag and reject a PR that blanket-disables async tests",
+  "prompt": "A teammate's PR changes 15 test modules from `async: true` to `async: false` citing 'fixes flaky tests'. Write `docs/pr_review.md` as a code-review rejection that states: (1) the specific anti-pattern, (2) the correct debugging step (look for ownership errors and use `allow/3`), and (3) the cost of losing async concurrency. Must NOT approve the PR.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/pr_review.md"],
+    "must_contain": [
+      "allow/3",
+      "ownership",
+      "concurrency",
+      "not approve"
+    ],
+    "must_not_contain": [
+      "approve this PR",
+      "LGTM"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "rejects_blanket_async_false",
+    "weight": 0.6
+  },
+  "tier_rationale": "Named Claude failure mode (disabling async as a fix). The task is to write a rejection — Sonnet reliably produces this when the anti-pattern is named explicitly.",
+  "research_citation": "\"Claude doesn't understand transaction isolation—tests can't see each other's data. It confuses itself and recommends disabling async tests altogether.\" — BoothIQ",
+  "calibration": null
+}

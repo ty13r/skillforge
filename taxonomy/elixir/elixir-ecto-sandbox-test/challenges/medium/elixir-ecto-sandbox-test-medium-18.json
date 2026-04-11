@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-18",
+  "tier": "medium",
+  "title": "Convert start_link to start_supervised! in a GenServer test",
+  "prompt": "The fixture at `test_fixtures/flaky_genserver_test.ex` starts a `CounterServer` via `start_link` that outlives the test process. Rewrite to `test/my_app/counter_server_test.exs`: replace `CounterServer.start_link(name: :my_counter)` with `start_supervised!({CounterServer, name: :my_counter})` so the GenServer is terminated before the test's sandbox connection is reclaimed. Preserve `async: true`.",
+  "fixture_files": ["test_fixtures/flaky_genserver_test.ex"],
+  "expected_outputs": {
+    "files": ["test/my_app/counter_server_test.exs"],
+    "must_contain": [
+      "start_supervised!({CounterServer",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "CounterServer.start_link",
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "connection-ownership-transfer",
+    "secondary_capabilities": ["async-test-safety-rules", "flaky-test-diagnosis"],
+    "criterion": "start_supervised_swap",
+    "weight": 0.7
+  },
+  "tier_rationale": "Pattern swap with named failure mode (lifetime escaping the test).",
+  "research_citation": "\"you might try to start the genserver under the test supervisor so it doesn't outlive the individual test process\" — Elixir Forum, CherryPoppins",
+  "calibration": null
+}

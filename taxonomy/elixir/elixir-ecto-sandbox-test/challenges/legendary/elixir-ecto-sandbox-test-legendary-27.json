@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-27",
+  "tier": "legendary",
+  "title": "Write a test that reproduces a race condition between allow and worker query",
+  "prompt": "Write `test/my_app/race_reproduction_test.exs` that DELIBERATELY reproduces a race condition — useful as a regression test for a fix to the allow/3 API. The test must: (1) spawn a `Task.Supervisor.async_nolink/2` child that does `Process.sleep(1); Repo.all(User)` (the sleep forces the child to check for the DB connection AFTER the test process has a chance to call allow/3), (2) call `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), task.pid)` after spawning, (3) `Task.await/1` the result, (4) assert success. The test should be `async: true` and use enough deliberate Process.sleep calls to force the race to manifest under repeated runs. Include a comment explaining that this is a regression test for race hunting, NOT production test code.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/race_reproduction_test.exs"],
+    "must_contain": [
+      "Task.Supervisor.async_nolink",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()",
+      "async: true",
+      "regression",
+      "race"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "async-test-safety-rules"],
+    "criterion": "race_reproduction",
+    "weight": 0.8
+  },
+  "tier_rationale": "Intentional race reproduction — requires deep understanding of the allow timing.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-34",
+  "tier": "easy",
+  "title": "Choose between allow/3 and shared mode for a spawned Task",
+  "prompt": "A test spawns a single `Task.async/1` inside its body that queries the Repo. The test wants to keep `async: true`. Write `docs/choose_allow.md` recommending `Ecto.Adapters.SQL.Sandbox.allow/3` (NOT shared mode) and explain why. Must state: (1) allow/3 preserves async, (2) shared mode would force async: false, (3) allow/3 is the right reach here.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/choose_allow.md"],
+    "must_contain": [
+      "allow/3",
+      "async: true",
+      "shared mode",
+      "preserve"
+    ],
+    "must_not_contain": [
+      "use shared mode"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "async-test-safety-rules"],
+    "criterion": "prefer_allow_over_shared",
+    "weight": 0.5
+  },
+  "tier_rationale": "Choice justification. Clear named tradeoff.",
+  "research_citation": "\"Because allowances use an explicit mechanism, their advantage is that you can still run your tests in async mode.\" — Ecto.Adapters.SQL.Sandbox docs",
+  "calibration": null
+}

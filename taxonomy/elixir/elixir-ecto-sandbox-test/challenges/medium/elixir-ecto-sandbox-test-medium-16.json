@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-16",
+  "tier": "medium",
+  "title": "Distinguish allow/3 from Phoenix.Ecto.SQL.Sandbox.allow/2",
+  "prompt": "Write `docs/allow_variants.md` explaining the difference between `Ecto.Adapters.SQL.Sandbox.allow/3` (takes `repo, owner_pid, allowed_pid`) and `Phoenix.Ecto.SQL.Sandbox.allow/2` (takes `metadata, adapter`). Must state: (1) the first is the raw PID-based mechanism, (2) the second is the HTTP-header-based variant used for LiveView/channels, (3) they are NOT interchangeable.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/allow_variants.md"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow/3",
+      "Phoenix.Ecto.SQL.Sandbox.allow/2",
+      "owner_pid",
+      "metadata",
+      "not interchangeable"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["liveview-sandbox-integration", "channels-sandbox-integration"],
+    "criterion": "allow_variants_doc",
+    "weight": 0.5
+  },
+  "tier_rationale": "Doc that forces disambiguation of two similarly-named APIs that Claude frequently confuses.",
+  "calibration": null
+}

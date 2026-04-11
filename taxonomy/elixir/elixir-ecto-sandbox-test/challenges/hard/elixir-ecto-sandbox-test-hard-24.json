@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-24",
+  "tier": "hard",
+  "title": "Debug LiveView: handle_info from a supervised task loses sandbox",
+  "prompt": "Write `docs/lv_task_sandbox_loss.md` diagnosing this scenario: a LiveView `handle_event` spawns a `Task.Supervisor.async_nolink` child that queries the Repo. In production it works; in tests the child's Repo.all raises `DBConnection.OwnershipError`. Must explain: (1) the LV process has the sandbox allowance from the `on_mount(:sandbox)` hook, (2) `Task.Supervisor.async_nolink` spawns under a DIFFERENT supervisor — the child does NOT inherit the LV's sandbox allowance, (3) the fix is to either use `Task.async_nolink/1` (stays under LV process $callers) OR call `Ecto.Adapters.SQL.Sandbox.allow/3` manually on the child pid in the test.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/lv_task_sandbox_loss.md"],
+    "must_contain": [
+      "Task.Supervisor.async_nolink",
+      "handle_event",
+      "on_mount(:sandbox",
+      "$callers",
+      "allow"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-sandbox-integration",
+    "secondary_capabilities": ["allow-pattern-for-spawned-processes", "connection-ownership-transfer"],
+    "criterion": "lv_task_diagnosis",
+    "weight": 0.8
+  },
+  "tier_rationale": "Requires synthesizing LiveView process model + $callers semantics + sandbox allowance propagation.",
+  "research_citation": "\"The sandbox uses the mechanic described here to track the caller (aka the test process) for a LV\" — Elixir Forum, LostKobrakai",
+  "calibration": null
+}

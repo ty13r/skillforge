@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-25",
+  "tier": "easy",
+  "title": "Configure Oban with testing: :manual in test config",
+  "prompt": "Update `config/test.exs` to configure Oban with `config :my_app, Oban, testing: :manual` so that no jobs execute automatically in tests. Include a brief `# ` comment explaining that `:manual` means jobs are inserted but not run automatically.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/test.exs"],
+    "must_contain": [
+      "config :my_app, Oban",
+      "testing: :manual"
+    ],
+    "must_not_contain": [
+      "testing: :inline"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "oban-sandbox-integration",
+    "secondary_capabilities": [],
+    "criterion": "oban_manual_mode",
+    "weight": 0.4
+  },
+  "tier_rationale": "Canonical config line — documented in Oban testing guide.",
+  "research_citation": "\"Both testing modes prevent Oban from running any database queries in the background. This simultaneously prevents Sandbox errors from plugin queries and prevents queues from executing jobs unexpectedly.\" — Oban testing docs",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-medium-04",
+  "tier": "medium",
+  "title": "Add allow/3 for a spawned Task in an existing test",
+  "prompt": "The fixture at `test_fixtures/task_spawn_test.exs` spawns a Task via `ReportGenerator.generate_async/0`. That call internally starts a Task under an unlinked `ReportSupervisor` (Task.Supervisor), so the Task is NOT a $callers descendant of the test process. The test fails with `DBConnection.OwnershipError`. Rewrite the fixture to `test/my_app/worker/report_generator_test.exs`: add `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), task_pid)` AFTER the `generate_async` call (using the returned `task_pid`). Preserve `async: true`.",
+  "fixture_files": ["test_fixtures/task_spawn_test.exs"],
+  "expected_outputs": {
+    "files": ["test/my_app/worker/report_generator_test.exs"],
+    "must_contain": [
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self()",
+      "task_pid",
+      "async: true"
+    ],
+    "must_not_contain": [
+      "async: false",
+      "mode(MyApp.Repo, {:shared, self()})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": ["connection-ownership-transfer", "test-isolation-philosophy"],
+    "criterion": "allow_on_task_pid",
+    "weight": 0.7
+  },
+  "tier_rationale": "Multi-step with real fixture. Requires recognizing the $callers boundary and applying allow/3 to the right pid.",
+  "research_citation": "\"background processes spawned manually, Tasks and GenServers do fail outputting that or similar error to the console\" — Elixir Forum, hubertlepicki",
+  "calibration": null
+}

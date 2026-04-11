@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-41",
+  "tier": "hard",
+  "title": "Diagnose 'passes alone, fails after X' — three root causes",
+  "prompt": "Write `docs/passes_alone_fails_after.md` for this scenario: `mix test test/my_app/feature_test.exs` passes. `mix test` fails the same test. The failing test is the LAST test in module `MyApp.FeatureTest`. Enumerate 3 plausible root causes in order of likelihood: (1) a test in a PRIOR module (any module) leaked a process that held a sandbox connection, (2) a prior test wrote to `Application.put_env` or ETS and didn't clean up, (3) a prior test left an Oban job in the DB via `Oban.insert!` (not valid for sandbox but some projects do it). For each, give a diagnostic step using `mix test --seed` or `--trace`. Must state 'do NOT disable async as the first step'.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/passes_alone_fails_after.md"],
+    "must_contain": [
+      "--seed",
+      "--trace",
+      "Application.put_env",
+      "ETS",
+      "do NOT disable async"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "flaky-test-diagnosis",
+    "secondary_capabilities": ["test-isolation-philosophy", "connection-ownership-transfer"],
+    "criterion": "passes_alone_diagnosis",
+    "weight": 0.7
+  },
+  "tier_rationale": "Three-cause triage with diagnostic commands.",
+  "research_citation": "\"It's impossible to know without seeing your code but this generally happens because one test is causing persisting side effects\" — Elixir Forum, sodapopcan",
+  "calibration": null
+}

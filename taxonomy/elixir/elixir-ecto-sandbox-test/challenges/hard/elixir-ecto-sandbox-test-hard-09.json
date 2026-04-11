@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-09",
+  "tier": "hard",
+  "title": "Reclaim async: true for a module that uses Mox",
+  "prompt": "A test module is currently `async: false` because it uses `Mox` to stub `MyApp.HttpClient`. Write `test/my_app/http_consumer_test.exs` that: (1) `use MyApp.DataCase, async: true`, (2) uses `Mox.set_mox_private(self())` in setup so each async test has its own expectations, (3) stubs `MyApp.HttpClient.get/1` to return `{:ok, %{\"status\" => \"ok\"}}`, (4) tests a function that calls HttpClient and inserts a record. Must NOT use `Mox.set_mox_global/0`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/http_consumer_test.exs"],
+    "must_contain": [
+      "use MyApp.DataCase, async: true",
+      "Mox.set_mox_private(self())",
+      "MyApp.HttpClient"
+    ],
+    "must_not_contain": [
+      "Mox.set_mox_global",
+      "async: false"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "async-test-safety-rules",
+    "secondary_capabilities": ["flaky-test-diagnosis"],
+    "criterion": "mox_private_mode",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires knowing Mox has a private-vs-global distinction AND choosing the async-safe variant.",
+  "calibration": null
+}

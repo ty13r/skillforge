@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-sandbox-test-legendary-22",
+  "tier": "legendary",
+  "title": "Refute 'the tests are wrong because the data is here' post-mortem",
+  "prompt": "Write a post-mortem response at `docs/postmortem_response.md` to this stakeholder report: 'Our CI is unreliable. Claude's been trying to fix the test suite for a week. It keeps adding fixes but more tests break. We checked the dev DB via Tidewave — all the expected data is there. So the tests must be wrong.' Your response must: (1) explicitly reject the 'tests must be wrong because dev DB has the data' conclusion, (2) explain that the dev DB is invisible from inside the test's sandbox transaction, (3) identify Claude's seed-data and async-false changes as the actual cascade source (not the real tests), (4) recommend a full git revert of Claude's test-file changes from the week, (5) recommend starting the debug from the test's own insert paths. Must NOT suggest that the test DB is broken or needs reseeding.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["docs/postmortem_response.md"],
+    "must_contain": [
+      "sandbox transaction",
+      "dev DB",
+      "invisible",
+      "revert",
+      "insert paths",
+      "cascade"
+    ],
+    "must_not_contain": [
+      "the test DB is broken",
+      "reseed the test DB"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "tidewave-dev-vs-test-trap",
+    "secondary_capabilities": ["test-isolation-philosophy", "flaky-test-diagnosis"],
+    "criterion": "postmortem_refuse",
+    "weight": 0.85
+  },
+  "tier_rationale": "Must push back against a stakeholder assumption that aligns with Claude's own failure mode.",
+  "calibration": null
+}

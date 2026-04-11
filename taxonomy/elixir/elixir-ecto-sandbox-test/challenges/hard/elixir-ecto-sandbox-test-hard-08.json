@@ -1,0 +1,24 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-08",
+  "tier": "hard",
+  "title": "Choose the right sandbox mode for a Phoenix pool config migration",
+  "prompt": "A project is migrating from `pool: Ecto.Adapters.SQL.Sandbox` (which implies checkout on every connection request) to the newer `start_owner!/2` pattern. Write `config/test.exs` that: (1) keeps `pool: Ecto.Adapters.SQL.Sandbox` (the pool is separate from the mode), (2) configures `pool_size: 10` to support concurrent tests, (3) adds a comment block explaining that `pool: Ecto.Adapters.SQL.Sandbox` is REQUIRED in test config even when using `start_owner!/2` at runtime.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/test.exs"],
+    "must_contain": [
+      "pool: Ecto.Adapters.SQL.Sandbox",
+      "pool_size: 10",
+      "start_owner!"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "sandbox-checkout-and-modes",
+    "secondary_capabilities": [],
+    "criterion": "pool_config_explained",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires understanding that the pool adapter and the setup mode are two layers — a common source of confusion.",
+  "calibration": null
+}

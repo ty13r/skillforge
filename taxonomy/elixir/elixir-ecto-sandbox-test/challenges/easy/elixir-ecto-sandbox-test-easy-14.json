@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-sandbox-test-easy-14",
+  "tier": "easy",
+  "title": "Write a sandbox allowance helper function",
+  "prompt": "Write a helper module `MyApp.TestSandbox` at `test/support/test_sandbox.ex` that defines `allow/2` accepting `(pid, owner_pid)` and calls `Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, owner_pid, pid)` to grant the given pid access to the owner's sandbox connection. Include a `@moduledoc` explaining it's a test helper for sandbox allowances.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/support/test_sandbox.ex"],
+    "must_contain": [
+      "defmodule MyApp.TestSandbox",
+      "def allow(pid, owner_pid)",
+      "Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, owner_pid, pid)",
+      "@moduledoc"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "allow-pattern-for-spawned-processes",
+    "secondary_capabilities": [],
+    "criterion": "helper_module",
+    "weight": 0.5
+  },
+  "tier_rationale": "Module scaffolding with one function. Boilerplate.",
+  "calibration": null
+}

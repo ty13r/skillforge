@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-sandbox-test-hard-38",
+  "tier": "hard",
+  "title": "Write a shared-mode setup for a multi-process integration test",
+  "prompt": "Write `test/my_app/integration/multi_process_test.exs` that legitimately requires shared mode because it spawns 3 distinct GenServer processes that each query Repo and none of them can be supervised under the test process (they're started globally by the application). Must: (1) `use MyApp.DataCase, async: false` with a comment explaining why, (2) `Ecto.Adapters.SQL.Sandbox.checkout(MyApp.Repo)` then `mode(MyApp.Repo, {:shared, self()})` in setup, (3) at least one test that exercises all 3 processes, (4) an `on_exit` callback that calls `Ecto.Adapters.SQL.Sandbox.mode(MyApp.Repo, :manual)` to reset mode for subsequent tests in other modules.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["test/my_app/integration/multi_process_test.exs"],
+    "must_contain": [
+      "async: false",
+      "Ecto.Adapters.SQL.Sandbox.checkout",
+      "mode(MyApp.Repo, {:shared, self()})",
+      "on_exit",
+      "mode(MyApp.Repo, :manual)"
+    ],
+    "must_not_contain": [
+      "async: true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "shared-mode-fallback",
+    "secondary_capabilities": ["connection-ownership-transfer", "sandbox-checkout-and-modes"],
+    "criterion": "legit_shared_mode",
+    "weight": 0.7
+  },
+  "tier_rationale": "Full shared-mode setup with mode reset — subtle detail often missed.",
+  "calibration": null
+}
