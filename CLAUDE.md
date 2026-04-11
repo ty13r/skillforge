@@ -148,9 +148,23 @@ Every Gen 0 seed skill MUST be a full golden-template package, not just a SKILL.
 
 ## Live SDK Test Budget
 - Matt has authorized up to **$5 of Anthropic API spend** for live SDK integration tests during overnight runs.
-- The live test at Wave 5 QA gate (2 pop × 1 gen × 1 challenge) costs ~$1-3.
+- The live test at Wave 5 QA gate (2 pop × 1 gen × 1 challenge) costs ~$1-3 on Sonnet.
 - If a live test would exceed the budget, skip it and log `[BLOCKED: budget]` in the Progress Tracker.
 - The `ANTHROPIC_API_KEY` is loaded from `.env` at project root (gitignored) via `config.py`.
+
+### Test Tiers (`SKILLFORGE_TEST_TIER`)
+Cost-tiered live testing via `tests/conftest.py::_apply_test_tier`. Reads `SKILLFORGE_TEST_TIER` at conftest import time and injects `SKILLFORGE_MODEL_<ROLE>` env vars so `model_for()` resolves to the chosen tier for every agent role.
+
+- **unset / `sonnet`**: every role on `claude-sonnet-4-6`. Full-quality, most expensive. Use for pre-release validation.
+- **`cheap`** / **`haiku`**: every role on `claude-haiku-4-5-20251001`. ~1/3 the cost per the pricing table in `skillforge/config.py`. Best for fast dev iteration — contract/schema/state-machine bugs surface identically, and Haiku's stricter JSON tends to *increase* test sensitivity to regressions.
+- **`mixed`**: Haiku for structured-output agents (Taxonomist, Scientist, Spawner, Engineer, judges); Sonnet for reasoning-heavy agents (Breeder, Competitor). Middle-ground cost.
+
+Explicit per-role overrides (`SKILLFORGE_MODEL_ENGINEER=...`) always win — the tier helper only fills in roles the caller didn't pin. Bogus tier names raise `ValueError` at conftest import time.
+
+Example invocations:
+- Cheap Haiku run: `SKILLFORGE_TEST_TIER=cheap SKILLFORGE_LIVE_TESTS=1 uv run pytest tests/test_atomic_evolution_live.py`
+- Mixed run: `SKILLFORGE_TEST_TIER=mixed SKILLFORGE_LIVE_TESTS=1 uv run pytest tests/test_atomic_evolution_live.py`
+- Cheap + pin Engineer to Sonnet: `SKILLFORGE_TEST_TIER=cheap SKILLFORGE_MODEL_ENGINEER=claude-sonnet-4-6 SKILLFORGE_LIVE_TESTS=1 uv run pytest tests/test_atomic_evolution_live.py`
 
 ## Autonomous-Run Scope
 When running autonomously (overnight work, no active user):
