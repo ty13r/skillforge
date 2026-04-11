@@ -136,3 +136,49 @@ async def list_family_variants(
         family_id, dimension=dimension, tier=tier
     )
     return [_variant_to_response(v) for v in variants]
+
+
+@router.get("/api/families/{family_id}/assembly")
+async def get_family_assembly(family_id: str) -> dict:
+    """Return the current best assembled composite skill for the family.
+
+    Shape: ``{"family_id": "...", "best_assembly_id": "...", "skill": {...}}``.
+    Returns 404 if the family doesn't exist or has no assembly yet (atomic
+    runs that haven't reached the assembly step won't have a
+    ``best_assembly_id``).
+    """
+    family = await get_family(family_id)
+    if family is None:
+        raise HTTPException(status_code=404, detail=f"family not found: {family_id}")
+
+    if not family.best_assembly_id:
+        raise HTTPException(
+            status_code=404,
+            detail=f"family {family_id} has no assembled composite yet",
+        )
+
+    # Resolve the composite SkillGenome
+    from skillforge.db.queries import _connect, _row_to_genome
+
+    async with _connect() as conn, conn.execute(
+        "SELECT * FROM skill_genomes WHERE id = ?",
+        (family.best_assembly_id,),
+    ) as cur:
+        row = await cur.fetchone()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"family {family_id} references best_assembly_id="
+                f"{family.best_assembly_id} but the genome row is missing"
+            ),
+        )
+
+    composite = _row_to_genome(row)
+    return {
+        "family_id": family.id,
+        "family_slug": family.slug,
+        "best_assembly_id": composite.id,
+        "skill": composite.to_dict(),
+    }

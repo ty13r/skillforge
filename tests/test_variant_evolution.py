@@ -263,6 +263,32 @@ async def test_run_variant_evolution_happy_path():
         )
         return generation
 
+    # Mock the Engineer's assemble_skill call too — Phase 4 wired the
+    # real assembly into the orchestrator, so without this mock the test
+    # would hit the real Anthropic API. The mock also emits the same
+    # event sequence the real assemble_skill would emit, so the
+    # variant_evolution event-sequence assertions still hold.
+    async def mock_assemble_skill(parent_run, family, foundation, capabilities, **kwargs):
+        from skillforge.agents.engineer import IntegrationReport
+        from skillforge.engine.events import emit as _emit
+
+        await _emit(
+            parent_run.id,
+            "assembly_started",
+            family_id=family.id,
+            foundation_id=foundation.id,
+            capability_count=len(capabilities),
+        )
+        await _emit(
+            parent_run.id,
+            "assembly_complete",
+            family_id=family.id,
+            composite_id=foundation.id,
+            integration_passed=True,
+            refinement_attempted=False,
+        )
+        return foundation, IntegrationReport(notes="mocked assembly")
+
     with patch(
         "skillforge.agents.challenge_designer.design_variant_challenge",
         new=mock_design,
@@ -275,13 +301,16 @@ async def test_run_variant_evolution_happy_path():
     ), patch(
         "skillforge.agents.judge.pipeline.run_judging_pipeline",
         new=mock_judging,
+    ), patch(
+        "skillforge.engine.assembly.assemble_skill",
+        new=mock_assemble_skill,
     ):
         result = await run_variant_evolution(run)
 
     assert result is run
     assert result.evolution_mode == "atomic"
     assert result.best_skill is not None
-    # Foundation winner has the highest fitness in its mocked pop (0.9)
+    # The mocked assembly returns the foundation winner unchanged
     assert result.best_skill.id.startswith("g_foundation_winner")
 
     events = _drain_queue(run.id)
