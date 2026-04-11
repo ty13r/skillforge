@@ -2,10 +2,31 @@
 
 This directory holds the proposed Elixir skill family roster for SkillForge, with full variant decomposition (foundation + capabilities) for each family.
 
+## Directory layout
+
+Each family lives in its own folder under `taxonomy/elixir/`:
+
+```
+taxonomy/elixir/
+├── README.md                        # this index
+├── SEEDING-PLAN.md                  # SKLD-bench v2.1 authoring workstream plan + reference
+├── <family-slug>/
+│   ├── README.md                    # family capability decomposition (foundation + capabilities)
+│   ├── research.md                  # per-family Claude failure-mode research (top 7 only)
+│   ├── family.json                  # family metadata + taxonomy + slug
+│   ├── seed.json                    # gen 0 SkillGenome
+│   ├── test_fixtures/               # immutable input files
+│   ├── challenges/{easy,medium,hard,legendary}/  # tiered challenge pool
+│   ├── evaluation/{criteria.json,score.py,environment.yml}
+│   └── golden/                      # reference solutions
+```
+
+The 15 deferred families currently have only the capability `README.md`. The top 7 are being progressively populated with the SKLD-bench v2.1 challenge pools — see [`SEEDING-PLAN.md`](SEEDING-PLAN.md) for the full workstream plan.
+
 ## How to read this directory
 
-- One markdown file per proposed family (22 total)
-- Each file lists the family's foundation dimension(s) and all capability dimensions
+- One folder per proposed family (22 total)
+- Each folder's `README.md` lists the family's foundation dimension(s) and all capability dimensions
 - Capabilities are the **atomic unit of evolution** — each is independently spawned, scored, and bred via the v2.0 atomic variant evolution pipeline
 - Foundations are evolved first; the winning foundation grounds the capability evolution; the Engineer assembles winners into a composite skill
 
@@ -13,34 +34,35 @@ This directory holds the proposed Elixir skill family roster for SkillForge, wit
 
 - **Original brainstorm**: 10 families proposed unvalidated, plus 7 runners-up
 - **Validation research**: [`docs/research/elixir-llm-pain-points.md`](../../docs/research/elixir-llm-pain-points.md) — Opus 4.6 web research agent collected real developer pain points from Elixir Forum, Hacker News, plugin repos, and blogs
+- **Per-family research** (top 7 only): each family's `research.md` is the deeper per-capability pain-point dossier produced during Phase 1 of the SKLD-bench workstream
 - **Final ranking**: tier S = strongest evidence, tier E = brainstormed only
 
 ## Ranked roster
 
-| Rank | Tier | Family | Status |
-|---|---|---|---|
-| 1 | S | [`elixir-phoenix-liveview`](elixir-phoenix-liveview.md) | Validated — strongest evidence |
-| 2 | S | [`elixir-ecto-sandbox-test`](elixir-ecto-sandbox-test.md) | NEW from research — "the ugly" pain |
-| 3 | S | [`elixir-security-linter`](elixir-security-linter.md) | NEW from research — entire plugin tier |
-| 4 | S | [`elixir-ecto-query-writer`](elixir-ecto-query-writer.md) | Validated — pin operator + preload bugs |
-| 5 | A | [`elixir-ecto-schema-changeset`](elixir-ecto-schema-changeset.md) | Validated — float-for-money clincher |
-| 6 | A | [`elixir-oban-worker`](elixir-oban-worker.md) | Validated — 3 named failure modes |
-| 7 | A | [`elixir-pattern-match-refactor`](elixir-pattern-match-refactor.md) | Validated — most-cited complaint |
-| 8 | B | [`elixir-genserver-builder-and-smells`](elixir-genserver-builder-and-smells.md) | Reframed — teach when NOT to use |
-| 9 | B | [`elixir-error-tuple-handler`](elixir-error-tuple-handler.md) | NEW runner-up |
-| 10 | B | [`elixir-otp-debugger`](elixir-otp-debugger.md) | NEW runner-up |
-| 11 | B | [`elixir-stdlib-validator`](elixir-stdlib-validator.md) | NEW runner-up |
-| 12 | C | [`elixir-supervisor-tree`](elixir-supervisor-tree.md) | Thin evidence |
-| 13 | C | [`elixir-exunit-test-suite`](elixir-exunit-test-suite.md) | Authoring isn't the pain — sandbox is |
-| 14 | D | [`elixir-phoenix-context`](elixir-phoenix-context.md) | DROPPED — zero evidence |
-| 15 | D | [`elixir-typespec-annotator`](elixir-typespec-annotator.md) | DROPPED — zero AI complaints |
-| 16 | E | [`elixir-phoenix-channel`](elixir-phoenix-channel.md) | Brainstormed; LiveView replaces |
-| 17 | E | [`elixir-broadway-pipeline`](elixir-broadway-pipeline.md) | Enterprise niche |
-| 18 | E | [`elixir-telemetry-instrument`](elixir-telemetry-instrument.md) | Observability cross-cutting |
-| 19 | E | [`elixir-macro-writer`](elixir-macro-writer.md) | Advanced escape hatch |
-| 20 | E | [`elixir-mix-task-writer`](elixir-mix-task-writer.md) | DX tooling |
-| 21 | E | [`elixir-binary-pattern-match`](elixir-binary-pattern-match.md) | Low-level protocols |
-| 22 | E | [`elixir-release-config`](elixir-release-config.md) | Deployment niche |
+| Rank | Tier | Family | SKLD-bench | Status |
+|---|---|---|---|---|
+| 1 | S | [`elixir-phoenix-liveview`](elixir-phoenix-liveview/README.md) | in progress | Validated — strongest evidence |
+| 2 | S | [`elixir-ecto-sandbox-test`](elixir-ecto-sandbox-test/README.md) | in progress | NEW from research — "the ugly" pain |
+| 3 | S | [`elixir-security-linter`](elixir-security-linter/README.md) | in progress | NEW from research — entire plugin tier |
+| 4 | S | [`elixir-ecto-query-writer`](elixir-ecto-query-writer/README.md) | in progress | Validated — pin operator + preload bugs |
+| 5 | A | [`elixir-ecto-schema-changeset`](elixir-ecto-schema-changeset/README.md) | in progress | Validated — float-for-money clincher |
+| 6 | A | [`elixir-oban-worker`](elixir-oban-worker/README.md) | in progress | Validated — 3 named failure modes |
+| 7 | A | [`elixir-pattern-match-refactor`](elixir-pattern-match-refactor/README.md) | in progress | Validated — most-cited complaint |
+| 8 | B | [`elixir-genserver-builder-and-smells`](elixir-genserver-builder-and-smells/README.md) | deferred | Reframed — teach when NOT to use |
+| 9 | B | [`elixir-error-tuple-handler`](elixir-error-tuple-handler/README.md) | deferred | NEW runner-up |
+| 10 | B | [`elixir-otp-debugger`](elixir-otp-debugger/README.md) | deferred | NEW runner-up |
+| 11 | B | [`elixir-stdlib-validator`](elixir-stdlib-validator/README.md) | deferred | NEW runner-up |
+| 12 | C | [`elixir-supervisor-tree`](elixir-supervisor-tree/README.md) | deferred | Thin evidence |
+| 13 | C | [`elixir-exunit-test-suite`](elixir-exunit-test-suite/README.md) | deferred | Authoring isn't the pain — sandbox is |
+| 14 | D | [`elixir-phoenix-context`](elixir-phoenix-context/README.md) | deferred | DROPPED — zero evidence |
+| 15 | D | [`elixir-typespec-annotator`](elixir-typespec-annotator/README.md) | deferred | DROPPED — zero AI complaints |
+| 16 | E | [`elixir-phoenix-channel`](elixir-phoenix-channel/README.md) | deferred | Brainstormed; LiveView replaces |
+| 17 | E | [`elixir-broadway-pipeline`](elixir-broadway-pipeline/README.md) | deferred | Enterprise niche |
+| 18 | E | [`elixir-telemetry-instrument`](elixir-telemetry-instrument/README.md) | deferred | Observability cross-cutting |
+| 19 | E | [`elixir-macro-writer`](elixir-macro-writer/README.md) | deferred | Advanced escape hatch |
+| 20 | E | [`elixir-mix-task-writer`](elixir-mix-task-writer/README.md) | deferred | DX tooling |
+| 21 | E | [`elixir-binary-pattern-match`](elixir-binary-pattern-match/README.md) | deferred | Low-level protocols |
+| 22 | E | [`elixir-release-config`](elixir-release-config/README.md) | deferred | Deployment niche |
 
 ## Variant dimension count
 
@@ -49,7 +71,7 @@ Across all 22 families:
 - **~175 capability dimensions** (avg ~8 per family, range 4-12)
 - **~197 total variant dimensions**
 
-If only the top 7 (Tier S + Tier A) are built, that's roughly **77 variant dimensions** total — still a sizable evolution surface but tractable.
+If only the top 7 (Tier S + Tier A) are built, that's roughly **77 variant dimensions** total — still a sizable evolution surface but tractable. This is the scope of the SKLD-bench v2.1 workstream documented in [`SEEDING-PLAN.md`](SEEDING-PLAN.md).
 
 ## Taxonomy additions required
 
@@ -86,4 +108,4 @@ That's ~13 new focus nodes + 1 language node. The taxonomy bootstrap loader is a
 
 ## Status
 
-This is a **planning document**. None of these families have been authored as Gen 0 seeds yet. The next step is to pick a flagship family (recommended: `elixir-phoenix-liveview`), draft its full Gen 0 package (SKILL.md + scripts + references + test_fixtures + 50 challenges), and run a controlled evaluation against vanilla Claude to validate the SkillForge methodology before scaling to the rest.
+The top 7 families (Tier S + Tier A) are being authored as full SKLD-bench v2.1 challenge pools. See [`SEEDING-PLAN.md`](SEEDING-PLAN.md) for the workstream details, scope, and progress. The remaining 15 families are deferred until the lighthouse 7 validate the methodology.
