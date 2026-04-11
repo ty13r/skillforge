@@ -1,0 +1,38 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-02",
+  "tier": "legendary",
+  "title": "Multi-error with chain that handles 4 distinct error types",
+  "prompt": "Refactor the nested case chain in test_fixtures/nested_case_auth.ex into lib/my_app/auth/sign_in.ex. The flow: (1) look up user by email (returns {:ok, user} | {:error, :not_found}), (2) verify password (returns :ok | {:error, :invalid_password}), (3) check account is active (returns :ok | {:error, :locked}), (4) issue session token (returns {:ok, token} | {:error, :token_gen_failed}). Use a single `with` expression that chains all four steps. The `else` clause must pattern-match on EACH distinct error tuple and return {:error, :user_not_found | :invalid_credentials | :account_locked | :session_failed} respectively (note the DIFFERENT public-facing error atoms). Do NOT catch a generic {:error, _} fallthrough. The happy path returns {:ok, %{user: user, token: token}}.",
+  "fixture_files": ["test_fixtures/nested_case_auth.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth/sign_in.ex"],
+    "must_contain": [
+      "with ",
+      "<-",
+      "else",
+      "{:error, :not_found} ->",
+      "{:error, :invalid_password} ->",
+      "{:error, :locked} ->",
+      "{:error, :token_gen_failed} ->",
+      "{:error, :user_not_found}",
+      "{:error, :invalid_credentials}",
+      "{:error, :account_locked}",
+      "{:error, :session_failed}",
+      "{:ok, %{user: user, token: token}}"
+    ],
+    "must_not_contain": [
+      "case Accounts.get_user_by_email",
+      "{:error, _}",
+      "is_nil("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["function-head-pattern-matching", "refactor-philosophy"],
+    "criterion": "multi_error_with_chain",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires the disciplined with-else pattern with 4 distinct error arms, NOT a generic fallthrough. The atom-translation (internal error → public error) is the subtle part Sonnet often flattens into a single clause.",
+  "research_citation": "Dashbit: 'with expressions + pattern-matched else clauses are the canonical Elixir error-handling pattern'",
+  "calibration": null
+}

@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-08",
+  "tier": "legendary",
+  "title": "Replace Map.get noise with struct destructure in function heads",
+  "prompt": "Refactor MyApp.Scoring.score_event/1 in test_fixtures/map_access_noise.ex into lib/my_app/scoring.ex. The input uses Map.get/Map.fetch throughout to pull 6 keys out of a nested map, then does conditional logic on their values. Rewrite using: (a) struct destructure in the function head to extract all 6 keys directly (def score_event(%Event{kind: kind, user: %User{id: uid, tier: tier}, payload: %{target_id: target_id, target_type: target_type}, metadata: %{source: source}}) = _event), (b) multi-clause dispatch on :kind values, (c) guard clauses for numeric thresholds on score. Do not use Map.get, Map.fetch, Map.fetch!, or bracket access (event[:kind]).",
+  "fixture_files": ["test_fixtures/map_access_noise.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/scoring.ex"],
+    "must_contain": [
+      "def score_event(%Event{",
+      "def score_event(",
+      "%User{",
+      "%{target_id:",
+      " when "
+    ],
+    "must_not_contain": [
+      "Map.get(",
+      "Map.fetch(",
+      "Map.fetch!(",
+      "event[:",
+      "is_nil("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses"],
+    "criterion": "destructure_in_head",
+    "weight": 0.85
+  },
+  "tier_rationale": "Requires deep struct destructure with nested map patterns in the function head. Sonnet typically destructures one level and uses Map.get for the rest, or keeps bracket access for the deeply nested fields.",
+  "calibration": null
+}

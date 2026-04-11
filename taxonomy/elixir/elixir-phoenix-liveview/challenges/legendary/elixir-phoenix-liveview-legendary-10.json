@@ -1,0 +1,39 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-10",
+  "tier": "legendary",
+  "title": "Live session auth chain with on_mount hooks and handle_params authz",
+  "prompt": "Write two files: (1) lib/my_app_web/user_auth.ex (module MyAppWeb.UserAuth) with three on_mount hooks: :fetch_current_user (loads current_user from session token), :ensure_authenticated (redirects to ~p\"/users/log_in\" if not logged in, otherwise {:cont, socket}), :ensure_admin (halts with {:halt, push_navigate(socket, to: ~p\"/\")} if current_user.role != \"admin\"). (2) lib/my_app_web/live/admin/dashboard_live.ex (module MyAppWeb.Admin.DashboardLive). The Admin dashboard must handle_params/3 to additionally verify the requested ?org_id= belongs to the current_user.organizations — if not, push_navigate(socket, to: ~p\"/\") with put_flash(:error, \"unauthorized\"). Do NOT do auth checks in mount/3 — use on_mount hooks and handle_params authz. The router is NOT included in the output; only the UserAuth module and the LiveView.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app_web/user_auth.ex",
+      "lib/my_app_web/live/admin/dashboard_live.ex"
+    ],
+    "must_contain": [
+      "MyAppWeb.UserAuth",
+      "def on_mount(:fetch_current_user",
+      "def on_mount(:ensure_authenticated",
+      "def on_mount(:ensure_admin",
+      "{:cont,",
+      "{:halt,",
+      "def handle_params(%{\"org_id\" =>",
+      "put_flash(socket, :error",
+      "push_navigate(socket, to: ~p",
+      "def mount("
+    ],
+    "must_not_contain": [
+      "def mount(_params, _session, socket) do\n    if is_nil",
+      "def mount(_params, _session, socket) do\n    case Accounts.authenticate",
+      "redirect(to:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "auth-and-authz",
+    "secondary_capabilities": ["mount-and-lifecycle", "navigation-patterns", "architectural-stance"],
+    "criterion": "on_mount_chain_and_handle_params_authz",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires the on_mount hook return-value contract ({:cont, _} vs {:halt, _}) AND the architectural rule that auth belongs in hooks (not mount) AND per-request authz in handle_params (not mount). Sonnet typically puts all the auth logic directly in mount/3 or forgets the halt tuple.",
+  "research_citation": "fly.io Phoenix LiveView auth guide; georgeguimaraes: 'on_mount hooks return {:cont, socket} or {:halt, push_navigate(...)}'",
+  "calibration": null
+}

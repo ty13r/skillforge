@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-05",
+  "tier": "legendary",
+  "title": "Eliminate defensive nil pipeline with pattern matching and with",
+  "prompt": "Refactor MyApp.Reports.generate/2 in test_fixtures/defensive_nil_pipeline.ex into lib/my_app/reports.ex. The current implementation has 5 stages, each preceded by `if is_nil(...)` defensive checks and safe navigation puns like `user && user.organization && user.organization.plan`. Replace ALL defensive checks with: (a) multi-clause function heads that pattern-match on the required shape (e.g., def generate(%User{organization: %Organization{plan: plan}} = user, opts)), (b) a with expression for the happy path through 3 lookups that each return {:ok, _} | {:error, _}, (c) a catch-all function head that returns {:error, :missing_required_fields}. No is_nil calls. No && chains. No x == nil.",
+  "fixture_files": ["test_fixtures/defensive_nil_pipeline.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports.ex"],
+    "must_contain": [
+      "def generate(",
+      "%User{",
+      "%Organization{",
+      "with ",
+      "<-",
+      "{:error, :missing_required_fields}"
+    ],
+    "must_not_contain": [
+      "is_nil(",
+      " && ",
+      "== nil",
+      "=== nil",
+      "if is_nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["function-head-pattern-matching", "with-expressions", "map-and-struct-destructuring"],
+    "criterion": "full_nil_elimination",
+    "weight": 0.9
+  },
+  "tier_rationale": "The defensive-nil challenge at maximum intensity — 5 nested nil checks must all collapse into struct destructure + with chain + catch-all head. Sonnet typically keeps at least one is_nil as a 'safety net'.",
+  "research_citation": "HN dnautics: '`case functioncall() do nil -> ... end` instead of idiomatic `if var = functioncall() do`'",
+  "calibration": null
+}

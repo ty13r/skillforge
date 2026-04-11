@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-07",
+  "tier": "legendary",
+  "title": "LiveComponent with send_update parent→child communication",
+  "prompt": "Write two files: (1) lib/my_app_web/live/dashboard_live.ex (module MyAppWeb.DashboardLive, Phoenix.LiveView). (2) lib/my_app_web/live/dashboard_live/metric_panel.ex (module MyAppWeb.DashboardLive.MetricPanel, Phoenix.LiveComponent). The parent DashboardLive receives a :refresh message via handle_info/2 and must tell each MetricPanel child to refresh via send_update(MetricPanel, id: panel_id, force_refresh: true). The MetricPanel defines update/2 — when assigns.force_refresh is true, it reloads data from MyApp.Metrics.fetch(panel_id) and re-assigns. It also defines mount/1 for initial assigns. Render the panels in the parent with <.live_component module={MetricPanel} id={panel_id} />. NEVER call handle_event in MetricPanel from the parent — all cross-component communication goes through send_update.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": [
+      "lib/my_app_web/live/dashboard_live.ex",
+      "lib/my_app_web/live/dashboard_live/metric_panel.ex"
+    ],
+    "must_contain": [
+      "MyAppWeb.DashboardLive",
+      "MyAppWeb.DashboardLive.MetricPanel",
+      "use Phoenix.LiveComponent",
+      "def update(",
+      "send_update(",
+      "<.live_component",
+      "def handle_info("
+    ],
+    "must_not_contain": [
+      "send(child_pid",
+      "GenServer.call",
+      "live_link"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "live-components-stateful",
+    "secondary_capabilities": ["event-handlers-and-handle-info", "architectural-stance"],
+    "criterion": "send_update_parent_child",
+    "weight": 0.85
+  },
+  "tier_rationale": "Cross-file LiveComponent coordination requires knowing the send_update contract, update/2 callback semantics, and the architectural rule that LiveComponents don't share state with their parent. Sonnet often tries to message child pids directly or puts state in the parent and re-renders.",
+  "calibration": null
+}

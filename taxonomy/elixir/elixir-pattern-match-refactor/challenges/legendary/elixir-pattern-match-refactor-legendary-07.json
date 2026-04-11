@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-07",
+  "tier": "legendary",
+  "title": "Rewrite imperative report builder as a pipe pipeline",
+  "prompt": "Refactor MyApp.Reports.Builder.build/1 in test_fixtures/imperative_report_builder.ex into lib/my_app/reports/builder.ex. The input function has intermediate temp variables: result_a = step1(data), result_b = step2(result_a), result_c = step3(result_b, opts), then returns {:ok, result_c}. Rewrite the body as a SINGLE pipe chain from input to result, using Enum.map/Enum.filter/Enum.reduce as needed. Extract any helper function that took multiple args but had an obvious 'main' arg — convert its signature so the main arg comes first and it can be piped into. Do not use intermediate `x =` bindings within the function body. The only acceptable exception is destructuring the {:ok, _} wrapper at the end.",
+  "fixture_files": ["test_fixtures/imperative_report_builder.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports/builder.ex"],
+    "must_contain": [
+      "def build(",
+      "|>",
+      "Enum.",
+      "{:ok,"
+    ],
+    "must_not_contain": [
+      "result_a = ",
+      "result_b = ",
+      "result_c = ",
+      "step1(data)\n    step2",
+      "temp = ",
+      "tmp = "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["enum-vs-recursion-choice", "refactor-philosophy"],
+    "criterion": "full_pipe_refactor",
+    "weight": 0.85
+  },
+  "tier_rationale": "The 'no temp vars' discipline at full intensity. Requires recognizing helper-function signature mismatches (args in the wrong order to pipe) and refactoring both the pipe and the helper. Sonnet often leaves at least one intermediate var or uses `|>` mechanically without restructuring helpers.",
+  "calibration": null
+}

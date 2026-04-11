@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-09",
+  "tier": "legendary",
+  "title": "Enum.reduce with non-obvious accumulator replaced by explicit recursion",
+  "prompt": "Refactor MyApp.LogParser.group_sessions/1 in test_fixtures/enum_reduce_awkward.ex into lib/my_app/log_parser.ex. The input uses Enum.reduce with a 3-element tuple accumulator (current_session, completed_sessions, last_timestamp) and awkward conditional logic to decide when to close a session. Rewrite as explicit tail-recursive functions: group_sessions/1 (public entry) calls group_sessions/4 with initial accumulators. group_sessions/4 has THREE function heads: empty list base case, same-session case (when timestamp is within 30 minutes of last), and new-session case (otherwise). The final head returns Enum.reverse(completed) to restore order. This is the canonical 'Enum.reduce is the wrong tool; explicit recursion is clearer' refactor.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/log_parser.ex"],
+    "must_contain": [
+      "def group_sessions(",
+      "defp group_sessions(",
+      "[h | t]",
+      "[]",
+      "Enum.reverse("
+    ],
+    "must_not_contain": [
+      "Enum.reduce(",
+      "Enum.chunk_while",
+      "{current_session, completed_sessions, last_timestamp}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["recursive-functions", "function-head-pattern-matching"],
+    "criterion": "reduce_to_explicit_recursion",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires recognizing WHEN Enum.reduce is worse than explicit recursion (multi-field accumulator with conditional transitions) AND writing the correct tail-recursive dispatch. Most refactor challenges go Enum→recursion, this one goes recursion→Enum — the opposite direction. Sonnet often sticks with reduce or picks chunk_while as an 'Enum solution' that hides the same complexity.",
+  "calibration": null
+}

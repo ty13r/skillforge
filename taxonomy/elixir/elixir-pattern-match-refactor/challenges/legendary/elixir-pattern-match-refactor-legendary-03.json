@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-03",
+  "tier": "legendary",
+  "title": "Recursive binary protocol parser with multi-clause heads",
+  "prompt": "Write lib/my_app/protocol/parser.ex (module MyApp.Protocol.Parser). It parses a byte stream for a simple fictional protocol: start with 4-byte magic \"MPRO\", then a 1-byte version (0x01), then a 2-byte message type (big-endian uint16), then a 4-byte payload length (big-endian uint32), then the payload bytes. Define parse/1 that takes a binary and returns {:ok, %{version: v, type: t, payload: payload}} | {:error, reason}. Use multi-clause function heads with binary pattern matching — NOT String.starts_with? or byte_size. The function heads: parse/1 dispatches on the magic bytes prefix pattern. A private helper parse_header/1 pattern-matches on the version+type+length prefix and extracts the payload. A private helper extract_payload/2 pattern-matches on <<payload::binary-size(len), rest::binary>> to slice exactly len bytes. If any stage fails to match, return {:error, :malformed} (not raise).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/protocol/parser.ex"],
+    "must_contain": [
+      "MyApp.Protocol.Parser",
+      "def parse(",
+      "<<\"MPRO\",",
+      "::binary-size(",
+      "::unsigned-big-integer-size(",
+      "{:ok, %{",
+      "{:error, :malformed}"
+    ],
+    "must_not_contain": [
+      "String.starts_with?",
+      "String.slice(",
+      "byte_size(",
+      "Base.decode",
+      "raise "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": ["function-head-pattern-matching", "recursive-functions"],
+    "criterion": "binary_protocol_parser",
+    "weight": 0.95
+  },
+  "tier_rationale": "Requires knowledge of Elixir binary pattern syntax (::binary-size, ::unsigned-big-integer-size) AND the discipline to dispatch via function heads rather than imperative slicing. Sonnet usually reaches for String.slice or byte_size loops.",
+  "calibration": null
+}

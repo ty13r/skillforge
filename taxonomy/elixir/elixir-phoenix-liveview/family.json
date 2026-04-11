@@ -25,12 +25,12 @@
     "anti-patterns-catalog"
   ],
   "challenges": {
-    "total": 125,
+    "total": 135,
     "by_tier": {
       "easy": 38,
       "medium": 45,
       "hard": 38,
-      "legendary": 4
+      "legendary": 14
     },
     "held_out_ids": [
       "elixir-phoenix-liveview-easy-05",
@@ -56,7 +56,10 @@
       "elixir-phoenix-liveview-hard-34",
       "elixir-phoenix-liveview-hard-37",
       "elixir-phoenix-liveview-legendary-02",
-      "elixir-phoenix-liveview-legendary-03"
+      "elixir-phoenix-liveview-legendary-03",
+      "elixir-phoenix-liveview-legendary-06",
+      "elixir-phoenix-liveview-legendary-09",
+      "elixir-phoenix-liveview-legendary-12"
     ]
   },
   "evaluation": {
@@ -66,8 +69,8 @@
   },
   "seeded_at": "2026-04-11",
   "tier_methodology": "heuristic",
-  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Known gap: legendary tier at 4/30 target — drafting agent was cut off before writing the legendary tier; can be augmented in a follow-up.",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Legendary tier augmented post-hoc from 4 to 14 challenges to increase hard-tier coverage.",
   "known_gaps": {
-    "legendary_tier_short": "Legendary tier has 4 challenges vs 30 target (drafting agent cut off)"
+    "legendary_tier_short": "Legendary tier has 14 challenges vs 30 target — still below target but substantially augmented from the original 4. New legendaries (legendary-05 through legendary-14) do not have golden reference files yet; can be added in a follow-up."
   }
 }

@@ -1,0 +1,35 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-13",
+  "tier": "legendary",
+  "title": "Reconnect-safe LiveView with temporary_assigns and fresh handle_params",
+  "prompt": "Write lib/my_app_web/live/live_dashboard_live.ex (module MyAppWeb.LiveDashboardLive). This dashboard shows: a large log buffer (stored in temporary_assigns: [logs: []] so it's emptied after each render and doesn't survive reconnects), a @now timestamp that must be fresh on every reconnect (so NOT via assign_new), and a @user_profile that must survive reconnect (so VIA assign_new from the session). mount/3 determines connection state and subscribes to \"logs:stream\" only on connected?/1. handle_info({:log, entry}, socket) appends to the @logs temporary assign. handle_params/3 reads current params and refreshes @now to DateTime.utc_now/0. The render function shows @logs, @now, and @user_profile.name. Key rule: assign_new for user_profile, plain assign for @now, temporary_assigns for @logs — three different assign strategies in one module.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/live_dashboard_live.ex"],
+    "must_contain": [
+      "MyAppWeb.LiveDashboardLive",
+      "temporary_assigns: [logs:",
+      "assign_new(socket, :user_profile",
+      "def handle_params(",
+      "DateTime.utc_now()",
+      "if connected?(socket)",
+      "def handle_info({:log,",
+      "Phoenix.PubSub.subscribe",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "assign_new(socket, :now",
+      "assign_new(socket, :logs",
+      "def mount(_params, _session, socket) do\n    Phoenix.PubSub.subscribe"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mount-and-lifecycle",
+    "secondary_capabilities": ["pubsub-and-realtime", "streams-and-collections", "event-handlers-and-handle-info"],
+    "criterion": "three_assign_strategies_reconnect_safe",
+    "weight": 0.9
+  },
+  "tier_rationale": "Requires knowing the semantic difference between assign_new (reuse across reconnects) and assign (fresh on each mount) and temporary_assigns (cleared after render). Sonnet typically picks one strategy for everything and doesn't understand when assign_new is unsafe (time-sensitive values) or when temporary_assigns is necessary (large buffers).",
+  "research_citation": "oliver-kriska: 'assign_new silently skips on reconnect'; Phoenix docs: 'temporary_assigns clear after each render'",
+  "calibration": null
+}

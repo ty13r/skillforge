@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-01",
+  "tier": "legendary",
+  "title": "Full refactor of a mixed-style UserService module",
+  "prompt": "Refactor test_fixtures/mixed_style_module.ex into lib/my_app/accounts/user_service.ex. The input has 6 functions written in Ruby/Java style: if/case chains, defensive is_nil/nil checks, manual loop accumulators, raw Map.get/Map.fetch, no pipe operator, no guards. Rewrite EVERY function to use: multi-clause function heads for dispatch, guard clauses for narrowing, pipe operator for sequencing, with expressions for multi-step error handling, pattern-matched destructure in function heads (no Map.get), and Enum.* where appropriate. Preserve the public API (same function names, same return types) and the module attribute @default_role. Do not introduce nil checks. Do not keep a case statement unless it's genuinely the only option.",
+  "fixture_files": ["test_fixtures/mixed_style_module.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user_service.ex"],
+    "must_contain": [
+      "@default_role",
+      "def ",
+      " when ",
+      "|>",
+      "with "
+    ],
+    "must_not_contain": [
+      "is_nil(",
+      " && ",
+      "Map.get(",
+      "if is_nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["function-head-pattern-matching", "guard-clauses", "pipe-operator-flows", "with-expressions", "map-and-struct-destructuring", "defensive-nil-checks-elimination"],
+    "criterion": "full_module_refactor",
+    "weight": 1.0
+  },
+  "tier_rationale": "The single broadest refactor challenge in the family — 6 capabilities must all be applied across one module in a coherent rewrite. Sonnet typically fixes the obvious stuff but leaves at least 2-3 imperative patterns behind.",
+  "research_citation": "BoothIQ post-mortem: 'Claude writes Ruby-style Elixir — if/then/else chains, defensive nil-checking'",
+  "calibration": null
+}

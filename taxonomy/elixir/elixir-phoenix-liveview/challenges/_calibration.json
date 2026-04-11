@@ -8,68 +8,72 @@
     "easy": 38,
     "medium": 45,
     "hard": 38,
-    "legendary": 4
+    "legendary": 14
   },
   "capability_coverage": {
     "anti-patterns-catalog": {
-      "primary_count": 6,
-      "secondary_count": 19,
+      "primary_count": 7,
+      "secondary_count": 20,
       "tier_breakdown": {
         "easy": 2,
         "medium": 1,
         "hard": 2,
-        "legendary": 1
+        "legendary": 2
       }
     },
     "architectural-stance": {
-      "primary_count": 12,
-      "secondary_count": 9,
+      "primary_count": 13,
+      "secondary_count": 11,
       "tier_breakdown": {
         "easy": 4,
         "medium": 5,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "auth-and-authz": {
-      "primary_count": 12,
-      "secondary_count": 6,
+      "primary_count": 13,
+      "secondary_count": 7,
       "tier_breakdown": {
         "easy": 3,
         "medium": 4,
-        "hard": 5
-      }
-    },
-    "event-handlers-and-handle-info": {
-      "primary_count": 12,
-      "secondary_count": 9,
-      "tier_breakdown": {
-        "easy": 4,
-        "medium": 5,
-        "hard": 3
-      }
-    },
-    "form-handling": {
-      "primary_count": 16,
-      "secondary_count": 4,
-      "tier_breakdown": {
-        "easy": 5,
-        "medium": 5,
         "hard": 5,
         "legendary": 1
       }
     },
+    "event-handlers-and-handle-info": {
+      "primary_count": 13,
+      "secondary_count": 13,
+      "tier_breakdown": {
+        "easy": 4,
+        "medium": 5,
+        "hard": 3,
+        "legendary": 1
+      }
+    },
+    "form-handling": {
+      "primary_count": 17,
+      "secondary_count": 7,
+      "tier_breakdown": {
+        "easy": 5,
+        "medium": 5,
+        "hard": 5,
+        "legendary": 2
+      }
+    },
     "function-components-and-slots": {
-      "primary_count": 9,
-      "secondary_count": 12,
+      "primary_count": 10,
+      "secondary_count": 14,
       "tier_breakdown": {
         "easy": 1,
         "medium": 5,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "heex-and-verified-routes": {
       "primary_count": 9,
-      "secondary_count": 10,
+      "secondary_count": 13,
       "tier_breakdown": {
         "easy": 5,
         "medium": 2,
@@ -77,36 +81,38 @@
       }
     },
     "live-components-stateful": {
-      "primary_count": 8,
-      "secondary_count": 2,
+      "primary_count": 9,
+      "secondary_count": 3,
       "tier_breakdown": {
         "easy": 3,
         "medium": 2,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "mount-and-lifecycle": {
-      "primary_count": 9,
-      "secondary_count": 17,
+      "primary_count": 10,
+      "secondary_count": 22,
       "tier_breakdown": {
         "easy": 2,
         "medium": 4,
         "hard": 2,
-        "legendary": 1
+        "legendary": 2
       }
     },
     "navigation-patterns": {
-      "primary_count": 10,
-      "secondary_count": 14,
+      "primary_count": 11,
+      "secondary_count": 16,
       "tier_breakdown": {
         "easy": 3,
         "medium": 4,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     },
     "pubsub-and-realtime": {
       "primary_count": 11,
-      "secondary_count": 10,
+      "secondary_count": 13,
       "tier_breakdown": {
         "easy": 2,
         "medium": 4,
@@ -115,12 +121,13 @@
       }
     },
     "streams-and-collections": {
-      "primary_count": 11,
-      "secondary_count": 18,
+      "primary_count": 12,
+      "secondary_count": 20,
       "tier_breakdown": {
         "easy": 4,
         "medium": 4,
-        "hard": 3
+        "hard": 3,
+        "legendary": 1
       }
     }
   },

@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-legendary-10",
+  "tier": "legendary",
+  "title": "Compose complex guards for a validation dispatch",
+  "prompt": "Write lib/my_app/validator.ex (module MyApp.Validator). Implement validate/2 that takes a value and a type spec atom (:positive_int, :non_empty_string, :email_shape, :percentage, :currency_code) and returns :ok | {:error, reason}. Use ONE function-head clause per type spec, each with a `when` guard that checks the value's shape (is_integer, is_binary, byte_size, string pattern). Compose guards with `and`/`or`. The :email_shape guard must require is_binary AND byte_size > 3 AND uses a function-head-level check — but since `String.contains?` is NOT allowed in guards, you must do the '@' check via a binary pattern in a SEPARATE guard-clause function: defp has_at?(s) when is_binary(s). Then the email_shape head calls: def validate(v, :email_shape) when is_binary(v) and byte_size(v) > 3, do: (if has_at?(v), do: :ok, else: {:error, :malformed_email}). Do NOT use cond or case inside validate/2. Fallthrough head: def validate(_, type), do: {:error, {:unknown_type, type}}.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/validator.ex"],
+    "must_contain": [
+      "MyApp.Validator",
+      "def validate(v, :positive_int) when is_integer(v)",
+      "def validate(v, :non_empty_string) when is_binary(v)",
+      "def validate(v, :email_shape) when is_binary(v)",
+      "def validate(v, :percentage) when is_integer(v)",
+      "def validate(v, :currency_code) when is_binary(v)",
+      "def validate(_, type)",
+      "{:error, {:unknown_type, type}}"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "case ",
+      "is_nil("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "guard_composition_per_type",
+    "weight": 0.85
+  },
+  "tier_rationale": "Requires knowing the exact set of functions allowed in guards (is_*, byte_size, +, -, ==, etc.) and working around the 'String.contains? not allowed' constraint by threading into a separate helper. Sonnet typically tries to call String.match?/Regex.match? from inside a guard and fails.",
+  "calibration": null
+}

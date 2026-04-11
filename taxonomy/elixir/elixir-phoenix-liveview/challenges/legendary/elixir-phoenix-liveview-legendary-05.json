@@ -1,0 +1,36 @@
+{
+  "id": "elixir-phoenix-liveview-legendary-05",
+  "tier": "legendary",
+  "title": "Multi-step onboarding wizard with push_patch URL state",
+  "prompt": "Write lib/my_app_web/live/onboarding_wizard_live.ex (module MyAppWeb.OnboardingWizardLive). The wizard has 3 steps: profile, preferences, review. Use handle_params/3 to drive step transitions via the URL (query string ?step=profile|preferences|review). Each handle_event(\"next\", _, socket) and handle_event(\"back\", _, socket) must use push_patch(socket, to: ~p\"/onboarding?step=#{new_step}\") — NOT push_navigate (same LiveView) and NOT redirect. Use a single <.form> with to_form/2 that lives across all three steps; show different <.input> fields per step via :if. Browser back/forward must work correctly because the URL drives the state. Render the current step title with <h2 :if={@step == :profile}>Profile</h2>, etc.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/onboarding_wizard_live.ex"],
+    "must_contain": [
+      "MyAppWeb.OnboardingWizardLive",
+      "def handle_params(",
+      "push_patch(socket, to: ~p\"/onboarding",
+      "to_form(",
+      "<.form",
+      "<.input",
+      ":if={@step == :",
+      "~H\"\"\""
+    ],
+    "must_not_contain": [
+      "push_navigate(socket, to: ~p\"/onboarding",
+      "redirect(to:",
+      "live_patch",
+      "Routes.onboarding_path",
+      "<%= if "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "navigation-patterns",
+    "secondary_capabilities": ["heex-and-verified-routes", "form-handling", "mount-and-lifecycle"],
+    "criterion": "wizard_push_patch_url_state",
+    "weight": 0.85
+  },
+  "tier_rationale": "Requires orchestrating 4 capabilities: push_patch-vs-push_navigate decision, handle_params-driven state, :if conditional rendering, and to_form lifecycle across step transitions. Sonnet typically picks push_navigate (which re-mounts) or breaks the form state across steps.",
+  "research_citation": "georgeguimaraes phoenix-thinking: 'push_patch for same-LiveView URL updates; push_navigate re-mounts'",
+  "calibration": null
+}
