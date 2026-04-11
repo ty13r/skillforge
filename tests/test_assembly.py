@@ -120,10 +120,6 @@ After the family has been fully evolved.
                 "allowed-tools": "Read Write",
             },
             "skill_md_content": valid_md,
-            "supporting_files": {
-                "scripts/validate.sh": "#!/bin/bash\nexit 0",
-                "scripts/score.py": "#!/usr/bin/env python3\nprint('{}')",
-            },
             "integration_notes": "merged cleanly",
         }
     )
