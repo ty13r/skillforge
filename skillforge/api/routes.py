@@ -508,26 +508,47 @@ async def get_run_skill(run_id: str, skill_id: str) -> dict:
     """Return the full SKILL.md + metadata for one genome in a run.
 
     Used by the SkillDiffViewer to render parent/child side-by-side.
+
+    Looks up the genome first in ``run.generations[].skills[]`` (molecular
+    mode), then falls back to a direct ``skill_genomes`` table query scoped
+    by ``run_id`` (atomic mode, where genomes live outside the generations
+    tree and are linked only via ``skill_genomes.run_id``).
     """
     run = await get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail=f"run {run_id} not found")
 
+    def _skill_to_dict(skill: SkillGenome) -> dict:
+        return {
+            "id": skill.id,
+            "generation": skill.generation,
+            "skill_md_content": skill.skill_md_content,
+            "supporting_files": skill.supporting_files or {},
+            "traits": skill.traits,
+            "maturity": skill.maturity,
+            "parent_ids": skill.parent_ids,
+            "mutations": skill.mutations,
+            "mutation_rationale": skill.mutation_rationale,
+            "pareto_objectives": skill.pareto_objectives,
+        }
+
     for gen in run.generations:
         for skill in gen.skills:
             if skill.id == skill_id:
-                return {
-                    "id": skill.id,
-                    "generation": skill.generation,
-                    "skill_md_content": skill.skill_md_content,
-                    "supporting_files": skill.supporting_files or {},
-                    "traits": skill.traits,
-                    "maturity": skill.maturity,
-                    "parent_ids": skill.parent_ids,
-                    "mutations": skill.mutations,
-                    "mutation_rationale": skill.mutation_rationale,
-                    "pareto_objectives": skill.pareto_objectives,
-                }
+                return _skill_to_dict(skill)
+
+    # Atomic-mode fallback: genomes are linked to the run via
+    # skill_genomes.run_id without nesting under run.generations.
+    from skillforge.db.queries import _connect, _row_to_genome
+
+    async with _connect() as conn, conn.execute(
+        "SELECT * FROM skill_genomes WHERE id = ? AND run_id = ?",
+        (skill_id, run_id),
+    ) as cur:
+        row = await cur.fetchone()
+    if row is not None:
+        return _skill_to_dict(_row_to_genome(row))
+
     raise HTTPException(
         status_code=404, detail=f"skill {skill_id} not found in run {run_id}"
     )
