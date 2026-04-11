@@ -1,20 +1,16 @@
-# golden: stateless LiveComponent demoted to function component
-defmodule MyAppWeb.UserCardComponent do
-  use Phoenix.Component
+# golden: HEEx :for attribute replacing the legacy EEx list comprehension form
+defmodule MyAppWeb.SimpleListLive do
+  use MyAppWeb, :live_view
 
-  attr :id, :string, required: true
-  attr :user, :map, required: true
-  attr :badge, :string, default: nil
-  attr :rest, :global
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, :items, ["apple", "banana", "cherry"])}
+  end
 
-  def user_card(assigns) do
+  def render(assigns) do
     ~H"""
-    <div class="user-card" id={@id} {@rest}>
-      <img src={@user.avatar_url} alt={@user.name} />
-      <h4>{@user.name}</h4>
-      <p>{@user.title}</p>
-      <span :if={@badge} class="badge">{@badge}</span>
-    </div>
+    <ul>
+      <li :for={item <- @items}>{item}</li>
+    </ul>
     """
   end
 end

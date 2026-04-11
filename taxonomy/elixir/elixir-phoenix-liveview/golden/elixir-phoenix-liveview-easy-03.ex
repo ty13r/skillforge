@@ -1,23 +1,14 @@
-# golden: move a single Repo.all call from mount/3 to handle_params/3
-defmodule MyAppWeb.CustomersLive do
+# golden: HEEx :if attribute replacing the legacy EEx conditional form
+defmodule MyAppWeb.BadgeLive do
   use MyAppWeb, :live_view
 
-  alias MyApp.Sales
-
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :customers, [])}
-  end
-
-  def handle_params(_params, _url, socket) do
-    customers = Sales.list_customers()
-    {:noreply, assign(socket, :customers, customers)}
+    {:ok, assign(socket, :current_user, %{admin: true})}
   end
 
   def render(assigns) do
     ~H"""
-    <ul>
-      <li :for={c <- @customers}>{c.name}</li>
-    </ul>
+    <span :if={@current_user.admin} class="badge">admin</span>
     """
   end
 end
