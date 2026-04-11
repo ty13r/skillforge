@@ -716,11 +716,15 @@ def _build_variant_spawn_prompt(
         "- All scripts/references referenced from SKILL.md use the\n"
         "  `${CLAUDE_SKILL_DIR}/...` path convention\n\n"
         "## Output format\n\n"
-        f"Return ONLY a JSON array of exactly {pop_size} objects matching:\n\n"
+        f"Return ONLY a JSON array of exactly {pop_size} objects. The "
+        "``skill_md_content`` field MUST contain the FULL SKILL.md — "
+        "starting with ``---`` (YAML frontmatter), then the body. Do NOT "
+        "separate frontmatter into its own field; it must be embedded in "
+        "``skill_md_content`` as the validator expects a complete SKILL.md.\n\n"
+        "Schema:\n"
         '```json\n[\n  {\n'
-        '    "frontmatter": {"name": "kebab-case", "description": "...", '
-        '"allowed-tools": "Read Write"},\n'
-        '    "skill_md_content": "# Display Name\\n## Quick Start\\n...",\n'
+        '    "name": "kebab-case-name",\n'
+        '    "skill_md_content": "---\\nname: ...\\ndescription: >-\\n  ...\\n---\\n\\n# Display Name\\n\\n## Quick Start\\n...",\n'
         '    "supporting_files": {"scripts/score.py": "...", '
         '"scripts/validate.sh": "..."},\n'
         '    "traits": ["trait1", "trait2"],\n'

@@ -439,17 +439,39 @@ async def save_run(
     pareto_front_ids = [s["id"] for s in d["pareto_front"]]
     best_skill_id = d["best_skill"]["id"] if d["best_skill"] is not None else None
 
-    # Step 1: insert/replace the run row with best_skill_id = NULL to avoid
+    # Step 1: upsert the run row with best_skill_id = NULL to avoid the
     # FK violation (the referenced genome may not exist yet).
+    #
+    # Uses INSERT ... ON CONFLICT(id) DO UPDATE instead of INSERT OR REPLACE
+    # because REPLACE deletes the existing row (triggering ON DELETE CASCADE
+    # on variant_evolutions/challenges/generations/etc.) and then inserts a
+    # new one, which WIPES every child row. DO UPDATE is a proper in-place
+    # update that leaves children intact. This matters when save_run is
+    # called twice during run submission (once before and once after the
+    # Taxonomist's variant_evolutions INSERTs).
     async with _connect(db_path) as conn:
         await conn.execute(
             """
-            INSERT OR REPLACE INTO evolution_runs
+            INSERT INTO evolution_runs
                 (id, mode, specialization, population_size, num_generations,
                  status, created_at, completed_at, total_cost_usd, max_budget_usd,
                  learning_log, pareto_front_ids, best_skill_id, failure_reason,
                  family_id, evolution_mode)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                mode=excluded.mode,
+                specialization=excluded.specialization,
+                population_size=excluded.population_size,
+                num_generations=excluded.num_generations,
+                status=excluded.status,
+                completed_at=excluded.completed_at,
+                total_cost_usd=excluded.total_cost_usd,
+                max_budget_usd=excluded.max_budget_usd,
+                learning_log=excluded.learning_log,
+                pareto_front_ids=excluded.pareto_front_ids,
+                failure_reason=excluded.failure_reason,
+                family_id=excluded.family_id,
+                evolution_mode=excluded.evolution_mode
             """,
             (
                 d["id"],

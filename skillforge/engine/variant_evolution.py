@@ -68,7 +68,11 @@ logger = logging.getLogger("skillforge.engine.variant_evolution")
 # challenge is narrow. Wave 1 of Phase 3 keeps gen=1 (no breeding loop yet);
 # Wave 4 will introduce per-dimension breeding.
 DEFAULT_VARIANT_POP = 2
-DEFAULT_VARIANT_GENS = 1
+# Post-v2.0 item 4: multi-generation breeding loops are now supported inside
+# _run_dimension_mini_evolution. Bumped to 2 so the default produces one
+# round of breeding after gen 0. Existing VariantEvolution rows with
+# ``num_generations=1`` still work — the loop collapses to a single pass.
+DEFAULT_VARIANT_GENS = 2
 DEFAULT_VARIANT_CONCURRENCY = 3
 
 
@@ -101,6 +105,7 @@ async def _run_dimension_mini_evolution(
     locally so the orchestrator stays import-cheap and tests can monkeypatch
     each stage independently.
     """
+    from skillforge.agents.breeder import breed
     from skillforge.agents.challenge_designer import design_variant_challenge
     from skillforge.agents.judge.pipeline import run_judging_pipeline
     from skillforge.agents.spawner import spawn_variant_gen0
@@ -123,47 +128,108 @@ async def _run_dimension_mini_evolution(
     vevo.challenge_id = challenge.id
     await save_variant_evolution(vevo)
 
-    # 2. Spawn the variant population
-    spawned = await spawn_variant_gen0(
-        specialization=run.specialization,
-        dimension=dimension_spec,
-        foundation_genome=foundation_winner,
-        pop_size=vevo.population_size,
-    )
-
-    # Persist genomes so save_variant's FK to skill_genomes is satisfied
-    for genome in spawned:
-        await save_genome(genome, run.id)
-
-    # 3. Run each variant against the focused challenge
+    # 2. Multi-generation mini-evolution loop (post-v2.0 item 4):
+    #    gen 0: spawn → compete → judge → score
+    #    gen 1..N-1: breed from previous gen → compete → judge → score
+    #    pick best across ALL generations as the winning variant
+    #
+    # When vevo.num_generations <= 1 this collapses to a single spawn/score
+    # pass, matching the Phase 3 behavior.
     semaphore = asyncio.Semaphore(DEFAULT_VARIANT_CONCURRENCY)
-    competitor_tasks = [
-        _gated_competitor(
-            semaphore=semaphore,
-            run_id=run.id,
-            generation=0,
-            competitor_idx=idx,
-            skill=skill,
-            challenge=challenge,
-            env_id=None,
+    generation: Generation | None = None
+    best_genome: SkillGenome | None = None
+    best_fitness_seen: float = -1.0
+    num_gens = max(1, vevo.num_generations)
+
+    for gen_num in range(num_gens):
+        # Spawn gen 0 from scratch; breed gen 1+ from the previous generation
+        if gen_num == 0:
+            current_skills = await spawn_variant_gen0(
+                specialization=run.specialization,
+                dimension=dimension_spec,
+                foundation_genome=foundation_winner,
+                pop_size=vevo.population_size,
+            )
+        else:
+            assert generation is not None
+            try:
+                children, _lessons, _report = await breed(
+                    generation=generation,
+                    learning_log=list(run.learning_log),
+                    specialization=f"{run.specialization} [{vevo.dimension}]",
+                    target_pop_size=vevo.population_size,
+                )
+                current_skills = children if children else generation.skills
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "run=%s dimension %s breeding failed at gen %d: %s — "
+                    "keeping previous generation",
+                    run.id[:8],
+                    vevo.dimension,
+                    gen_num,
+                    exc,
+                )
+                current_skills = generation.skills
+
+        # Persist genomes so the save_variant FK to skill_genomes resolves
+        for genome in current_skills:
+            genome.generation = gen_num
+            await save_genome(genome, run.id)
+
+        # Compete all skills against the focused challenge
+        competitor_tasks = [
+            _gated_competitor(
+                semaphore=semaphore,
+                run_id=run.id,
+                generation=gen_num,
+                competitor_idx=idx,
+                skill=skill,
+                challenge=challenge,
+                env_id=None,
+            )
+            for idx, skill in enumerate(current_skills)
+        ]
+        results = list(await asyncio.gather(*competitor_tasks))
+
+        # Judge — scores get written onto each SkillGenome in place
+        generation = Generation(
+            number=gen_num, skills=current_skills, results=results
         )
-        for idx, skill in enumerate(spawned)
-    ]
-    results = list(await asyncio.gather(*competitor_tasks))
+        generation = await run_judging_pipeline(
+            generation, [challenge], run_id=run.id
+        )
 
-    # 4. Judging pipeline scores everything in place
-    generation = Generation(number=0, skills=spawned, results=results)
-    generation = await run_judging_pipeline(
-        generation, [challenge], run_id=run.id
-    )
+        # Track cost for this generation — atomic mode used to skip this,
+        # which made total_cost_usd stuck at 0.0. Fixed in item 1 of the
+        # post-v2.0 polish pass.
+        from skillforge.engine.evolution import _estimate_generation_cost
 
-    # 5. Pick the winner — highest aggregate fitness
-    if not generation.skills:
+        gen_cost = _estimate_generation_cost(generation)
+        run.total_cost_usd += gen_cost
+        await emit(
+            run.id,
+            "cost_update",
+            generation=gen_num,
+            dimension=vevo.dimension,
+            generation_cost_usd=round(gen_cost, 4),
+            total_cost_usd=round(run.total_cost_usd, 4),
+        )
+
+        # Track the best genome across all generations so far
+        if generation.skills:
+            gen_best = max(generation.skills, key=_aggregate_fitness)
+            gen_best_fitness = _aggregate_fitness(gen_best)
+            if gen_best_fitness > best_fitness_seen:
+                best_genome = gen_best
+                best_fitness_seen = gen_best_fitness
+
+    if best_genome is None:
         raise RuntimeError(
             f"variant evolution {vevo.id}: no skills produced for dimension {vevo.dimension}"
         )
-    winner_genome = max(generation.skills, key=_aggregate_fitness)
-    winner_fitness = _aggregate_fitness(winner_genome)
+
+    winner_genome = best_genome
+    winner_fitness = best_fitness_seen
 
     variant = Variant(
         id=f"var_{uuid.uuid4().hex[:12]}",

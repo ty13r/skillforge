@@ -43,6 +43,7 @@ from anthropic import AsyncAnthropic
 from skillforge.agents._llm import stream_text
 from skillforge.config import ANTHROPIC_API_KEY, model_for
 from skillforge.db.queries import (
+    get_family_by_slug,
     get_taxonomy_node_by_slug,
     save_skill_family,
     save_taxonomy_node,
@@ -512,20 +513,40 @@ async def classify_and_decompose(
     )
 
     family_spec = raw["family"]
-    family = SkillFamily(
-        id=f"fam_{uuid.uuid4().hex[:12]}",
-        slug=family_spec["slug"],
-        label=family_spec["label"],
-        specialization=specialization,
-        domain_id=domain.id,
-        focus_id=focus.id,
-        language_id=language.id,
-        tags=list(family_spec.get("tags", [])),
-        decomposition_strategy=family_spec["decomposition_strategy"],
-        best_assembly_id=None,
-        created_at=datetime.now(UTC),
-    )
-    await save_skill_family(family)
+
+    # Reuse-or-create: if a family with the proposed slug already exists,
+    # adopt it (the LLM is implicitly recommending we use the existing one).
+    # This is the analog of the taxonomy-node reuse path and prevents the
+    # UNIQUE constraint violation when the LLM proposes an existing slug.
+    family = await get_family_by_slug(family_spec["slug"])
+    if family is None:
+        family = SkillFamily(
+            id=f"fam_{uuid.uuid4().hex[:12]}",
+            slug=family_spec["slug"],
+            label=family_spec["label"],
+            specialization=specialization,
+            domain_id=domain.id,
+            focus_id=focus.id,
+            language_id=language.id,
+            tags=list(family_spec.get("tags", [])),
+            decomposition_strategy=family_spec["decomposition_strategy"],
+            best_assembly_id=None,
+            created_at=datetime.now(UTC),
+        )
+        await save_skill_family(family)
+        logger.info(
+            "taxonomist: created new family '%s' under %s/%s/%s",
+            family.slug,
+            domain.slug,
+            focus.slug,
+            language.slug,
+        )
+    else:
+        logger.info(
+            "taxonomist: reusing existing family '%s' (id=%s) for new run",
+            family.slug,
+            family.id,
+        )
 
     dimensions = [
         VariantDimension(
