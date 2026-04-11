@@ -138,11 +138,17 @@ def test_get_family_detail_404_on_unknown(client: TestClient) -> None:
 
 
 def test_list_family_variants_empty_by_default(client: TestClient) -> None:
+    # Pick a known seeded family that no other test will populate with
+    # variants — terraform-module-full is created by the bootstrap loader
+    # and stays untouched by the rest of the suite.
     fams = client.get("/api/families").json()
-    first = fams[0]
-    resp = client.get(f"/api/families/{first['id']}/variants")
+    target = next(
+        (f for f in fams if f["slug"] == "terraform-module-full"), None
+    )
+    assert target is not None, "bootstrap loader should have created terraform-module-full"
+    resp = client.get(f"/api/families/{target['id']}/variants")
     assert resp.status_code == 200
-    assert resp.json() == []  # no variants until atomic evolution runs
+    assert resp.json() == []  # no variants on a never-evolved seed family
 
 
 def test_list_family_variants_404_on_unknown_family(client: TestClient) -> None:

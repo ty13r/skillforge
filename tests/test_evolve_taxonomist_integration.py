@@ -35,31 +35,35 @@ from skillforge.models import SkillFamily, TaxonomyNode
 
 def _make_taxonomist_output(
     *,
-    family_slug: str = "django-rest-pytest",
+    family_slug: str = "test-fixture-family",
     evolution_mode: str = "atomic",
 ) -> TaxonomistOutput:
-    """Hand-build a TaxonomistOutput so we can hardcode mock results."""
+    """Hand-build a TaxonomistOutput so we can hardcode mock results.
+
+    Uses ``test-`` prefixed slugs so the seeded bootstrap taxonomy (which
+    already has ``testing``/``unit-tests``/``python``) doesn't collide.
+    """
     domain = TaxonomyNode(
-        id="dom_test", level="domain", slug="testing", label="Testing"
+        id="dom_test_fixture", level="domain", slug="test-fixture-domain", label="Test Domain"
     )
     focus = TaxonomyNode(
-        id="foc_unit",
+        id="foc_test_fixture",
         level="focus",
-        slug="unit-tests",
-        label="Unit Tests",
-        parent_id="dom_test",
+        slug="test-fixture-focus",
+        label="Test Focus",
+        parent_id="dom_test_fixture",
     )
     language = TaxonomyNode(
-        id="lang_py",
+        id="lang_test_fixture",
         level="language",
-        slug="python",
-        label="Python",
-        parent_id="foc_unit",
+        slug="test-fixture-lang",
+        label="Test Lang",
+        parent_id="foc_test_fixture",
     )
     family = SkillFamily(
-        id="fam_test",
+        id="fam_test_fixture",
         slug=family_slug,
-        label="Django REST Pytest",
+        label="Test Fixture Family",
         specialization="x",
         domain_id=domain.id,
         focus_id=focus.id,
@@ -141,6 +145,23 @@ def test_evolve_classifies_run_via_taxonomist(client: TestClient):
     """Happy path — Taxonomist returns atomic, run is stamped + event emitted."""
     mock_output = _make_taxonomist_output(evolution_mode="atomic")
 
+    # The mocked classify_and_decompose bypasses the real persistence logic
+    # inside the agent, so for routes.py downstream code (which persists
+    # VariantEvolution rows with FK to skill_families) to work, we have to
+    # manually persist the mocked family + taxonomy nodes before the request.
+    async def _seed_db():
+        from skillforge.db import init_db as _init
+        from skillforge.db import save_skill_family as _sf
+        from skillforge.db import save_taxonomy_node as _stn
+
+        await _init()
+        await _stn(mock_output.domain)
+        await _stn(mock_output.focus)
+        await _stn(mock_output.language)
+        await _sf(mock_output.family)
+
+    asyncio.new_event_loop().run_until_complete(_seed_db())
+
     with patch(
         "skillforge.agents.taxonomist.classify_and_decompose",
         new=AsyncMock(return_value=mock_output),
@@ -168,7 +189,7 @@ def test_evolve_classifies_run_via_taxonomist(client: TestClient):
     async def _check():
         run = await get_run(run_id)
         assert run is not None
-        assert run.family_id == "fam_test"
+        assert run.family_id == "fam_test_fixture"
         assert run.evolution_mode == "atomic"
 
     asyncio.new_event_loop().run_until_complete(_check())
@@ -179,7 +200,7 @@ def test_evolve_classifies_run_via_taxonomist(client: TestClient):
     assert "decomposition_complete" in event_types
 
     classified = next(e for e in events if e["event"] == "taxonomy_classified")
-    assert classified["family_id"] == "fam_test"
+    assert classified["family_id"] == "fam_test_fixture"
     assert classified["evolution_mode"] == "atomic"
 
     decomp = next(e for e in events if e["event"] == "decomposition_complete")
@@ -192,6 +213,20 @@ def test_evolve_explicit_mode_overrides_taxonomist(client: TestClient):
     """If the request specifies evolution_mode, use it regardless of what
     the Taxonomist returns."""
     mock_output = _make_taxonomist_output(evolution_mode="atomic")
+
+    # Same DB seeding as the happy-path test
+    async def _seed_db():
+        from skillforge.db import init_db as _init
+        from skillforge.db import save_skill_family as _sf
+        from skillforge.db import save_taxonomy_node as _stn
+
+        await _init()
+        await _stn(mock_output.domain)
+        await _stn(mock_output.focus)
+        await _stn(mock_output.language)
+        await _sf(mock_output.family)
+
+    asyncio.new_event_loop().run_until_complete(_seed_db())
 
     with patch(
         "skillforge.agents.taxonomist.classify_and_decompose",
@@ -221,7 +256,7 @@ def test_evolve_explicit_mode_overrides_taxonomist(client: TestClient):
         run = await get_run(run_id)
         assert run is not None
         # Family was still set by the Taxonomist
-        assert run.family_id == "fam_test"
+        assert run.family_id == "fam_test_fixture"
         # But mode was forced to molecular by the caller
         assert run.evolution_mode == "molecular"
 

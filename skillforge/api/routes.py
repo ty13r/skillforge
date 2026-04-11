@@ -110,6 +110,45 @@ async def _classify_run_via_taxonomist(
             ],
         )
 
+    # Persist a VariantEvolution row per dimension ONLY if the run will
+    # actually execute in atomic mode (the final stamped mode, which may
+    # have been overridden by the caller). The variant_evolutions FK
+    # requires the parent run to exist, so we save_run first.
+    if (
+        run.evolution_mode == "atomic"
+        and result.evolution_mode == "atomic"
+        and result.variant_dimensions
+    ):
+        from datetime import UTC as _UTC
+        from datetime import datetime as _dt
+        from uuid import uuid4 as _uuid4
+
+        from skillforge.db import save_variant_evolution
+        from skillforge.models import VariantEvolution
+
+        # Insert the parent run row first so the FK on
+        # variant_evolutions.parent_run_id is satisfied. save_run is
+        # idempotent (INSERT OR REPLACE) so the second save_run later in
+        # the route handler is a no-op refresh.
+        from skillforge.db import save_run as _save_run
+
+        await _save_run(run)
+
+        for dim in result.variant_dimensions:
+            await save_variant_evolution(
+                VariantEvolution(
+                    id=f"vevo_{_uuid4().hex[:12]}",
+                    family_id=result.family.id,
+                    dimension=dim.name,
+                    tier=dim.tier,
+                    parent_run_id=run.id,
+                    population_size=2,
+                    num_generations=1,
+                    status="pending",
+                    created_at=_dt.now(_UTC),
+                )
+            )
+
 
 @router.post("/evolve", response_model=EvolveResponse)
 async def start_evolution(req: EvolveRequest) -> EvolveResponse:

@@ -198,12 +198,22 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
     Failure mode: any unhandled exception sets status='failed', emits a
     run_failed event, persists the partial run, and re-raises.
+
+    v2.0 dispatcher: when ``run.evolution_mode == "atomic"`` we delegate to
+    ``variant_evolution.run_variant_evolution`` which orchestrates the
+    per-dimension mini-evolutions and stamps ``run.best_skill`` with the
+    assembled composite. The dispatcher catches the case where atomic mode
+    was requested but no variant_evolutions rows exist (defensive — the
+    Taxonomist should always create them at submission); the orchestrator
+    flips ``run.evolution_mode`` to ``"molecular"`` in that case so the
+    rest of this function falls through to the molecular pipeline.
     """
     run.status = "running"
     run.created_at = run.created_at or datetime.now(UTC)
-    logger.info("run=%s starting: spec=%s pop=%d gens=%d backend=%s",
+    logger.info("run=%s starting: spec=%s pop=%d gens=%d backend=%s mode=%s",
                 run.id[:8], run.specialization[:60], run.population_size,
-                run.num_generations, COMPETITOR_BACKEND)
+                run.num_generations, COMPETITOR_BACKEND,
+                getattr(run, "evolution_mode", "molecular"))
 
     try:
         await init_db()
@@ -211,6 +221,51 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
         logger.warning("run=%s init_db failed: %s", run.id[:8], exc)
 
     await emit(run.id, "run_started", specialization=run.specialization)
+
+    # v2.0 atomic-mode dispatch — runs the per-dimension orchestrator and
+    # then falls through to finalization. The orchestrator may set
+    # evolution_mode back to "molecular" if no variant_evolutions exist;
+    # in that case we proceed with the standard molecular pipeline below.
+    if getattr(run, "evolution_mode", "molecular") == "atomic":
+        from skillforge.engine.variant_evolution import run_variant_evolution
+
+        try:
+            run = await run_variant_evolution(run)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("run=%s atomic evolution failed: %s", run.id[:8], exc)
+            run.status = "failed"
+            run.failure_reason = f"atomic evolution failed: {exc}"
+            run.completed_at = datetime.now(UTC)
+            await emit(run.id, "run_failed", reason=str(exc))
+            await _persist(run)
+            return run
+
+        # If atomic actually ran (mode is still "atomic"), we're done — emit
+        # evolution_complete and return. Otherwise the orchestrator flipped
+        # the mode and we fall through to molecular below.
+        if getattr(run, "evolution_mode", "molecular") == "atomic":
+            run.status = "complete"
+            run.completed_at = datetime.now(UTC)
+            await _persist(run)
+            await emit(
+                run.id,
+                "evolution_complete",
+                best_skill_id=run.best_skill.id if run.best_skill else None,
+                total_cost_usd=run.total_cost_usd,
+                generations_completed=0,
+                evolution_mode="atomic",
+            )
+
+            import contextlib as _report_ctx
+
+            from skillforge.engine.report import generate_run_report
+
+            async def _build_report() -> None:
+                with _report_ctx.suppress(Exception):
+                    await generate_run_report(run.id)
+
+            asyncio.create_task(_build_report())
+            return run
 
     # --- Managed Agents environment (one per run, shared across competitors) -
     # Created up-front when COMPETITOR_BACKEND=managed and torn down in the

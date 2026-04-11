@@ -653,3 +653,149 @@ Do NOT modify the parent. Do NOT return fewer or more than {num_mutants} entries
     # Drop any mutants that fail validation — keep the elite always
     valid_mutants, _ = _validate_genomes(mutants)
     return [elite, *valid_mutants][:pop_size]
+
+
+# ---------------------------------------------------------------------------
+# v2.0 — focused per-dimension variant spawner
+# ---------------------------------------------------------------------------
+
+
+def _build_variant_spawn_prompt(
+    specialization: str,
+    dimension: dict,
+    foundation_genome: SkillGenome | None,
+    pop_size: int,
+    template: str,
+) -> str:
+    """System prompt for spawning N focused mini-SKILL.md variants for one dimension."""
+    name = dimension.get("name", "")
+    tier = dimension.get("tier", "")
+    description = dimension.get("description", "")
+    evaluation_focus = dimension.get("evaluation_focus", "")
+
+    foundation_block = ""
+    if foundation_genome is not None and tier == "capability":
+        # Capability variants get the winning foundation as grounding so they
+        # plug into a consistent skeleton during Engineer assembly later.
+        foundation_block = (
+            "\n## Foundation context (capability variants must plug into this)\n\n"
+            "The following foundation variant has already won its tier. Your "
+            "capability variants will be assembled with it later, so they "
+            "MUST be compatible with its directory layout, naming, and fixture "
+            "philosophy. Reference the foundation's scripts and conventions "
+            "in your workflow steps.\n\n"
+            "```markdown\n"
+            f"{foundation_genome.skill_md_content[:2000]}\n"
+            "```\n"
+        )
+
+    return (
+        f"## Specialization\n\n{specialization}\n\n"
+        f"## Variant dimension you are spawning for\n\n"
+        f"- Name: `{name}`\n"
+        f"- Tier: {tier}\n"
+        f"- Description: {description}\n"
+        f"- Evaluation focus: {evaluation_focus}\n"
+        f"{foundation_block}\n"
+        f"## Your job\n\n"
+        f"Spawn {pop_size} DIVERSE mini-skill packages that each take a "
+        f"DIFFERENT angle on the dimension above. Gen 0 exists to explore — "
+        f"do not produce N near-duplicates and do not kitchen-sink one "
+        f"variant with every approach.\n\n"
+        "**One dimension, one angle per variant.** Each variant's SKILL.md "
+        "body must focus on the single dimension named above and avoid "
+        "drifting into adjacent dimensions.\n\n"
+        "## Golden template\n\n"
+        f"```markdown\n{template}\n```\n\n"
+        "## Hard rules (validator-enforced)\n\n"
+        "- `name`: kebab-case, matches `^[a-z0-9]+(-[a-z0-9]+)*$`\n"
+        "- `description`: ≤250 chars, pushy routing pattern\n"
+        "- Body: ≤500 lines\n"
+        "- 2-3 diverse I/O examples mandatory\n"
+        "- The body MUST mention the dimension name somewhere\n"
+        "- All scripts/references referenced from SKILL.md use the\n"
+        "  `${CLAUDE_SKILL_DIR}/...` path convention\n\n"
+        "## Output format\n\n"
+        f"Return ONLY a JSON array of exactly {pop_size} objects matching:\n\n"
+        '```json\n[\n  {\n'
+        '    "frontmatter": {"name": "kebab-case", "description": "...", '
+        '"allowed-tools": "Read Write"},\n'
+        '    "skill_md_content": "# Display Name\\n## Quick Start\\n...",\n'
+        '    "supporting_files": {"scripts/score.py": "...", '
+        '"scripts/validate.sh": "..."},\n'
+        '    "traits": ["trait1", "trait2"],\n'
+        '    "meta_strategy": "one-liner approach description"\n'
+        "  }\n]\n```\n"
+        "No prose before or after — ONLY the JSON array."
+    )
+
+
+async def spawn_variant_gen0(
+    specialization: str,
+    dimension: dict,
+    foundation_genome: SkillGenome | None,
+    pop_size: int = 2,
+) -> list[SkillGenome]:
+    """Spawn ``pop_size`` focused mini-skill variants for a single dimension.
+
+    Args:
+        specialization: The parent skill family's specialization string.
+        dimension: A dict with at minimum ``name`` and ``tier`` keys; may
+            include ``description`` and ``evaluation_focus``. Matches the
+            shape of ``TaxonomistOutput.variant_dimensions``.
+        foundation_genome: For capability variants, the winning foundation
+            genome to use as grounding context. Pass ``None`` for foundation
+            variants.
+        pop_size: How many variants to spawn (default 2 for atomic mode).
+
+    Returns:
+        A list of ``pop_size`` SkillGenome objects at generation 0. Each is
+        validated against the standard authoring constraints. Invalid
+        variants are dropped — the caller may receive fewer than
+        ``pop_size`` if the model produces malformed output, but never more.
+
+    Raises:
+        ValueError: if no valid variants survive validation after one retry.
+    """
+    if pop_size < 1:
+        raise ValueError(f"pop_size must be ≥ 1, got {pop_size}")
+
+    template = (GOLDEN_TEMPLATE_DIR / "SKILL.md").read_text()
+    system_prompt = _build_variant_spawn_prompt(
+        specialization, dimension, foundation_genome, pop_size, template
+    )
+
+    text = await _generate(system_prompt)
+    _save_debug_response(f"spawn_variant_gen0_{dimension.get('name', 'unknown')}", text)
+
+    try:
+        raw = _extract_json_array(text)
+    except ValueError:
+        # One retry with a stricter formatting reminder
+        retry_prompt = (
+            system_prompt
+            + "\n\nCRITICAL: Your previous response did not contain a valid "
+            "JSON array. Respond with ONLY a JSON array — no prose, no "
+            "markdown fences."
+        )
+        text = await _generate(retry_prompt)
+        raw = _extract_json_array(text)
+
+    genomes = _parse_genomes(raw, generation=0)
+    valid_genomes, invalid = _validate_genomes(genomes)
+
+    if not valid_genomes:
+        violations = [f"skill {i}: {'; '.join(v)}" for i, v in invalid.items()]
+        raise ValueError(
+            "spawn_variant_gen0 produced no valid variants: "
+            + "; ".join(violations)
+        )
+
+    # Stamp dimension metadata into the frontmatter so the Reviewer knows
+    # how to scope L3/L4 evaluation. Validator doesn't require it but it's
+    # the right shape for downstream consumers.
+    for genome in valid_genomes:
+        genome.frontmatter["dimension"] = dimension.get("name", "")
+        genome.frontmatter["tier"] = dimension.get("tier", "")
+
+    return valid_genomes[:pop_size]
