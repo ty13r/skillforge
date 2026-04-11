@@ -36,6 +36,81 @@ router = APIRouter(prefix="/api")
 _active_runs: dict[str, asyncio.Task] = {}
 
 
+async def _classify_run_via_taxonomist(
+    run: EvolutionRun, requested_mode: str | None
+) -> None:
+    """Best-effort: classify the run, persist family + new nodes, stamp the run.
+
+    Sets ``run.family_id`` and ``run.evolution_mode`` in place. If
+    ``requested_mode`` is "atomic" or "molecular" the explicit value wins
+    over whatever the Taxonomist returns. If the Taxonomist call fails for
+    any reason — missing API key, network error, JSON parse failure — we
+    log it, leave ``family_id`` as None, default ``evolution_mode`` to
+    "molecular", and let the run proceed.
+    """
+    from skillforge.config import ANTHROPIC_API_KEY
+    from skillforge.db import get_taxonomy_tree, list_families
+    from skillforge.engine.events import emit
+
+    # No API key → skip classification entirely
+    if not ANTHROPIC_API_KEY:
+        run.evolution_mode = requested_mode or "molecular"
+        return
+
+    # Skip the LLM call when the caller explicitly forced a mode AND specified
+    # no specialization that needs classification (the autoclassify is the
+    # whole point of running the agent — if mode is forced, just stamp it).
+    if requested_mode in {"atomic", "molecular"} and not run.specialization:
+        run.evolution_mode = requested_mode
+        return
+
+    try:
+        from skillforge.agents.taxonomist import classify_and_decompose
+
+        taxonomy_tree = await get_taxonomy_tree()
+        existing_families = await list_families()
+        result = await classify_and_decompose(
+            run.specialization,
+            taxonomy_tree,
+            existing_families,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "run=%s taxonomist classification failed: %s — defaulting to molecular",
+            run.id[:8],
+            exc,
+        )
+        run.evolution_mode = requested_mode or "molecular"
+        return
+
+    run.family_id = result.family.id
+    # Caller's explicit mode wins over the Taxonomist's recommendation
+    run.evolution_mode = requested_mode or result.evolution_mode
+
+    await emit(
+        run.id,
+        "taxonomy_classified",
+        family_id=result.family.id,
+        family_slug=result.family.slug,
+        domain_slug=result.domain.slug,
+        focus_slug=result.focus.slug,
+        language_slug=result.language.slug,
+        evolution_mode=run.evolution_mode,
+        created_new_nodes=result.created_new_nodes,
+    )
+
+    if result.evolution_mode == "atomic":
+        await emit(
+            run.id,
+            "decomposition_complete",
+            dimension_count=len(result.variant_dimensions),
+            dimensions=[d.to_dict() for d in result.variant_dimensions],
+            reuse_recommendations=[
+                r.to_dict() for r in result.reuse_recommendations
+            ],
+        )
+
+
 @router.post("/evolve", response_model=EvolveResponse)
 async def start_evolution(req: EvolveRequest) -> EvolveResponse:
     """Start a new evolution run and return its ID + WebSocket URL.
@@ -70,6 +145,12 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
         status="pending",
         created_at=datetime.now(UTC),
     )
+
+    # v2.0 — Taxonomist classification before evolution starts. Best-effort:
+    # the run still proceeds in molecular mode if the LLM call fails or no
+    # API key is available, so we never block submission on classification.
+    await _classify_run_via_taxonomist(run, req.evolution_mode)
+
     await save_run(run)
 
     # Spawn background task — store reference so it isn't GC'd

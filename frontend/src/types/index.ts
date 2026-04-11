@@ -14,6 +14,8 @@ export interface EvolveRequest {
   population_size: number;
   num_generations: number;
   max_budget_usd: number;
+  // v2.0 — explicit override; omit/undefined means "let the Taxonomist decide"
+  evolution_mode?: "atomic" | "molecular";
 }
 
 export interface EvolveResponse {
@@ -80,7 +82,16 @@ export type EvolutionEventName =
   | "run_failed"
   | "run_cancelled"
   | "competitor_progress"
-  | "heartbeat";
+  | "heartbeat"
+  // v2.0 atomic evolution events
+  | "taxonomy_classified"
+  | "decomposition_complete"
+  | "variant_evolution_started"
+  | "variant_evolution_complete"
+  | "assembly_started"
+  | "assembly_complete"
+  | "integration_test_started"
+  | "integration_test_complete";
 
 export interface EvolutionEvent {
   event: EvolutionEventName;
@@ -112,6 +123,17 @@ export interface EvolutionEvent {
   skill_md_content?: string;
   turn?: number;
   tool_name?: string;
+  // v2.0 atomic evolution payload fields
+  family_id?: string;
+  family_slug?: string;
+  domain_slug?: string;
+  focus_slug?: string;
+  language_slug?: string;
+  evolution_mode?: "atomic" | "molecular";
+  created_new_nodes?: string[];
+  dimension_count?: number;
+  dimensions?: { name: string; tier: string; description: string; evaluation_focus: string }[];
+  reuse_recommendations?: { source_family_slug: string; dimension: string; variant_slug: string; fitness: number | null; reason: string }[];
 }
 
 // --- Derived view state ------------------------------------------------------
