@@ -278,5 +278,67 @@ async def design_challenges(specialization: str, n: int = 3) -> list[Challenge]:
         raise ValueError(
             f"challenge designer returned {len(challenges)} challenges, expected {n}"
         )
-
     return challenges
+
+
+# ---------------------------------------------------------------------------
+# v2.0 — focused per-dimension challenge generator (the Scientist role)
+# ---------------------------------------------------------------------------
+
+
+def _build_variant_system_prompt(specialization: str, dimension: dict) -> str:
+    name = dimension.get("name", "")
+    tier = dimension.get("tier", "")
+    description = dimension.get("description", "")
+    evaluation_focus = dimension.get("evaluation_focus", "")
+    return (
+        f"## Specialization\n\n{specialization}\n\n"
+        f"## Variant Dimension\n\n"
+        f"- Name: `{name}`\n"
+        f"- Tier: {tier}\n"
+        f"- Description: {description}\n"
+        f"- Evaluation focus: {evaluation_focus}\n\n"
+        "## Your job (Scientist)\n\n"
+        "Design ONE focused challenge that exercises ONLY the dimension above. "
+        "The challenge should be narrow enough that the variant's specific "
+        "approach to this dimension is the dominant factor in its success — "
+        "not its general code quality, not other unrelated dimensions.\n\n"
+        f"{_FILE_CONVENTION}\n\n"
+        "Return ONLY a JSON array containing exactly ONE challenge object — "
+        "no prose before or after — matching this schema:\n"
+        f"{_SCHEMA_DESCRIPTION}\n"
+    )
+
+
+async def design_variant_challenge(
+    specialization: str, dimension: dict
+) -> Challenge:
+    """Generate a single focused challenge targeting one variant dimension.
+
+    Args:
+        specialization: The parent skill family's specialization.
+        dimension: A dict with at minimum ``name`` and ``tier`` keys; may
+            also include ``description`` and ``evaluation_focus`` for richer
+            prompting. Matches the shape of ``TaxonomistOutput.variant_dimensions``.
+
+    Returns:
+        A single Challenge object.
+
+    Raises:
+        ValueError: if the model returns 0 or >1 challenges, or if JSON
+            parsing fails after 2 attempts.
+    """
+    prompt = _build_variant_system_prompt(specialization, dimension)
+    text = await _generate(prompt)
+    try:
+        raw = _extract_json_array(text)
+    except ValueError:
+        text = await _generate(_build_retry_prompt(specialization, n=1))
+        raw = _extract_json_array(text)
+
+    challenges = _parse_challenges(raw)
+    if len(challenges) != 1:
+        raise ValueError(
+            f"design_variant_challenge expected 1 challenge, got {len(challenges)}"
+        )
+    return challenges[0]
