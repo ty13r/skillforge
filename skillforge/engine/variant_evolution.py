@@ -48,8 +48,10 @@ from datetime import UTC, datetime
 
 from skillforge.db.queries import (
     get_variant_evolutions_for_run,
+    get_variants_for_family,
     save_challenge,
     save_genome,
+    save_run,
     save_variant,
     save_variant_evolution,
 )
@@ -206,6 +208,10 @@ async def _run_dimension_mini_evolution(
 
         gen_cost = _estimate_generation_cost(generation)
         run.total_cost_usd += gen_cost
+        # Persist the updated cost immediately so budget checks see real
+        # numbers and the frontend can read the in-flight total. Without
+        # this, the cost only lands in the DB when run_evolution returns.
+        await save_run(run)
         await emit(
             run.id,
             "cost_update",
@@ -214,6 +220,33 @@ async def _run_dimension_mini_evolution(
             generation_cost_usd=round(gen_cost, 4),
             total_cost_usd=round(run.total_cost_usd, 4),
         )
+
+        # Budget enforcement — atomic mode used to skip this. If the
+        # accumulated cost exceeds max_budget_usd, mark the run failed
+        # and bail out of the remaining dimensions.
+        budget = getattr(run, "max_budget_usd", 10.0)
+        if run.total_cost_usd >= budget:
+            logger.warning(
+                "run=%s atomic mode: budget exceeded ($%.2f >= $%.2f), "
+                "aborting remaining dimensions",
+                run.id[:8],
+                run.total_cost_usd,
+                budget,
+            )
+            run.status = "failed"
+            run.failure_reason = (
+                f"budget exceeded: ${run.total_cost_usd:.2f} >= ${budget:.2f}"
+            )
+            await emit(
+                run.id,
+                "run_failed",
+                reason="budget_exceeded",
+                total_cost_usd=run.total_cost_usd,
+            )
+            # Save the winner we have so far as the result, then bail
+            vevo.status = "failed"
+            await save_variant_evolution(vevo)
+            raise RuntimeError("atomic: budget exceeded during mini-evolution")
 
         # Track the best genome across all generations so far
         if generation.skills:
@@ -230,6 +263,19 @@ async def _run_dimension_mini_evolution(
 
     winner_genome = best_genome
     winner_fitness = best_fitness_seen
+
+    # Deactivate any existing active variants in this (family, dimension)
+    # before stamping the new winner as active. Without this, re-running an
+    # evolution on the same family leaves the previous winner active too,
+    # violating the "exactly one active variant per (family, dimension)"
+    # invariant — which swap-variant and the frontend rely on.
+    existing_in_dim = await get_variants_for_family(
+        vevo.family_id, dimension=vevo.dimension
+    )
+    for existing in existing_in_dim:
+        if existing.is_active:
+            existing.is_active = False
+            await save_variant(existing)
 
     variant = Variant(
         id=f"var_{uuid.uuid4().hex[:12]}",
@@ -335,10 +381,30 @@ async def run_variant_evolution(run: EvolutionRun) -> EvolutionRun:
     if no dimensions are recorded against the run (defensive — the
     Taxonomist should always create them at submission time for atomic).
     """
-    pending = await get_variant_evolutions_for_run(run.id)
+    all_rows = await get_variant_evolutions_for_run(run.id)
+
+    # Filter to rows that actually need work. Rows already in a terminal
+    # state (complete/failed) from prior runs must NOT be re-processed —
+    # that was causing 4x API spend on re-runs because the live test's
+    # hardcoded run_id accumulates stale rows across test invocations.
+    # "running" is included because a previous crash may have left a row
+    # stuck mid-processing; we let the orchestrator retry it.
+    pending = [
+        v for v in all_rows if v.status not in {"complete", "failed"}
+    ]
+    skipped = len(all_rows) - len(pending)
+    if skipped:
+        logger.info(
+            "run=%s atomic mode: skipping %d terminal variant_evolutions "
+            "(%d pending)",
+            run.id[:8],
+            skipped,
+            len(pending),
+        )
+
     if not pending:
         logger.warning(
-            "run=%s atomic mode requested but no variant_evolutions rows; "
+            "run=%s atomic mode requested but no pending variant_evolutions; "
             "falling back to molecular pipeline",
             run.id[:8],
         )
