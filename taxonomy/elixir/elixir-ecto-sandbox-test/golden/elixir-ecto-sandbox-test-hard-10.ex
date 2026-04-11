@@ -1,25 +1,27 @@
-# Golden: Fix on_exit DB write by moving to a setup teardown pattern with explicit allowance
-defmodule MyApp.AuditTrailTest do
+# golden: async: true with start_supervised + allow/3 replacing shared mode
+defmodule MyApp.NotificationServiceTest do
   use MyApp.DataCase, async: true
 
   alias MyApp.Accounts
-  alias MyApp.AuditTrail
+  alias MyApp.Notifications.NotificationService
 
   setup do
-    {:ok, user} = Accounts.create_user(%{email: "audit@example.com"})
-    {:ok, user: user}
+    # start_supervised! ties the GenServer lifetime to the test process,
+    # so it dies cleanly when the test exits — no lingering references.
+    pid = start_supervised!(NotificationService)
+
+    # Grant the GenServer sandbox access. Because allow/3 is per-process
+    # and per-connection, we keep async: true — no shared mode needed.
+    Ecto.Adapters.SQL.Sandbox.allow(MyApp.Repo, self(), pid)
+
+    {:ok, pid: pid}
   end
 
-  test "records an event when something happens", %{user: user} do
-    AuditTrail.record_event(user.id, "something_happened")
+  test "notification service records an event to the DB", %{pid: pid} do
+    {:ok, user} = Accounts.create_user(%{email: "subscriber@example.com"})
 
-    assert [%{event: "something_happened"}] = AuditTrail.for_user(user.id)
-  end
+    :ok = NotificationService.notify(pid, user.id, "welcome")
 
-  test "audit cleanup is handled by sandbox rollback, not on_exit", %{user: user} do
-    # Sandbox rollback automatically reverts every Repo change at the end
-    # of the test. We never need on_exit DB writes — the sandbox *is* the cleanup.
-    AuditTrail.record_event(user.id, "ephemeral")
-    assert length(AuditTrail.for_user(user.id)) == 1
+    assert [%{kind: "welcome"}] = Accounts.notifications_for(user.id)
   end
 end

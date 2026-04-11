@@ -1,3 +1,4 @@
+# golden: extracted query builder module with named binding base
 defmodule MyApp.Accounts.UserQueries do
   @moduledoc """
   Pure query-builder module. Every function takes and returns an
@@ -28,26 +29,5 @@ defmodule MyApp.Accounts.UserQueries do
 
   def by_name(query \\ base()) do
     from([user: u] in query, order_by: [asc: u.name])
-  end
-end
-
-defmodule MyApp.Accounts do
-  alias MyApp.Repo
-  alias MyApp.Accounts.UserQueries, as: Q
-
-  def list_active_users do
-    Q.base() |> Q.active() |> Q.by_name() |> Repo.all()
-  end
-
-  def list_admins do
-    Q.base() |> Q.by_role("admin") |> Q.by_name() |> Repo.all()
-  end
-
-  def list_users_in_team(team_id) do
-    Q.base() |> Q.in_team(team_id) |> Q.active() |> Q.by_name() |> Repo.all()
-  end
-
-  def verified_users do
-    Q.base() |> Q.verified() |> Repo.all()
   end
 end

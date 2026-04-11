@@ -175,7 +175,14 @@ def score_challenge(challenge: dict, output_dir: Path) -> dict:
         }
 
     # must_not_contain patterns (each is equal-weighted within the set)
-    mnc_weight = 1.5 / max(len(must_not_contain), 1) if must_not_contain else 0
+    # When output is empty/whitespace-only, zero-weight these so the empty
+    # file can't get free credit for trivially satisfying "absence" checks.
+    has_meaningful_output = bool(aggregated_content.strip())
+    mnc_weight = (
+        1.5 / max(len(must_not_contain), 1)
+        if must_not_contain and has_meaningful_output
+        else 0
+    )
     for pat in must_not_contain:
         absent = pat not in aggregated_content
         objectives[f"absent:{pat[:60]}"] = {

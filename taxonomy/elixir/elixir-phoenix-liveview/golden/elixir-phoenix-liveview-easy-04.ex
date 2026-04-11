@@ -1,24 +1,14 @@
-# golden: add connected?/1 guard around PubSub subscribe
-defmodule MyAppWeb.FeedLive do
+# golden: ~p route interpolation with <.link navigate={...}>
+defmodule MyAppWeb.ShowLinkLive do
   use MyAppWeb, :live_view
 
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(MyApp.PubSub, "feed:user:1")
-    end
-
-    {:ok, assign(socket, :items, [])}
-  end
-
-  def handle_info({:new_item, item}, socket) do
-    {:noreply, update(socket, :items, &[item | &1])}
+    {:ok, assign(socket, :user, %{id: 42})}
   end
 
   def render(assigns) do
     ~H"""
-    <ul>
-      <li :for={i <- @items}>{i.text}</li>
-    </ul>
+    <.link navigate={~p"/users/#{@user}"}>Profile</.link>
     """
   end
 end
