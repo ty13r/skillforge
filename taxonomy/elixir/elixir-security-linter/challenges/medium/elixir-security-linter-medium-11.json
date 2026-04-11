@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-11",
+  "tier": "medium",
+  "title": "Fix open redirect with naive path check",
+  "prompt": "The following code attempts to guard against open redirects but only checks if the URL starts with `/`:\n\n```elixir\ndef post_login(conn, %{\"return_to\" => url}) do\n  if String.starts_with?(url, \"/\") do\n    redirect(conn, external: url)\n  else\n    redirect(conn, to: \"/\")\n  end\nend\n```\n\nThis is defeated by `//evil.com` (protocol-relative URL) and by `/\\nevil.com` (CVE-2017-1000163 — the exact bypass that hit Phoenix). Rewrite the function so the redirect target is constrained to a static allowlist of safe paths, rejects any URL containing `//` at the start or newline characters, and NEVER uses `redirect(external: ...)` with user input. Use `redirect(conn, to: \"/dashboard\")` for the safe case. Write the fix to `lib/my_app_web/session_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/session_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.SessionController",
+      "redirect(conn, to:"
+    ],
+    "must_not_contain": [
+      "redirect(conn, external: url)",
+      "redirect(external: url)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": [],
+    "criterion": "no_naive_path_check",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires knowing the CVE-2017-1000163 bypass and choosing allowlist over blocklist.",
+  "calibration": null,
+  "research_citation": "CVE-2017-1000163: 'An example of a user input that would pass local URL validation but be treated by Chrome and Firefox as external URLs is: /\\nexample.com.'"
+}

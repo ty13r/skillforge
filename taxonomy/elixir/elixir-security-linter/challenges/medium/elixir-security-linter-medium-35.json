@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-35",
+  "tier": "medium",
+  "title": "Fix argon2 with dangerously low m_cost",
+  "prompt": "This argon2 password-hash config uses a dangerously low memory cost — the memory-hard property is bypassed:\n\n```elixir\n# config/config.exs\nconfig :argon2_elixir,\n  m_cost: 10,\n  t_cost: 1,\n  parallelism: 1\n```\n\nThe `m_cost: 10` means 2^10 = 1024 KiB (1 MiB). Modern guidance is at least 64 MiB (`m_cost: 16` → 65536 KiB). The `t_cost: 1` is also too low; minimum is 3. Rewrite the config to use `m_cost: 16`, `t_cost: 3`, `parallelism: 1`, and add a comment citing 2026 guidance (m=64MB+, t=3, p=1). Write the fix to `config/config.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/config.exs"],
+    "must_contain": [
+      "import Config",
+      "m_cost: 16",
+      "t_cost: 3"
+    ],
+    "must_not_contain": [
+      "m_cost: 10",
+      "t_cost: 1"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": [],
+    "criterion": "argon2_params_hardened",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires knowing argon2 parameters and 2026 guidance.",
+  "calibration": null,
+  "research_citation": "argon2_elixir hexdocs: 'Argon2 is a memory-hard function... designed to use a lot more memory than Bcrypt / Pbkdf2.'"
+}

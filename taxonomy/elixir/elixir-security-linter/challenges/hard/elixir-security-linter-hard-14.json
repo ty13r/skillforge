@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-hard-14",
+  "tier": "hard",
+  "title": "Fix mass assignment via Map.take allowlist with wrong keys",
+  "prompt": "This changeset attempts to sanitize `attrs` via `Map.take/2` before casting, but the allowlist uses ATOM keys while the incoming `attrs` uses STRING keys — so `Map.take/2` drops everything, then `cast/3` re-introduces `:role` because it's in the cast list:\n\n```elixir\ndef update_changeset(user, attrs) do\n  safe_attrs = Map.take(attrs, [:email, :name])  # drops all string-keyed fields!\n  user\n  |> cast(safe_attrs, [:email, :name, :role, :is_admin])\n  |> validate_required([:email])\nend\n```\n\nThe combination is a full bypass: `safe_attrs` ends up empty, and `cast/3` reads nothing. But then the developer 'fixes' the test by passing atom keys in tests, which makes the cast allowlist apparently work — but in production with string keys, the code ALSO doesn't reject `:role`. Rewrite the function so: (a) remove the Map.take entirely, (b) remove `:role` and `:is_admin` from the cast allowlist, (c) cast only `[:email, :name]`. Write the fix to `lib/my_app/accounts/profile.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/profile.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Profile",
+      "cast(attrs, [:email, :name])"
+    ],
+    "must_not_contain": [
+      "Map.take(attrs, [",
+      ":role, :is_admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "remove_take_and_tighten_cast",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — subtle string-vs-atom key bug combined with overly-permissive cast allowlist.",
+  "calibration": null
+}

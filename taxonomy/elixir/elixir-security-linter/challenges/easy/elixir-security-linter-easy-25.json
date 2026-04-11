@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-25",
+  "tier": "easy",
+  "title": "Spot the MD5 password verification function",
+  "prompt": "Identify why this function is a security hazard and rewrite it:\n\n```elixir\ndef legacy_md5_check(password, md5_hex) do\n  :crypto.hash(:md5, password) |> Base.encode16(case: :lower) == md5_hex\nend\n```\n\nMD5 is cryptographically broken for password hashing (unsalted, fast to brute-force, collision-prone), and the `==` comparison at the end is variable-time. Produce a rewrite that (a) refuses to verify MD5 at all — i.e., documents that callers must migrate to bcrypt and returns `{:error, :unsupported_hash_format}`, and (b) includes a helper that rehashes with `Bcrypt.hash_pwd_salt/1` on successful bcrypt verification. Write the corrected module to `lib/my_app/accounts/legacy_auth.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/legacy_auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.LegacyAuth",
+      "Bcrypt.hash_pwd_salt",
+      ":unsupported_hash_format"
+    ],
+    "must_not_contain": [
+      ":crypto.hash(:md5, "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": [],
+    "criterion": "md5_refused",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires recognizing that MD5 is never acceptable for passwords and explicitly refusing rather than 'fixing'.",
+  "calibration": null
+}

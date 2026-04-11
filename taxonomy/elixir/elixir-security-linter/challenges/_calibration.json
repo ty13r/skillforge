@@ -1,0 +1,141 @@
+{
+  "methodology": "heuristic",
+  "calibration_deferred": true,
+  "deferred_reason": "See taxonomy/elixir/SEEDING-PLAN.md item 4 \u2014 empirical Haiku+Sonnet calibration is a future workstream",
+  "calibrated_date": null,
+  "spec_version": "2.1",
+  "tier_distribution": {
+    "easy": 35,
+    "medium": 35,
+    "hard": 22,
+    "legendary": 8
+  },
+  "capability_coverage": {
+    "atom-exhaustion": {
+      "primary_count": 10,
+      "secondary_count": 7,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 4,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "csrf-and-secure-headers": {
+      "primary_count": 4,
+      "secondary_count": 5,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 2
+      }
+    },
+    "ecto-fragment-injection": {
+      "primary_count": 11,
+      "secondary_count": 1,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 4,
+        "hard": 3,
+        "legendary": 1
+      }
+    },
+    "liveview-handle-event-authz": {
+      "primary_count": 10,
+      "secondary_count": 1,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 4,
+        "hard": 2,
+        "legendary": 1
+      }
+    },
+    "mass-assignment-in-changesets": {
+      "primary_count": 7,
+      "secondary_count": 3,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "open-redirect-protection": {
+      "primary_count": 7,
+      "secondary_count": 5,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "password-hashing-choice": {
+      "primary_count": 7,
+      "secondary_count": 1,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 3,
+        "hard": 1
+      }
+    },
+    "plug-security-middleware-chain": {
+      "primary_count": 7,
+      "secondary_count": 6,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 2
+      }
+    },
+    "raw-xss-prevention": {
+      "primary_count": 8,
+      "secondary_count": 7,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 3,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "secrets-in-config": {
+      "primary_count": 7,
+      "secondary_count": 4,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 3,
+        "hard": 1,
+        "legendary": 1
+      }
+    },
+    "security-scan-philosophy": {
+      "primary_count": 9,
+      "secondary_count": 27,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 2,
+        "hard": 4,
+        "legendary": 1
+      }
+    },
+    "session-and-cookie-security": {
+      "primary_count": 6,
+      "secondary_count": 4,
+      "tier_breakdown": {
+        "easy": 2,
+        "medium": 2,
+        "hard": 2
+      }
+    },
+    "timing-attack-comparisons": {
+      "primary_count": 7,
+      "secondary_count": 16,
+      "tier_breakdown": {
+        "easy": 3,
+        "medium": 2,
+        "hard": 2
+      }
+    }
+  },
+  "tier_rubric_link": "../../SEEDING-PLAN.md#heuristic-tier-rubric",
+  "notes": "Generated from the family's actual challenge pool state after the overnight drafting run. Tier methodology is heuristic per SEEDING-PLAN.md item 4 (empirical Haiku+Sonnet calibration deferred)."
+}

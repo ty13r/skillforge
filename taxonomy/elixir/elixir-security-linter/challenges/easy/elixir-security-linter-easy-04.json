@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-04",
+  "tier": "easy",
+  "title": "Fix Ecto fragment with string interpolation",
+  "prompt": "The Ecto query below is vulnerable to SQL injection because `fragment/1` receives an interpolated string:\n\n```elixir\nfrom u in User, where: fragment(\"name LIKE '%#{name}%'\")\n```\n\nRewrite the query so the user-supplied `name` is bound via the `^` pin operator and passed as a fragment argument (`fragment(\"name LIKE ?\", ^like)`). Wrap the term with `%` characters at the Elixir level before pinning. Produce the full corrected context module at `lib/my_app/users.ex` with a `search_by_name/1` function that returns the list of matching users. Preserve the query style (Ecto keyword query).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/users.ex"],
+    "must_contain": [
+      "defmodule MyApp.Users",
+      "def search_by_name",
+      "^",
+      "fragment("
+    ],
+    "must_not_contain": [
+      "fragment(\"name LIKE '%#{",
+      "#{name}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "pin_operator_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical SQL injection fix with a known Ecto idiom. Ecto even rejects interpolation in fragment at compile time via its own error message.",
+  "calibration": null,
+  "research_citation": "Ecto compile-time error: 'to prevent SQL injection attacks, fragment(...) does not allow strings to be interpolated as the first argument via the ^ operator.'"
+}

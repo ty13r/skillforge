@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-hard-21",
+  "tier": "hard",
+  "title": "Replace non-parameterized DISTINCT ON with identifier allowlist",
+  "prompt": "This Ecto query builds a `DISTINCT ON` clause with a user-controlled column list — Ecto cannot parameterize identifiers, so Claude typically reaches for string interpolation and introduces SQL injection:\n\n```elixir\ndef distinct_by(cols) when is_list(cols) do\n  col_str = Enum.join(cols, \", \")\n  from u in User,\n    distinct: fragment(\"DISTINCT ON (?)\", literal(^col_str)),\n    order_by: fragment(\"?\", literal(^col_str))\nend\n```\n\nThe `literal(^col_str)` inlines the string directly. An attacker passing `[\"email) /*\"]` can inject SQL. Rewrite the function so: (a) `cols` is validated against a static allowlist of atom column names, (b) invalid columns are rejected with an error tuple, (c) the Ecto query uses `distinct: ^cols_as_atoms` with the list of validated atoms (Ecto's `distinct` accepts lists). Write the fix to `lib/my_app/distinct_query.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/distinct_query.ex"],
+    "must_contain": [
+      "defmodule MyApp.DistinctQuery",
+      "@allowed"
+    ],
+    "must_not_contain": [
+      "Enum.join(cols",
+      "literal(^col_str)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": ["atom-exhaustion"],
+    "criterion": "distinct_allowlisted",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — DISTINCT ON identifier-level injection with Ecto literal/1 abuse.",
+  "calibration": null
+}

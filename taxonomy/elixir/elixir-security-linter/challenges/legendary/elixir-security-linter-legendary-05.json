@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-legendary-05",
+  "tier": "legendary",
+  "title": "Fix mass-assignment + timing-equal + role-escalation combo",
+  "prompt": "This account update flow chains THREE subtle bugs together to produce a privilege-escalation exploit:\n\n```elixir\ndef update_profile(current_user, attrs) do\n  # Bug 1: admin flag can be set via mass assignment\n  cs = Ecto.Changeset.cast(%MyApp.Accounts.User{} = current_user, attrs, [:name, :email, :is_admin])\n\n  # Bug 2: ownership check uses variable-time == on user ID (information disclosure)\n  if current_user.id == attrs[\"id\"] do\n    MyApp.Repo.update(cs)\n  else\n    {:error, :forbidden}\n  end\nend\n```\n\nPlus a consumer:\n\n```elixir\ndef update(conn, %{\"user\" => user_params}) do\n  # Bug 3: the controller trusts current_user blindly and passes user_params through\n  case MyApp.Accounts.update_profile(conn.assigns.current_user, user_params) do\n    {:ok, _} -> redirect(conn, to: \"/profile\")\n    {:error, _} -> redirect(conn, to: \"/profile?error=1\")\n  end\nend\n```\n\nRewrite both modules so: (a) `cast/3` does NOT include `:is_admin`, (b) the ownership check is removed entirely (it is checked by the authorization layer, not the changeset), (c) a separate `admin_changeset/2` exists for actual admin operations. Write the fix to `lib/my_app/accounts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts",
+      "def update_profile",
+      "admin_changeset"
+    ],
+    "must_not_contain": [
+      "cast(%MyApp.Accounts.User{} = current_user, attrs, [:name, :email, :is_admin])",
+      "current_user.id == attrs[\"id\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "split_changesets_and_remove_bad_check",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — three combined bugs producing privilege escalation. Requires recognizing each in isolation and the emergent exploit.",
+  "calibration": null
+}

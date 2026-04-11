@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-30",
+  "tier": "medium",
+  "title": "Foundation — prioritize fixes across a multi-vuln controller",
+  "prompt": "The controller below has FOUR vulnerabilities of varying severity. Rewrite the module so all of them are addressed in a single pass, and include a brief comment at the top listing what was fixed (HIGH/MED/LOW tags):\n\n```elixir\ndefmodule MyAppWeb.AccountController do\n  use MyAppWeb, :controller\n\n  def show(conn, %{\"id\" => id, \"view\" => view}) do\n    user = MyApp.Accounts.get_user!(id)\n    template = String.to_atom(\"show_#{view}\")\n    render(conn, template, user: user)\n  end\n\n  def update(conn, %{\"id\" => id, \"user\" => user_params}) do\n    user = MyApp.Accounts.get_user!(id)\n    cs = MyApp.Accounts.User.admin_changeset(user, user_params)\n    case MyApp.Repo.update(cs) do\n      {:ok, _} -> redirect(conn, external: user_params[\"return_to\"])\n      {:error, cs} -> render(conn, :edit, changeset: cs)\n    end\n  end\n\n  def token_equals(conn, %{\"token\" => token}) do\n    if conn.assigns.expected == token, do: text(conn, \"ok\"), else: text(conn, \"no\")\n  end\nend\n```\n\nThe four issues are: (1) atom exhaustion via `String.to_atom(\"show_#{view}\")`, (2) mass assignment via `admin_changeset` on user_params, (3) open redirect via `external: user_params[\"return_to\"]`, (4) timing leak via `==` on `expected`. Write the fix to `lib/my_app_web/account_controller.ex` with all four resolved.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/account_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.AccountController",
+      "Plug.Crypto.secure_compare"
+    ],
+    "must_not_contain": [
+      "String.to_atom(\"show_#{",
+      "admin_changeset(user, user_params)",
+      "redirect(conn, external: user_params[",
+      "conn.assigns.expected == token"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["atom-exhaustion", "mass-assignment-in-changesets", "open-redirect-protection", "timing-attack-comparisons"],
+    "criterion": "multi_vuln_prioritized_fix",
+    "weight": 0.4
+  },
+  "tier_rationale": "Medium — requires catching four related vulnerabilities and fixing all simultaneously.",
+  "calibration": null
+}

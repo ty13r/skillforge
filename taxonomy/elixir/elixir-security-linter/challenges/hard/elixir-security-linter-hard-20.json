@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-20",
+  "tier": "hard",
+  "title": "Fix full vulnerable controller + router + endpoint end to end",
+  "prompt": "Consider this mini stack — a router, endpoint, and controller — where each layer has one vulnerability. Rewrite all three:\n\n```elixir\n# lib/my_app_web/endpoint.ex\ndefmodule MyAppWeb.Endpoint do\n  use Phoenix.Endpoint, otp_app: :my_app\n  @session_options [\n    store: :cookie,\n    key: \"_my_app_key\",\n    signing_salt: \"hardcoded-salt\",\n    http_only: false,\n    secure: false\n  ]\n  plug Plug.Session, @session_options\n  plug MyAppWeb.Router\nend\n\n# lib/my_app_web/router.ex\ndefmodule MyAppWeb.Router do\n  use MyAppWeb, :router\n  pipeline :browser do\n    plug :accepts, [\"html\"]\n    plug :fetch_session\n    plug :put_secure_browser_headers, %{\"content-security-policy\" => \"default-src * 'unsafe-inline'\"}\n  end\n  scope \"/\", MyAppWeb do\n    pipe_through :browser\n    get \"/search\", SearchController, :search\n  end\nend\n\n# lib/my_app_web/controllers/search_controller.ex\ndefmodule MyAppWeb.SearchController do\n  use MyAppWeb, :controller\n  def search(conn, %{\"q\" => q}) do\n    results = MyApp.Search.run(q)\n    html(conn, \"<h2>Results for #{q}</h2>\" <> Enum.join(results, \"<br>\"))\n  end\nend\n```\n\nFive issues to fix: (1) hardcoded signing_salt — move to runtime.exs reference, (2) http_only/secure false → true, (3) unsafe-inline CSP → `default-src 'self'`, (4) controller `html/2` with interpolation → render template, (5) `plug :protect_from_forgery` missing from browser pipeline. Produce a SINGLE fixed file `lib/my_app_web/router.ex` that contains the router with all router-side fixes. The router must contain `plug :protect_from_forgery`, a CSP without `'unsafe-inline'`, and NOT have `get \"/search\"` leading to the html/2 version.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "default-src 'self'",
+      "plug :protect_from_forgery"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["csrf-and-secure-headers", "plug-security-middleware-chain", "session-and-cookie-security", "raw-xss-prevention"],
+    "criterion": "full_stack_hardening",
+    "weight": 0.5
+  },
+  "tier_rationale": "Hard — five vulnerabilities spread across three layers. Tests ability to audit the stack.",
+  "calibration": null
+}

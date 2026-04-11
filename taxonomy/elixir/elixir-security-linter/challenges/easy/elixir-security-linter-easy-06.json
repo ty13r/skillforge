@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-06",
+  "tier": "easy",
+  "title": "Spot the SQL injection in a search helper",
+  "prompt": "Identify and fix the SQL injection in this query helper:\n\n```elixir\ndefmodule MyApp.Orders do\n  import Ecto.Query\n  def recent_for_customer(customer_id, status) do\n    from o in MyApp.Sales.Order,\n      where: fragment(\"customer_id = #{customer_id} AND status = '#{status}'\"),\n      order_by: [desc: o.inserted_at]\n  end\nend\n```\n\nRewrite the function to use the `^` pin operator for both `customer_id` and `status`. Write the corrected module to `lib/my_app/orders.ex` and keep the public function signature.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/orders.ex"],
+    "must_contain": [
+      "defmodule MyApp.Orders",
+      "^customer_id",
+      "^status"
+    ],
+    "must_not_contain": [
+      "#{customer_id}",
+      "'#{status}'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "pin_operator_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Small, self-contained fragment with two user-controlled interpolations. Canonical ^ pin fix.",
+  "calibration": null
+}

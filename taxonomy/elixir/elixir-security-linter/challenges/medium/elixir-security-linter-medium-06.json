@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-06",
+  "tier": "medium",
+  "title": "Spot SQL injection in a LIKE search with interpolation",
+  "prompt": "Identify and fix the SQL injection in this search helper:\n\n```elixir\ndef search(query_string, opts \\\\ []) do\n  limit = Keyword.get(opts, :limit, 25)\n  from(b in Book,\n    where: fragment(\"title ILIKE '%#{query_string}%' OR author ILIKE '%#{query_string}%'\"),\n    limit: ^limit)\n  |> Repo.all()\nend\n```\n\nRewrite the function so the `query_string` is bound via `^` and wrapped with `%` at the Elixir level. The OR clause should use two separate `fragment(\"... ILIKE ?\", ^like)` calls joined with `or`. Write the fix to `lib/my_app/library.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/library.ex"],
+    "must_contain": [
+      "defmodule MyApp.Library",
+      "^",
+      "ILIKE ?"
+    ],
+    "must_not_contain": [
+      "'%#{query_string}%'",
+      "#{query_string}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "like_pattern_parameterized",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires knowing the fragment('... ILIKE ?', ^like) idiom and wrapping %% at the Elixir level.",
+  "calibration": null
+}

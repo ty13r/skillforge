@@ -1,0 +1,31 @@
+{
+  "id": "elixir-security-linter-easy-33",
+  "tier": "easy",
+  "title": "Fix all hardcoded secrets in prod.exs",
+  "prompt": "`test_fixtures/hardcoded_prod_secrets.ex` is a `prod.exs` with FOUR hardcoded secrets: `secret_key_base`, DB password, Stripe publishable+secret keys, and SendGrid API key. Move all of them to a `runtime.exs` that uses `System.fetch_env!/1` for each value. The DB URL should come from a single `DATABASE_URL` env var. Write the fix to `config/runtime.exs` (not `prod.exs`). Every secret should be read from env at runtime, and none should appear as a string literal.",
+  "fixture_files": ["test_fixtures/hardcoded_prod_secrets.ex"],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "System.fetch_env!(\"DATABASE_URL\")",
+      "System.fetch_env!(\"SECRET_KEY_BASE\")",
+      "System.fetch_env!(\"STRIPE_SECRET_KEY\")",
+      "System.fetch_env!(\"SENDGRID_API_KEY\")"
+    ],
+    "must_not_contain": [
+      "\"Zq8X4z3p9WnKvB2RLh6JmS0aY5Qd",
+      "\"super-secret-prod-password\"",
+      "\"sk_live_",
+      "\"SG.real_api_key_here.xxx\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_secrets_at_runtime",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four related hardcoded secrets; each fix is mechanical but requires catching all four.",
+  "calibration": null
+}

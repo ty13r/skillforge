@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-29",
+  "tier": "medium",
+  "title": "Foundation — distinguish Phoenix defaults from opt-in",
+  "prompt": "The following router has a well-intentioned but redundant plug configuration. Phoenix's `:browser` pipeline already calls `put_secure_browser_headers` by default (which sets X-Frame-Options, X-Content-Type-Options, XSS-Protection), and `:protect_from_forgery` is applied automatically for state-changing actions in the `:browser` pipeline via the default scaffolding. Identify which lines are redundant vs necessary, and rewrite to a CLEAN config:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :fetch_live_flash\n  plug :put_root_layout, html: {MyAppWeb.Layouts, :root}\n  plug :put_secure_browser_headers\n  plug :protect_from_forgery\n  plug :put_resp_header, \"x-frame-options\", \"DENY\"\n  plug :put_resp_header, \"x-content-type-options\", \"nosniff\"\nend\n```\n\nThe last two lines duplicate what `put_secure_browser_headers` already sets. Rewrite the pipeline so only the non-redundant plugs remain. ALSO add a CSP via the map argument to `put_secure_browser_headers` because the default does NOT include a CSP. Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "put_secure_browser_headers",
+      "content-security-policy"
+    ],
+    "must_not_contain": [
+      "put_resp_header, \"x-frame-options\"",
+      "put_resp_header, \"x-content-type-options\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["plug-security-middleware-chain"],
+    "criterion": "redundancy_removed",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude often adds redundant protection instead of recognizing Phoenix defaults.",
+  "calibration": null,
+  "research_citation": "Arrowsmith Labs: 'The default Phoenix router calls the put_secure_browser_headers plug in its :browser pipeline.'"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-28",
+  "tier": "medium",
+  "title": "Fix HSTS max-age=0 left in production",
+  "prompt": "The router below has HSTS disabled because someone set `max-age=0` for local testing and forgot to revert:\n\n```elixir\nplug :put_secure_browser_headers, %{\n  \"content-security-policy\" => \"default-src 'self'\",\n  \"strict-transport-security\" => \"max-age=0\"\n}\n```\n\nRewrite the HSTS value to at least `max-age=31536000` (1 year) with `includeSubDomains`. Do not add `preload` (that has significant operational risk). Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "max-age=31536000",
+      "includeSubDomains"
+    ],
+    "must_not_contain": [
+      "max-age=0"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": [],
+    "criterion": "hsts_enabled",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — subtle config bug; requires knowing what a safe HSTS baseline looks like.",
+  "calibration": null
+}

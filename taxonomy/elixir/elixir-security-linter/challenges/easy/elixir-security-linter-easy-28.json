@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-28",
+  "tier": "easy",
+  "title": "Harden session cookie config with all flags",
+  "prompt": "`test_fixtures/session_cookie_config.ex` has four session-config weaknesses: (1) hardcoded `signing_salt`, (2) `same_site: \"None\"` without the required `secure` flag, (3) missing `http_only`, (4) a 10-year `max_age`. Rewrite the endpoint module so: (a) `signing_salt` is read at runtime from a function reference instead of being a literal, (b) `http_only: true` and `secure: true` are both set, (c) `same_site:` is `\"Lax\"` or `\"Strict\"`, (d) `max_age` is 7 days or less. Write the corrected module to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": ["test_fixtures/session_cookie_config.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "http_only: true",
+      "secure: true"
+    ],
+    "must_not_contain": [
+      "signing_salt: \"dev-signing-salt-123\"",
+      "same_site: \"None\"",
+      "max_age: 60 * 60 * 24 * 365 * 10"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": ["secrets-in-config"],
+    "criterion": "full_cookie_hardening",
+    "weight": 0.35
+  },
+  "tier_rationale": "Four related cookie misconfigurations; each fix is mechanical.",
+  "calibration": null,
+  "research_citation": "WebSentry: 'Cookies with SameSite=None must also have the Secure flag; browsers reject SameSite=None cookies without Secure.'"
+}

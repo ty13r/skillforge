@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-medium-31",
+  "tier": "medium",
+  "title": "Fix weak signing salt hardcoded in config.exs",
+  "prompt": "The endpoint's session config hardcodes `signing_salt` in `config.exs` rather than reading it from env:\n\n```elixir\n# config/config.exs\nconfig :my_app, MyAppWeb.Endpoint,\n  session: [signing_salt: \"my-literal-salt-abc123\"]\n```\n\nMove `signing_salt` to `runtime.exs` and read it from `System.fetch_env!(\"SESSION_SIGNING_SALT\")`. Write the result to `config/runtime.exs`. The fix must NOT leave any literal salt string in the config.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "System.fetch_env!(\"SESSION_SIGNING_SALT\")"
+    ],
+    "must_not_contain": [
+      "\"my-literal-salt-abc123\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": ["session-and-cookie-security"],
+    "criterion": "salt_moved_to_env",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires understanding that signing_salt is secret-adjacent and should live in runtime.exs.",
+  "calibration": null
+}

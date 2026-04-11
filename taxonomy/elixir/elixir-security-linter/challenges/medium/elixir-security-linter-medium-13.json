@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-13",
+  "tier": "medium",
+  "title": "Fix HMAC timing leak in webhook verification",
+  "prompt": "The webhook verifier below computes an HMAC correctly but compares the result with `==`:\n\n```elixir\ndef verify(payload, signature, secret) do\n  expected = :crypto.mac(:hmac, :sha256, secret, payload) |> Base.encode16()\n  if expected == signature, do: :ok, else: :error\nend\n```\n\nEven though the HMAC step is correct, the final `==` is variable-time and leaks byte-by-byte. Rewrite the function so the comparison uses `Plug.Crypto.secure_compare/2` (constant time). Make sure both arguments are the same size before comparison (normalize case if needed). Write the fix to `lib/my_app/webhooks/verifier.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/webhooks/verifier.ex"],
+    "must_contain": [
+      "defmodule MyApp.Webhooks.Verifier",
+      "Plug.Crypto.secure_compare",
+      ":crypto.mac"
+    ],
+    "must_not_contain": [
+      "expected == signature"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": [],
+    "criterion": "hmac_compared_safely",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude often thinks 'hash comparison is safe' because the inputs are hashes. The fix requires recognizing the final == is still variable-time.",
+  "calibration": null
+}

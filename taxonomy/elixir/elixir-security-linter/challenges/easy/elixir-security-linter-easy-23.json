@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-23",
+  "tier": "easy",
+  "title": "Spot the role escalation in a register action",
+  "prompt": "Identify the vulnerability and produce a fix:\n\n```elixir\ndefmodule MyAppWeb.RegistrationController do\n  use MyAppWeb, :controller\n  alias MyApp.Accounts\n\n  def create(conn, %{\"user\" => user_params}) do\n    case Accounts.register_user(user_params) do\n      {:ok, user} -> redirect(conn, to: \"/dashboard\")\n      {:error, cs} -> render(conn, :new, changeset: cs)\n    end\n  end\nend\n\ndefmodule MyApp.Accounts do\n  def register_user(attrs) do\n    %MyApp.Accounts.User{}\n    |> MyApp.Accounts.User.admin_changeset(attrs)\n    |> MyApp.Repo.insert()\n  end\nend\n```\n\n`User.admin_changeset/2` accepts `:role` as a castable field. The registration action passes raw `user_params` to it. Rewrite both modules so that registration only uses a profile-safe changeset that cannot set `:role`. Write the corrected code to `lib/my_app/accounts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts",
+      "register_user"
+    ],
+    "must_not_contain": [
+      "User.admin_changeset(attrs)",
+      "User.admin_changeset(user_params)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": [],
+    "criterion": "register_uses_safe_changeset",
+    "weight": 0.3
+  },
+  "tier_rationale": "Self-contained snippet; fix is to swap the changeset function name.",
+  "calibration": null
+}

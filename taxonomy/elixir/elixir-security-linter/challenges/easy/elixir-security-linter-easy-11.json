@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-11",
+  "tier": "easy",
+  "title": "Spot the open redirect in an OAuth callback",
+  "prompt": "Identify the vulnerability in this OAuth callback handler:\n\n```elixir\ndef oauth_callback(conn, %{\"state\" => state, \"code\" => code}) do\n  with {:ok, user} <- MyApp.OAuth.exchange(code) do\n    conn\n    |> put_session(:user_id, user.id)\n    |> redirect(external: state)\n  end\nend\n```\n\nThe `state` parameter is attacker-controlled and is being passed to `redirect(external: ...)`. Rewrite the handler so the post-login destination is looked up server-side (treat `state` as an opaque token). Write the corrected module to `lib/my_app_web/controllers/oauth_controller.ex`. The final redirect must use `to:` with a static path like `/dashboard`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/oauth_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.OAuthController",
+      "redirect(conn, to:"
+    ],
+    "must_not_contain": [
+      "redirect(external: state)",
+      "redirect(conn, external: state)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": [],
+    "criterion": "state_is_not_redirect_target",
+    "weight": 0.3
+  },
+  "tier_rationale": "Single-action open redirect via OAuth state parameter. Fix is to use a fixed internal path.",
+  "calibration": null
+}

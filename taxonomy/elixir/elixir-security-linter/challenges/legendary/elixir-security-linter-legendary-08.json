@@ -1,0 +1,31 @@
+{
+  "id": "elixir-security-linter-legendary-08",
+  "tier": "legendary",
+  "title": "Foundation — end-to-end audit with seven vulnerabilities",
+  "prompt": "The file below is a small Phoenix app fragment containing SEVEN interrelated security bugs. Identify all seven and rewrite to `lib/my_app_web/seven_vuln_rewrite.ex`. The seven issues are:\n\n1. `String.to_atom(params[\"scope\"])` — atom exhaustion\n2. `fragment(\"... LIKE '%#{term}%'\")` — SQL injection\n3. `raw(@post.body)` in HEEx — XSS\n4. `redirect(conn, external: params[\"next\"])` — open redirect\n5. `conn.assigns.csrf == received` — timing leak\n6. `handle_event(\"delete\", ...)` with no ownership check — missing authz\n7. `cast(attrs, [:name, :email, :role])` — mass assignment\n\n```elixir\ndefmodule MyAppWeb.KitchenSinkController do\n  use MyAppWeb, :controller\n  import Ecto.Query\n\n  def search(conn, %{\"term\" => term, \"scope\" => scope, \"next\" => next, \"csrf_token\" => received} = params) do\n    atom_scope = String.to_atom(scope)\n    results = from(p in MyApp.Blog.Post,\n      where: fragment(\"body LIKE '%#{term}%' AND scope = ?\", ^atom_scope))\n      |> MyApp.Repo.all()\n    if conn.assigns.csrf == received do\n      render(conn, :search, results: results)\n    else\n      redirect(conn, external: next)\n    end\n  end\nend\n\ndefmodule MyAppWeb.PostLive do\n  use MyAppWeb, :live_view\n\n  def handle_event(\"delete\", %{\"id\" => id}, socket) do\n    MyApp.Repo.get!(MyApp.Blog.Post, id) |> MyApp.Repo.delete!()\n    {:noreply, socket}\n  end\nend\n\ndefmodule MyApp.Accounts.User do\n  import Ecto.Changeset\n  def changeset(user, attrs), do: cast(user, attrs, [:name, :email, :role])\nend\n```\n\nRewrite everything into ONE file `lib/my_app_web/seven_vuln_rewrite.ex`. ALL seven issues must be resolved. Use allowlist maps, `^` pinning, HEEx auto-escape, `redirect(conn, to: ...)` with a fixed path, `Plug.Crypto.secure_compare`, `handle_event` ownership checks, and a split changeset (not `:role` in the cast list).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/seven_vuln_rewrite.ex"],
+    "must_contain": [
+      "Plug.Crypto.secure_compare",
+      "redirect(conn, to:",
+      "current_user"
+    ],
+    "must_not_contain": [
+      "String.to_atom(scope)",
+      "'%#{term}%'",
+      "raw(@post.body)",
+      "redirect(conn, external: next)",
+      "conn.assigns.csrf == received",
+      "cast(user, attrs, [:name, :email, :role])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["atom-exhaustion", "ecto-fragment-injection", "raw-xss-prevention", "open-redirect-protection", "timing-attack-comparisons", "liveview-handle-event-authz", "mass-assignment-in-changesets"],
+    "criterion": "all_seven_fixed",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — seven-capability audit. Tests whether Claude can systematically catch a whole stack of issues rather than fix-and-continue.",
+  "calibration": null
+}

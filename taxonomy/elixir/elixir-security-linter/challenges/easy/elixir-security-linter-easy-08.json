@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-08",
+  "tier": "easy",
+  "title": "Spot the XSS in a controller using html/2",
+  "prompt": "The following controller action bypasses HEEx's automatic HTML escaping by constructing HTML via string interpolation and sending it with `html/2`:\n\n```elixir\ndefmodule MyAppWeb.GreetingController do\n  use MyAppWeb, :controller\n  def hello(conn, %{\"name\" => name}) do\n    html(conn, \"<h1>Welcome back, #{name}!</h1>\")\n  end\nend\n```\n\nRewrite the controller so it uses a HEEx template to render the greeting. Also create the template component (or a simple render) that interpolates `@name` safely. Write the corrected controller to `lib/my_app_web/controllers/greeting_controller.ex`. Do not interpolate user input into an HTML string anywhere.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/greeting_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.GreetingController",
+      "render("
+    ],
+    "must_not_contain": [
+      "html(conn, \"<",
+      "<h1>Welcome back, #{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": [],
+    "criterion": "no_html_string_interpolation",
+    "weight": 0.3
+  },
+  "tier_rationale": "Short snippet with a canonical html/2 bypass of HEEx auto-escaping. Fix is to route through render/template.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'A malicious user could set the content_type to text/html, and upload an HTML document that executes JavaScript.'"
+}

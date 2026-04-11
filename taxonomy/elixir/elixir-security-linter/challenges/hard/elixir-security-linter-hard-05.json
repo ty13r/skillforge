@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-hard-05",
+  "tier": "hard",
+  "title": "Remove unsafe-inline from LiveView CSP via nonce plug",
+  "prompt": "`test_fixtures/csp_nonce_liveview.ex` has a CSP that uses `'unsafe-inline'` in both `script-src` and `style-src` because the developer didn't know how to make LiveView's inline socket script work with strict CSP. Rewrite the router so: (a) a plug generates a per-request nonce via `:crypto.strong_rand_bytes(16) |> Base.encode16/1`, (b) the nonce is assigned to `conn.assigns[:csp_nonce]`, (c) `put_secure_browser_headers` is called with an EMPTY CSP string, (d) a follow-up plug sets a dynamic CSP header using the nonce in both `script-src` and `style-src`. The final CSP must contain `'nonce-...'` (literally, with the interpolated hex value) and must NOT contain `'unsafe-inline'` anywhere. Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": ["test_fixtures/csp_nonce_liveview.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "csp_nonce",
+      "'nonce-",
+      "strong_rand_bytes"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": ["raw-xss-prevention"],
+    "criterion": "nonce_based_csp",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — requires knowing the nonce-per-request plug pattern and wiring it through put_secure_browser_headers.",
+  "calibration": null
+}

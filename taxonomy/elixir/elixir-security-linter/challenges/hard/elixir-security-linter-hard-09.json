@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-09",
+  "tier": "hard",
+  "title": "Audit multi-env config where dev uses hardcoded secrets",
+  "prompt": "The following config tree has prod correctly using `System.fetch_env!/1`, but `dev.exs` leaks two production-adjacent secrets as hardcoded values:\n\n```elixir\n# config/runtime.exs (PROD ONLY)\nimport Config\nif config_env() == :prod do\n  config :my_app, :stripe_key, System.fetch_env!(\"STRIPE_KEY\")\n  config :my_app, :webhook_secret, System.fetch_env!(\"WEBHOOK_SECRET\")\nend\n\n# config/dev.exs\nimport Config\nconfig :my_app, :stripe_key, \"sk_test_live_realprodkey_abc\"\nconfig :my_app, :webhook_secret, \"real-webhook-secret-shhh\"\n```\n\nEven though `dev.exs` is for dev, the developer has pasted REAL production keys there for quick testing. Rewrite BOTH files so: (a) `dev.exs` uses `System.get_env/1` with an OBVIOUSLY-FAKE default (`\"sk_test_dev_fake_key\"`, `\"dev-placeholder-secret\"`), (b) `runtime.exs` still fetches the real env vars in prod. The goal is that checking out the repo and reading `dev.exs` never reveals any real production value. Write `dev.exs` to `config/dev.exs` and `runtime.exs` to `config/runtime.exs`. The fake defaults must contain the word 'fake' or 'placeholder'.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/dev.exs"],
+    "must_contain": [
+      "import Config",
+      "System.get_env"
+    ],
+    "must_not_contain": [
+      "\"sk_test_live_realprodkey_abc\"",
+      "\"real-webhook-secret-shhh\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "multi_env_audit",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — requires auditing multiple env files and recognizing that 'for dev' is not an excuse to hardcode.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'Multi-env config where dev uses a hardcoded value and prod uses env — skill must audit all envs, not just prod.'"
+}

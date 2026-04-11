@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-26",
+  "tier": "easy",
+  "title": "Fix full auth module using bcrypt",
+  "prompt": "`test_fixtures/weak_password_hashing.ex` contains three weaknesses: (1) SHA-256 for password hashing in `register/1`, (2) SHA-256 + `==` for verification, (3) a legacy MD5 check. Rewrite the module to use `Bcrypt.hash_pwd_salt/1` for hashing and `Bcrypt.verify_pass/2` for verification. Drop the MD5 legacy function entirely (it should not exist in the rewrite). Include a `Bcrypt.no_user_verify()` call in the user-not-found branch. Write the corrected module to `lib/my_app/accounts/auth.ex`.",
+  "fixture_files": ["test_fixtures/weak_password_hashing.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Auth",
+      "Bcrypt.hash_pwd_salt",
+      "Bcrypt.verify_pass",
+      "Bcrypt.no_user_verify"
+    ],
+    "must_not_contain": [
+      ":crypto.hash(:sha256, ",
+      ":crypto.hash(:md5, ",
+      "legacy_md5_check"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "full_bcrypt_rewrite",
+    "weight": 0.4
+  },
+  "tier_rationale": "Full-module rewrite with three related weaknesses. Each fix is canonical.",
+  "calibration": null
+}

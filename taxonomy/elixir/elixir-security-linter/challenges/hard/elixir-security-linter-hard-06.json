@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-06",
+  "tier": "hard",
+  "title": "Fix multi-step handle_event where step 2 trusts step 1 via socket",
+  "prompt": "This LiveView implements a two-step publish flow: step 1 verifies ownership and stores the post_id in socket assigns, step 2 trusts that socket state and publishes. But step 2 has NO independent authorization check — an attacker who bypasses step 1 (by pushing `step_2` directly via the LiveView socket) can publish arbitrary posts:\n\n```elixir\ndef handle_event(\"step_1_select\", %{\"id\" => id}, socket) do\n  post = MyApp.Repo.get!(MyApp.Blog.Post, id)\n  if post.user_id == socket.assigns.current_user.id do\n    {:noreply, assign(socket, :selected_post_id, post.id)}\n  else\n    {:noreply, put_flash(socket, :error, \"Not authorized\")}\n  end\nend\n\ndef handle_event(\"step_2_publish\", _params, socket) do\n  post_id = socket.assigns.selected_post_id\n  post = MyApp.Repo.get!(MyApp.Blog.Post, post_id)\n  {:ok, _} = MyApp.Blog.publish_post(post)\n  {:noreply, socket}\nend\n```\n\nRewrite the LiveView so step 2 independently re-verifies ownership BEFORE publishing — socket state is not trusted. Write the fix to `lib/my_app_web/live/publish_live.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/publish_live.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PublishLive",
+      "step_2_publish",
+      "current_user"
+    ],
+    "must_not_contain": [
+      "def handle_event(\"step_2_publish\", _params, socket) do\n    post_id = socket.assigns.selected_post_id\n    post = MyApp.Repo.get!"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "each_step_independently_authorized",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — Claude often trusts socket state between events. Requires recognizing that every step must independently authorize.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'legendary — a multi-step handle_event flow where step 2 trusts step 1 validation via socket state.'"
+}

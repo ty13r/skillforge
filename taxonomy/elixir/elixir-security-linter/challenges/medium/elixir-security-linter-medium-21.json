@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-21",
+  "tier": "medium",
+  "title": "Migrate custom password hashing to phx.gen.auth pattern",
+  "prompt": "This custom auth module uses `pbkdf2_sha256` from an unofficial library but does it badly — it doesn't use a per-user salt and stores raw hex:\n\n```elixir\ndefmodule MyApp.Auth do\n  @salt \"static-app-salt\"\n  def hash(password), do: :crypto.pbkdf2_hmac(:sha256, password, @salt, 1000, 32) |> Base.encode16()\n  def verify(password, stored), do: hash(password) == stored\nend\n```\n\nThree issues: (1) static application-level salt (not per-user), (2) low iteration count (1000), (3) variable-time `==` compare. Rewrite using `Pbkdf2.hash_pwd_salt/1` from the `pbkdf2_elixir` package (per-user salt baked in), and `Pbkdf2.verify_pass/2` for constant-time verify. Write the fix to `lib/my_app/auth.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth",
+      "Pbkdf2.hash_pwd_salt",
+      "Pbkdf2.verify_pass"
+    ],
+    "must_not_contain": [
+      ":crypto.pbkdf2_hmac",
+      "hash(password) == stored"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": ["timing-attack-comparisons"],
+    "criterion": "pbkdf2_lib_used",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — three combined issues (salt, iterations, timing). Requires knowing the pbkdf2_elixir API.",
+  "calibration": null
+}

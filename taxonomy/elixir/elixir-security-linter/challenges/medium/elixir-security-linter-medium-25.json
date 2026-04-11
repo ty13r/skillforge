@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-25",
+  "tier": "medium",
+  "title": "Migrate compile-time System.get_env to runtime.exs",
+  "prompt": "`test_fixtures/secrets_compile_time_env.ex` has THREE issues: (1) `System.get_env(\"STRIPE_KEY\")` is called in `config.exs`, which means it is read at COMPILE time — the value is baked into the release at build time, so runtime env changes are ignored, (2) `System.get_env(\"DATABASE_URL\")` has the same problem, (3) the webhook secret has a `||` fallback to a hardcoded dev value. Migrate all three config values from `config.exs` to `runtime.exs`. In `runtime.exs`, use `System.fetch_env!/1` so missing env raises rather than silently returning `nil`. Write the result to `config/runtime.exs`.",
+  "fixture_files": ["test_fixtures/secrets_compile_time_env.ex"],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "System.fetch_env!(\"STRIPE_KEY\")",
+      "System.fetch_env!(\"DATABASE_URL\")",
+      "System.fetch_env!(\"WEBHOOK_SECRET\")"
+    ],
+    "must_not_contain": [
+      "|| \"default-dev-secret\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_secrets_runtime",
+    "weight": 0.4
+  },
+  "tier_rationale": "Medium — requires understanding compile-time vs runtime evaluation AND migrating correctly.",
+  "calibration": null,
+  "research_citation": "Elixir Forum: 'Configuration files... are evaluated at compile-time. Thus, if you use System.get_env within a configuration file, it is evaluated during the compilation process.'"
+}

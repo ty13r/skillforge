@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-hard-13",
+  "tier": "hard",
+  "title": "Spot and fix atom-construction in telemetry tags",
+  "prompt": "The following Telemetry wrapper creates atoms dynamically from user-provided tag names — each new request type creates a new atom:\n\n```elixir\ndefmodule MyApp.Telemetry.Tag do\n  def report(metric_name, value, tags \\\\ %{}) do\n    event = [:my_app, :telemetry, String.to_atom(metric_name)]\n    measurements = %{value: value}\n    metadata = for {k, v} <- tags, into: %{}, do: {String.to_atom(k), v}\n    :telemetry.execute(event, measurements, metadata)\n  end\nend\n```\n\nRewrite it so (a) `metric_name` is mapped to a fixed allowlist of known metric atoms at compile time, (b) `tags` keys are validated against a fixed set, (c) unknown metrics or tags result in an error tuple rather than creating new atoms. Write the fix to `lib/my_app/telemetry/tag.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/telemetry/tag.ex"],
+    "must_contain": [
+      "defmodule MyApp.Telemetry.Tag",
+      "@allowed"
+    ],
+    "must_not_contain": [
+      "String.to_atom(metric_name)",
+      "String.to_atom(k)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": [],
+    "criterion": "telemetry_tags_allowlist",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — atom exhaustion in a less-obvious telemetry context.",
+  "calibration": null
+}

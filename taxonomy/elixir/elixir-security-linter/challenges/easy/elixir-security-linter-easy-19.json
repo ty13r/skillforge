@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-easy-19",
+  "tier": "easy",
+  "title": "Add protect_from_forgery plug to a new API pipeline",
+  "prompt": "A developer has created this router pipeline for an admin JSON API that shares the session cookie with the browser pipeline:\n\n```elixir\npipeline :admin_api do\n  plug :accepts, [\"json\"]\n  plug :fetch_session\nend\n```\n\nThis pipeline is vulnerable to CSRF + CSWSH because it omits `:protect_from_forgery`. Add the CSRF protection plug and make sure the pipeline still parses JSON request bodies. Write the corrected router to `lib/my_app_web/router.ex`. The fix must include `plug :protect_from_forgery` in the `:admin_api` pipeline.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "pipeline :admin_api",
+      "plug :protect_from_forgery"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "csrf-and-secure-headers",
+    "secondary_capabilities": [],
+    "criterion": "csrf_protection_added",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical CSRF fix — add one plug line to a pipeline.",
+  "calibration": null,
+  "research_citation": "Arrowsmith Labs: 'Phoenix automatically applies CSRF protection to all non-GET endpoints.'"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-05",
+  "tier": "medium",
+  "title": "Replace Ecto.Adapters.SQL.query escape hatch",
+  "prompt": "The following analytics function uses `Ecto.Adapters.SQL.query/3` with an interpolated SQL string — the classic \"escape hatch\" SQL injection:\n\n```elixir\ndef orders_for_customer(customer_id, limit) do\n  sql = \"SELECT * FROM orders WHERE customer_id = #{customer_id} LIMIT #{limit}\"\n  {:ok, %{rows: rows}} = Ecto.Adapters.SQL.query(MyApp.Repo, sql)\n  rows\nend\n```\n\nRewrite it to use parameterized SQL via `Ecto.Adapters.SQL.query/3` with `$1, $2` placeholders, OR better, rewrite it using the Ecto query builder (`from o in Order, where: o.customer_id == ^customer_id, limit: ^limit`). Write the fix to `lib/my_app/sales.ex`. The corrected version must not interpolate `customer_id` or `limit` into the SQL string.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/sales.ex"],
+    "must_contain": [
+      "defmodule MyApp.Sales",
+      "def orders_for_customer"
+    ],
+    "must_not_contain": [
+      "\"SELECT * FROM orders WHERE customer_id = #{",
+      "LIMIT #{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "no_sql_escape_hatch",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium because Ecto.Adapters.SQL.query is a known escape hatch that Claude often reaches for. The fix requires either parameter placeholders or a full rewrite to the Ecto DSL.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'SQL injection vulnerabilities are introduced through the escape hatch provided by Ecto via the Ecto.Adapters.SQL function.'"
+}

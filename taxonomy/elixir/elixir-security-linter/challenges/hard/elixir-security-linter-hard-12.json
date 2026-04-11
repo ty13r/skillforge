@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-hard-12",
+  "tier": "hard",
+  "title": "Fix multi-vuln controller from fixture",
+  "prompt": "`test_fixtures/multi_vuln_controller.ex` contains THREE distinct security vulnerabilities of different severities: (1) `String.to_atom(params[\"scope\"])` — HIGH, atom exhaustion; (2) `conn.assigns.csrf == received` — MED, timing leak; (3) `redirect(conn, external: params[\"next\"])` — HIGH, open redirect. The FOUNDATION capability is being tested here: Claude often fixes the first one and stops. Rewrite the module so ALL THREE issues are addressed in ONE pass. Use an allowlist map for scope, `Plug.Crypto.secure_compare/2` for the csrf check, and `redirect(conn, to: ...)` with a static path for the redirect. Write the fix to `lib/my_app_web/admin_controller.ex`.",
+  "fixture_files": ["test_fixtures/multi_vuln_controller.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/admin_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.AdminController",
+      "Plug.Crypto.secure_compare",
+      "redirect(conn, to:"
+    ],
+    "must_not_contain": [
+      "String.to_atom(params[",
+      "conn.assigns.csrf == received",
+      "redirect(conn, external: params["
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["atom-exhaustion", "timing-attack-comparisons", "open-redirect-protection"],
+    "criterion": "all_three_fixed",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — three issues in one module, classic Claude fail-and-continue trap.",
+  "calibration": null
+}

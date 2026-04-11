@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-hard-04",
+  "tier": "hard",
+  "title": "Fix OAuth state as opaque token, not redirect URL",
+  "prompt": "The OAuth callback below decodes a user-controlled `state` parameter that encodes a JSON-serialized destination URL. The developer intended `state` to carry deep-link context through the OAuth flow, but it's become an open-redirect vector:\n\n```elixir\ndef oauth_callback(conn, %{\"state\" => state, \"code\" => code}) do\n  %{\"return_to\" => return_to} = Jason.decode!(state)\n  with {:ok, user} <- MyApp.OAuth.exchange(code) do\n    conn\n    |> put_session(:user_id, user.id)\n    |> redirect(external: return_to)\n  end\nend\n```\n\nRewrite the flow so (a) `state` is treated as an OPAQUE TOKEN (a random ID stored in the session before the OAuth redirect), (b) the actual return_to is stored server-side keyed by that token and looked up on callback, (c) the lookup is via `get_session(conn, {:oauth_state, state})` so an attacker can't inject arbitrary destinations, (d) if the lookup fails, redirect to `/dashboard` (static path). Write the fix to `lib/my_app_web/oauth_controller.ex`. The final redirect must use `redirect(conn, to: ...)` with a path, never `external: user_input`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/oauth_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.OAuthController",
+      "redirect(conn, to:",
+      "get_session"
+    ],
+    "must_not_contain": [
+      "redirect(external: return_to)",
+      "Jason.decode!(state)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": ["session-and-cookie-security"],
+    "criterion": "state_is_opaque",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — requires understanding OAuth state semantics and rewriting the flow to server-side lookup.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'legendary — a multi-step OAuth flow where the state parameter serializes a destination URL.'"
+}

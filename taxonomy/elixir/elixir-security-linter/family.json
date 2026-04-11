@@ -1,0 +1,67 @@
+{
+  "slug": "elixir-security-linter",
+  "name": "Elixir Security Linter",
+  "language": "elixir",
+  "tier": "S",
+  "curve": "binary",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "security",
+    "focus": "security-linting",
+    "language": "elixir"
+  },
+  "foundation_dimension": "security-scan-philosophy",
+  "capability_dimensions": [
+    "atom-exhaustion",
+    "ecto-fragment-injection",
+    "raw-xss-prevention",
+    "open-redirect-protection",
+    "timing-attack-comparisons",
+    "liveview-handle-event-authz",
+    "csrf-and-secure-headers",
+    "mass-assignment-in-changesets",
+    "password-hashing-choice",
+    "session-and-cookie-security",
+    "plug-security-middleware-chain",
+    "secrets-in-config"
+  ],
+  "challenges": {
+    "total": 100,
+    "by_tier": {
+      "easy": 35,
+      "medium": 35,
+      "hard": 22,
+      "legendary": 8
+    },
+    "held_out_ids": [
+      "elixir-security-linter-easy-03",
+      "elixir-security-linter-easy-08",
+      "elixir-security-linter-easy-14",
+      "elixir-security-linter-easy-19",
+      "elixir-security-linter-easy-25",
+      "elixir-security-linter-easy-30",
+      "elixir-security-linter-easy-34",
+      "elixir-security-linter-medium-04",
+      "elixir-security-linter-medium-09",
+      "elixir-security-linter-medium-14",
+      "elixir-security-linter-medium-19",
+      "elixir-security-linter-medium-24",
+      "elixir-security-linter-medium-29",
+      "elixir-security-linter-medium-34",
+      "elixir-security-linter-hard-03",
+      "elixir-security-linter-hard-08",
+      "elixir-security-linter-hard-14",
+      "elixir-security-linter-hard-19",
+      "elixir-security-linter-legendary-02",
+      "elixir-security-linter-legendary-07"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream."
+}

@@ -1,0 +1,24 @@
+{
+  "id": "elixir-security-linter-medium-08",
+  "tier": "medium",
+  "title": "Sanitize markdown before rendering in HEEx",
+  "prompt": "This HEEx template renders the result of a third-party markdown library that returns `{:safe, html}` tuples — but the library does not sanitize `<script>` tags:\n\n```elixir\ndef post(assigns) do\n  ~H\"\"\"\n  <article>\n    {@rendered_markdown}\n  </article>\n  \"\"\"\nend\n```\n\nWhere `@rendered_markdown` came from `Earmark.as_html!(user_input)` or similar. Rewrite the template so the HTML passes through `HtmlSanitizeEx.basic_html/1` (or equivalent sanitizer) before being interpolated via `raw/1`. Write the fix to `lib/my_app_web/components/post_html.ex`. The component should accept `@body_source` (markdown text) and `@rendered_markdown` (already-HTML string), and must sanitize the HTML before it is rendered.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/post_html.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostHTML",
+      "HtmlSanitizeEx"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": [],
+    "criterion": "sanitizer_used",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires knowing that `{:safe, html}` tuples from third-party libs are NOT automatically safe, and that a sanitizer like HtmlSanitizeEx is the right tool.",
+  "calibration": null,
+  "research_citation": "Paraxial.io: 'HEEx templates auto-escape by default... it is still possible to bypass this protection with raw/1.'"
+}

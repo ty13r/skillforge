@@ -1,0 +1,30 @@
+{
+  "id": "elixir-security-linter-easy-15",
+  "tier": "easy",
+  "title": "Fix all three timing leaks in an auth module",
+  "prompt": "`test_fixtures/timing_attack_token_verify.ex` contains three timing-attack leaks: (1) API token compared with `==`, (2) HMAC signature compared with `==` after hash computation, (3) pattern match with `^token`. Rewrite the entire module so every comparison on a secret uses `Plug.Crypto.secure_compare/2`. Preserve the public function signatures `authenticate/2`, `verify_webhook_signature/3`, `check_match/2`. Write the corrected module to `lib/my_app/auth/api_key.ex`.",
+  "fixture_files": ["test_fixtures/timing_attack_token_verify.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth/api_key.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth.ApiKey",
+      "Plug.Crypto.secure_compare",
+      "def authenticate",
+      "def verify_webhook_signature",
+      "def check_match"
+    ],
+    "must_not_contain": [
+      "user.api_token == token",
+      "expected == signature",
+      "def check_match(token, %{token: ^token})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_comparisons_constant_time",
+    "weight": 0.35
+  },
+  "tier_rationale": "Three distinct timing-attack variants in one file. Each fix is the same mechanical substitution but requires recognizing all three forms.",
+  "calibration": null
+}

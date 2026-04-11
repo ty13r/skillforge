@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-16",
+  "tier": "hard",
+  "title": "Remove SHA1 HMAC in favor of SHA256 + secure_compare",
+  "prompt": "This SSO callback verifies an HMAC using SHA1 and compares with `==`:\n\n```elixir\ndef verify_sso(params, secret) do\n  payload = params[\"data\"]\n  expected = :crypto.mac(:hmac, :sha, secret, payload) |> Base.encode16()\n  if expected == params[\"sig\"], do: :ok, else: :error\nend\n```\n\nTwo issues: (1) SHA1 is deprecated — collision attacks have been demonstrated, and any new auth should use SHA256 or stronger, (2) `==` is variable-time. Rewrite the function to use `:crypto.mac(:hmac, :sha256, ...)` and `Plug.Crypto.secure_compare/2`. Also verify the `sig` parameter is present and is binary before comparing. Write the fix to `lib/my_app/sso.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/sso.ex"],
+    "must_contain": [
+      "defmodule MyApp.SSO",
+      ":sha256",
+      "Plug.Crypto.secure_compare"
+    ],
+    "must_not_contain": [
+      ":crypto.mac(:hmac, :sha,",
+      "expected == params[\"sig\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": ["password-hashing-choice"],
+    "criterion": "sha256_and_secure_compare",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — requires catching both the deprecated hash and the timing leak.",
+  "calibration": null
+}

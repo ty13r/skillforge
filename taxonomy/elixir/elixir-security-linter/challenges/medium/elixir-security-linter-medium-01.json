@@ -1,0 +1,32 @@
+{
+  "id": "elixir-security-linter-medium-01",
+  "tier": "medium",
+  "title": "Audit a module and flag ALL atom-exhaustion variants",
+  "prompt": "The following module uses FOUR different functions that all cause atom-table exhaustion on user input:\n\n```elixir\ndefmodule MyApp.DynamicDispatch do\n  def by_name(req), do: String.to_atom(req[\"name\"])\n  def by_chars(req), do: List.to_atom(String.to_charlist(req[\"name\"]))\n  def by_bin(req), do: :erlang.binary_to_atom(req[\"name\"], :utf8)\n  def by_module(req), do: Module.concat([MyApp.Plugins, req[\"name\"]])\nend\n```\n\nMany linters only catch `String.to_atom/1`. Produce a fixed module that uses an explicit string->term mapping for all four functions. Every function must return a fixed value (atom, module, or `{:error, :unknown}`) drawn from a compile-time allowlist. Do not rely on `String.to_existing_atom/1` (still a trap if the atom table is seeded from user data). Write the fix to `lib/my_app/dynamic_dispatch.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/dynamic_dispatch.ex"],
+    "must_contain": [
+      "defmodule MyApp.DynamicDispatch",
+      "def by_name",
+      "def by_chars",
+      "def by_bin",
+      "def by_module"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      "List.to_atom(",
+      ":erlang.binary_to_atom(",
+      "Module.concat([MyApp.Plugins, req"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": [],
+    "criterion": "all_atom_variants_removed",
+    "weight": 0.4
+  },
+  "tier_rationale": "Four related vulnerabilities using DIFFERENT functions for the same DoS class. Medium because Claude often catches the first (String.to_atom) and misses the siblings.",
+  "calibration": null,
+  "research_citation": "Sobelow has three separate DOS checks (StringToAtom, ListToAtom, BinaryToAtom) precisely because Claude varies the function but not the pattern."
+}

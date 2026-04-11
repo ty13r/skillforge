@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-12",
+  "tier": "easy",
+  "title": "Fix timing-attack-prone API key check",
+  "prompt": "The API key verification function below compares tokens with `==`, which is a variable-time comparison and leaks timing information byte-by-byte:\n\n```elixir\ndef authenticate(user_id, token) do\n  user = Repo.get!(User, user_id)\n  if user.api_token == token do\n    {:ok, user}\n  else\n    {:error, :invalid_token}\n  end\nend\n```\n\nRewrite it to use `Plug.Crypto.secure_compare/2` (constant-time). Write the corrected module to `lib/my_app/auth/api_key.ex` with the `authenticate/2` function preserved.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth/api_key.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth.ApiKey",
+      "Plug.Crypto.secure_compare"
+    ],
+    "must_not_contain": [
+      "user.api_token == token",
+      "if user.api_token == "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": [],
+    "criterion": "secure_compare_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical timing-attack fix — replace == with Plug.Crypto.secure_compare/2. Well-documented EEF Security WG pattern.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'The plug_crypto Elixir package provides secure_compare/2... compares two binaries in constant-time.'"
+}

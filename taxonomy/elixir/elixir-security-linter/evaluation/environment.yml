@@ -1,0 +1,20 @@
+runtime:
+  language: python
+  version: "3.12"
+binaries:
+  - python3
+python_packages:
+  - regex
+optional_binaries:
+  - elixir@1.16
+  - mix@1.16
+optional_services:
+  - postgres@15
+notes: |
+  score.py uses regex + Python stdlib for SAST-style static checks on Elixir
+  source output. No Elixir runtime is required for scoring — we do not
+  compile or execute competitor output. Postgres optional only for challenges
+  that involve Ecto migration assertions. Challenges test for absence of
+  known vulnerability patterns and presence of the canonical safer
+  alternative (e.g. String.to_existing_atom, ^ pin operator, secure_compare,
+  Bcrypt/Argon2/Pbkdf2).

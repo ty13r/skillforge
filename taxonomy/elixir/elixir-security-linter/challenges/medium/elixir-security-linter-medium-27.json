@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-medium-27",
+  "tier": "medium",
+  "title": "Fix CSWSH risk in shared session :api pipeline",
+  "prompt": "The router below has two pipelines that share the same session cookie. The `:api` pipeline handles POST requests but omits `:protect_from_forgery`, creating a cross-site WebSocket hijacking (CSWSH) risk:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :protect_from_forgery\nend\n\npipeline :api do\n  plug :accepts, [\"json\"]\n  plug :fetch_session\nend\n\nscope \"/api\", MyAppWeb do\n  pipe_through :api\n  post \"/posts/:id/delete\", PostController, :delete\nend\n```\n\nEither: (a) add `:protect_from_forgery` to `:api`, OR (b) use a different authentication mechanism for the API (Bearer token) and do NOT fetch the session cookie at all. Implement option (a) — add `:protect_from_forgery` to the `:api` pipeline. Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "pipeline :api",
+      "plug :protect_from_forgery"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "csrf-and-secure-headers",
+    "secondary_capabilities": ["plug-security-middleware-chain"],
+    "criterion": "api_csrf_added",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires understanding CSWSH and the shared-cookie risk.",
+  "calibration": null,
+  "research_citation": "Phoenix LiveView security docs: 'A cross-site WebSocket hijacking attack is very similar to a CSRF attack... Phoenix applies CSRF protections when the socket is configured to expose the session.'"
+}

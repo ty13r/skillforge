@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-legendary-02",
+  "tier": "legendary",
+  "title": "Fix subtle Ecto fragment EXTRACT cast injection",
+  "prompt": "This query does something clever: it pins the value correctly with `^`, but uses an `EXTRACT(EPOCH FROM ...)` cast where the CAST TARGET is taken from user input. Even with pinning, the CAST CONTEXT itself becomes an injection vector if Postgres's behavior around type casting is exploited:\n\n```elixir\ndef time_bucket(col_name, value) do\n  from u in User,\n    where: fragment(\"EXTRACT(EPOCH FROM ?::text) = ?\", field(u, ^col_name), ^value)\nend\n```\n\nThe `field(u, ^col_name)` pins a column atom — but `^col_name` must be an atom, and Claude often converts a user string to an atom here, reintroducing atom exhaustion. Meanwhile, the `EXTRACT(EPOCH FROM ?::text)` cast to text on a column that isn't a timestamp will raise a runtime error and leak column type information. Rewrite the function so (a) `col_name` is validated against a static allowlist of `[:inserted_at, :updated_at, :published_at]`, (b) the allowlist is built at compile time (no runtime String.to_atom), (c) if the user passes a disallowed column, return an empty result rather than erroring, (d) the fragment only uses `?` as a VALUE pin, never as an identifier. Write the fix to `lib/my_app/time_bucket.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/time_bucket.ex"],
+    "must_contain": [
+      "defmodule MyApp.TimeBucket",
+      "@allowed",
+      "^value"
+    ],
+    "must_not_contain": [
+      "String.to_atom",
+      "field(u, ^col_name)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": ["atom-exhaustion"],
+    "criterion": "cast_context_safe",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — combines casting-context injection with atom-exhaustion on field(u, ^col_name). Subtle even for experts.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'legendary — fragment EXTRACT(...)::text = ? where the issue is casting context injection, not the pin itself.'"
+}

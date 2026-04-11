@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-17",
+  "tier": "medium",
+  "title": "Spot the hidden-button authz anti-pattern",
+  "prompt": "Identify and fix the authorization bug in this LiveView. The developer 'hides the delete button' in the template for non-owners, but the `handle_event` doesn't check anything:\n\n```elixir\ndefmodule MyAppWeb.PostLive.Show do\n  use MyAppWeb, :live_view\n  \n  def mount(%{\"id\" => id}, _session, socket) do\n    post = MyApp.Blog.get_post!(id)\n    {:ok, assign(socket, post: post)}\n  end\n\n  def render(assigns) do\n    ~H\"\"\"\n    <h1>{@post.title}</h1>\n    <p>{@post.body}</p>\n    <button :if={@post.user_id == @current_user.id}\n            phx-click=\"delete\" phx-value-id={@post.id}>\n      Delete\n    </button>\n    \"\"\"\n  end\n\n  def handle_event(\"delete\", %{\"id\" => id}, socket) do\n    post = MyApp.Blog.get_post!(id)\n    MyApp.Blog.delete_post!(post)\n    {:noreply, push_navigate(socket, to: \"/posts\")}\n  end\nend\n```\n\nHiding the button does NOT prevent a malicious user from sending the `delete` event via the LiveView socket manually. Rewrite the handler to verify server-side ownership before deletion. Write the fix to `lib/my_app_web/live/post_live/show.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/post_live/show.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostLive.Show",
+      "handle_event(\"delete\"",
+      "current_user",
+      "user_id"
+    ],
+    "must_not_contain": [
+      "MyApp.Blog.delete_post!(post)\n    {:noreply, push_navigate(socket, to: \"/posts\")}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": [],
+    "criterion": "server_side_authz",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude often treats hiding UI as authorization. Fix requires server-side check.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'Access controls should always be enforced by the server: it is not enough to hide a Delete button from users who do not have permission.'"
+}

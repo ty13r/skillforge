@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-09",
+  "tier": "easy",
+  "title": "Remove raw/1 and html/2 XSS from template and controller",
+  "prompt": "`test_fixtures/xss_raw_template.ex` contains three XSS surfaces: (1) `raw(@post.body_html)` in the HEEx body, (2) `raw(@post.author_name)` in the footer, (3) a `GreetingController.hello/2` that builds HTML via string interpolation and sends it with `html/2`, (4) a `download/2` action that accepts a user-supplied `content_type` and echoes the body. Rewrite both modules so no user-controlled data flows through `raw/1` or through a hand-built HTML string. The `GreetingController.hello/2` should use `render/2`. The `download/2` action should force `text/plain` for user-supplied payloads (do not honor the user-supplied content-type). Write the corrected code to `lib/my_app_web/post_html.ex`.",
+  "fixture_files": ["test_fixtures/xss_raw_template.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/post_html.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostHTML",
+      "{@post.body_html}",
+      "{@post.author_name}"
+    ],
+    "must_not_contain": [
+      "raw(@post.body_html)",
+      "raw(@post.author_name)",
+      "html(conn, \"<",
+      "put_resp_content_type(ct)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_xss_surfaces_removed",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-surface fix (raw, html/2, content-type) but each fix is a mechanical substitution. Easy by volume, not by difficulty of any single fix.",
+  "calibration": null
+}

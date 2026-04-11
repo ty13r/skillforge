@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-03",
+  "tier": "medium",
+  "title": "Fix atom-exhaustion-prone via: Registry tuple",
+  "prompt": "This GenServer uses `String.to_atom/1` to construct a dynamic process name for `start_link`:\n\n```elixir\ndef start_link(user_id) do\n  name = String.to_atom(\"session_#{user_id}\")\n  GenServer.start_link(__MODULE__, user_id, name: name)\nend\n```\n\nEach unique `user_id` creates a new permanent atom. Rewrite it so the process is registered through `Registry` with a string key (`{:via, Registry, {MyApp.SessionRegistry, user_id}}`). Do not call `String.to_atom/1`, `List.to_atom/1`, or use atom sigil interpolation anywhere. Write the fix to `lib/my_app/session_server.ex`. Also export a helper `name_for(user_id)` that returns the via-tuple, so callers don't reimplement it.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/session_server.ex"],
+    "must_contain": [
+      "defmodule MyApp.SessionServer",
+      ":via, Registry",
+      "SessionRegistry",
+      "name_for"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      ":\"session_#{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": [],
+    "criterion": "registry_via_tuple",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium because the fix requires knowing the Registry via-tuple idiom, not just removing String.to_atom.",
+  "calibration": null
+}

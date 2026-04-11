@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-32",
+  "tier": "medium",
+  "title": "Spot the 10-year max_age and shorten it",
+  "prompt": "Identify the security concern in this session config and fix it:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: {MyApp.Salt, :get, []},\n  http_only: true,\n  secure: true,\n  max_age: 60 * 60 * 24 * 365 * 10\n]\n```\n\nA 10-year `max_age` (315_360_000 seconds) means a hijacked session cookie remains valid forever. Shorten `max_age` to 7 days (`60 * 60 * 24 * 7 = 604_800`) or less, and add an explicit comment about the session window. Write the corrected endpoint module to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "max_age"
+    ],
+    "must_not_contain": [
+      "max_age: 60 * 60 * 24 * 365 * 10",
+      "max_age: 60 * 60 * 24 * 365"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": [],
+    "criterion": "max_age_shortened",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — subtle operational issue; requires recognizing a hijacked cookie's lifetime.",
+  "calibration": null
+}

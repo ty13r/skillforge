@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-hard-19",
+  "tier": "hard",
+  "title": "Fix Ecto dynamic OR-clause with interpolation",
+  "prompt": "This advanced search function builds a dynamic Ecto query by concatenating fragment strings with user-controlled column names — an identifier-injection case:\n\n```elixir\ndef advanced_search(filters) do\n  conditions =\n    Enum.reduce(filters, true, fn {col, val}, acc ->\n      dynamic([u], ^acc and fragment(\"? = ?\", literal(^col), ^val))\n    end)\n\n  from(u in User, where: ^conditions)\nend\n```\n\nThe `literal(^col)` ACTUALLY inlines the column name into the SQL (Ecto's `literal/1` is specifically designed for this — it does NOT parameterize), so an attacker-controlled `col` value is an injection vector. Rewrite the function so `filters` is validated against a static allowlist of `{column_atom, value}` pairs, and the dynamic expression uses `field(u, ^col_atom)` where `col_atom` comes from the allowlist. Write the fix to `lib/my_app/advanced_search.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/advanced_search.ex"],
+    "must_contain": [
+      "defmodule MyApp.AdvancedSearch",
+      "@allowed"
+    ],
+    "must_not_contain": [
+      "literal(^col)",
+      "fragment(\"? = ?\", literal"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "literal_removed",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — subtle Ecto.Query.API.literal/1 behavior; Claude often misses that literal doesn't parameterize.",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-27",
+  "tier": "easy",
+  "title": "Add http_only and secure flags to session options",
+  "prompt": "The session config below is missing `http_only` and `secure` — JavaScript can read the cookie (XSS -> session theft), and it is transmitted over plain HTTP:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: \"some-salt\"\n]\nplug Plug.Session, @session_options\n```\n\nRewrite the session options to set `http_only: true`, `secure: true`, and a reasonable `same_site: \"Lax\"` default. Also cap `max_age` to 7 days or less. Write the corrected endpoint module to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "http_only: true",
+      "secure: true",
+      "same_site:"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": [],
+    "criterion": "cookie_flags_set",
+    "weight": 0.3
+  },
+  "tier_rationale": "Add three boolean/string flags to an options list. Canonical cookie-hardening fix.",
+  "calibration": null,
+  "research_citation": "Curiosum: 'When http_only: true is set then: the cookie cannot be accessed by JavaScript.'"
+}

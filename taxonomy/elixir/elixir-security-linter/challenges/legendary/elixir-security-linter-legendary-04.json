@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-legendary-04",
+  "tier": "legendary",
+  "title": "Fix mount authz AND per-event re-authz in multi-step flow",
+  "prompt": "A multi-tenant admin LiveView has three interconnected bugs: (1) `mount/3` checks `user.role == \"admin\"` with variable-time `==`, (2) `handle_event(\"switch_tenant\", ...)` lets ANY logged-in user change `socket.assigns.tenant_id` to any value, (3) `handle_event(\"delete_tenant\", ...)` trusts `socket.assigns.tenant_id` (set in step 2) and deletes that tenant without re-checking that the current user has permission on that tenant. This is a privilege-escalation-via-LiveView-state-pinning exploit:\n\n```elixir\ndefmodule MyAppWeb.AdminLive do\n  use MyAppWeb, :live_view\n\n  def mount(_params, %{\"user_id\" => user_id}, socket) do\n    user = MyApp.Accounts.get_user!(user_id)\n    if user.role == \"admin\" do\n      {:ok, assign(socket, current_user: user, tenant_id: nil)}\n    else\n      {:ok, push_navigate(socket, to: \"/\")}\n    end\n  end\n\n  def handle_event(\"switch_tenant\", %{\"tenant_id\" => tid}, socket) do\n    {:noreply, assign(socket, :tenant_id, tid)}\n  end\n\n  def handle_event(\"delete_tenant\", _params, socket) do\n    MyApp.Tenants.delete!(socket.assigns.tenant_id)\n    {:noreply, put_flash(socket, :info, \"deleted\")}\n  end\nend\n```\n\nRewrite so: (a) mount uses a `Policy.admin?/1` helper (never `role == \"admin\"`), (b) `switch_tenant` validates that the current user has admin permission FOR THAT tenant before updating socket state, (c) `delete_tenant` RE-VALIDATES permission on `socket.assigns.tenant_id` before deletion — socket state is never trusted. Write the fix to `lib/my_app_web/admin_live.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/admin_live.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.AdminLive",
+      "Policy",
+      "switch_tenant",
+      "delete_tenant"
+    ],
+    "must_not_contain": [
+      "user.role == \"admin\"",
+      "MyApp.Tenants.delete!(socket.assigns.tenant_id)\n    {:noreply, put_flash"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "full_state_pinning_fix",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — privilege escalation via LiveView state pinning. Requires deep understanding of per-event re-authorization.",
+  "calibration": null
+}

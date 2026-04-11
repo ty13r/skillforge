@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-29",
+  "tier": "easy",
+  "title": "Add CSP to put_secure_browser_headers",
+  "prompt": "The router pipeline below calls `put_secure_browser_headers` without specifying a Content-Security-Policy, so Phoenix's default only sets X-Frame-Options, X-Content-Type-Options, and XSS-Protection — not CSP:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :put_secure_browser_headers\nend\n```\n\nAdd an explicit CSP header via the map argument: `%{\"content-security-policy\" => \"default-src 'self'; object-src 'none'; base-uri 'self'\"}`. Also add `strict-transport-security` with a 1-year max-age. Write the corrected router to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "content-security-policy",
+      "default-src 'self'",
+      "strict-transport-security"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": [],
+    "criterion": "csp_and_hsts_added",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical middleware fix — add CSP + HSTS to put_secure_browser_headers.",
+  "calibration": null
+}

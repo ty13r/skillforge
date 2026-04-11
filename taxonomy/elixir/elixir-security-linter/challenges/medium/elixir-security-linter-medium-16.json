@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-16",
+  "tier": "medium",
+  "title": "Fix LiveView that authorizes mount but not handle_event",
+  "prompt": "The LiveView below enforces authorization in `mount/3` (checking that the user is an admin) but forgets to re-check on `handle_event/3`. An attacker who already has a connected socket can issue events without re-mounting:\n\n```elixir\ndefmodule MyAppWeb.AdminLive do\n  use MyAppWeb, :live_view\n\n  def mount(_params, session, socket) do\n    user = MyApp.Accounts.get_user!(session[\"user_id\"])\n    if user.role == \"admin\" do\n      {:ok, assign(socket, :current_user, user)}\n    else\n      {:ok, push_navigate(socket, to: \"/\")}\n    end\n  end\n\n  def handle_event(\"delete_user\", %{\"id\" => id}, socket) do\n    MyApp.Accounts.delete_user!(id)\n    {:noreply, put_flash(socket, :info, \"deleted\")}\n  end\nend\n```\n\nRewrite the LiveView so: (a) every `handle_event` re-checks the current user's permissions, (b) the mount check uses a proper `Policy.admin?/1` helper instead of `==` on `role`, and (c) a helper function handles the common authorization pattern. Write the fix to `lib/my_app_web/admin_live.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/admin_live.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.AdminLive",
+      "handle_event(\"delete_user\"",
+      "Policy"
+    ],
+    "must_not_contain": [
+      "user.role == \"admin\"",
+      "def handle_event(\"delete_user\", %{\"id\" => id}, socket) do\n    MyApp.Accounts.delete_user!(id)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["timing-attack-comparisons"],
+    "criterion": "mount_and_event_authorized",
+    "weight": 0.4
+  },
+  "tier_rationale": "Medium — Claude often adds mount authz but forgets handle_event. Requires catching both + the role-string ==.",
+  "calibration": null,
+  "research_citation": "Research: 'Claude adds authorization on mount/3 but not on handle_event — an attacker who already has a socket connection can issue events without re-mounting.'"
+}

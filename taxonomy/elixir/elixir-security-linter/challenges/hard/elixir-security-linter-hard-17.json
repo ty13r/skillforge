@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-hard-17",
+  "tier": "hard",
+  "title": "Harden session config with all four flags + short max_age",
+  "prompt": "`test_fixtures/session_cookie_config.ex` has FOUR related session weaknesses: (1) hardcoded `signing_salt`, (2) `same_site: \"None\"` without `secure: true`, (3) missing `http_only: true`, (4) 10-year `max_age`. Rewrite the endpoint module to fix all four: (a) `signing_salt` must be a `{module, function, args}` runtime reference (not a literal), (b) `secure: true` AND `http_only: true` must both be present, (c) `same_site: \"Lax\"` (the safe default for first-party apps), (d) `max_age` no more than 7 days in seconds (604800 or less). Write the fix to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": ["test_fixtures/session_cookie_config.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "http_only: true",
+      "secure: true",
+      "same_site: \"Lax\""
+    ],
+    "must_not_contain": [
+      "signing_salt: \"dev-signing-salt-123\"",
+      "same_site: \"None\"",
+      "max_age: 60 * 60 * 24 * 365 * 10"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": ["secrets-in-config", "security-scan-philosophy"],
+    "criterion": "full_session_hardening",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — four interrelated fixes with cross-capability implications.",
+  "calibration": null
+}

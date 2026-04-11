@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-34",
+  "tier": "medium",
+  "title": "Spot existing Phoenix protection and avoid redundant add",
+  "prompt": "A developer has added `plug :protect_from_forgery` to the `:browser` pipeline and is now considering adding custom CSRF verification code to every controller action. Rewrite the controller below so it takes NO custom CSRF verification (Phoenix already handles it), but adds a comment documenting that `:protect_from_forgery` in the router is what's providing the protection:\n\n```elixir\ndefmodule MyAppWeb.CheckoutController do\n  use MyAppWeb, :controller\n\n  def submit(conn, params) do\n    received = params[\"csrf_token\"]\n    expected = get_session(conn, :_csrf_token)\n    if received == expected do\n      MyApp.Checkout.submit(params)\n      redirect(conn, to: \"/thanks\")\n    else\n      send_resp(conn, 403, \"Forbidden\")\n    end\n  end\nend\n```\n\nRewrite the controller so (a) the CSRF check is removed (the framework handles it), (b) a one-line comment notes that protect_from_forgery is the actual gate, (c) the happy path still redirects to `/thanks`. Write the fix to `lib/my_app_web/checkout_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/checkout_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.CheckoutController",
+      "protect_from_forgery"
+    ],
+    "must_not_contain": [
+      "received == expected",
+      "params[\"csrf_token\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "csrf-and-secure-headers",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "no_redundant_csrf",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires recognizing Phoenix default and NOT adding redundant code.",
+  "calibration": null
+}
