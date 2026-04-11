@@ -42,6 +42,9 @@ export interface RunDetail {
   total_cost_usd: number;
   best_fitness?: number | null;
   best_skill_id?: string | null;
+  // v2.0 — present so the Advanced toggle can render the VariantBreakdown
+  family_id?: string | null;
+  evolution_mode?: "molecular" | "atomic";
 }
 
 export interface LineageNode {

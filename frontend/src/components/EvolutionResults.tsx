@@ -5,6 +5,7 @@ import FitnessChart from "./FitnessChart";
 import FitnessRadar from "./FitnessRadar";
 import PrimaryButton from "./PrimaryButton";
 import Sidebar from "./Sidebar";
+import VariantBreakdown from "./VariantBreakdown";
 import { derivePhases, type EvolutionSocketState } from "../hooks/useEvolutionSocket";
 import type { RunDetail } from "../types";
 
@@ -39,6 +40,11 @@ export default function EvolutionResults({
       .then(setSkillMd)
       .catch((err) => setSkillMdError(String(err)));
   }, [runId]);
+
+  // v2.0 — Advanced toggle reveals the VariantBreakdown for atomic-mode runs
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const isAtomic = runDetail?.evolution_mode === "atomic";
+  const familyId = runDetail?.family_id ?? null;
 
   // Pull objectives from the latest generation_complete or scores_published event
   const lastScores = sockState.events
@@ -164,6 +170,23 @@ export default function EvolutionResults({
             </p>
           </div>
         </div>
+
+        {isAtomic && familyId && (
+          <div className="mt-8">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              className="rounded-lg bg-primary/10 px-4 py-2 font-mono text-[0.6875rem] uppercase tracking-wider text-primary transition-colors hover:bg-primary/20"
+            >
+              {showAdvanced ? "Hide" : "Show"} Advanced — Variant Breakdown
+            </button>
+            {showAdvanced && (
+              <div className="mt-4">
+                <VariantBreakdown familyId={familyId} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
