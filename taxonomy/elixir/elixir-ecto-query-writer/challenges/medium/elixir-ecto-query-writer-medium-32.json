@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-32",
+  "tier": "medium",
+  "title": "Pin a module attribute at the right point",
+  "prompt": "Write `MyApp.Accounts.active_roles/0`. A module attribute `@roles [\"admin\", \"editor\", \"viewer\"]` defines the allowed values. The query should filter users whose `role` is in that list. Pin `@roles` correctly — do NOT inline the list into the query body, pin it once (`where: u.role in ^@roles`). Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "@roles",
+      "u.role in ^@roles"
+    ],
+    "must_not_contain": [
+      "u.role in [\"admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "module_attr_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Pinning a module attribute is subtly different from pinning a runtime variable — this is one of the patterns where `^` on a compile-time constant is actually justified (so Ecto parameterizes a list).",
+  "research_citation": "LostKobrakai: 'The pin operator marks a value to be passed as a parameter to a query. If values change between executions, use it.'",
+  "calibration": null
+}

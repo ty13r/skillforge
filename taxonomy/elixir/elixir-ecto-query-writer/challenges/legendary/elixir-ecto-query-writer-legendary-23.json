@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-23",
+  "tier": "legendary",
+  "title": "Cursor pagination with multi-field tuple comparison",
+  "prompt": "Write `MyApp.Blog.cursor_paginate/1` over a query sorted by `(score desc, published_at desc, id desc)` — three columns with id as unique tie-breaker. Cursor is `{score, ts, id}`. The keyset predicate must correctly handle the three-level row comparison: `p.score < ^score OR (p.score == ^score AND (p.published_at < ^ts OR (p.published_at == ^ts AND p.id < ^id)))`. Must produce zero-duplicate pages. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "p.score < ^",
+      "p.score == ^",
+      "p.published_at < ^",
+      "p.published_at == ^",
+      "p.id < ^",
+      "order_by: [desc: p.score, desc: p.published_at, desc: p.id]"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety", "basic-where-select-order"],
+    "criterion": "three_col_keyset",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-level tuple comparison is extremely error-prone; one missing `AND ==` breaks determinism.",
+  "calibration": null
+}

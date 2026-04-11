@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-hard-17",
+  "tier": "hard",
+  "title": "Cursor pagination over joined + aggregated feed",
+  "prompt": "Write `MyApp.Blog.cursor_page_with_counts/1` that returns a cursor-paginated feed of posts along with each post's comment count, using keyset cursor on `(inserted_at desc, id desc)`. The query must: (a) left_join comments, (b) group by post, (c) compute `comment_count`, (d) apply the keyset comparison, (e) limit. Cursor is `{ts, id}` or `nil`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "left_join:",
+      "group_by: [p.id",
+      "count(c.id)",
+      "order_by: [desc: p.inserted_at, desc: p.id]",
+      "p.inserted_at < ^",
+      "p.inserted_at == ^",
+      "p.id < ^"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["aggregates-and-group-by", "joins"],
+    "criterion": "cursor_aggregated_feed",
+    "weight": 1.0
+  },
+  "tier_rationale": "Cursor + aggregate + join is a demanding combination. Most challenging mid-range pagination scenario.",
+  "calibration": null
+}

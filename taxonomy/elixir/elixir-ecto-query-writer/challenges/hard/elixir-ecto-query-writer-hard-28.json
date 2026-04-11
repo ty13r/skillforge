@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-hard-28",
+  "tier": "hard",
+  "title": "Fragment with multiple placeholders for custom SQL function",
+  "prompt": "Write `MyApp.Shop.price_in_currency/2` that takes `order_id` and `currency` string and returns the order total converted using a PostgreSQL-side function `convert_currency(amount, currency)`. Use `fragment(\"convert_currency(?, ?)\", o.total, ^currency)` — exactly two placeholders, one pinned, one columnar. Pin `order_id`. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "fragment(\"convert_currency(?, ?)\", o.total, ^currency)",
+      "o.id == ^order_id"
+    ],
+    "must_not_contain": [
+      "\"convert_currency(#{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "multi_placeholder_fragment",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multiple placeholders with mixed columnar + pinned values. Common fragment mistake: using the wrong number of placeholders.",
+  "calibration": null
+}

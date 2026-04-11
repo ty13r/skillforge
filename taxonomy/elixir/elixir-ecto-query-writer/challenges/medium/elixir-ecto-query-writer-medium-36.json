@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-36",
+  "tier": "medium",
+  "title": "Case in select",
+  "prompt": "Write `MyApp.Blog.posts_with_status_label/0` that selects each post along with a synthetic `status` string: `\"published\"` if `p.published == true`, otherwise `\"draft\"`. Use `fragment(\"CASE WHEN ? THEN 'published' ELSE 'draft' END\", p.published)` with a pinned nothing (the boolean is already columnar). Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(\"CASE WHEN ?",
+      "p.published",
+      "'published'",
+      "'draft'"
+    ],
+    "must_not_contain": [
+      "\"#{p.published}\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "case_fragment",
+    "weight": 1.0
+  },
+  "tier_rationale": "CASE is a legitimate fragment use case (no typed equivalent). Must use `?` placeholder for the column reference.",
+  "calibration": null
+}

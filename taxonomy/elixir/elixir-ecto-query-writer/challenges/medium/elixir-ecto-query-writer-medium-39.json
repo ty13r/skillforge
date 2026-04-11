@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-39",
+  "tier": "medium",
+  "title": "Select distinct categories from joined posts",
+  "prompt": "Write `MyApp.Blog.active_categories/0` that returns distinct categories that have at least one published post. Use a subquery that selects distinct category_ids from published posts, then join with Category. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "distinct: true",
+      "p.published == true",
+      "subquery("
+    ],
+    "must_not_contain": [
+      "Enum.uniq"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["joins", "basic-where-select-order"],
+    "criterion": "subquery_with_distinct",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines subquery with distinct + join. Multiple concerns.",
+  "calibration": null
+}

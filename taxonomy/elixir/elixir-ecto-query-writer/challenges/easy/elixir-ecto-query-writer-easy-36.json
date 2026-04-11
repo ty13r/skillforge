@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-36",
+  "tier": "easy",
+  "title": "Simple average aggregate with filter",
+  "prompt": "Write `MyApp.Shop.average_order_total/0` that returns the average total of `placed` status orders. Use `Repo.aggregate(query, :avg, :total)` on a filtered query. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "Repo.aggregate",
+      ":avg",
+      ":total",
+      "where: o.status == \"placed\""
+    ],
+    "must_not_contain": [
+      "sum(o.total) / "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": [],
+    "criterion": "avg_aggregate",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical `Repo.aggregate` + filter. Single-step.",
+  "calibration": null
+}

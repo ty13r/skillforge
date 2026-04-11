@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-medium-13",
+  "tier": "medium",
+  "title": "Correlated subquery with parent_as/1",
+  "prompt": "Write `MyApp.Accounts.users_with_recent_post/1` that takes `days` and returns users whose most recent post was within the last `days` days. Use a correlated subquery with `parent_as(:user)`: the outer query is `from u in User, as: :user`, and the subquery uses `parent_as(:user).id` to correlate. Use `exists(subquery(q))` to filter. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "as: :user",
+      "parent_as(:user)",
+      "exists(",
+      "subquery(",
+      "^days"
+    ],
+    "must_not_contain": [
+      "Repo.all(",
+      ".user_id == u.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "correlated_parent_as",
+    "weight": 1.0
+  },
+  "tier_rationale": "`parent_as` is a non-obvious Ecto API that Claude rarely reaches for. Must combine it with `exists` and `subquery`.",
+  "research_citation": "Ecto aggregates-and-subqueries hexdocs: 'from c in Comment, where: parent_as(:posts).id == c.post_id'",
+  "calibration": null
+}

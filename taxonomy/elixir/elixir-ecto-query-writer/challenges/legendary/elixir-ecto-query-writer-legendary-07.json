@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-07",
+  "tier": "legendary",
+  "title": "Recursive CTE for organizational hierarchy with depth ranking",
+  "prompt": "Write `MyApp.Accounts.subordinates_with_depth/1` that takes a `manager_id` and returns all descendants (transitive subordinates) along with their depth in the hierarchy. Assume `User` has a `manager_id` pointing to another user. Use `with_cte/3` + `recursive: true`. Base case: direct reports. Recursive case: reports of reports with `depth + 1`. Return `{id, name, depth}` ordered by depth and name. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "with_cte(",
+      ":recursive",
+      "union_all",
+      "manager_id",
+      "^manager_id"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["raw-sql-fragment", "pin-operator-safety"],
+    "criterion": "recursive_hierarchy_cte",
+    "weight": 1.0
+  },
+  "tier_rationale": "Recursive CTEs in Ecto require both a base + recursive case joined by union_all and proper with_cte setup. Niche API.",
+  "calibration": null
+}

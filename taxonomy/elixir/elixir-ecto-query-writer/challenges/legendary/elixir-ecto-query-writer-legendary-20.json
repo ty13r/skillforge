@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-20",
+  "tier": "legendary",
+  "title": "JSONB extraction in fragments with typed cast",
+  "prompt": "Write `MyApp.Blog.posts_with_meta_title/0` where Posts have a JSONB `metadata` column. Extract `metadata->>'title'` as a string and select it as `meta_title`. Use `fragment(\"? ->> 'title'\", p.metadata)` inside a `select:`. Also filter WHERE `metadata ? 'title'` (field exists) — note the `?` must be escaped as `\\?` in the fragment literal since `?` is the placeholder marker. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(\"? ->> 'title'\"",
+      "p.metadata"
+    ],
+    "must_not_contain": [
+      "\"metadata->>'title'\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "jsonb_extraction_fragment",
+    "weight": 1.0
+  },
+  "tier_rationale": "JSONB operators + the escaped `?` gotcha. Quite niche.",
+  "calibration": null
+}

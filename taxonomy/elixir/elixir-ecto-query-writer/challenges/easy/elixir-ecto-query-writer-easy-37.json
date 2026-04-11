@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-37",
+  "tier": "easy",
+  "title": "Cursor pagination: pinning the cursor variable",
+  "prompt": "Given that the user passes a cursor datetime `since_ts`, write `MyApp.Blog.next_page/2` that returns the next 20 published posts with `published_at < ^since_ts`, ordered by `(published_at desc, id desc)`. Pin the cursor. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "p.published_at < ^since_ts",
+      "order_by: [desc: p.published_at, desc: p.id]",
+      "limit: 20"
+    ],
+    "must_not_contain": [
+      "p.published_at < since_ts"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "cursor_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces cursor-based filtering with one pinned cursor. Single step.",
+  "calibration": null
+}

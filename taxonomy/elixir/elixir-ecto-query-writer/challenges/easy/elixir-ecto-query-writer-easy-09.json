@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-09",
+  "tier": "easy",
+  "title": "Count rows with Repo.aggregate/3 instead of length(Repo.all/1)",
+  "prompt": "Write `MyApp.Accounts.count_active_users/0` that returns the number of active users. Do NOT use `length(Repo.all(...))` — that materializes the entire result set. Use `Repo.aggregate(query, :count, :id)` instead. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Repo.aggregate",
+      ":count",
+      "where: u.active == true"
+    ],
+    "must_not_contain": [
+      "length(Repo.all",
+      "Enum.count(Repo.all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "uses_repo_aggregate",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step: use the canonical count helper. Mechanical substitution once the anti-pattern is recognized.",
+  "calibration": null
+}

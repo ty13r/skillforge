@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-easy-08",
+  "tier": "easy",
+  "title": "Remove string interpolation from a fragment",
+  "prompt": "`MyApp.Blog.Search.find/1` in `test_fixtures/fragment_interpolation_bug.ex` interpolates `user_input` directly into a fragment literal with `#{}` — SQL injection. Fix it using placeholder-style fragments: `fragment(\"? ILIKE ?\", p.body, ^pattern)` with the pattern built outside the fragment. Do the same for `by_score_threshold/1` (replace it with a typed comparison). Write the fix to `lib/my_app/blog/search.ex`.",
+  "fixture_files": ["test_fixtures/fragment_interpolation_bug.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/search.ex"],
+    "must_contain": [
+      "fragment(\"? ILIKE ?\"",
+      "^pattern",
+      "p.score > ^threshold"
+    ],
+    "must_not_contain": [
+      "\"#{user_input}",
+      "\"#{threshold}",
+      "fragment(\"p.body ILIKE"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "no_string_interpolation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Well-known security rule; straightforward substitution of `#{}` with `?` placeholders. Ecto also raises a compile error for `#{}` inside fragment, so the fix direction is unambiguous.",
+  "research_citation": "Victor Bjorklund: 'fragment does not allow strings to be interpolated as the first argument via the ^ operator. You must use placeholders (?)'",
+  "calibration": null
+}

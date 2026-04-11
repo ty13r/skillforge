@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-hard-03",
+  "tier": "hard",
+  "title": "Cursor pagination over (ts, id) with first-page/next-page branch",
+  "prompt": "Starting from `test_fixtures/offset_pagination_slow.ex`, rewrite `MyApp.Blog.Feed.feed/1` as a cursor-paginated function `feed/1` that takes either `nil` (first page) or a `{published_at, id}` tuple (subsequent pages). Each page returns 20 rows ordered `(published_at desc, id desc)`. For subsequent pages use the row-wise comparison `(p.published_at < ^ts) or (p.published_at == ^ts and p.id < ^last_id)` — this is the deterministic cursor. Write to `lib/my_app/blog/feed.ex`.",
+  "fixture_files": ["test_fixtures/offset_pagination_slow.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/feed.ex"],
+    "must_contain": [
+      "def feed(nil)",
+      "def feed({",
+      "order_by: [desc: p.published_at, desc: p.id]",
+      "p.published_at < ^",
+      "p.published_at == ^",
+      "p.id < ^",
+      "limit:"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety", "query-composition-style"],
+    "criterion": "cursor_tuple_with_branches",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full tuple-cursor rewrite with pattern-match branches and the non-obvious row-wise comparison. Sonnet commonly produces a broken single-column cursor.",
+  "research_citation": "duffelhq/paginator: 'This method requires a deterministic sort order'",
+  "calibration": null
+}

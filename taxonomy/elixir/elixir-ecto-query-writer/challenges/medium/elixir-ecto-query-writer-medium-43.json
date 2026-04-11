@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-43",
+  "tier": "medium",
+  "title": "Keyword-style `from` with multiple clauses",
+  "prompt": "Write `MyApp.Blog.trending_posts/1` using the keyword-style `from(...)` syntax. Filter published posts with `view_count >= 100`, order by `view_count desc`, limit to `^n`. Use ONLY the keyword form, no pipe composition. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "from(p in Post",
+      "where: p.published == true",
+      "where: p.view_count >= 100",
+      "order_by: [desc: p.view_count]",
+      "limit: ^n"
+    ],
+    "must_not_contain": [
+      "|> where"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["basic-where-select-order", "pin-operator-safety"],
+    "criterion": "keyword_from_style",
+    "weight": 1.0
+  },
+  "tier_rationale": "Keyword-style with multiple clauses — style exercise, tests that multi-clause `where:` is understood.",
+  "calibration": null
+}

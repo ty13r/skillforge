@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-easy-33",
+  "tier": "easy",
+  "title": "Dynamic(true) as identity element",
+  "prompt": "Write `MyApp.Accounts.optional_filter/1` that takes a map with an optional `:team_id`. If present, filter users by `team_id`; if absent, return all users. Start the dynamic with `dynamic(true)` as the identity element. Use `Enum.reduce/3`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "dynamic(true)",
+      "Enum.reduce",
+      "^acc and",
+      "where: ^"
+    ],
+    "must_not_contain": [
+      "if params",
+      "if Map.has_key"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "reduce_identity",
+    "weight": 1.0
+  },
+  "tier_rationale": "The canonical reduce-starts-from-dynamic(true) pattern. One clause, but introduces the idiom.",
+  "research_citation": "Jonny Eberhardt: 'dynamic(true) serves as the initial condition, allowing seamless composition'",
+  "calibration": null
+}

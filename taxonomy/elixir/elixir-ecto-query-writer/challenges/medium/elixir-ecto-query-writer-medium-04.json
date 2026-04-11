@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-04",
+  "tier": "medium",
+  "title": "Fix a left-join where the filter nullified the outer-join",
+  "prompt": "`MyApp.Accounts.Summary.users_with_approved_comments/0` in `test_fixtures/left_join_filter_bug.ex` wants every user with a count of their approved comments — but the `where: c.approved == true` clause runs AFTER the left_join, which turns it into an inner join (users with zero comments get dropped). Fix the bug by moving the `approved == true` filter INTO the join's `on:` clause, preserving the outer-join semantics. Write to `lib/my_app/accounts/summary.ex`.",
+  "fixture_files": ["test_fixtures/left_join_filter_bug.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/summary.ex"],
+    "must_contain": [
+      "left_join: c in assoc(u, :comments)",
+      "on: c.approved == true",
+      "count(c.id)",
+      "group_by: [u.id, u.name]"
+    ],
+    "must_not_contain": [
+      "where: c.approved == true"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "filter_in_on_clause",
+    "weight": 1.0
+  },
+  "tier_rationale": "Recognizing that WHERE on a LEFT JOIN nullifies it is a subtle SQL semantics issue. Sonnet commonly misses this — especially since the fixture already has a `group_by` and looks superficially correct.",
+  "calibration": null
+}

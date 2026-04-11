@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-24",
+  "tier": "hard",
+  "title": "Group_by across two dimensions",
+  "prompt": "Write `MyApp.Blog.post_counts_by_category_and_month/0` that groups posts by `category_id` AND the month of `inserted_at`, returning `{category_id, month, count}`. Use `fragment(\"date_trunc('month', ?)\", p.inserted_at)` for the month bucket, group by both `p.category_id` and the fragment. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "fragment(\"date_trunc",
+      "p.inserted_at",
+      "group_by: [p.category_id, fragment",
+      "count(p.id)"
+    ],
+    "must_not_contain": [
+      "group_by: p.category_id\n"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "multi_dimension_group",
+    "weight": 1.0
+  },
+  "tier_rationale": "Fragment inside group_by is unusual; must be referenced in both group_by and select for consistency.",
+  "calibration": null
+}

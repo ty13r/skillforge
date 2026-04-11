@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-36",
+  "tier": "hard",
+  "title": "Dense_rank window function with filter",
+  "prompt": "Write `MyApp.Blog.top_ranked_posts/0` that returns posts with a `dense_rank` by view_count descending, then filters to only those with `rank <= 5`. Use `dense_rank() |> over(order_by: [desc: p.view_count])` in an inner subquery, then `where: r.rank <= 5` in the outer. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "dense_rank()",
+      "|> over(",
+      "subquery(",
+      "r.rank <= 5"
+    ],
+    "must_not_contain": [
+      "fragment(\"dense_rank"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["subqueries"],
+    "criterion": "dense_rank_with_filter",
+    "weight": 1.0
+  },
+  "tier_rationale": "Window function + subquery + filter by window result. Standard top-K pattern with dense_rank variant.",
+  "calibration": null
+}

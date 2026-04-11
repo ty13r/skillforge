@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-03",
+  "tier": "easy",
+  "title": "Fix a group_by/select mismatch for post counts per category",
+  "prompt": "`MyApp.Blog.Stats.post_count_by_category/0` in `test_fixtures/group_by_select_mismatch.ex` joins posts with categories, groups by `c.id`, and selects `{c.id, c.name, count(p.id)}`. Ecto raises at compile time because `c.name` is neither grouped nor aggregated. Fix the grouping so the select list is valid. Write the corrected module to `lib/my_app/blog/stats.ex`.",
+  "fixture_files": ["test_fixtures/group_by_select_mismatch.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/stats.ex"],
+    "must_contain": [
+      "group_by: [c.id, c.name]",
+      "count(p.id)",
+      "select: {c.id, c.name, count(p.id)}"
+    ],
+    "must_not_contain": [
+      "group_by: c.id,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["joins"],
+    "criterion": "select_matches_group_by",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step: add `c.name` to the group_by list. Rule is well-documented in Ecto docs, pattern is mechanical once the error is recognized.",
+  "research_citation": "Ecto.Query hexdocs: 'only fields that were referenced in the group_by can be used in the select or if the field is given as an argument to an aggregate function'",
+  "calibration": null
+}

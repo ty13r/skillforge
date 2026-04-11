@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-12",
+  "tier": "easy",
+  "title": "Select a map shape instead of a struct",
+  "prompt": "Write `MyApp.Accounts.user_summaries/0` that returns a list of plain maps `%{id: ..., name: ..., email: ...}` — not partial User structs. Use `select: %{...}` so Ecto knows to return maps. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "select: %{",
+      "id: u.id",
+      "name: u.name",
+      "email: u.email"
+    ],
+    "must_not_contain": [
+      "select: [:id, :name, :email]",
+      "select: struct(u"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": [],
+    "criterion": "map_select_shape",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single select clause; distinct from struct shape but well-documented.",
+  "calibration": null
+}

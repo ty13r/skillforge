@@ -1,0 +1,17 @@
+runtime:
+  language: python
+  version: "3.12"
+binaries:
+  - python3
+python_packages: []
+optional_binaries:
+  - elixir@1.16
+  - mix@1.16
+optional_services:
+  - postgres@15
+notes: |
+  score.py uses only the Python standard library (argparse, json, re, sys,
+  pathlib) so it has no external pip dependencies. Elixir and Postgres are
+  declared as optional only because a future empirical calibration pass may
+  compile and run competitor output against a live database — for the
+  heuristic-tier workstream, static regex/pattern checks are sufficient.

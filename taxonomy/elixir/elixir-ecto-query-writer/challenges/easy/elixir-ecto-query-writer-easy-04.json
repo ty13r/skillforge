@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-04",
+  "tier": "easy",
+  "title": "Replace nil comparison with is_nil/1",
+  "prompt": "Write a query function `MyApp.Accounts.unverified_users/0` that returns all users whose `email_verified_at` is NULL. Do NOT use `u.email_verified_at == nil` — Ecto forbids nil comparisons. Use the `is_nil/1` function instead. Write the module to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "is_nil(u.email_verified_at)",
+      "def unverified_users",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "== nil",
+      "!= nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": [],
+    "criterion": "uses_is_nil",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step transformation; `is_nil/1` rule is well-documented and Ecto raises a helpful error when violated.",
+  "research_citation": "Ecto.Query hexdocs: 'nil comparison in filters is forbidden and it will raise an error; use is_nil/1 instead'",
+  "calibration": null
+}

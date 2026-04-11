@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-10",
+  "tier": "legendary",
+  "title": "Hybrid preload for N:1 + 1:N with threading",
+  "prompt": "Write `MyApp.Blog.feed_with_mixed_strategies/0`: return published Posts with `:author` (belongs_to) preloaded via JOIN (efficient for single rows), and `:comments` AND `:tags` (has_many and many_to_many) preloaded via separate queries. The `author` join binding must be threaded into `preload: [author: u]` AND the other two must be bare struct preloads in the SAME preload list: `preload: [author: u, :comments, :tags]`. Include ordering and filter. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex", "test_fixtures/schemas/tag.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: u in assoc(p, :author)",
+      "preload: [author: u",
+      ":comments",
+      ":tags",
+      "where: p.published == true",
+      "order_by:"
+    ],
+    "must_not_contain": [
+      "join: c in assoc(p, :comments)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins", "query-composition-style"],
+    "criterion": "three_way_hybrid_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines join-preload + struct-preload + many_to_many preload in a single preload list. Requires knowing the nuance for each association type.",
+  "research_citation": "oliver-kriska: 'Separate queries for has_many, JOIN for belongs_to' + georgeguimaraes: '10x memory' guidance",
+  "calibration": null
+}

@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-01",
+  "tier": "legendary",
+  "title": "Top-N per partition via correlated subquery with window function",
+  "prompt": "Write `MyApp.Blog.TopCommenters.top_n_per_category/1` that returns the top N commenters per category. The inner subquery joins comments with posts, groups by `{user_id, category_id}`, computes `total: count(c.id)` AND `rank: row_number() |> over(partition_by: p.category_id, order_by: [desc: count(c.id)])`. The outer query joins the subquery with User, filters `rank <= ^n`, selects `%{category_id, user_id, name, total_comments, rank}`, and orders `[asc: category_id, asc: rank]`. Uses named binding `as: :rank_row` for the subquery, `as: :commenter` for the User join. Write to `lib/my_app/blog/top_commenters.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/top_commenters.ex"],
+    "must_contain": [
+      "subquery(",
+      "row_number()",
+      "|> over(",
+      "partition_by: p.category_id",
+      "order_by: [desc: count(c.id)]",
+      "r.rank <= ^n",
+      "as: :rank_row",
+      "as: :commenter"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number",
+      "Enum.sort_by"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["subqueries", "aggregates-and-group-by", "joins"],
+    "criterion": "top_n_per_partition_full",
+    "weight": 1.0
+  },
+  "tier_rationale": "Integrates window functions, subquery-as-join-source, named bindings, pinned limit, and correct aggregate ordering. All pieces must work together — one of the most demanding query patterns.",
+  "calibration": null
+}

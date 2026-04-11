@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-23",
+  "tier": "easy",
+  "title": "Upsert with on_conflict: :nothing",
+  "prompt": "Write `MyApp.Accounts.bulk_insert_users/1` that takes a list of user attribute maps and bulk-inserts them using `Repo.insert_all/3`. Duplicates on the `email` unique index should be silently ignored — use `on_conflict: :nothing` and `conflict_target: :email`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Repo.insert_all",
+      "on_conflict: :nothing",
+      "conflict_target: :email"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "do_nothing_upsert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical do-nothing upsert with both required options. Mechanical.",
+  "calibration": null
+}

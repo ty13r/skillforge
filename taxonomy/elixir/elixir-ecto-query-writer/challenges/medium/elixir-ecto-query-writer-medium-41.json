@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-41",
+  "tier": "medium",
+  "title": "Group by with having + aggregate filter",
+  "prompt": "Write `MyApp.Blog.categories_with_many_posts/1` that takes a `min_count` integer and returns categories with at least `min_count` published posts. Use a join, group by category id+name, `having: count(p.id) >= ^min_count`. Select `{c.id, c.name, count(p.id)}`. Pin `min_count`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "having: count(p.id) >= ^min_count",
+      "group_by: [c.id, c.name]",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      ">= min_count"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "having_with_pin",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combines group_by + having + pinned threshold + where filter. Several pieces.",
+  "calibration": null
+}

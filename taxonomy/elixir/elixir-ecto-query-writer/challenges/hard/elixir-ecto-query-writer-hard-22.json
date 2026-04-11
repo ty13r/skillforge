@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-22",
+  "tier": "hard",
+  "title": "Virtual aggregate field via select_merge",
+  "prompt": "Write `MyApp.Blog.posts_with_comment_count/0` that returns Post structs but with a virtual `comment_count` field computed via aggregate subquery. Approach: use `select_merge: %{comment_count: ...}` to inject the count into each Post struct. The subquery correlates on `parent_as(:post).id`. Name the outer binding `as: :post`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "select_merge:",
+      "comment_count:",
+      "parent_as(:post)",
+      "as: :post",
+      "subquery("
+    ],
+    "must_not_contain": [
+      "Enum.map(posts"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by", "query-composition-style"],
+    "criterion": "select_merge_virtual",
+    "weight": 1.0
+  },
+  "tier_rationale": "`select_merge` is rarely used; combines with correlated subquery to return enriched structs.",
+  "calibration": null
+}

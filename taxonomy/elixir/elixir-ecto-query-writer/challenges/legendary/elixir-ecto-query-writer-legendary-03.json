@@ -1,0 +1,37 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-03",
+  "tier": "legendary",
+  "title": "Dynamic query library with join, filter, sort, paginate composability",
+  "prompt": "Build a mini query library `MyApp.QueryKit` with these functions, all composable via pipe: `new(schema)` (base query with `as: :root`), `filter/3` (field, op, value — op is :eq, :in, :gt, :lt), `join_scope/3` (adds a named-binding join — assoc atom + `as:` atom), `sort/3` (field, direction), `paginate/3` (limit, offset — pinned). Operators must compile via dynamic/2. Write a caller `MyApp.Accounts.Finder.find/1` that builds a search for active users in a specific team with name-ilike, sorted and paginated. Write to `lib/my_app/query_kit.ex` and `lib/my_app/accounts/finder.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/query_kit.ex", "lib/my_app/accounts/finder.ex"],
+    "must_contain": [
+      "defmodule MyApp.QueryKit",
+      "def new(schema",
+      "as: :root",
+      "def filter(query",
+      "def join_scope(query",
+      "def sort(query",
+      "def paginate(query",
+      "dynamic(",
+      ":eq",
+      ":in",
+      ":gt",
+      ":lt",
+      "^limit",
+      "^offset"
+    ],
+    "must_not_contain": [
+      "def filter(field, value, op, query)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["dynamic-query-builder", "joins", "pagination-patterns"],
+    "criterion": "query_kit_full_dsl",
+    "weight": 1.0
+  },
+  "tier_rationale": "Full composable DSL across 5+ operations including operator dispatch, dynamic joins, and pagination. End-to-end exercise of the query-composition capability.",
+  "calibration": null
+}

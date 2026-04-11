@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-13",
+  "tier": "legendary",
+  "title": "Dynamic aggregates in dynamic where clause",
+  "prompt": "Write `MyApp.Blog.group_filter/1` that takes params with optional `\"min_comments\"`, `\"min_score\"`, `\"category_id\"`. Build a grouped query (post_id, category_id) with `count(c.id) as comment_count` and `avg(p.score) as avg_score`. For each filter, add a conditional `having` clause via dynamic: `having: ^dynamic_having`. Use `dynamic([p, c], ...)` with aggregate expressions inside. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "dynamic(",
+      "having: ^",
+      "count(c.id)",
+      "avg(p.score)",
+      "Enum.reduce"
+    ],
+    "must_not_contain": [
+      "if params"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "aggregates-and-group-by",
+    "secondary_capabilities": ["dynamic-query-builder"],
+    "criterion": "dynamic_having",
+    "weight": 1.0
+  },
+  "tier_rationale": "Dynamic having with aggregate expressions inside dynamic/2 is one of the rarest Ecto patterns; nearly undocumented.",
+  "calibration": null
+}

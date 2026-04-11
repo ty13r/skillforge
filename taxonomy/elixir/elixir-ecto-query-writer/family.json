@@ -1,0 +1,76 @@
+{
+  "slug": "elixir-ecto-query-writer",
+  "name": "Elixir Ecto Query Writer",
+  "language": "elixir",
+  "tier": "S",
+  "curve": "rich",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "data",
+    "focus": "ecto-queries",
+    "language": "elixir"
+  },
+  "foundation_dimension": "query-composition-style",
+  "capability_dimensions": [
+    "basic-where-select-order",
+    "joins",
+    "preloads",
+    "aggregates-and-group-by",
+    "subqueries",
+    "dynamic-query-builder",
+    "pin-operator-safety",
+    "pagination-patterns",
+    "raw-sql-fragment",
+    "window-functions",
+    "upserts-and-on-conflict"
+  ],
+  "challenges": {
+    "total": 151,
+    "by_tier": {
+      "easy": 38,
+      "medium": 45,
+      "hard": 38,
+      "legendary": 30
+    },
+    "held_out_ids": [
+      "elixir-ecto-query-writer-easy-02",
+      "elixir-ecto-query-writer-easy-07",
+      "elixir-ecto-query-writer-easy-08",
+      "elixir-ecto-query-writer-easy-09",
+      "elixir-ecto-query-writer-easy-15",
+      "elixir-ecto-query-writer-easy-16",
+      "elixir-ecto-query-writer-easy-18",
+      "elixir-ecto-query-writer-easy-22",
+      "elixir-ecto-query-writer-medium-02",
+      "elixir-ecto-query-writer-medium-03",
+      "elixir-ecto-query-writer-medium-06",
+      "elixir-ecto-query-writer-medium-14",
+      "elixir-ecto-query-writer-medium-15",
+      "elixir-ecto-query-writer-medium-28",
+      "elixir-ecto-query-writer-medium-35",
+      "elixir-ecto-query-writer-medium-38",
+      "elixir-ecto-query-writer-medium-44",
+      "elixir-ecto-query-writer-hard-02",
+      "elixir-ecto-query-writer-hard-13",
+      "elixir-ecto-query-writer-hard-15",
+      "elixir-ecto-query-writer-hard-19",
+      "elixir-ecto-query-writer-hard-27",
+      "elixir-ecto-query-writer-hard-29",
+      "elixir-ecto-query-writer-hard-33",
+      "elixir-ecto-query-writer-hard-36",
+      "elixir-ecto-query-writer-legendary-01",
+      "elixir-ecto-query-writer-legendary-09",
+      "elixir-ecto-query-writer-legendary-25",
+      "elixir-ecto-query-writer-legendary-26",
+      "elixir-ecto-query-writer-legendary-28"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-06",
+  "tier": "easy",
+  "title": "Add a missing preload for has_one :profile",
+  "prompt": "Write `MyApp.Accounts.get_user_with_profile/1` that takes a user id and returns the `User` struct with `:profile` preloaded. Use a query-time preload (not `Repo.preload/2`), and pin the id. Write the function to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/profile.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "preload: [:profile]",
+      "where: u.id == ^id",
+      "Repo.one"
+    ],
+    "must_not_contain": [
+      "Repo.preload",
+      "u.id == id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["pin-operator-safety", "basic-where-select-order"],
+    "criterion": "query_time_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step add-preload task with two well-known rules; pattern is mechanical.",
+  "calibration": null
+}

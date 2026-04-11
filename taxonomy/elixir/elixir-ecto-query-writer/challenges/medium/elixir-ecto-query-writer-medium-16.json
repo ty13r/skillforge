@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-16",
+  "tier": "medium",
+  "title": "Multi-clause where with pinned params and runtime functions",
+  "prompt": "Write `MyApp.Accounts.registered_between/2` that takes two `DateTime` values and returns users whose `inserted_at` is between them, inclusive. Use `where: u.inserted_at >= ^start_ts and u.inserted_at <= ^end_ts`. Order by `inserted_at asc`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.inserted_at >= ^start_ts",
+      "u.inserted_at <= ^end_ts",
+      "order_by: [asc: u.inserted_at]"
+    ],
+    "must_not_contain": [
+      "u.inserted_at >= start_ts"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "two_pinned_datetimes",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two pins and a range check — more moving parts than easy but mechanical.",
+  "calibration": null
+}

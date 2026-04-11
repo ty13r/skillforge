@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-medium-11",
+  "tier": "medium",
+  "title": "Join preload threads binding via preload: [assoc: binding]",
+  "prompt": "Write `MyApp.Blog.posts_with_category_loaded/0` that joins posts with their category in a single round trip. You MUST thread the join binding into the preload: `join: c in assoc(p, :category), preload: [category: c]`. Merely writing `preload: :category` without the binding would cause Ecto to issue a second query for categories. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "join: c in assoc(p, :category)",
+      "preload: [category: c]"
+    ],
+    "must_not_contain": [
+      "preload: [:category]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["joins"],
+    "criterion": "binding_threaded_to_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-query preload requires threading the binding — Claude often writes the join AND the preload but forgets to wire them together, causing a silent 2x.",
+  "research_citation": "Research on Ecto preloads: 'Using preload with a join but not passing the bound variable via preload: [posts: p], causing Ecto to re-query the associations despite the join'",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-15",
+  "tier": "hard",
+  "title": "N+1 fix through parent-level preload consolidation",
+  "prompt": "Given `MyApp.Accounts.get_user_with_stats/1` that currently runs: `Repo.get(User, id)`, then `length(Repo.all(from p in Post, where: p.user_id == ^id))`, then `length(Repo.all(from c in Comment, where: c.user_id == ^id))`. Rewrite it to a single query with subqueries returning `{user, post_count, comment_count}` — NO multi-round-trip. Use two aggregate subqueries and join/select. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "subquery(",
+      "count(p.id)",
+      "count(c.id)",
+      "u.id == ^id",
+      "Repo.one"
+    ],
+    "must_not_contain": [
+      "length(Repo.all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by", "pin-operator-safety"],
+    "criterion": "consolidated_subquery",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires consolidating 3 round-trips into 1. Multiple pattern synthesis.",
+  "calibration": null
+}

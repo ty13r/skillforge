@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-easy-25",
+  "tier": "easy",
+  "title": "Multi-clause where with pinned values",
+  "prompt": "Write `MyApp.Accounts.filter/1` that takes a map with `:team_id`, `:min_age`, and `:role`. All three are required (no optional handling). Build a `from(...)` query with all three conditions pinned and `and`-combined. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.team_id == ^team_id",
+      "u.age >= ^min_age",
+      "u.role == ^role",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "u.team_id == team_id",
+      "u.age >= min_age",
+      "u.role == role"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "multiclause_pinned",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multi-pin practice — three values in one where. Mechanical.",
+  "calibration": null
+}

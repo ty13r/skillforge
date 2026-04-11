@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-hard-27",
+  "tier": "hard",
+  "title": "Keyset pagination over a joined + filtered query",
+  "prompt": "Write `MyApp.Blog.category_feed/2` that returns cursor-paginated posts within a specific category. Takes `category_id` and an optional `{ts, id}` cursor. Inner-join category, filter by `^category_id`, apply row-wise keyset cursor on `(inserted_at desc, id desc)`, return 20 rows. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "p.category_id == ^category_id",
+      "order_by: [desc: p.inserted_at, desc: p.id]",
+      "p.inserted_at < ^",
+      "p.inserted_at == ^",
+      "p.id < ^",
+      "limit:"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["joins", "pin-operator-safety"],
+    "criterion": "keyset_with_filter",
+    "weight": 1.0
+  },
+  "tier_rationale": "Cursor + joined filter + multi-pin. Requires understanding both the filter and the keyset at once.",
+  "calibration": null
+}

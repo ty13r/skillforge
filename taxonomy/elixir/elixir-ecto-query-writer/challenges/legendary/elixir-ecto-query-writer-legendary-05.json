@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-05",
+  "tier": "legendary",
+  "title": "Conditional upsert using dynamic on_conflict query with excluded table",
+  "prompt": "Write `MyApp.Shop.smart_upsert_order/1` that upserts an Order. On conflict of `number`, only update `status`, `total`, and `updated_at` IF the incoming row's `placed_at` is STRICTLY newer than the existing record's. Use `on_conflict:` with a full query form: `from(o in Order, update: [set: [status: fragment(\"EXCLUDED.status\"), total: fragment(\"EXCLUDED.total\"), updated_at: fragment(\"EXCLUDED.updated_at\")]], where: fragment(\"EXCLUDED.placed_at > ?\", o.placed_at))`. `conflict_target: :number`. Write to `lib/my_app/shop.ex`.",
+  "fixture_files": ["test_fixtures/schemas/order.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/shop.ex"],
+    "must_contain": [
+      "on_conflict: from(",
+      "update: [set:",
+      "fragment(\"EXCLUDED",
+      "o.placed_at",
+      "conflict_target: :number"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "conditional_dynamic_upsert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Dynamic on_conflict query with EXCLUDED fragments is an advanced PostgreSQL upsert pattern that Claude almost never produces.",
+  "research_citation": "Research: 'write an upsert that only updates if the incoming row is newer — needs on_conflict: with a dynamic query'",
+  "calibration": null
+}

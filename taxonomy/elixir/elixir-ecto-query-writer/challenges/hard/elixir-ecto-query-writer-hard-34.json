@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-34",
+  "tier": "hard",
+  "title": "Dynamic filters with typed validation",
+  "prompt": "Write `MyApp.Accounts.Search.validated_search/1` that accepts a params map and returns `{:ok, users}` or `{:error, reason}`. Optional filters: `\"age_range\"` (tuple `{min, max}` where both must be integers), `\"role\"` (must be in `[\"admin\", \"user\", \"guest\"]`), `\"active\"` (must be bool). Validate each param before adding to the dynamic. Return `{:error, :invalid_role}` if role is unknown, etc. Build final dynamic with `dynamic(true)` + `Enum.reduce`. Write to `lib/my_app/accounts/search.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/search.ex"],
+    "must_contain": [
+      "dynamic(true)",
+      "Enum.reduce",
+      "{:error,",
+      "{:ok,",
+      "in [\"admin\", \"user\", \"guest\"]"
+    ],
+    "must_not_contain": [
+      "if params"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "validated_dynamic",
+    "weight": 1.0
+  },
+  "tier_rationale": "Dynamic + validation + error propagation inside a reduce is a multi-pattern combination.",
+  "calibration": null
+}

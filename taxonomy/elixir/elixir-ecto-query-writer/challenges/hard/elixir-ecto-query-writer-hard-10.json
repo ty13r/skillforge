@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-10",
+  "tier": "hard",
+  "title": "Aggregate with window function in subquery",
+  "prompt": "Write `MyApp.Blog.top_2_posts_per_category/0` that returns the top 2 posts per category by `view_count`. Use an inner subquery that selects `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])` as `rn`, then the outer query filters `rn <= 2`. Use `subquery/1` properly. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "subquery(",
+      "row_number()",
+      "|> over(",
+      "partition_by: p.category_id",
+      "r.rn <= 2"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["subqueries"],
+    "criterion": "window_in_subquery_filter",
+    "weight": 1.0
+  },
+  "tier_rationale": "Canonical 'top-N per group' pattern: window function inside a subquery, filter on the window result in the outer query. Advanced synthesis.",
+  "calibration": null
+}

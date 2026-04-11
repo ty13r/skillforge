@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-query-writer-medium-05",
+  "tier": "medium",
+  "title": "Extract queries from a bloated context into a UserQueries module",
+  "prompt": "`MyApp.Accounts` in `test_fixtures/bloated_context.ex` contains four query functions inline. Refactor by creating a new `MyApp.Accounts.UserQueries` module that exposes composable query builders: `base/0`, `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder takes and returns an `Ecto.Queryable`. Use `from(u in User, as: :user)` as the base so builders can be composed across joins. Then rewrite `MyApp.Accounts` to delegate to the new module via pipe chains. Write UserQueries to `lib/my_app/accounts/user_queries.ex` and the refactored context to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/bloated_context.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user_queries.ex", "lib/my_app/accounts.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.UserQueries",
+      "def base",
+      "as: :user",
+      "def active(query",
+      "def by_role(query",
+      "|> Q.",
+      "Repo.all"
+    ],
+    "must_not_contain": [
+      "def list_active_users do\n    from(u in User",
+      "def list_admins do\n    from(u in User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "extracted_query_module",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing the anti-pattern + applying the reusable-builder refactor across two files. Sonnet typically either skips the base query setup or forgets the named binding.",
+  "research_citation": "Curiosum: 'A common anti-pattern is to put resource queries in files that hold resource business logic, such as in a context file... the context file may grow very large'",
+  "calibration": null
+}

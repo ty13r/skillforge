@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-35",
+  "tier": "easy",
+  "title": "Named binding on base query",
+  "prompt": "Write `MyApp.Accounts.base/0` that returns `from(u in User, as: :user)` — a named binding on the base query so downstream composers can use `[user: u]`. Then write `MyApp.Accounts.active/1` that takes the base query and filters active users via `from([user: u] in query, where: u.active == true)`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "as: :user",
+      "[user: u] in query",
+      "def base do",
+      "def active(query"
+    ],
+    "must_not_contain": [
+      "where([u],"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["joins"],
+    "criterion": "named_binding_base",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces the `as: :user` convention that makes queries reusable across joins; canonical pattern.",
+  "research_citation": "Curiosum: 'Always defaulting query functions to from(MySchema, as: :my_schema) so functions can be reused across joins'",
+  "calibration": null
+}

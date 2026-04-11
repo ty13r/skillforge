@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-05",
+  "tier": "easy",
+  "title": "Convert a manual join to assoc/2",
+  "prompt": "Write a query function `MyApp.Blog.posts_with_authors/0` that returns posts joined with their authors. Use Ecto's `assoc/2` helper — `join: u in assoc(p, :author)` — rather than a manual `on: p.user_id == u.id` clause. Return `select: {p.title, u.name}`. Write the module to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "assoc(p, :author)",
+      "from(p in Post",
+      "{p.title, u.name}"
+    ],
+    "must_not_contain": [
+      "on: p.user_id == u.id",
+      "on: u.id == p.user_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "uses_assoc_helper",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single-step: replace the manual `on:` with `assoc/2`. Ecto convention, well-documented, a one-shot for Sonnet.",
+  "calibration": null
+}

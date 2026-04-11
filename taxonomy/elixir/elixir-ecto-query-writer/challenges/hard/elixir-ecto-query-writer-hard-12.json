@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-hard-12",
+  "tier": "hard",
+  "title": "Aggregates nested inside a subquery join",
+  "prompt": "Write `MyApp.Accounts.users_ranked_by_activity/0` that returns users with their total comments + total posts, ordered by the sum. Build a subquery that groups comments by user_id and selects `count(c.id) as comment_count`. Build another subquery for posts. Join both subqueries on the outer User query. Select `{u.id, u.name, comment_count, post_count, total}` with `total = coalesce(cc.comment_count, 0) + coalesce(pc.post_count, 0)`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "subquery(",
+      "group_by: [c.user_id]",
+      "group_by: [p.user_id]",
+      "count(c.id)",
+      "count(p.id)",
+      "left_join:",
+      "coalesce"
+    ],
+    "must_not_contain": [
+      "Repo.all(posts)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by", "joins"],
+    "criterion": "multi_aggregate_subquery_join",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two aggregate subqueries joined as sources — an advanced composition of subqueries + aggregates.",
+  "calibration": null
+}

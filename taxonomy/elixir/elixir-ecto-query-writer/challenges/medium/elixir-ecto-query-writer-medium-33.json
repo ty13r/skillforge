@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-medium-33",
+  "tier": "medium",
+  "title": "Correlated subquery selecting max/min",
+  "prompt": "Write `MyApp.Blog.posts_at_top_score/0` that returns posts whose `score` equals the maximum score for their category. Use a correlated subquery: `where: p.score == subquery(max_for_category)` where `max_for_category` selects `max(p2.score) from Post p2 where p2.category_id == parent_as(:post).category_id`. Name the outer binding `as: :post`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "parent_as(:post)",
+      "as: :post",
+      "subquery(",
+      "max(",
+      "p.score =="
+    ],
+    "must_not_contain": [
+      "Repo.all("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "correlated_max",
+    "weight": 1.0
+  },
+  "tier_rationale": "Combining correlated subquery + aggregate is subtle; `parent_as` must carry the category_id correlation.",
+  "calibration": null
+}

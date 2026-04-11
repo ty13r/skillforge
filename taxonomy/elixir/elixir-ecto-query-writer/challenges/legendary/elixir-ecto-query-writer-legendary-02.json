@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-02",
+  "tier": "legendary",
+  "title": "Lateral join with correlated subquery and window function",
+  "prompt": "Write `MyApp.Blog.top_commenter_per_post/0` that returns each post with its single most-prolific commenter (user with most comments on that post). Use a lateral join: `from p in Post, as: :post, inner_lateral_join: top in subquery(q), on: true, select: %{post_id: p.id, post_title: p.title, commenter_id: top.user_id, commenter_name: top.name, comment_count: top.cnt}`. The subquery correlates via `parent_as(:post).id == c.post_id`, groups by user_id, joins User, orders by count desc, limits to 1. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "inner_lateral_join:",
+      "parent_as(:post)",
+      "as: :post",
+      "subquery(",
+      "limit: 1",
+      "order_by: [desc: count("
+    ],
+    "must_not_contain": [
+      "fragment(\"LATERAL"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["joins", "aggregates-and-group-by"],
+    "criterion": "lateral_with_correlation",
+    "weight": 1.0
+  },
+  "tier_rationale": "Lateral joins are a niche PostgreSQL feature that Ecto exposes. Combining with correlation via parent_as + aggregate + limit 1 is advanced.",
+  "research_citation": "justinappears.com: 'Lateral joins in Ecto without fragments'",
+  "calibration": null
+}

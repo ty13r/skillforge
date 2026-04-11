@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-medium-02",
+  "tier": "medium",
+  "title": "Replace string-interpolated fragments with parameterized fragments",
+  "prompt": "`MyApp.Blog.Search.find/1` and `by_score_threshold/1` in `test_fixtures/fragment_interpolation_bug.ex` both interpolate user input into fragment literals with `#{}`, which is an SQL injection vector (and Ecto compile error). Rewrite `find/1` to use a placeholder fragment `fragment(\"? ILIKE ?\", p.body, ^pattern)` with the LIKE pattern built outside, and rewrite `by_score_threshold/1` to use Ecto's typed comparison `p.score > ^threshold`. Write the corrected module to `lib/my_app/blog/search.ex`.",
+  "fixture_files": ["test_fixtures/fragment_interpolation_bug.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/search.ex"],
+    "must_contain": [
+      "fragment(\"? ILIKE ?\"",
+      "p.score > ^threshold",
+      "^pattern"
+    ],
+    "must_not_contain": [
+      "\"#{user_input}",
+      "\"#{threshold}",
+      "fragment(\"p.score > "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-sql-fragment",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "no_interpolation_both_funcs",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two separate fixes in one file — first is a placeholder substitution, second is recognizing that a typed comparison replaces the fragment entirely. Sonnet commonly fixes the first but misses the typed-equivalent opportunity on the second.",
+  "research_citation": "oliver-kriska/claude-elixir-phoenix security rules: 'String interpolation in Ecto fragment' flagged as SQL-injection",
+  "calibration": null
+}

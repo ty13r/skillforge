@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-32",
+  "tier": "easy",
+  "title": "Existential subquery check",
+  "prompt": "Write `MyApp.Accounts.users_with_any_posts/0` that returns users where there exists at least one post authored by them. Use `where: exists(subquery(q))` pattern with a subquery that selects `p.id from Post where p.user_id == parent_as(:user).id`. Name the outer binding `as: :user`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "parent_as(:user)",
+      "as: :user",
+      "exists("
+    ],
+    "must_not_contain": [
+      "Repo.exists",
+      "in subquery"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "exists_with_parent_as",
+    "weight": 1.0
+  },
+  "tier_rationale": "Introduces `parent_as` and `exists` together; marginally above trivial because `parent_as` is non-obvious, but still a single-pattern task.",
+  "research_citation": "Ecto aggregates-and-subqueries hexdocs: 'parent_as(:posts).id == c.post_id'",
+  "calibration": null
+}

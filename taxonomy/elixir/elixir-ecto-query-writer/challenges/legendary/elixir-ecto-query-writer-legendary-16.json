@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-16",
+  "tier": "legendary",
+  "title": "Streaming large result set via Repo.stream + transaction",
+  "prompt": "Write `MyApp.Blog.stream_all_published/0` that streams all published posts without loading them into memory. Use `Repo.stream/2` (must be inside a `Repo.transaction/2`). Return the transaction wrapping `stream |> Stream.map(&process/1) |> Enum.to_list()`. Pin `true` for the published filter. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "Repo.stream",
+      "Repo.transaction",
+      "Stream.",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "Repo.all(q)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "basic-where-select-order",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "repo_stream_txn",
+    "weight": 1.0
+  },
+  "tier_rationale": "Streaming requires knowing `Repo.stream` must run inside a transaction. Niche operational knowledge.",
+  "calibration": null
+}

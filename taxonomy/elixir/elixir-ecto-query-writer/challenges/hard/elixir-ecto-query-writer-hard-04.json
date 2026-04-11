@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-04",
+  "tier": "hard",
+  "title": "Subquery replacement for a raw-SQL two-query round-trip",
+  "prompt": "Starting from `test_fixtures/raw_sql_subquery.ex`, rewrite `MyApp.Accounts.Recent.recently_active/0` to replace the `Ecto.Adapters.SQL.query/3` round-trip with a single Ecto query. Use: (a) a subquery over `Comment` that selects distinct `user_id` where `inserted_at > ^seven_days_ago`, (b) an outer query `from u in User, where: u.id in subquery(inner)`. Compute `seven_days_ago` via `DateTime.add(DateTime.utc_now(), -604800, :second)`. Write to `lib/my_app/accounts/recent.ex`.",
+  "fixture_files": ["test_fixtures/raw_sql_subquery.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/recent.ex"],
+    "must_contain": [
+      "u.id in subquery(",
+      "distinct: true",
+      "c.user_id",
+      "c.inserted_at > ^",
+      "DateTime"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "full_subquery_replacement",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must eliminate the raw SQL entirely AND structure the subquery with a select clause + distinct flag. Claude typically leaves the raw SQL or overcomplicates with multiple queries.",
+  "calibration": null
+}

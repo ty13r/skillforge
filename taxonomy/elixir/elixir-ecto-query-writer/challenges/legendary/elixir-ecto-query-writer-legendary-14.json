@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-14",
+  "tier": "legendary",
+  "title": "Stable cursor pagination across group-by + aggregates",
+  "prompt": "Write `MyApp.Blog.leaderboard/1` that returns a cursor-paginated leaderboard of categories ordered by `(total_posts desc, category_id asc)` as the unique sort. Each row has `category_id, category_name, total_posts`. Cursor is `{count, id}`. Apply keyset filtering on the aggregated result via `having`, because `where` cannot reference aggregates. Handle `nil` cursor as first page. Limit to 10 per page. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/category.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "group_by: [c.id, c.name]",
+      "count(p.id)",
+      "having:",
+      "order_by: [desc: count(p.id), asc: c.id]",
+      "limit: 10"
+    ],
+    "must_not_contain": [
+      "offset:"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["aggregates-and-group-by"],
+    "criterion": "leaderboard_keyset",
+    "weight": 1.0
+  },
+  "tier_rationale": "Cursor pagination over an aggregated column requires `having` for the keyset filter. Subtle pattern.",
+  "calibration": null
+}

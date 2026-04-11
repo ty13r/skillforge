@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-29",
+  "tier": "legendary",
+  "title": "Three-level nested subquery with correlation",
+  "prompt": "Write `MyApp.Blog.posts_trending_in_top_category/0` that returns posts from the single category with the most total comments, ranked within that category. This needs: (1) innermost subquery: comments grouped by category_id, selecting `max category_id`, (2) middle: posts filtered to that category id, (3) outermost: post ranking with row_number. Or equivalently: use a CTE-like structure. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "subquery(",
+      "count(c.id)",
+      "group_by: [p.category_id]",
+      "row_number()",
+      "limit: 1"
+    ],
+    "must_not_contain": [
+      "Repo.one(top_cat_query)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["aggregates-and-group-by", "window-functions"],
+    "criterion": "multi_level_subquery",
+    "weight": 1.0
+  },
+  "tier_rationale": "Nested subqueries with aggregates + window + filter is close to the limit of what Ecto query composition supports cleanly.",
+  "calibration": null
+}

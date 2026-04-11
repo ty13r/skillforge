@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-21",
+  "tier": "hard",
+  "title": "Extended upsert with returning clause",
+  "prompt": "Write `MyApp.Accounts.upsert_and_return/1` that takes user attrs, upserts via `Repo.insert/2` with a changeset, uses `on_conflict: {:replace, [:name, :updated_at]}`, `conflict_target: :email`, and `returning: true`. The function should return the final (inserted-or-updated) User struct. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Repo.insert",
+      "on_conflict: {:replace,",
+      "conflict_target: :email",
+      "returning: true",
+      "User.changeset"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "upsert_with_returning",
+    "weight": 1.0
+  },
+  "tier_rationale": "`returning:` is often forgotten but critical when you need the result of the upsert. Combined with targeted replace.",
+  "calibration": null
+}

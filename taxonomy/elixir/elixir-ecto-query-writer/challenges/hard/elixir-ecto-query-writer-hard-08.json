@@ -1,0 +1,32 @@
+{
+  "id": "elixir-ecto-query-writer-hard-08",
+  "tier": "hard",
+  "title": "Extract context queries into a dedicated module with named bindings",
+  "prompt": "Starting from `test_fixtures/bloated_context.ex`, extract every query into `MyApp.Accounts.UserQueries`. Define: `base/0` returning `from(u in User, as: :user)`, plus `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder must accept the query as its first argument (pipe-friendly). The refactored `MyApp.Accounts` module should use `alias MyApp.Accounts.UserQueries, as: Q` and compose the builders via pipe for each of the four original public functions. Preserve ordering semantics. Write to `lib/my_app/accounts/user_queries.ex` and `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/bloated_context.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user_queries.ex", "lib/my_app/accounts.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.UserQueries",
+      "def base",
+      "as: :user",
+      "[user: u] in query",
+      "alias MyApp.Accounts.UserQueries",
+      "|> Q.base()",
+      "|> Q.active()"
+    ],
+    "must_not_contain": [
+      "def list_active_users do\n    from(u in User",
+      "def list_admins do\n    from(u in User"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "full_module_extraction",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two-file refactor requiring correct named-binding reuse, alias conventions, and preservation of all four public API functions.",
+  "research_citation": "Curiosum: 'Always defaulting query functions to from(MySchema, as: :my_schema)'",
+  "calibration": null
+}

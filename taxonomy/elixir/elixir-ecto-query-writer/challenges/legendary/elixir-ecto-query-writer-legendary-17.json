@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-17",
+  "tier": "legendary",
+  "title": "Preload N+1 elimination with Ecto.assoc/2 batch",
+  "prompt": "Write `MyApp.Blog.posts_for_users/1` that takes a list of User structs and efficiently loads all their posts in a single query using `Ecto.assoc/2`. Use `posts_query = Ecto.assoc(users, :posts); Repo.all(posts_query)`. Then group the results by `user_id` in-memory and return a map `%{user_id => [posts]}`. This is the idiomatic batch-load pattern when you can't preload at the original query site. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "Ecto.assoc(",
+      ":posts",
+      "Enum.group_by",
+      "Repo.all"
+    ],
+    "must_not_contain": [
+      "Enum.map(users, fn user -> Repo"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "ecto_assoc_batch",
+    "weight": 1.0
+  },
+  "tier_rationale": "`Ecto.assoc/2` is a rarely-used helper for batch-loading across already-loaded parents. Knowing this pattern prevents the 'preload at query site' constraint.",
+  "calibration": null
+}

@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-hard-02",
+  "tier": "hard",
+  "title": "Typed window ranking per category ordered by recency",
+  "prompt": "Starting from `test_fixtures/fragment_window_fn.ex`, rewrite `MyApp.Blog.Rankings.posts_ranked_per_category/0` entirely. The target form: each post gets a `rank` column computed by `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])`. Select a map `%{id, title, category_id, rank}`. No fragments, no raw SQL. Write to `lib/my_app/blog/rankings.ex`.",
+  "fixture_files": ["test_fixtures/fragment_window_fn.ex", "test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog/rankings.ex"],
+    "must_contain": [
+      "row_number() |> over(",
+      "partition_by: p.category_id",
+      "order_by: [desc: p.inserted_at]",
+      "select: %{",
+      "rank:"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number",
+      "fragment(\"ROW_NUMBER"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "typed_window_full_replacement",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must know the full typed form including partition_by in a keyword list (not inline), plus use it inside a map select. Fragment form is the default Claude reach.",
+  "research_citation": "Ecto.Query.WindowAPI: 'row_number() |> over(partition_by: p.category_id, order_by: p.date)'",
+  "calibration": null
+}

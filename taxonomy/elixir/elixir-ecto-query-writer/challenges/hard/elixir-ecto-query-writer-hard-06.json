@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-hard-06",
+  "tier": "hard",
+  "title": "Correlated lateral join for latest-per-user",
+  "prompt": "Write `MyApp.Accounts.users_with_latest_comment/0` that returns each user with their single most-recent comment via a lateral join + correlated subquery. Use: `from u in User, as: :user, inner_lateral_join: c in subquery(from(c in Comment, where: c.user_id == parent_as(:user).id, order_by: [desc: c.inserted_at], limit: 1)), select: %{user_id: u.id, name: u.name, latest_comment_body: c.body}`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "as: :user",
+      "inner_lateral_join:",
+      "parent_as(:user)",
+      "subquery(",
+      "limit: 1",
+      "order_by: [desc:"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["joins", "query-composition-style"],
+    "criterion": "inner_lateral_join",
+    "weight": 1.0
+  },
+  "tier_rationale": "Lateral join + correlated subquery + parent_as. Multi-concept synthesis Claude rarely produces without explicit guidance.",
+  "research_citation": "Ecto aggregates-and-subqueries hexdocs: 'inner_lateral_join: c in subquery(inner_query)'",
+  "calibration": null
+}

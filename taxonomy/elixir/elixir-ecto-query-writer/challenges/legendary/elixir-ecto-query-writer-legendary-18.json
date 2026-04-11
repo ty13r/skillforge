@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-18",
+  "tier": "legendary",
+  "title": "Precise pin-operator fix with type coercion awareness",
+  "prompt": "Write `MyApp.Accounts.find_user_safe/1` that takes a `String.t()` user id. The schema's `id` field is `:integer`. Must safely parse the string to integer before pinning (so Ecto's automatic coercion doesn't mask parse errors). Use `case Integer.parse(id) do {n, \"\"} -> ..., _ -> {:error, :invalid_id} end`. On success, run `where: u.id == ^n` with the integer. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Integer.parse",
+      "u.id == ^",
+      "{:error,",
+      "{:ok,"
+    ],
+    "must_not_contain": [
+      "u.id == ^id",
+      "u.id == id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "typed_parse_before_pin",
+    "weight": 1.0
+  },
+  "tier_rationale": "Ecto's pin coerces types silently; knowing to parse explicitly so type errors surface as application errors is advanced.",
+  "research_citation": "Lasse Skindstad Ebert: 'It was simply ignoring that I had to do with a string and coerced it into a integer... I thought the pin-operator was only for inserting values of variables, but now I know it also acts as a coercer'",
+  "calibration": null
+}

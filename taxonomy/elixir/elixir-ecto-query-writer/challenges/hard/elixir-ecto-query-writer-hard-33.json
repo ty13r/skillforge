@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-hard-33",
+  "tier": "hard",
+  "title": "Subquery + pin operator: ids from outside query",
+  "prompt": "Write `MyApp.Accounts.list_users_by_cached_ids/1` that takes a list of user ids (ordered — ranking from a cache), returns users in that ID order. Use `where: u.id in ^ids` to filter, then reorder in memory via `Enum.sort_by/2` matching the cache order. Pin the ids list. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "u.id in ^ids",
+      "Enum.sort_by",
+      "Repo.all"
+    ],
+    "must_not_contain": [
+      "u.id in ids"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pin-operator-safety",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "pinned_ids_with_sort",
+    "weight": 1.0
+  },
+  "tier_rationale": "Pinning + post-query sort is a common real-world pattern. Must remember Ecto won't preserve the input order.",
+  "calibration": null
+}

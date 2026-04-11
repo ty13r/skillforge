@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-15",
+  "tier": "medium",
+  "title": "Preload a filtered subset via query-tuple syntax",
+  "prompt": "Write `MyApp.Accounts.users_with_approved_comments_only/0` that returns users with ONLY their approved comments preloaded (unapproved comments excluded). Use the query-tuple preload syntax: `preload: [comments: ^approved_comments_query]` where `approved_comments_query` is built as `from(c in Comment, where: c.approved == true)`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "approved_comments",
+      "c.approved == true",
+      "preload: [comments: ^"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "subset_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "The query-tuple preload syntax is non-obvious; Claude often tries to filter post-preload in Elixir instead.",
+  "research_citation": "Cory O'Daniel: 'TIL Ecto preloading subsets'",
+  "calibration": null
+}

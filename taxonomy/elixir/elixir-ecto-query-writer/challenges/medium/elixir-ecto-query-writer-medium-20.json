@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-medium-20",
+  "tier": "medium",
+  "title": "Upsert with placeholders for batch inserts",
+  "prompt": "Write `MyApp.Blog.bulk_upsert_tags/1` that takes a list of tag name strings and bulk-inserts them as `Tag` records, skipping duplicates on the `slug` unique index. Use `Repo.insert_all/3` with `on_conflict: :nothing`, `conflict_target: :slug`. Generate slugs by downcasing and replacing spaces with dashes. Include `inserted_at`/`updated_at` timestamps in each row (`DateTime.utc_now()`). Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/tag.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "Repo.insert_all",
+      "Tag",
+      "on_conflict: :nothing",
+      "conflict_target: :slug",
+      "DateTime.utc_now",
+      "inserted_at:",
+      "updated_at:"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "batch_insert_timestamps",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must remember `insert_all` doesn't auto-set timestamps (unlike `insert/2`). Bypass of changesets means manual slug generation, too.",
+  "research_citation": "AppSignal: 'Batch inserts bypass validation entirely, meaning data integrity checks must be handled manually before insertion'",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-07",
+  "tier": "easy",
+  "title": "Paginate with offset and limit",
+  "prompt": "Write `MyApp.Blog.list_posts/2` that takes `page` and `page_size` integers and returns a page of published posts ordered by `published_at` descending. Use `limit` and `offset` with the pin operator. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "limit: ^page_size",
+      "offset: ^",
+      "order_by: [desc: p.published_at]",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "limit: page_size",
+      "offset: offset"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pagination-patterns",
+    "secondary_capabilities": ["pin-operator-safety", "basic-where-select-order"],
+    "criterion": "offset_with_pins",
+    "weight": 1.0
+  },
+  "tier_rationale": "Basic offset pagination with pinned integers — canonical pattern.",
+  "calibration": null
+}

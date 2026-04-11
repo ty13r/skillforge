@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-medium-08",
+  "tier": "medium",
+  "title": "Replace imperative if/where with dynamic-reduce search",
+  "prompt": "`MyApp.Accounts.Search.search/1` in `test_fixtures/chained_if_search.ex` uses `if/where` chaining for 4 optional filters. Rewrite it using `Enum.reduce(params, dynamic(true), fn ... end)` with one `dynamic/2` fragment per filter, then apply the accumulated dynamic to a single `where: ^dyn` clause. Handle string keys `\"name\"`, `\"email\"`, `\"min_age\"`, `\"active\"`. Write to `lib/my_app/accounts/search.ex`.",
+  "fixture_files": ["test_fixtures/chained_if_search.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/search.ex"],
+    "must_contain": [
+      "Enum.reduce",
+      "dynamic(true)",
+      "^acc and",
+      "where: ^",
+      "dynamic("
+    ],
+    "must_not_contain": [
+      "if params",
+      "query = where(query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["query-composition-style", "pin-operator-safety"],
+    "criterion": "reduce_dynamic_composition",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires the whole dynamic-reduce idiom (identity element, acc pinning, case-matching on keys). Canonical pattern but not one Sonnet reaches for by default.",
+  "research_citation": "Ecto hexdocs dynamic-queries: 'By using dynamic fragments, you can decouple the processing of parameters from the query generation'",
+  "calibration": null
+}

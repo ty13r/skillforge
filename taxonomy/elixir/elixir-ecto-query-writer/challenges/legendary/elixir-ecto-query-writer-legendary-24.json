@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-24",
+  "tier": "legendary",
+  "title": "Batch update with subquery constraint",
+  "prompt": "Write `MyApp.Blog.mark_all_inactive_authors_posts_as_archived/0` that updates Post status to \"archived\" for all posts by authors who are inactive. Use `Repo.update_all/3` with a subquery on User to get inactive author ids: `where: p.user_id in subquery(inactive_user_ids)`, `set: [status: \"archived\"]`. Pin nothing — the subquery does the filtering. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "Repo.update_all",
+      "subquery(",
+      "u.active == false",
+      "set: [",
+      "p.user_id in subquery"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": ["subqueries"],
+    "criterion": "update_all_with_subquery",
+    "weight": 1.0
+  },
+  "tier_rationale": "`update_all` with a subquery constraint is advanced bulk-update pattern that bypasses changesets. Must know that `subquery/1` works in `where:` of update queries too.",
+  "calibration": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-easy-19",
+  "tier": "easy",
+  "title": "Nested preload: posts with their comments",
+  "prompt": "Write `MyApp.Accounts.users_with_posts_and_comments/0` that returns users with `:posts` and nested `{posts: [:comments]}` preloaded. Use `preload: [posts: :comments]`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/post.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "preload: [posts: :comments]",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "Repo.preload"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "nested_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Nested keyword-list preload syntax; easy once you've seen it once.",
+  "calibration": null
+}

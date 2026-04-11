@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-11",
+  "tier": "easy",
+  "title": "Port a keyword-style query to a pipe chain",
+  "prompt": "Write `MyApp.Accounts.active_admins/0`. Produce a pipe-based query: start from `User`, pipe through `where` for `role == \"admin\"` and `active == true`, then `order_by` name ascending. Do NOT use the `from(...)` keyword form. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "User",
+      "|> where([u]",
+      "|> order_by([u]",
+      "|> Repo.all"
+    ],
+    "must_not_contain": [
+      "from(u in User, where"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "pipe_style",
+    "weight": 1.0
+  },
+  "tier_rationale": "Simple style conversion — no new semantics, just the pipe form of an otherwise trivial query.",
+  "calibration": null
+}

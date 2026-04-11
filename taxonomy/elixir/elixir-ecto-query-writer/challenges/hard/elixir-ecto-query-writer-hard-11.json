@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-hard-11",
+  "tier": "hard",
+  "title": "Dynamic query with conditional join",
+  "prompt": "Write `MyApp.Blog.search/1` that accepts optional `:category_name` and `:author_name` filters. If `:category_name` is present, `inner_join: c in assoc(p, :category)` and filter `c.name`. If `:author_name` is present, `inner_join: u in assoc(p, :author)` and filter `u.name`. If neither, no join. Start with a base query, conditionally add joins, and use dynamic filters. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "dynamic(",
+      "assoc(p, :category)",
+      "assoc(p, :author)",
+      "Map.get",
+      "where: ^"
+    ],
+    "must_not_contain": [
+      "if params[\"category_name\"] and params[\"author_name\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["joins"],
+    "criterion": "conditional_join_and_filter",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires conditional joins (not just filters), which is the hardest dynamic pattern — the query structure itself varies.",
+  "calibration": null
+}

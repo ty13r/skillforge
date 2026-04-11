@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-09",
+  "tier": "medium",
+  "title": "Replace raw SQL with Ecto subquery/1",
+  "prompt": "`MyApp.Accounts.Recent.recently_active/0` in `test_fixtures/raw_sql_subquery.ex` uses `Ecto.Adapters.SQL.query/3` to get a list of user ids, then runs a second Ecto query. Rewrite it as a single Ecto query using `subquery/1`: filter `Comment` to the last 7 days, select `user_id distinct`, then use `where: u.id in subquery(q)`. Use `DateTime.utc_now()` and `DateTime.add/3` for the 7-day cutoff. Write to `lib/my_app/accounts/recent.ex`.",
+  "fixture_files": ["test_fixtures/raw_sql_subquery.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/recent.ex"],
+    "must_contain": [
+      "subquery(",
+      "u.id in subquery",
+      "DateTime.utc_now",
+      "where: c.inserted_at > ^"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "raw_sql_to_subquery",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires recognizing that the entire two-query round-trip collapses into a single Ecto subquery. Claude often leaves the raw SQL in place when it sees the API doesn't match a familiar pattern.",
+  "calibration": null
+}

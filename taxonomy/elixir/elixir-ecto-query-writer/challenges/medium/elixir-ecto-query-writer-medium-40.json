@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-medium-40",
+  "tier": "medium",
+  "title": "Dynamic composing with two conditional paths",
+  "prompt": "Write `MyApp.Accounts.search/1` that takes a map with optional `:name_or_email` string. When present, match EITHER `u.name` ilike OR `u.email` ilike (case-insensitive). Use `dynamic/2` with the `or` combinator: `dynamic([u], ilike(u.name, ^pat) or ilike(u.email, ^pat))`. When absent, return all users. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "dynamic(",
+      "ilike(u.name, ^",
+      "ilike(u.email, ^",
+      " or "
+    ],
+    "must_not_contain": [
+      "if params"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "dynamic_or_combinator",
+    "weight": 1.0
+  },
+  "tier_rationale": "Two-field OR search inside a dynamic. The OR composition is less familiar than AND-chains.",
+  "calibration": null
+}

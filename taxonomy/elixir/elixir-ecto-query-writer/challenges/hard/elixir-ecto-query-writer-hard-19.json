@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-hard-19",
+  "tier": "hard",
+  "title": "Composable query builder with dynamic base",
+  "prompt": "Write a reusable query module `MyApp.Accounts.UserQueries` that exposes a `base/1` function accepting options. If `scoped_to_team: team_id` is passed, base query is filtered to that team. Otherwise, base is all users. Then define composable `active/1` and `verified/1` builders that pipe from `base/1`. Also write `MyApp.Accounts.list_active_team_members/1` that uses these. Write to `lib/my_app/accounts/user_queries.ex` and `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user_queries.ex", "lib/my_app/accounts.ex"],
+    "must_contain": [
+      "def base(opts",
+      "Keyword.get(opts, :scoped_to_team)",
+      "from(u in User",
+      "as: :user",
+      "def active(query",
+      "|> active()",
+      "^team_id"
+    ],
+    "must_not_contain": [
+      "def base() do"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["dynamic-query-builder", "pin-operator-safety"],
+    "criterion": "dynamic_base_builder",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires a base that varies by options + downstream composers that work over either base. Novel composition.",
+  "calibration": null
+}

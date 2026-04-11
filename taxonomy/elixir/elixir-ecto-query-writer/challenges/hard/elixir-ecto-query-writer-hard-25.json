@@ -1,0 +1,25 @@
+{
+  "id": "elixir-ecto-query-writer-hard-25",
+  "tier": "hard",
+  "title": "Diverging preload strategies on same query",
+  "prompt": "Write `MyApp.Blog.enriched_feed/0` that returns published Posts with: (1) `:author` via struct preload (`preload: [:author]`), (2) `:category` via struct preload as well, (3) NO comments preloaded. Then use `Repo.all/1` and verify the result. The two preloads should be in a single `preload:` list. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "preload: [:author, :category]",
+      "where: p.published == true"
+    ],
+    "must_not_contain": [
+      "join: u in assoc(p, :author)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "preloads",
+    "secondary_capabilities": [],
+    "criterion": "multi_struct_preload",
+    "weight": 1.0
+  },
+  "tier_rationale": "Multiple preloads in one list — seems simple but the nuance is NOT join-preloading even the belongs_to one when mixed with other preloads is fine (keeps code uniform).",
+  "calibration": null
+}

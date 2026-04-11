@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-easy-10",
+  "tier": "easy",
+  "title": "Use dynamic/2 for one optional filter",
+  "prompt": "Write `MyApp.Accounts.search/1` that takes a map with optional `:active` key (boolean). When `:active` is present, filter users by that value; when absent, return all users. Use `Ecto.Query.dynamic/2` to build the filter, not `if` chaining. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "dynamic(",
+      "where: ^",
+      "dynamic(true)"
+    ],
+    "must_not_contain": [
+      "if params",
+      "case params"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "dynamic-query-builder",
+    "secondary_capabilities": ["pin-operator-safety"],
+    "criterion": "dynamic_entry_point",
+    "weight": 1.0
+  },
+  "tier_rationale": "Minimal intro to dynamic/2 — one filter only. Easy if you know the pattern; legendary failure mode is not present here.",
+  "calibration": null
+}

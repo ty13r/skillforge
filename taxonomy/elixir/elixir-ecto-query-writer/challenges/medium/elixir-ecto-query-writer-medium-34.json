@@ -1,0 +1,30 @@
+{
+  "id": "elixir-ecto-query-writer-medium-34",
+  "tier": "medium",
+  "title": "Select map with joined table fields",
+  "prompt": "Write `MyApp.Blog.posts_with_author_and_category/0` that inner-joins posts with author and category, and returns a list of maps: `%{post_id, title, author_name, category_name}`. Use named bindings and reference them in the select map. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex", "test_fixtures/schemas/user.ex", "test_fixtures/schemas/category.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "as: :post",
+      "as: :author",
+      "as: :category",
+      "select: %{",
+      "post_id:",
+      "author_name:",
+      "category_name:"
+    ],
+    "must_not_contain": [
+      "on: u.id == p.user_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["query-composition-style"],
+    "criterion": "joined_select_map",
+    "weight": 1.0
+  },
+  "tier_rationale": "Three-way join with a structured map select. Many pieces to assemble correctly.",
+  "calibration": null
+}

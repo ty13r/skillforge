@@ -1,0 +1,29 @@
+{
+  "id": "elixir-ecto-query-writer-hard-29",
+  "tier": "hard",
+  "title": "Upsert with NULL-safe required fields",
+  "prompt": "Write `MyApp.Accounts.bulk_upsert_users/1` that takes a list of complete user maps (with all NOT NULL fields — email, name) and upserts them. On conflict (email), replace `[:name, :updated_at]` only. Include timestamps (`inserted_at`, `updated_at`) in each row. Use `conflict_target: :email`. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "Repo.insert_all",
+      "on_conflict: {:replace, [:name, :updated_at]}",
+      "conflict_target: :email",
+      "inserted_at:",
+      "updated_at:"
+    ],
+    "must_not_contain": [
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": [],
+    "criterion": "not_null_safe_upsert",
+    "weight": 1.0
+  },
+  "tier_rationale": "Must know NOT NULL must be supplied for every row (PostgreSQL validates INSERT before ON CONFLICT) AND use targeted replace.",
+  "research_citation": "benzene73 Elixir Forum: 'PostgreSQL requires all NOT NULL columns to be provided in an INSERT, even if the row already exists. ON CONFLICT DO NOTHING does NOT bypass this.'",
+  "calibration": null
+}

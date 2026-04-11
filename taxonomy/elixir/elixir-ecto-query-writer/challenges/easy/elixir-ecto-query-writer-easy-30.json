@@ -1,0 +1,26 @@
+{
+  "id": "elixir-ecto-query-writer-easy-30",
+  "tier": "easy",
+  "title": "Distinct results on a joined query",
+  "prompt": "Write `MyApp.Accounts.users_with_any_comments/0` that returns distinct users who have any comment. Use `distinct: true` to dedupe the join Cartesian product. Write to `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex", "test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts.ex"],
+    "must_contain": [
+      "distinct: true",
+      "join: c in assoc(u, :comments)",
+      "from(u in User"
+    ],
+    "must_not_contain": [
+      "Enum.uniq"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "joins",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "distinct_flag",
+    "weight": 1.0
+  },
+  "tier_rationale": "One-step `distinct: true`; common Ecto idiom.",
+  "calibration": null
+}

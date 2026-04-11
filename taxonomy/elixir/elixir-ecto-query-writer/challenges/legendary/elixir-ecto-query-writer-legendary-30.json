@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-legendary-30",
+  "tier": "legendary",
+  "title": "Bulk insert with on_conflict query: atomic counter increment",
+  "prompt": "Write `MyApp.Analytics.record_page_view/1` that records a page view. Schema is a `PageStat` with `path` (unique) + `view_count` (default 0). The function should: (a) try to insert a new row with `view_count: 1`, (b) on conflict on `path`, increment the existing view_count by 1 using `on_conflict: from(p in PageStat, update: [set: [view_count: p.view_count + 1]])` + `conflict_target: :path`. Fully atomic via PostgreSQL's ON CONFLICT. Use `insert_all` (faster than `insert`). Write to `lib/my_app/analytics.ex`. (Define `PageStat` inline in the same file.)",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/analytics.ex"],
+    "must_contain": [
+      "defmodule MyApp.Analytics.PageStat",
+      "Repo.insert_all",
+      "on_conflict: from(",
+      "update: [set:",
+      "view_count: p.view_count + 1",
+      "conflict_target: :path"
+    ],
+    "must_not_contain": [
+      "Repo.get_by",
+      "on_conflict: :replace_all"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "upserts-and-on-conflict",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "atomic_counter_upsert",
+    "weight": 1.0
+  },
+  "tier_rationale": "The dynamic `on_conflict` query form for an atomic counter increment is a non-obvious PostgreSQL pattern. Claude usually produces a racy get-then-increment pair.",
+  "research_citation": "Ecto constraints-and-upserts hexdocs: use `on_conflict` with an update query for atomic counters",
+  "calibration": null
+}

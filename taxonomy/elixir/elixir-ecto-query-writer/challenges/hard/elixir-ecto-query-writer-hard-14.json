@@ -1,0 +1,27 @@
+{
+  "id": "elixir-ecto-query-writer-hard-14",
+  "tier": "hard",
+  "title": "Recursive self-join with CTE",
+  "prompt": "Write `MyApp.Blog.thread_comments/1` that takes a root comment id and returns all descendants using a recursive CTE. Assume `Comment` has a `parent_id` field. Use `with_cte/3` + `recursive: true`. The base case selects `c.id, c.body, 0 as depth`; recursive case joins on `parent_id`. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/comment.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "with_cte(",
+      ":recursive",
+      "union_all",
+      "parent_id"
+    ],
+    "must_not_contain": [
+      "Ecto.Adapters.SQL.query"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "subqueries",
+    "secondary_capabilities": ["raw-sql-fragment"],
+    "criterion": "recursive_cte",
+    "weight": 1.0
+  },
+  "tier_rationale": "Recursive CTEs in Ecto are niche — union_all + with_cte + :recursive. Rarely-used API.",
+  "calibration": null
+}

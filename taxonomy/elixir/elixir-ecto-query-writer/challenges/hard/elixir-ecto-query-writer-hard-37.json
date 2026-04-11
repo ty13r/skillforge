@@ -1,0 +1,31 @@
+{
+  "id": "elixir-ecto-query-writer-hard-37",
+  "tier": "hard",
+  "title": "Minimum viable query DSL: base + filter + sort + page builders",
+  "prompt": "Write `MyApp.QueryDSL` — a minimal DSL for building User queries. It should expose: `new/0` (returns base query with `as: :user`), `filter/3` (takes `query, field_atom, value` and adds dynamic where), `sort/3` (takes `query, field, direction`), `paginate/3` (takes `query, limit, offset`, pinned). All functions take and return queryables. Then write `MyApp.Accounts.search_users/2` that uses the DSL to build a query from `opts` keyword list. Write to `lib/my_app/query_dsl.ex` and `lib/my_app/accounts.ex`.",
+  "fixture_files": ["test_fixtures/schemas/user.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/query_dsl.ex", "lib/my_app/accounts.ex"],
+    "must_contain": [
+      "defmodule MyApp.QueryDSL",
+      "def new",
+      "as: :user",
+      "def filter(query, field, value)",
+      "def sort(query, field, direction)",
+      "def paginate(query, limit, offset)",
+      "^limit",
+      "^offset"
+    ],
+    "must_not_contain": [
+      "def filter(field, value, query)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "query-composition-style",
+    "secondary_capabilities": ["dynamic-query-builder", "pin-operator-safety"],
+    "criterion": "dsl_builders",
+    "weight": 1.0
+  },
+  "tier_rationale": "Requires a mini-DSL with proper builder conventions (query first, return queryable). Multiple composable functions.",
+  "calibration": null
+}

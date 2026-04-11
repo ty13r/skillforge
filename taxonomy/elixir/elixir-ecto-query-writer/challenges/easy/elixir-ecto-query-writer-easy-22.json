@@ -1,0 +1,28 @@
+{
+  "id": "elixir-ecto-query-writer-easy-22",
+  "tier": "easy",
+  "title": "Typed row_number window function",
+  "prompt": "Write `MyApp.Blog.posts_with_rank/0` that selects each post with its row number ordered by `published_at desc`. Use Ecto's typed `row_number() |> over(order_by: [desc: p.published_at])` — NOT a fragment. Write to `lib/my_app/blog.ex`.",
+  "fixture_files": ["test_fixtures/schemas/post.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "row_number()",
+      "|> over(",
+      "order_by: [desc: p.published_at]"
+    ],
+    "must_not_contain": [
+      "fragment(\"row_number()",
+      "fragment(\"ROW_NUMBER("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "window-functions",
+    "secondary_capabilities": ["basic-where-select-order"],
+    "criterion": "typed_row_number",
+    "weight": 1.0
+  },
+  "tier_rationale": "Single window function, no partition; straightforward typed form.",
+  "research_citation": "Ecto.Query.WindowAPI hexdocs: 'row_number() |> over(partition_by: p.category_id, order_by: p.date)'",
+  "calibration": null
+}
