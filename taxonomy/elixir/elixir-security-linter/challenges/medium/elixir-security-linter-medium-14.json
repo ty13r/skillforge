@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-medium-14",
+  "tier": "medium",
+  "title": "Spot timing leak in CSRF token verification",
+  "prompt": "Identify the timing-attack leak in this CSRF verification helper and fix it:\n\n```elixir\ndefmodule MyApp.Csrf do\n  def verify(%Plug.Conn{} = conn, received_token) do\n    expected = Plug.CSRFProtection.get_csrf_token_for(conn)\n    if expected == received_token, do: {:ok, conn}, else: {:error, :invalid}\n  end\nend\n```\n\nThe `==` on `expected` and `received_token` leaks timing. Rewrite it to use `Plug.Crypto.secure_compare/2`, and normalize the tokens to the same size before comparison. Write the fix to `lib/my_app/csrf.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/csrf.ex"],
+    "must_contain": [
+      "defmodule MyApp.Csrf",
+      "Plug.Crypto.secure_compare"
+    ],
+    "must_not_contain": [
+      "expected == received_token"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": ["csrf-and-secure-headers"],
+    "criterion": "csrf_secure_compare",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires recognizing CSRF token comparison is still timing-sensitive.",
+  "calibration": null
+}

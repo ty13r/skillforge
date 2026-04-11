@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-26",
+  "tier": "medium",
+  "title": "Convert unsafe-inline CSP to use nonces for LiveView",
+  "prompt": "The router's `put_secure_browser_headers` map uses `'unsafe-inline'` for `script-src` and `style-src` because the developer couldn't get LiveView's inline initialization script to work with strict CSP:\n\n```elixir\nplug :put_secure_browser_headers, %{\n  \"content-security-policy\" =>\n    \"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'\"\n}\n```\n\nRewrite it using a per-request nonce: (a) add a plug `assign_csp_nonce/2` that generates `:crypto.strong_rand_bytes(16) |> Base.encode16/1` and puts it in `conn.assigns[:csp_nonce]`, (b) a second plug `put_dynamic_csp/2` that sets `content-security-policy` using that nonce, (c) the CSP must contain `'nonce-#{nonce}'` in both `script-src` and `style-src` and must NOT contain `'unsafe-inline'`. Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "csp_nonce",
+      "'nonce-"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": ["raw-xss-prevention"],
+    "criterion": "nonce_csp",
+    "weight": 0.4
+  },
+  "tier_rationale": "Medium — requires knowing the CSP nonce pattern and wiring it through a plug.",
+  "calibration": null,
+  "research_citation": "Dan Schultzer: 'The same nonce is used across the initial request process... The same nonce is used across the LiveView Socket.'"
+}

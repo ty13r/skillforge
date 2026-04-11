@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-24",
+  "tier": "medium",
+  "title": "Remove fallback value from secret env lookup",
+  "prompt": "This runtime config has a secret with a `||` fallback — if `WEBHOOK_SECRET` is unset, the app silently ships a hardcoded dev value:\n\n```elixir\nimport Config\nconfig :my_app, :webhook_secret, System.get_env(\"WEBHOOK_SECRET\") || \"dev-webhook-secret\"\n```\n\nRewrite it so the secret is fetched via `System.fetch_env!/1` (which raises on missing env), removing the `||` fallback entirely. No hardcoded value should remain. If the env is required only in prod, gate the fetch behind `if config_env() == :prod`. Write the fix to `config/runtime.exs`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "System.fetch_env!(\"WEBHOOK_SECRET\")"
+    ],
+    "must_not_contain": [
+      "|| \"dev-webhook-secret\"",
+      "System.get_env(\"WEBHOOK_SECRET\") ||"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": [],
+    "criterion": "fallback_removed",
+    "weight": 0.3
+  },
+  "tier_rationale": "Medium — requires catching that the fallback IS the hardcoded secret.",
+  "calibration": null
+}

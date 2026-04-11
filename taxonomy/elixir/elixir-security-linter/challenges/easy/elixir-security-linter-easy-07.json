@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-07",
+  "tier": "easy",
+  "title": "Strip raw/1 from a HEEx template",
+  "prompt": "This HEEx template renders a user's bio using `raw/1`, which bypasses Phoenix's automatic HTML escaping and enables XSS:\n\n```heex\n<article>\n  <h1>{@user.display_name}</h1>\n  <p class=\"bio\">{raw(@user.bio)}</p>\n</article>\n```\n\nRewrite the component so the bio is auto-escaped by HEEx. Write the corrected component module to `lib/my_app_web/components/user_html.ex` as a Phoenix HTML module with a `show/1` function. Do not use `raw/1` or `Phoenix.HTML.raw/1` anywhere in the output.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/components/user_html.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.UserHTML",
+      "def show",
+      "{@user.bio}"
+    ],
+    "must_not_contain": [
+      "raw(@",
+      "raw @",
+      "Phoenix.HTML.raw"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": [],
+    "criterion": "no_raw_on_user_data",
+    "weight": 0.3
+  },
+  "tier_rationale": "Single raw/1 call on user data. Canonical fix is to remove the raw wrapper.",
+  "calibration": null,
+  "research_citation": "Phoenix Security Guide: 'User input should never be passed into the raw/1 function.'"
+}

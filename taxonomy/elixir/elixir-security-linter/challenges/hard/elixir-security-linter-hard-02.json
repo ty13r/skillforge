@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-02",
+  "tier": "hard",
+  "title": "Fix fragment with user-controlled identifier + cast injection",
+  "prompt": "This query casts a column to text before matching a user value — the fragment is well-pinned, but the casting context itself is attacker-controlled because the column name comes from user input:\n\n```elixir\ndef search(col, value) do\n  from u in User,\n    where: fragment(\"EXTRACT(EPOCH FROM ?)::text = ?\", field(u, ^col), ^value)\nend\n```\n\nThe `field(u, ^col)` lets the user choose the column via a string. If the user picks `:bio` (a text column), the `EXTRACT(EPOCH FROM bio)` call will raise — but more importantly, a clever attacker can combine this with other parameters to leak timing information about specific columns. Rewrite the function so: (a) `col` is validated against a static allowlist of `[:inserted_at, :updated_at, :published_at]`, (b) the allowlist maps strings to atom field names via a compile-time map, (c) if `col` is not in the allowlist, return an empty result. Write the fix to `lib/my_app/search.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/search.ex"],
+    "must_contain": [
+      "defmodule MyApp.Search",
+      "^value",
+      "@allowed"
+    ],
+    "must_not_contain": [
+      "field(u, ^col)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "identifier_allowlist_strict",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — combines parameterization, identifier validation, and casting context. Claude often stops at pinning values.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'legendary — EXTRACT(...)::text = ? where the issue is casting context injection, not the pin itself.'"
+}

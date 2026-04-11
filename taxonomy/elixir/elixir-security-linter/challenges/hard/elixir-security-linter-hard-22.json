@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-hard-22",
+  "tier": "hard",
+  "title": "Foundation — Phoenix default vs opt-in confusion audit",
+  "prompt": "Audit this router and rewrite it. The developer has: (a) added redundant `plug :put_resp_header, \"x-frame-options\", \"DENY\"` — redundant because `put_secure_browser_headers` already sets this, (b) added a custom `plug :verify_csrf` module — redundant because `:protect_from_forgery` is already in the pipeline, (c) omitted a CSP (they thought it was in the default — it ISN'T), (d) kept the default `put_secure_browser_headers` call but without a map argument:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :fetch_live_flash\n  plug :put_root_layout, html: {MyAppWeb.Layouts, :root}\n  plug :put_secure_browser_headers\n  plug :protect_from_forgery\n  plug :verify_csrf\n  plug :put_resp_header, \"x-frame-options\", \"DENY\"\n  plug :put_resp_header, \"strict-transport-security\", \"max-age=31536000\"\nend\n```\n\nThe rewrite should: (1) DROP the redundant `put_resp_header` calls, (2) DROP `verify_csrf`, (3) KEEP `put_secure_browser_headers` but with a map argument that ADDS CSP and HSTS, (4) KEEP `protect_from_forgery`. The key insight: `put_secure_browser_headers` with a map argument MERGES your map with Phoenix defaults — so just pass the new headers. Write the fix to `lib/my_app_web/router.ex`. Final router must contain `content-security-policy` and `strict-transport-security` in the map argument to `put_secure_browser_headers`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "content-security-policy",
+      "strict-transport-security",
+      "plug :protect_from_forgery"
+    ],
+    "must_not_contain": [
+      "plug :verify_csrf",
+      "plug :put_resp_header, \"x-frame-options\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["plug-security-middleware-chain", "csrf-and-secure-headers"],
+    "criterion": "defaults_vs_opt_in",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — tests understanding of Phoenix defaults vs opt-in, and the Claude-specific failure of adding redundant protection.",
+  "calibration": null
+}

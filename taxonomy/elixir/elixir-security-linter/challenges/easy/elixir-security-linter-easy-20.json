@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-20",
+  "tier": "easy",
+  "title": "Convert state-changing GET to POST",
+  "prompt": "The route below is a state-changing action mounted on GET — an unsubscribe link that deletes a newsletter subscription:\n\n```elixir\nscope \"/\", MyAppWeb do\n  pipe_through :browser\n  get \"/unsubscribe\", NewsletterController, :unsubscribe\nend\n```\n\nPer the Phoenix security guide, state-changing actions should never be mounted on GET because GET requests aren't protected by CSRF tokens and can be triggered via `<img>` tags or pre-fetchers. Convert this to a POST route that is protected by CSRF. Write the corrected router to `lib/my_app_web/router.ex`. The fix must use `post \"/unsubscribe\"` and the `:browser` pipeline.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "post \"/unsubscribe\""
+    ],
+    "must_not_contain": [
+      "get \"/unsubscribe\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "csrf-and-secure-headers",
+    "secondary_capabilities": [],
+    "criterion": "state_changing_not_get",
+    "weight": 0.3
+  },
+  "tier_rationale": "Single-line fix — get -> post. Canonical Phoenix security guide rule.",
+  "calibration": null,
+  "research_citation": "Phoenix Security Guide: 'state changing actions... should occur via a POST request with proper CSRF protections, never via a GET request.'"
+}

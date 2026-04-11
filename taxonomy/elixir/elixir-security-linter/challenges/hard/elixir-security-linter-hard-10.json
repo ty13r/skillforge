@@ -1,0 +1,31 @@
+{
+  "id": "elixir-security-linter-hard-10",
+  "tier": "hard",
+  "title": "Replace hand-rolled auth with timing-safe bcrypt flow",
+  "prompt": "A developer rolled their own authentication because `mix phx.gen.auth` 'was too much.' The result is a module with multiple issues: SHA-256 for hashing, variable-time `==` for verification, no user-not-found timing equalization, and the verify function leaks which case branch matched via flash messages. Rewrite the module to use `Bcrypt.hash_pwd_salt/1` for hashing, `Bcrypt.verify_pass/2` for verification, `Bcrypt.no_user_verify/0` in the missing-user branch, AND a single generic error message for all failure modes (so the server can't be used as an oracle for 'which emails exist'):\n\n```elixir\ndefmodule MyApp.Accounts.Auth do\n  def register(attrs) do\n    hash = :crypto.hash(:sha256, attrs[\"password\"]) |> Base.encode16()\n    attrs = Map.put(attrs, \"password_hash\", hash)\n    %MyApp.Accounts.User{} |> MyApp.Accounts.User.changeset(attrs) |> MyApp.Repo.insert()\n  end\n\n  def verify(email, password) do\n    case MyApp.Repo.get_by(MyApp.Accounts.User, email: email) do\n      nil -> {:error, \"No such user\"}\n      user ->\n        expected = :crypto.hash(:sha256, password) |> Base.encode16()\n        if expected == user.password_hash do\n          {:ok, user}\n        else\n          {:error, \"Wrong password\"}\n        end\n    end\n  end\nend\n```\n\nWrite the fix to `lib/my_app/accounts/auth.ex`. The error message must be the SAME (`:invalid_credentials`) for both branches.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Auth",
+      "Bcrypt.hash_pwd_salt",
+      "Bcrypt.verify_pass",
+      "Bcrypt.no_user_verify",
+      ":invalid_credentials"
+    ],
+    "must_not_contain": [
+      ":crypto.hash(:sha256, ",
+      "\"No such user\"",
+      "\"Wrong password\"",
+      "expected == user.password_hash"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "full_hand_rolled_rewrite",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — four combined issues (hash, compare, timing equalization, error oracle). Each is individually known but combination is non-trivial.",
+  "calibration": null
+}

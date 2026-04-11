@@ -1,0 +1,30 @@
+{
+  "id": "elixir-security-linter-easy-01",
+  "tier": "easy",
+  "title": "Fix atom exhaustion from String.to_atom on params",
+  "prompt": "The controller in `test_fixtures/atom_exhaustion_controller.ex` converts `params[\"sort_by\"]`, `params[\"dir\"]`, and `params[\"view\"]` directly into atoms via `String.to_atom/1`. Because atoms in the BEAM are never garbage collected and have a hard default limit (1_048_576), this lets an attacker exhaust the atom table and OOM the node. Rewrite the controller so user-supplied strings never reach `String.to_atom/1`, `List.to_atom/1`, or an atom-interpolation sigil. Use an explicit string->atom allowlist (e.g., a module attribute map or a case statement) so the set of possible atoms is bounded at compile time. Preserve both the `index/2` and `show/2` public API. Write the corrected module to `lib/my_app_web/controllers/post_controller.ex`.",
+  "fixture_files": ["test_fixtures/atom_exhaustion_controller.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/post_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostController",
+      "def index(conn,",
+      "def show(conn,"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      "List.to_atom(",
+      ":\"show_#{",
+      ":erlang.binary_to_atom("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "no_user_input_to_atom",
+    "weight": 0.35
+  },
+  "tier_rationale": "Single, well-documented vulnerability with a canonical fix (allowlist map). Sonnet typically identifies and fixes this in one shot.",
+  "calibration": null,
+  "research_citation": "oliver-kriska/claude-elixir-phoenix iron law: 'No String.to_atom with user input.'"
+}

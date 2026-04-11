@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-10",
+  "tier": "easy",
+  "title": "Fix open redirect in a login flow",
+  "prompt": "The login controller below takes a user-supplied `return_to` param and redirects to it without validation — a classic open-redirect vulnerability:\n\n```elixir\ndef create(conn, %{\"email\" => email, \"password\" => password} = params) do\n  case Accounts.authenticate(email, password) do\n    {:ok, user} ->\n      conn\n      |> put_session(:user_id, user.id)\n      |> redirect(external: params[\"return_to\"] || \"/\")\n    {:error, _} ->\n      render(conn, :new)\n  end\nend\n```\n\nRewrite this action so the redirect target is constrained to a static allowlist of internal paths. Never pass user input directly to `redirect(external: ...)`. Use `redirect(conn, to: ...)` (which only accepts paths) with an allowlisted return target. Write the corrected module to `lib/my_app_web/controllers/session_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/session_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.SessionController",
+      "redirect(conn, to:"
+    ],
+    "must_not_contain": [
+      "redirect(external: params[",
+      "redirect(conn, external: params[",
+      "external: params[\"return_to\"]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": [],
+    "criterion": "no_external_redirect_from_params",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical open-redirect fix — replace external redirect with an allowlisted internal path. Well-documented Phoenix doc pattern.",
+  "calibration": null,
+  "research_citation": "Phoenix.Controller.redirect/2: 'For security, :to only accepts paths. Use the :external option to redirect to any URL.'"
+}

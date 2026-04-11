@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-09",
+  "tier": "medium",
+  "title": "Spot the content-type XSS in a download endpoint",
+  "prompt": "Identify and fix the XSS vulnerability in this download action:\n\n```elixir\ndef download(conn, %{\"content_type\" => ct, \"body\" => body}) do\n  conn\n  |> put_resp_content_type(ct)\n  |> send_resp(200, body)\nend\n```\n\nAn attacker can set `content_type=text/html` and upload `<script>alert(1)</script>` as the body, producing stored XSS on any subsequent request that fetches the file. Rewrite the action so (a) the content-type is forced to `application/octet-stream` or `text/plain` regardless of user input, (b) a `content-disposition: attachment; filename=...` header is added so browsers download rather than render, and (c) the `body` is still returned as the response body. Write the fix to `lib/my_app_web/download_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/download_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.DownloadController",
+      "put_resp_content_type",
+      "content-disposition"
+    ],
+    "must_not_contain": [
+      "put_resp_content_type(ct)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": [],
+    "criterion": "content_type_hardened",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires recognizing that a user-supplied content-type is a stored XSS vector, not just a raw/1 issue.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'A malicious user could set the content_type to text/html, and upload an HTML document that executes JavaScript.'"
+}

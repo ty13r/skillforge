@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-hard-18",
+  "tier": "hard",
+  "title": "Spot and fix LiveView with three handle_event bugs",
+  "prompt": "`test_fixtures/liveview_missing_authz.ex` has three related authorization bugs: (1) `delete` handle_event — no ownership check, (2) `publish` handle_event — no ownership check, (3) `promote_to_admin` — uses variable-time `==` on `current_user.role`. Rewrite the LiveView so every `handle_event/3` clause: (a) loads the record via a user-scoped query (e.g., `Blog.get_user_post!(current_user, id)`), (b) uses a `Policy.can?/3` helper instead of string comparison, (c) returns a flash error on unauthorized attempts. Do NOT include the deprecated `current_user.role == \"admin\"` pattern. Write the fix to `lib/my_app_web/live/post_live/index.ex`.",
+  "fixture_files": ["test_fixtures/liveview_missing_authz.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/post_live/index.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostLive.Index",
+      "handle_event(\"delete\"",
+      "handle_event(\"publish\"",
+      "handle_event(\"promote_to_admin\"",
+      "Policy"
+    ],
+    "must_not_contain": [
+      "current_user.role == \"admin\"",
+      "post = Repo.get!(Post, id)\n    {:ok, _} = Repo.delete(post)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "all_events_authorized",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — requires fixing three related authz bugs plus the timing-leak on role comparison, all in one LiveView.",
+  "calibration": null
+}

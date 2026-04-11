@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-legendary-07",
+  "tier": "legendary",
+  "title": "CVE-2017-1000163 regression — reject /\\nevil.com bypass",
+  "prompt": "Phoenix had an open-redirect vulnerability (CVE-2017-1000163) where a URL like `/\\nevil.com` would pass a `String.starts_with?(url, \"/\")` check but be treated as external by Chrome and Firefox. Consider this defensive code:\n\n```elixir\ndef safe_return_to(url) do\n  if is_binary(url) and String.starts_with?(url, \"/\") and not String.starts_with?(url, \"//\") do\n    url\n  else\n    \"/\"\n  end\nend\n```\n\nThis catches the obvious `//evil.com` protocol-relative case but is still defeated by `/\\nevil.com` (newline bypass — the exact CVE-2017-1000163 case) and by `/%2F%2Fevil.com` (URL-encoded bypass). Rewrite the function to reject ANY URL containing: (1) newline characters (`\\n`, `\\r`), (2) URL-encoded path separators (`%2F` case-insensitive), (3) a backslash, (4) a colon at any position before the first `/`. Write the fix to `lib/my_app/safe_return.ex`. The fix must use an allowlist character set (or regex) and reject anything suspicious rather than try to normalize it.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/safe_return.ex"],
+    "must_contain": [
+      "defmodule MyApp.SafeReturn",
+      "\\n",
+      "%2F"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "cve_2017_1000163_regression",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — requires knowing the exact CVE bypass string, plus URL encoding bypasses and normalization traps.",
+  "calibration": null,
+  "research_citation": "CVE-2017-1000163 Snyk advisory: 'An example of a user input that would pass local URL validation but be treated by Chrome and Firefox as external URLs is: /\\nexample.com.'"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "elixir-security-linter-easy-05",
+  "tier": "easy",
+  "title": "Rewrite Ecto search context to remove SQL injection",
+  "prompt": "`test_fixtures/ecto_fragment_search.ex` contains three Ecto queries with SQL injection vulnerabilities: a search by name, a date filter, and a `Ecto.Adapters.SQL.query` escape hatch. Rewrite the entire module (`MyApp.Catalog`) so: (1) `search_products/1` uses `fragment(\"... ILIKE ?\", ^like)` with the `%`-wrapped term built at the Elixir level, (2) `products_created_after/1` uses `p.inserted_at > ^date` with a proper `DateTime` or `NaiveDateTime` input, and (3) `find_by_id/1` uses the Ecto query builder instead of `Ecto.Adapters.SQL.query`. Preserve all three public function names. Write the corrected module to `lib/my_app/catalog.ex`.",
+  "fixture_files": ["test_fixtures/ecto_fragment_search.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/catalog.ex"],
+    "must_contain": [
+      "defmodule MyApp.Catalog",
+      "def search_products",
+      "def products_created_after",
+      "def find_by_id",
+      "^"
+    ],
+    "must_not_contain": [
+      "'%#{term}%'",
+      "'#{date_str}'",
+      "\"SELECT * FROM products WHERE id = #{",
+      "Ecto.Adapters.SQL.query(Repo, \"SELECT"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_injections_removed",
+    "weight": 0.4
+  },
+  "tier_rationale": "Three related injections in one file; the canonical fixes are well-known. Easy because the patterns are mechanical, but requires fixing all three to score.",
+  "calibration": null
+}

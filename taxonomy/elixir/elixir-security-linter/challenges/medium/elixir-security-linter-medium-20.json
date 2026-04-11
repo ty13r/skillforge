@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-20",
+  "tier": "medium",
+  "title": "Fix Map.put-before-cast mass assignment ordering bug",
+  "prompt": "The changeset below attempts to force `:role` to `\"user\"` via `Map.put/3` BEFORE calling `cast/3`:\n\n```elixir\ndef profile_update_changeset(user, attrs) do\n  safe_attrs = Map.put(attrs, \"role\", \"user\")\n  user\n  |> cast(safe_attrs, [:email, :name, :role, :is_admin])\n  |> validate_required([:email])\nend\n```\n\nThis does NOT work: when attrs contains `\"role\" => \"admin\"`, `Map.put(attrs, \"role\", \"user\")` overwrites it correctly — BUT since the `cast/3` allowlist still INCLUDES `:role`, a clever attacker can use atom keys (`%{role: \"admin\"}`) or re-override via ordering. The correct fix is to REMOVE `:role` and `:is_admin` from the cast allowlist entirely. Rewrite the function to cast only `[:email, :name]`. Write the fix to `lib/my_app/accounts/profile.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/profile.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Profile",
+      "cast(attrs, [:email, :name])"
+    ],
+    "must_not_contain": [
+      "Map.put(attrs, \"role\"",
+      ":role, :is_admin"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": [],
+    "criterion": "cast_allowlist_tight",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude often 'fixes' this via Map.put without realizing cast/3 ordering defeats it. Must remove field from allowlist.",
+  "calibration": null
+}

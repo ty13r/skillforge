@@ -1,0 +1,31 @@
+{
+  "id": "elixir-security-linter-easy-31",
+  "tier": "easy",
+  "title": "Fix full router with weak CSP and missing CSRF",
+  "prompt": "`test_fixtures/router_weak_headers.ex` has three issues: (1) CSP includes `'unsafe-inline'` and `'unsafe-eval'`, (2) `strict-transport-security: max-age=0` defeats HSTS, (3) the `:api` pipeline omits `:protect_from_forgery` while sharing cookies with `:browser`, and (4) an `/unsubscribe` GET route does state-changing work. Rewrite the router so: (a) CSP is `default-src 'self'; object-src 'none'; base-uri 'self'`, (b) HSTS max-age is 31536000 (1 year) with `includeSubDomains`, (c) the `:api` pipeline includes `:protect_from_forgery`, (d) `/unsubscribe` is a POST. Write the fix to `lib/my_app_web/router.ex`.",
+  "fixture_files": ["test_fixtures/router_weak_headers.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "default-src 'self'",
+      "max-age=31536000",
+      "plug :protect_from_forgery",
+      "post \"/unsubscribe\""
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'",
+      "max-age=0",
+      "get \"/unsubscribe\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": ["csrf-and-secure-headers", "security-scan-philosophy"],
+    "criterion": "full_router_hardening",
+    "weight": 0.4
+  },
+  "tier_rationale": "Multi-issue router hardening. Each fix is mechanical but requires catching all four.",
+  "calibration": null
+}

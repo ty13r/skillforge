@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-03",
+  "tier": "easy",
+  "title": "Fix atom interpolation for dynamic role atoms",
+  "prompt": "The following function builds atoms by interpolating a user-controlled role string:\n\n```elixir\ndefmodule MyApp.Roles do\n  def role_to_atom(role_str) when is_binary(role_str) do\n    :\"role_#{role_str}\"\n  end\nend\n```\n\nThis is an atom-exhaustion DoS — each unique `role_str` permanently grows the atom table. Rewrite the module to map known role strings to a fixed set of atoms without ever calling `String.to_atom/1` or using the `:\"...\"` sigil with an interpolated value. Default unknown roles to `:user`. Write the fixed code to `lib/my_app/roles.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/roles.ex"],
+    "must_contain": [
+      "defmodule MyApp.Roles",
+      "def role_to_atom",
+      ":user"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      ":\"role_#{",
+      ":erlang.binary_to_atom("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": [],
+    "criterion": "no_atom_interpolation",
+    "weight": 0.3
+  },
+  "tier_rationale": "Tests the non-obvious atom-interpolation sigil variant. Fix is a simple case/cond block.",
+  "calibration": null
+}

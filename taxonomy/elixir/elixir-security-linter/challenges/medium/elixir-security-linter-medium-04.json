@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-04",
+  "tier": "medium",
+  "title": "Fix SQL injection in dynamic ORDER BY",
+  "prompt": "This query lets the user control the ORDER BY column via a string:\n\n```elixir\ndef list(params) do\n  sort = params[\"sort\"] || \"inserted_at\"\n  from(p in Post,\n    order_by: fragment(\"? DESC\", ^sort))\nend\n```\n\nEven with the `^` pin operator, `fragment(\"? DESC\", ^sort)` does not parameterize the identifier — the value is bound as a positional parameter, and PostgreSQL will treat it as a string literal, not a column reference. The fix is a static allowlist that maps user strings to actual column atoms. Rewrite the module so `sort` is mapped through a fixed allowlist and the Ecto `order_by` uses atoms. Never interpolate or pin user input as a column identifier. Write the fix to `lib/my_app/posts.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/posts.ex"],
+    "must_contain": [
+      "defmodule MyApp.Posts",
+      "order_by:"
+    ],
+    "must_not_contain": [
+      "fragment(\"? DESC\", ^sort)",
+      "fragment(\"#{sort}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": ["atom-exhaustion"],
+    "criterion": "identifier_allowlist",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude typically recognizes value injection but not identifier injection. Requires understanding parameterization limits.",
+  "calibration": null,
+  "research_citation": "Research dossier: Claude 'defends this as you cant parameterize identifiers (true but doesnt justify interpolation — the fix is a static allowlist).'"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-19",
+  "tier": "medium",
+  "title": "Fix cast_assoc mass assignment on nested child",
+  "prompt": "The following changeset uses `cast_assoc/3` on a nested `memberships` association, but the child `Membership` changeset itself allows `:role` to be set — so attackers can still become admins by sending nested params:\n\n```elixir\ndef changeset(user, attrs) do\n  user\n  |> cast(attrs, [:email, :name])\n  |> cast_assoc(:memberships, with: &Membership.changeset/2)\nend\n\n# in Membership schema:\ndef changeset(membership, attrs) do\n  membership\n  |> cast(attrs, [:team_id, :role])\nend\n```\n\nRewrite both schemas so `Membership.changeset/2` does NOT accept `:role` from user input. Create a separate `Membership.role_changeset/2` for admin-only role changes. The parent `User.changeset/2` must pass `with: &Membership.profile_changeset/2` (or equivalent safe changeset). Write the fix to `lib/my_app/accounts/membership.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/membership.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Membership",
+      "def changeset",
+      "role_changeset"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:team_id, :role])"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": [],
+    "criterion": "nested_role_protected",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires recognizing that cast_assoc doesn't re-protect child-level fields.",
+  "calibration": null
+}

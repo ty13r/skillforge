@@ -1,0 +1,25 @@
+{
+  "id": "elixir-security-linter-hard-07",
+  "tier": "hard",
+  "title": "Fix secure_compare on different-length inputs",
+  "prompt": "This function uses `Plug.Crypto.secure_compare/2` — which IS constant-time — but it compares values of different lengths. `secure_compare/2` short-circuits on size mismatch (returns false immediately), which leaks the expected length:\n\n```elixir\ndef verify(token, expected) do\n  Plug.Crypto.secure_compare(token, expected)\nend\n```\n\nIf `expected` has a known length (say 32 bytes), an attacker learns whether their input is 32 bytes by timing the response. Rewrite the function so both inputs are always padded or truncated to the same fixed length before being compared, using a constant-time algorithm. Also return `false` for obviously malformed input (e.g., a token shorter than 8 bytes) — this is a deliberate public error signal, not a leak. Write the fix to `lib/my_app/auth/compare.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth/compare.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth.Compare",
+      "Plug.Crypto.secure_compare",
+      "byte_size"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": [],
+    "criterion": "length_normalized_compare",
+    "weight": 0.4
+  },
+  "tier_rationale": "Hard — requires recognizing that secure_compare short-circuits on length mismatch. The fix is to normalize first.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'legendary — secure_compare/2 used correctly but on values of different lengths — skill must recognize the length leak and normalize.'"
+}

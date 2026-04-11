@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-legendary-03",
+  "tier": "legendary",
+  "title": "Fix content-type upload XSS with user-controlled MIME",
+  "prompt": "This file-upload controller persists the user-supplied content type and echoes it back on download — a stored XSS vector that bypasses HEEx entirely:\n\n```elixir\ndefmodule MyAppWeb.UploadController do\n  use MyAppWeb, :controller\n\n  def create(conn, %{\"upload\" => %Plug.Upload{} = upload}) do\n    {:ok, saved} = MyApp.Uploads.store(%{\n      path: upload.path,\n      content_type: upload.content_type,\n      name: upload.filename\n    })\n    json(conn, %{id: saved.id})\n  end\n\n  def show(conn, %{\"id\" => id}) do\n    upload = MyApp.Uploads.get!(id)\n    conn\n    |> put_resp_content_type(upload.content_type)\n    |> send_file(200, upload.path)\n  end\nend\n```\n\nAn attacker uploads a file with `content_type: \"text/html\"` and a body containing `<script>alert(1)</script>`. Any user visiting the download URL gets script execution. Rewrite the module so: (a) uploaded `content_type` is validated against a static allowlist of safe types (images, pdf, octet-stream, plain), (b) disallowed content types are FORCED to `application/octet-stream`, (c) the `show/2` action always adds `content-disposition: attachment; filename=...` so browsers download rather than render, (d) it never echoes back the user-supplied MIME type verbatim. Write the fix to `lib/my_app_web/upload_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/upload_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.UploadController",
+      "@safe_types",
+      "content-disposition",
+      "attachment"
+    ],
+    "must_not_contain": [
+      "put_resp_content_type(upload.content_type)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": ["plug-security-middleware-chain", "security-scan-philosophy"],
+    "criterion": "content_type_sanitized_and_forced_download",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — multi-stage XSS via stored content-type, with a fix that requires allowlist + content-disposition forcing. Not a raw/1 pattern.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'A malicious user could set the content_type to text/html, and upload an HTML document that executes JavaScript in the browser.'"
+}

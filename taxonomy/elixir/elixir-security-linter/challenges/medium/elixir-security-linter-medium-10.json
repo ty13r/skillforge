@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-medium-10",
+  "tier": "medium",
+  "title": "Convert controller HTML interpolation to HEEx component",
+  "prompt": "The controller below builds HTML by string interpolation, bypassing HEEx's auto-escaping:\n\n```elixir\ndef profile(conn, %{\"id\" => id}) do\n  user = MyApp.Accounts.get_user!(id)\n  html(conn, \"<section class=\\\"profile\\\"><h1>#{user.name}</h1><p>#{user.bio}</p></section>\")\nend\n```\n\nRewrite the action to use a HEEx template. Also create a stateless function component `profile/1` that takes `@user` as an assign and renders the section. Write both the controller and the component to `lib/my_app_web/profile_html.ex`. The action must NOT call `html/2` with an interpolated string.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/profile_html.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.ProfileHTML",
+      "{@user.name}",
+      "{@user.bio}"
+    ],
+    "must_not_contain": [
+      "html(conn, \"<",
+      "<h1>#{user.name}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "raw-xss-prevention",
+    "secondary_capabilities": [],
+    "criterion": "heex_component_used",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires transforming a controller pattern into a component pattern.",
+  "calibration": null
+}

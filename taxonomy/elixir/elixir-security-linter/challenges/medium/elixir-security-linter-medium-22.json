@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-22",
+  "tier": "medium",
+  "title": "Fix bcrypt verify that still uses == for comparison",
+  "prompt": "This auth module hashes passwords correctly with `Bcrypt.hash_pwd_salt/1`, but verifies them by hashing the input and comparing with `==`:\n\n```elixir\ndef verify(email, password) do\n  user = Repo.get_by(User, email: email)\n  if user && Bcrypt.hash_pwd_salt(password) == user.password_hash do\n    {:ok, user}\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nThis is doubly broken: (1) bcrypt hashes are not deterministic — hashing the same password twice produces different outputs, so `==` will NEVER match, (2) `==` is variable-time. Rewrite to use `Bcrypt.verify_pass/2` which internally uses secure_compare, and `Bcrypt.no_user_verify/0` for the user-not-found branch (preserves timing consistency). Write the fix to `lib/my_app/auth.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth",
+      "Bcrypt.verify_pass",
+      "Bcrypt.no_user_verify"
+    ],
+    "must_not_contain": [
+      "Bcrypt.hash_pwd_salt(password) == user.password_hash"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": ["timing-attack-comparisons"],
+    "criterion": "verify_pass_used",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — Claude often assumes bcrypt hashes are deterministic, missing both the correctness bug and the timing leak.",
+  "calibration": null
+}

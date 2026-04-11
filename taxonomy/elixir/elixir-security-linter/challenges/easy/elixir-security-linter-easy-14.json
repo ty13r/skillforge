@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-14",
+  "tier": "easy",
+  "title": "Fix pattern-match timing leak on tokens",
+  "prompt": "The following function uses pattern matching with a pinned token, which looks elegant but uses Elixir's variable-time equality algorithm (per the EEF Security Working Group, pattern matching compares byte-by-byte and leaks timing):\n\n```elixir\ndef verify(token, %{token: ^token}), do: :ok\ndef verify(_, _), do: :error\n```\n\nRewrite this as a single-clause function that uses `Plug.Crypto.secure_compare/2` to compare the supplied token to the stored one in constant time. Write the corrected module to `lib/my_app/auth/token.ex` with a `verify/2` function that takes the incoming token and a map with a `:token` key.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/auth/token.ex"],
+    "must_contain": [
+      "defmodule MyApp.Auth.Token",
+      "Plug.Crypto.secure_compare",
+      "def verify"
+    ],
+    "must_not_contain": [
+      "def verify(token, %{token: ^token})"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "timing-attack-comparisons",
+    "secondary_capabilities": [],
+    "criterion": "no_pattern_match_timing_leak",
+    "weight": 0.3
+  },
+  "tier_rationale": "Requires recognizing that pattern matching with ^ is variable-time — a subtle but documented EEF Security WG failure mode.",
+  "calibration": null,
+  "research_citation": "EEF Security WG: 'Pattern matching uses a variable-time equality algorithm to detect differences.'"
+}

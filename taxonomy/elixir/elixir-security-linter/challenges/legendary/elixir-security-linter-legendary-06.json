@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-legendary-06",
+  "tier": "legendary",
+  "title": "Audit runtime.exs with an attacker-writable env file pattern",
+  "prompt": "The app reads a `.env` file at boot via a custom `MyApp.EnvLoader`:\n\n```elixir\n# runtime.exs\nimport Config\nMyApp.EnvLoader.load!(\"/etc/my_app/env.conf\")\nconfig :my_app, :api_key, System.fetch_env!(\"API_KEY\")\nconfig :my_app, :db_url, System.fetch_env!(\"DATABASE_URL\")\n\n# lib/my_app/env_loader.ex\ndefmodule MyApp.EnvLoader do\n  def load!(path) do\n    path\n    |> File.read!()\n    |> String.split(\"\\n\")\n    |> Enum.each(fn line ->\n      case String.split(line, \"=\", parts: 2) do\n        [k, v] -> System.put_env(k, v)\n        _ -> :ok\n      end\n    end)\n  end\nend\n```\n\nThree issues: (1) the env file path is hardcoded — operational readers can't audit what's being loaded from where, (2) `File.read!/1` on a specific path with no permissions check means any process that can write to `/etc/my_app/env.conf` can inject env vars, (3) the parser is naive — a line like `ADMIN_KEY=\\nOTHER_KEY=injected` defeats the split. Rewrite the module so: (a) the env file path comes from an environment variable `MY_APP_ENV_FILE` (via `System.get_env/1` with a safe default), (b) the file's permissions are verified via `File.stat!/1` and the loader refuses to load if mode is group- or world-writable, (c) the parser correctly handles newline-embedded values (refuse or encode), (d) the behavior is logged so ops can audit it. Write the fix to `lib/my_app/env_loader.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/env_loader.ex"],
+    "must_contain": [
+      "defmodule MyApp.EnvLoader",
+      "File.stat",
+      "System.get_env"
+    ],
+    "must_not_contain": [
+      "path\n    |> File.read!()\n    |> String.split(\"\\n\")"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "env_loader_hardened",
+    "weight": 0.5
+  },
+  "tier_rationale": "Legendary — operational-security concern that requires reasoning about file permissions, parser correctness, and audit logging.",
+  "calibration": null
+}

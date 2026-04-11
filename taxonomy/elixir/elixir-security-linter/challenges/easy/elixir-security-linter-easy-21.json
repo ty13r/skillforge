@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-21",
+  "tier": "easy",
+  "title": "Remove :role from a User changeset allowlist",
+  "prompt": "The following Ecto changeset allows mass-assignment of the `:role` and `:is_admin` fields via arbitrary form params:\n\n```elixir\ndef changeset(user, attrs) do\n  user\n  |> cast(attrs, [:email, :name, :password_hash, :role, :is_admin])\n  |> validate_required([:email, :name])\nend\n```\n\nA malicious user can send `POST /users?user[role]=admin&user[is_admin]=true` and become an admin. Rewrite the changeset to remove `:role` and `:is_admin` from the cast allowlist. Write the corrected schema module to `lib/my_app/accounts/user.ex`. Preserve the other fields.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.User",
+      "cast(attrs, [:email, :name, :password_hash])"
+    ],
+    "must_not_contain": [
+      ":role, :is_admin",
+      ":role,",
+      ":is_admin,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": [],
+    "criterion": "sensitive_fields_removed_from_cast",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical mass-assignment fix — remove sensitive fields from cast allowlist.",
+  "calibration": null,
+  "research_citation": "Ecto.Changeset docs: 'The cast/4 function... specifies which fields can be modified through mass assignment, protecting against unwanted parameter injection.'"
+}

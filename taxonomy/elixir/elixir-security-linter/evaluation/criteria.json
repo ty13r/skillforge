@@ -1,0 +1,109 @@
+{
+  "family_slug": "elixir-security-linter",
+  "capabilities": {
+    "security-scan-philosophy": {
+      "weight": 0.08,
+      "objectives": {
+        "fail_closed_style": {"weight": 0.4, "description": "Uses fail-closed idioms (with guard, raise on missing auth, default deny)"},
+        "severity_labeled": {"weight": 0.3, "description": "Security issue is labeled with severity (@critical / @warning comments or structured responses)"},
+        "cross_cutting_clean": {"weight": 0.3, "description": "No cross-cutting anti-patterns (md5, String.to_atom, fragment interpolation, raw/1)"}
+      }
+    },
+    "atom-exhaustion": {
+      "weight": 0.10,
+      "objectives": {
+        "no_user_input_to_atom": {"weight": 0.5, "description": "No String.to_atom/List.to_atom/binary_to_atom on user input"},
+        "safer_alternative": {"weight": 0.3, "description": "Uses String.to_existing_atom OR an allowlist map"},
+        "atom_table_bounded": {"weight": 0.2, "description": "Set of possible atoms is bounded at compile time"}
+      }
+    },
+    "ecto-fragment-injection": {
+      "weight": 0.12,
+      "objectives": {
+        "no_fragment_interpolation": {"weight": 0.5, "description": "No string interpolation inside fragment/1"},
+        "pin_operator_used": {"weight": 0.3, "description": "Uses ^ pin operator for user values"},
+        "parameterized_query": {"weight": 0.2, "description": "Query is parameterized via Ecto macros, not raw SQL"}
+      }
+    },
+    "raw-xss-prevention": {
+      "weight": 0.10,
+      "objectives": {
+        "no_raw_on_user_content": {"weight": 0.5, "description": "No raw/1 call on user-controlled assign"},
+        "sanitizer_used": {"weight": 0.3, "description": "Phoenix.HTML.html_escape or HtmlSanitizeEx used for rich text"},
+        "auto_escape_preserved": {"weight": 0.2, "description": "HEEx auto-escape not bypassed unnecessarily"}
+      }
+    },
+    "open-redirect-protection": {
+      "weight": 0.08,
+      "objectives": {
+        "no_user_controlled_redirect": {"weight": 0.5, "description": "No redirect(to: params[...]) without validation"},
+        "url_validated": {"weight": 0.3, "description": "URL validation (URI.parse, starts_with?, regex) before redirect"},
+        "allowlist_or_relative_only": {"weight": 0.2, "description": "Only relative URLs or allowlisted hosts accepted"}
+      }
+    },
+    "timing-attack-comparisons": {
+      "weight": 0.08,
+      "objectives": {
+        "no_equality_on_secrets": {"weight": 0.5, "description": "No == on token/secret/hash variables"},
+        "secure_compare_used": {"weight": 0.5, "description": "Plug.Crypto.secure_compare or equivalent constant-time compare used"}
+      }
+    },
+    "liveview-handle-event-authz": {
+      "weight": 0.10,
+      "objectives": {
+        "ownership_check_present": {"weight": 0.5, "description": "Ownership check (owner_id == current_user) in handle_event body"},
+        "with_guard_pattern": {"weight": 0.3, "description": "Uses with-chain authorize guard for multi-step authorization"},
+        "unauthorized_error_path": {"weight": 0.2, "description": "Explicit error path on authorization failure (put_flash + noreply)"}
+      }
+    },
+    "csrf-and-secure-headers": {
+      "weight": 0.07,
+      "objectives": {
+        "protect_from_forgery": {"weight": 0.4, "description": "protect_from_forgery plug in the browser pipeline"},
+        "put_secure_browser_headers": {"weight": 0.3, "description": "put_secure_browser_headers plug present"},
+        "csp_configured": {"weight": 0.3, "description": "Content-Security-Policy header configured"}
+      }
+    },
+    "mass-assignment-in-changesets": {
+      "weight": 0.08,
+      "objectives": {
+        "no_role_in_public_cast": {"weight": 0.5, "description": "cast/3 allowlist excludes :role/:admin/:permissions on public changesets"},
+        "separate_admin_changeset": {"weight": 0.3, "description": "Separate admin-only changeset for privileged fields"},
+        "no_wide_open_cast": {"weight": 0.2, "description": "cast/3 uses explicit allowlist, not params / attrs passthrough"}
+      }
+    },
+    "password-hashing-choice": {
+      "weight": 0.09,
+      "objectives": {
+        "strong_hash_used": {"weight": 0.5, "description": "Bcrypt, Argon2, or Pbkdf2 used (not md5/sha1/plaintext)"},
+        "no_broken_crypto": {"weight": 0.3, "description": "No :crypto.hash(:md5 | :sha, ...)"},
+        "no_plaintext": {"weight": 0.2, "description": "No plaintext password assignment"}
+      }
+    },
+    "session-and-cookie-security": {
+      "weight": 0.05,
+      "objectives": {
+        "secure_flag": {"weight": 0.3, "description": "secure: true set on session cookie"},
+        "httponly_flag": {"weight": 0.3, "description": "http_only: true set on session cookie"},
+        "samesite_flag": {"weight": 0.2, "description": "same_site: Strict/Lax set"},
+        "signing_salt": {"weight": 0.2, "description": "signing_salt or encryption_salt configured"}
+      }
+    },
+    "plug-security-middleware-chain": {
+      "weight": 0.03,
+      "objectives": {
+        "csp_header": {"weight": 0.4, "description": "Content-Security-Policy header present"},
+        "hsts_header": {"weight": 0.3, "description": "Strict-Transport-Security header present"},
+        "x_frame_options": {"weight": 0.3, "description": "X-Frame-Options header present"}
+      }
+    },
+    "secrets-in-config": {
+      "weight": 0.02,
+      "objectives": {
+        "no_hardcoded_secret": {"weight": 0.6, "description": "No hardcoded secrets in config values"},
+        "system_fetch_env_used": {"weight": 0.4, "description": "System.fetch_env! used for secret loading in runtime.exs"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

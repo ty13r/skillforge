@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-33",
+  "tier": "medium",
+  "title": "Fix LiveView handle_event that delegates to context without scope",
+  "prompt": "This LiveView delegates deletion to a context function, trusting it to enforce authorization — but the context function doesn't scope the query:\n\n```elixir\ndef handle_event(\"delete\", %{\"id\" => id}, socket) do\n  :ok = MyApp.Blog.delete_post(id)\n  {:noreply, stream_delete(socket, :posts, %{id: id})}\nend\n\n# in MyApp.Blog:\ndef delete_post(id) do\n  post = Repo.get!(Post, id)\n  {:ok, _} = Repo.delete(post)\n  :ok\nend\n```\n\nRewrite both the LiveView AND the context function so that authorization happens in the context, and the query is scoped to the current user: `Repo.get_by!(Post, id: id, user_id: current_user.id)`. The context function should take `current_user` as its first argument. Write the fix to `lib/my_app/blog.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/blog.ex"],
+    "must_contain": [
+      "defmodule MyApp.Blog",
+      "def delete_post(",
+      "user_id"
+    ],
+    "must_not_contain": [
+      "def delete_post(id) do\n    post = Repo.get!(Post, id)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "context_scoped",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires fixing both the LiveView AND the context; Claude often trusts one side.",
+  "calibration": null
+}

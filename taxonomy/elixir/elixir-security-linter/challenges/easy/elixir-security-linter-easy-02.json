@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-02",
+  "tier": "easy",
+  "title": "Spot the atom-exhaustion vulnerability in a GenServer",
+  "prompt": "Below is a GenServer that registers worker processes:\n\n```elixir\ndefmodule MyApp.WorkerSupervisor do\n  def start_worker(user_id, worker_type) do\n    name = String.to_atom(\"worker_#{user_id}_#{worker_type}\")\n    GenServer.start_link(MyApp.Worker, [user_id, worker_type], name: name)\n  end\nend\n```\n\nIdentify the security vulnerability by name, explain why it is dangerous in the BEAM runtime, and produce a fixed version of the module. Write your analysis and the fixed code to `lib/my_app/worker_supervisor.ex`. The fix should use `Registry` with a string/binary key so that process names are never dynamically minted atoms. Include a short comment at the top of the file stating what was fixed.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/worker_supervisor.ex"],
+    "must_contain": [
+      "defmodule MyApp.WorkerSupervisor",
+      "Registry",
+      "atom"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      "List.to_atom("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": [],
+    "criterion": "identifies_and_fixes_atom_dos",
+    "weight": 0.3
+  },
+  "tier_rationale": "Short self-contained snippet with one well-known vulnerability. Requires identification plus a canonical Registry-based fix.",
+  "calibration": null,
+  "research_citation": "Paraxial.io: 'Atoms in Elixir are not garbage collected... default limit 1_048_576.'"
+}

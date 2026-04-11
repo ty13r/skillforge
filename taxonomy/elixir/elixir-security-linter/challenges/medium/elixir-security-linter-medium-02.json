@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-02",
+  "tier": "medium",
+  "title": "Spot atom exhaustion in three sibling controllers",
+  "prompt": "The following code shows three controllers that all use `String.to_atom/1` with slightly different wrappings — an attacker can target any one of them to exhaust the atom table. Rewrite all three so none call `String.to_atom/1`, `List.to_atom/1`, or `:\"...\"` with interpolation:\n\n```elixir\ndefmodule MyAppWeb.FilterController do\n  use MyAppWeb, :controller\n  def index(conn, %{\"kind\" => kind}) do\n    render(conn, :index, filter: String.to_atom(kind))\n  end\nend\n\ndefmodule MyAppWeb.OrderController do\n  use MyAppWeb, :controller\n  def index(conn, params) do\n    ord = String.to_atom(params[\"order\"] || \"desc\")\n    render(conn, :index, order: ord)\n  end\nend\n\ndefmodule MyAppWeb.TagController do\n  use MyAppWeb, :controller\n  def show(conn, %{\"tag\" => tag}) do\n    key = :\"tag_#{tag}\"\n    render(conn, :show, tag: key)\n  end\nend\n```\n\nWrite all three corrected modules into a single file `lib/my_app_web/controllers/filters.ex`. Use allowlist maps.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/filters.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.FilterController",
+      "defmodule MyAppWeb.OrderController",
+      "defmodule MyAppWeb.TagController"
+    ],
+    "must_not_contain": [
+      "String.to_atom(kind)",
+      "String.to_atom(params[",
+      ":\"tag_#{tag}\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "multi_site_atom_fix",
+    "weight": 0.4
+  },
+  "tier_rationale": "Three sibling vulnerabilities in different controllers. Requires consistent pattern across all of them, not a one-off fix.",
+  "calibration": null
+}

@@ -1,0 +1,24 @@
+{
+  "id": "elixir-security-linter-medium-18",
+  "tier": "medium",
+  "title": "Scope ownership check into the Ecto query",
+  "prompt": "This handle_event has an ownership check as an `if` guard AFTER loading the record — which means a malicious user still causes a DB lookup for records they don't own:\n\n```elixir\ndef handle_event(\"edit\", %{\"id\" => id, \"title\" => title}, socket) do\n  post = MyApp.Repo.get!(MyApp.Blog.Post, id)\n\n  if post.user_id == socket.assigns.current_user.id do\n    {:ok, updated} = MyApp.Blog.update_post(post, %{title: title})\n    {:noreply, stream_insert(socket, :posts, updated)}\n  else\n    {:noreply, put_flash(socket, :error, \"Not authorized\")}\n  end\nend\n```\n\nRewrite it so the ownership check is scoped INTO the Ecto query — i.e., `Repo.get_by!(Post, id: id, user_id: current_user.id)` raises if the user doesn't own the post. This prevents leaking existence. Also add a rescue for `Ecto.NoResultsError`. Write the fix to `lib/my_app_web/live/post_live/edit.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/post_live/edit.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostLive.Edit",
+      "user_id: ",
+      "get_by"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": [],
+    "criterion": "query_scoped_authz",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires knowing that ownership should be in the query, not an after-load if.",
+  "calibration": null
+}

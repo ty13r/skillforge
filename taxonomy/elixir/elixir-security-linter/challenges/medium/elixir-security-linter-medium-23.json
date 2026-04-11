@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-23",
+  "tier": "medium",
+  "title": "Encrypt session cookie for sensitive data",
+  "prompt": "The endpoint below stores sensitive user data (an API key) in the session, but uses a signed-only cookie store. Signed cookies are tamper-proof but NOT confidential — any user with browser access can read their own session contents:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: {MyAppWeb.SessionSalt, :get, []},\n  http_only: true,\n  secure: true\n]\n```\n\nRewrite the config so the cookie is both signed AND encrypted: add an `encryption_salt` option (with a runtime function reference, not a literal). Write the corrected module to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "encryption_salt:",
+      "http_only: true",
+      "secure: true"
+    ],
+    "must_not_contain": [
+      "encryption_salt: \""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": ["secrets-in-config"],
+    "criterion": "encryption_added",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires recognizing the difference between signed-only and encrypted cookies, which Claude conflates.",
+  "calibration": null,
+  "research_citation": "Curiosum: 'By default, Phoenix stores session data in signed, but not encrypted, cookies.'"
+}

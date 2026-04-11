@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-hard-01",
+  "tier": "hard",
+  "title": "Fix String.to_existing_atom used with attacker-seeded atom table",
+  "prompt": "The code below uses `String.to_existing_atom/1` — which LOOKS safe because it only converts strings that already exist in the atom table. But the atom table is populated at boot time by reading `config/roles.json`, which is writable by a content editor:\n\n```elixir\n# In application.ex:\ndef start(_, _) do\n  {:ok, roles} = File.read(\"config/roles.json\")\n  roles\n  |> Jason.decode!()\n  |> Map.keys()\n  |> Enum.each(&String.to_atom/1)  # pre-populate table\n\n  # later in the supervision tree...\nend\n\n# In controller:\ndef show(conn, %{\"role\" => role}) do\n  atom = String.to_existing_atom(role)\n  render(conn, :show, role: atom)\nend\n```\n\nAn attacker with write access to `config/roles.json` can seed arbitrary strings into the atom table at boot, making `String.to_existing_atom/1` a useless guard. Rewrite the module so (a) the boot-time `String.to_atom/1` is replaced with a static compile-time map of known roles, (b) the controller uses the map for lookup (returns `:error` on unknown), (c) NO `String.to_atom` or `String.to_existing_atom` is called at runtime. Write the fix to `lib/my_app/roles.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/roles.ex"],
+    "must_contain": [
+      "defmodule MyApp.Roles",
+      "@roles"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      "String.to_existing_atom("
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "static_allowlist_no_runtime_atomization",
+    "weight": 0.45
+  },
+  "tier_rationale": "Hard — requires recognizing that to_existing_atom is only safe if the atom table itself is trustworthy. The fix requires eliminating runtime atomization entirely.",
+  "calibration": null,
+  "research_citation": "Research dossier: 'String.to_existing_atom/1 used safely but the atom table is boot-populated from an attacker-writable config file, making the existing-atom check toothless.'"
+}

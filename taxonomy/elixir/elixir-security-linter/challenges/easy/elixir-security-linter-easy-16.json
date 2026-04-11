@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-16",
+  "tier": "easy",
+  "title": "Add authorization to LiveView delete handler",
+  "prompt": "The following LiveView `handle_event(\"delete\", ...)` deletes a post without checking whether the current user owns it:\n\n```elixir\ndef handle_event(\"delete\", %{\"id\" => id}, socket) do\n  post = Repo.get!(Post, id)\n  {:ok, _} = Repo.delete(post)\n  {:noreply, stream_delete(socket, :posts, post)}\nend\n```\n\nAdd an ownership check so the post can only be deleted if `socket.assigns.current_user.id == post.user_id`. If the check fails, put a flash error and do not delete. Write the corrected LiveView module to `lib/my_app_web/live/post_live/index.ex` with the `handle_event/3` clause preserved. Do not 'hide the button' — the server must enforce.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/post_live/index.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostLive.Index",
+      "handle_event(\"delete\"",
+      "current_user"
+    ],
+    "must_not_contain": [
+      "post = Repo.get!(Post, id)\n    {:ok, _} = Repo.delete(post)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": [],
+    "criterion": "ownership_check_added",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical missing-authz fix — add ownership check to a single handle_event.",
+  "calibration": null,
+  "research_citation": "Phoenix LiveView Security: 'you must always verify permissions on the server... a savvy user can directly talk to the server and request a deletion anyway.'"
+}

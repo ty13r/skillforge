@@ -1,0 +1,27 @@
+{
+  "id": "elixir-security-linter-easy-32",
+  "tier": "easy",
+  "title": "Move hardcoded API key from prod.exs to runtime.exs",
+  "prompt": "The following config has a hardcoded Stripe API key committed to source:\n\n```elixir\n# prod.exs\nimport Config\nconfig :my_app, :stripe_secret, \"sk_live_abc123_real_key\"\n```\n\nMove this to `config/runtime.exs` and read the secret from an environment variable via `System.fetch_env!/1` (raises if unset). Write the corrected `runtime.exs` to `config/runtime.exs`. The value must be looked up via `System.fetch_env!(\"STRIPE_SECRET\")`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["config/runtime.exs"],
+    "must_contain": [
+      "import Config",
+      "System.fetch_env!(\"STRIPE_SECRET\")"
+    ],
+    "must_not_contain": [
+      "\"sk_live_abc123_real_key\"",
+      "\"sk_live_"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "secrets-in-config",
+    "secondary_capabilities": [],
+    "criterion": "runtime_env_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical Phoenix secret-migration fix.",
+  "calibration": null,
+  "research_citation": "GuardRails: 'Hardcoding secrets in the configuration files... can lead to security vulnerabilities, as these secrets might end up in version control systems.'"
+}

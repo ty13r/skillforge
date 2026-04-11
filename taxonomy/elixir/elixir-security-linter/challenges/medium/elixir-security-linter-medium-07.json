@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-medium-07",
+  "tier": "medium",
+  "title": "Rewrite reports module using parameterized SQL",
+  "prompt": "Below is an analytics module that uses `Ecto.Adapters.SQL.query/3` with direct SQL string interpolation on `id`. Rewrite the module so (a) `find_by_id/1` uses parameterized SQL via `$1` placeholder, and (b) add a second `product_by_id/1` that uses the Ecto DSL (`from p in Product, where: p.id == ^id`). Both functions must accept the same `id` argument.\n\n```elixir\ndefmodule MyApp.Reports do\n  alias MyApp.Repo\n\n  def find_by_id(id) do\n    {:ok, %{rows: rows}} =\n      Ecto.Adapters.SQL.query(Repo, \"SELECT * FROM products WHERE id = #{id}\")\n    rows\n  end\nend\n```\n\nWrite the corrected module to `lib/my_app/reports.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports.ex"],
+    "must_contain": [
+      "defmodule MyApp.Reports",
+      "def find_by_id",
+      "def product_by_id",
+      "$1",
+      "^id"
+    ],
+    "must_not_contain": [
+      "\"SELECT * FROM products WHERE id = #{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "ecto-fragment-injection",
+    "secondary_capabilities": [],
+    "criterion": "parameterized_sql_and_dsl",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — two related fixes, one via $1 parameter placeholder and one via Ecto DSL.",
+  "calibration": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-medium-12",
+  "tier": "medium",
+  "title": "Spot open redirect via URI.parse allowlist with scheme gap",
+  "prompt": "This function tries to validate a redirect URL via `URI.parse/1` and a host allowlist, but forgets to reject `javascript:` and `data:` schemes:\n\n```elixir\n@hosts [\"example.com\", \"dashboard.example.com\"]\n\ndef safe_redirect(conn, url) do\n  case URI.parse(url) do\n    %URI{host: host} when host in @hosts ->\n      redirect(conn, external: url)\n    _ ->\n      redirect(conn, to: \"/\")\n  end\nend\n```\n\nRewrite this so the scheme is checked against `[\"https\", \"http\"]` (rejecting `javascript:`, `data:`, `file:`, etc.), the host is still checked against the allowlist, and if ANY check fails the redirect goes to `/`. Write the fix to `lib/my_app_web/safe_redirect.ex`. The fix must include a scheme check that explicitly allows only `\"https\"` or `\"http\"`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/safe_redirect.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.SafeRedirect",
+      "URI.parse",
+      "scheme"
+    ],
+    "must_not_contain": [
+      "redirect(conn, external: url)\n    _ ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": [],
+    "criterion": "scheme_check_added",
+    "weight": 0.35
+  },
+  "tier_rationale": "Medium — requires catching that host-allowlist alone isn't enough; scheme must also be checked.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-24",
+  "tier": "easy",
+  "title": "Replace :crypto.hash(:sha256, password) with bcrypt",
+  "prompt": "The following auth module stores passwords using `:crypto.hash(:sha256, password)` — a general-purpose, unsalted hash that is trivially reversed with rainbow tables:\n\n```elixir\ndef register(attrs) do\n  hash = :crypto.hash(:sha256, attrs[\"password\"]) |> Base.encode16()\n  %User{} |> User.changeset(Map.put(attrs, \"password_hash\", hash)) |> Repo.insert()\nend\n```\n\nRewrite the module to use `Bcrypt.hash_pwd_salt/1` (bcrypt_elixir package) for password hashing, and `Bcrypt.verify_pass/2` for verification. Include a `Bcrypt.no_user_verify()` call in the email-not-found branch to preserve timing consistency. Write the corrected module to `lib/my_app/accounts/auth.ex` with `register/1` and `verify/2` functions.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/auth.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.Auth",
+      "Bcrypt.hash_pwd_salt",
+      "Bcrypt.verify_pass"
+    ],
+    "must_not_contain": [
+      ":crypto.hash(:sha256, ",
+      ":crypto.hash(:md5, "
+    ]
+  },
+  "scoring": {
+    "primary_capability": "password-hashing-choice",
+    "secondary_capabilities": ["timing-attack-comparisons"],
+    "criterion": "modern_hash_used",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical 'never use a general-purpose hash for passwords' fix. Well-documented and has a standard replacement.",
+  "calibration": null,
+  "research_citation": "Phoenix Mix.Tasks.Phx.Gen.Auth: 'The password hashing mechanism defaults to bcrypt for Unix systems.'"
+}

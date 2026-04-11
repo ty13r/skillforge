@@ -1,0 +1,28 @@
+{
+  "id": "elixir-security-linter-easy-22",
+  "tier": "easy",
+  "title": "Split the User changeset into profile and role variants",
+  "prompt": "`test_fixtures/mass_assignment_changeset.ex` contains a `User` schema with TWO mass-assignment vulnerabilities: (1) the main `changeset/2` allows `:role` and `:is_admin` to be set via `cast/3`, (2) the `profile_update_changeset/2` tries to defend with `Map.put(attrs, \"role\", \"user\")` BEFORE casting — but that doesn't work because `cast/3` still honors the subsequent user-supplied value when `:role` is in the allowlist. Rewrite the schema so: (a) `changeset/2` casts only profile-safe fields, (b) `profile_update_changeset/2` is limited to `:email` and `:name`, (c) a new `role_changeset/2` exists for admin-only role updates. Write the corrected module to `lib/my_app/accounts/user.ex`.",
+  "fixture_files": ["test_fixtures/mass_assignment_changeset.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accounts/user.ex"],
+    "must_contain": [
+      "defmodule MyApp.Accounts.User",
+      "def changeset",
+      "def profile_update_changeset",
+      "def role_changeset"
+    ],
+    "must_not_contain": [
+      "cast(attrs, [:email, :name, :password_hash, :role, :is_admin",
+      "Map.put(attrs, \"role\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "mass-assignment-in-changesets",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "split_changesets",
+    "weight": 0.35
+  },
+  "tier_rationale": "Two related mass-assignment bugs including the Map.put-before-cast ordering issue. Fix requires splitting into three changesets.",
+  "calibration": null
+}

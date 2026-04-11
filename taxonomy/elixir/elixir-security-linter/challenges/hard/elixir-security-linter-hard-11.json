@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-hard-11",
+  "tier": "hard",
+  "title": "Foundation — triage and fix a file with mixed severity",
+  "prompt": "The module below contains FIVE issues at varying severities. Rewrite it so all are fixed, and include a brief block comment at the top that lists each issue with its severity tag (HIGH/MED/LOW):\n\n```elixir\ndefmodule MyAppWeb.UserSettingsController do\n  use MyAppWeb, :controller\n\n  @salt \"hardcoded-salt\"\n\n  def update(conn, %{\"user\" => user_params}) do\n    user = conn.assigns.current_user\n    token = user_params[\"token\"]\n\n    if user.api_token == token do\n      cs = MyApp.Accounts.User.admin_changeset(user, user_params)\n      case MyApp.Repo.update(cs) do\n        {:ok, _} ->\n          html(conn, \"<h1>Updated #{user.name}</h1>\")\n        {:error, _} ->\n          redirect(conn, external: user_params[\"return_to\"])\n      end\n    else\n      send_resp(conn, 403, \"Bad token\")\n    end\n  end\nend\n```\n\nThe five issues are: (1) hardcoded salt as module attribute (`secrets-in-config`), (2) timing leak `==` on api_token, (3) mass assignment via `admin_changeset`, (4) XSS via `html/2` with interpolation, (5) open redirect to `user_params[\"return_to\"]`. Rewrite to address ALL of them. Move the salt to runtime.exs (commented placeholder in the source). Write the fix to `lib/my_app_web/user_settings_controller.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/user_settings_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.UserSettingsController",
+      "Plug.Crypto.secure_compare"
+    ],
+    "must_not_contain": [
+      "@salt \"hardcoded-salt\"",
+      "user.api_token == token",
+      "admin_changeset(user, user_params)",
+      "html(conn, \"<h1>Updated #{",
+      "redirect(conn, external: user_params["
+    ]
+  },
+  "scoring": {
+    "primary_capability": "security-scan-philosophy",
+    "secondary_capabilities": ["secrets-in-config", "timing-attack-comparisons", "mass-assignment-in-changesets", "raw-xss-prevention", "open-redirect-protection"],
+    "criterion": "all_five_fixed",
+    "weight": 0.5
+  },
+  "tier_rationale": "Hard — five-capability audit with mixed severity. Requires a systematic pass rather than a single obvious fix.",
+  "calibration": null
+}

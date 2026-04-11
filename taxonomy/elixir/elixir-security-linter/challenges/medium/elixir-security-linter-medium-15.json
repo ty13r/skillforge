@@ -1,0 +1,32 @@
+{
+  "id": "elixir-security-linter-medium-15",
+  "tier": "medium",
+  "title": "Fix atom-variants dispatch module",
+  "prompt": "`test_fixtures/atom_variants_dispatch.ex` uses four different atom-creation patterns: `List.to_atom`, `:erlang.binary_to_atom`, atom-interpolation sigil, and `Module.concat` with user input. Rewrite the module to `lib/my_app/dispatch.ex` so: (a) `handle_request/2` uses an allowlist map for known request types, (b) `register_worker/1` uses Registry via-tuple with a binary key, (c) `build_role_atom/1` uses a static case statement, (d) `load_module/1` returns a fixed module reference (never dynamically concatenated). Every function must avoid creating atoms from user-supplied strings.",
+  "fixture_files": ["test_fixtures/atom_variants_dispatch.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/dispatch.ex"],
+    "must_contain": [
+      "defmodule MyApp.Dispatch",
+      "def handle_request",
+      "def register_worker",
+      "def build_role_atom",
+      "def load_module"
+    ],
+    "must_not_contain": [
+      "String.to_atom(",
+      "List.to_atom(",
+      ":erlang.binary_to_atom(",
+      "Module.concat([MyApp.Plugins, mod_name])",
+      ":\"role_#{"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "atom-exhaustion",
+    "secondary_capabilities": ["security-scan-philosophy"],
+    "criterion": "all_atom_variants_fixed",
+    "weight": 0.4
+  },
+  "tier_rationale": "Medium — fixing all four variants in one module, each with a different idiomatic fix.",
+  "calibration": null
+}

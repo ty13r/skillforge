@@ -1,0 +1,30 @@
+{
+  "id": "elixir-security-linter-easy-13",
+  "tier": "easy",
+  "title": "Rewrite full session controller to remove open redirect",
+  "prompt": "`test_fixtures/open_redirect_session.ex` contains a login flow and an OAuth callback that both redirect to user-controlled URLs via `redirect(external: ...)`. Rewrite the module so that: (a) `create/2` validates the return_to against a static allowlist of internal paths and falls back to `/`, (b) `oauth_callback/2` ignores the `state` param as a destination and redirects to a fixed path like `/dashboard`, and (c) no `redirect(external: ...)` call anywhere uses a value originating from `params`. Write the fix to `lib/my_app_web/controllers/session_controller.ex`.",
+  "fixture_files": ["test_fixtures/open_redirect_session.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/controllers/session_controller.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.SessionController",
+      "redirect(conn, to:",
+      "def create(conn,",
+      "def oauth_callback(conn,"
+    ],
+    "must_not_contain": [
+      "redirect(conn, external: params[",
+      "redirect(external: params[",
+      "redirect(conn, external: state)",
+      "redirect(external: state)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "open-redirect-protection",
+    "secondary_capabilities": ["session-and-cookie-security"],
+    "criterion": "both_redirects_internalized",
+    "weight": 0.35
+  },
+  "tier_rationale": "Full-module rewrite with two related open-redirect sites. Each fix is canonical.",
+  "calibration": null
+}

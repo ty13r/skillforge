@@ -1,0 +1,32 @@
+{
+  "id": "elixir-security-linter-hard-15",
+  "tier": "hard",
+  "title": "Rewrite pipeline with nonce + CSRF + HSTS + strict CSP",
+  "prompt": "Produce a hardened `:browser` pipeline that satisfies ALL of these constraints: (1) Per-request CSP nonce generated via `:crypto.strong_rand_bytes(16)`, (2) `content-security-policy` containing `default-src 'self'; script-src 'self' 'nonce-...'; style-src 'self' 'nonce-...'; object-src 'none'; base-uri 'self'`, (3) `strict-transport-security: max-age=31536000; includeSubDomains`, (4) `x-frame-options: DENY`, (5) `x-content-type-options: nosniff`, (6) `referrer-policy: strict-origin-when-cross-origin`, (7) `protect_from_forgery` is present. Implement via two plugs: `assign_csp_nonce` and `put_dynamic_csp`. Write the result to `lib/my_app_web/router.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "csp_nonce",
+      "'nonce-",
+      "default-src 'self'",
+      "max-age=31536000",
+      "x-frame-options",
+      "referrer-policy",
+      "plug :protect_from_forgery"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": ["csrf-and-secure-headers", "raw-xss-prevention"],
+    "criterion": "hardened_pipeline",
+    "weight": 0.5
+  },
+  "tier_rationale": "Hard — requires composing many directives into a complete hardened pipeline.",
+  "calibration": null
+}

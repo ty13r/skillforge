@@ -1,0 +1,29 @@
+{
+  "id": "elixir-security-linter-easy-30",
+  "tier": "easy",
+  "title": "Remove unsafe-inline from an explicit CSP",
+  "prompt": "The following CSP has valid syntax but provides effectively zero protection because of `'unsafe-inline'` and `'unsafe-eval'`:\n\n```elixir\n%{\"content-security-policy\" => \"default-src * 'unsafe-inline' 'unsafe-eval'\"}\n```\n\nRewrite it to a secure baseline: `default-src 'self'`, no `'unsafe-*'` directives, `object-src 'none'`, `base-uri 'self'`. Write the corrected router to `lib/my_app_web/router.ex` with the full `:browser` pipeline and `put_secure_browser_headers` call.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/router.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Router",
+      "default-src 'self'",
+      "object-src 'none'"
+    ],
+    "must_not_contain": [
+      "'unsafe-inline'",
+      "'unsafe-eval'",
+      "default-src *"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "plug-security-middleware-chain",
+    "secondary_capabilities": [],
+    "criterion": "unsafe_directives_removed",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical CSP-hardening fix — remove unsafe-* directives.",
+  "calibration": null,
+  "research_citation": "Dan Schultzer: 'We shouldn't opt for the obviously unsafe unsafe-inline... use a nonce for dynamic content that cannot be hashed.'"
+}

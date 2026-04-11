@@ -1,0 +1,30 @@
+{
+  "id": "elixir-security-linter-easy-18",
+  "tier": "easy",
+  "title": "Add authz to all three handle_event clauses in a LiveView",
+  "prompt": "`test_fixtures/liveview_missing_authz.ex` has three `handle_event/3` clauses (`\"delete\"`, `\"publish\"`, `\"promote_to_admin\"`) with no authorization checks (the promote_to_admin clause does have an admin check, but it uses variable-time `==` on a role string, which is also a vulnerability). Rewrite the LiveView so every handle_event clause: (1) loads the record scoped to the current user where applicable, (2) calls a `Policy.can?(current_user, :action, resource)` helper, and (3) returns a flash error if the check fails. Write the corrected module to `lib/my_app_web/live/post_live/index.ex`.",
+  "fixture_files": ["test_fixtures/liveview_missing_authz.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/post_live/index.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.PostLive.Index",
+      "handle_event(\"delete\"",
+      "handle_event(\"publish\"",
+      "handle_event(\"promote_to_admin\"",
+      "Policy",
+      "current_user"
+    ],
+    "must_not_contain": [
+      "post = Repo.get!(Post, id)\n    {:ok, _} = Repo.delete(post)",
+      "current_user.role == \"admin\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": ["timing-attack-comparisons", "security-scan-philosophy"],
+    "criterion": "all_events_authorized",
+    "weight": 0.4
+  },
+  "tier_rationale": "Three related handle_event clauses all need fixing, plus the admin check uses variable-time ==. Each individual fix is mechanical.",
+  "calibration": null
+}

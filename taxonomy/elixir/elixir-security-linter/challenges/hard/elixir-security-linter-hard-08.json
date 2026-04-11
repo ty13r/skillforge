@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-hard-08",
+  "tier": "hard",
+  "title": "Fix SameSite=None without Secure",
+  "prompt": "The session config uses `same_site: \"None\"` without setting `secure: true` — modern browsers REJECT `SameSite=None` cookies that lack the `Secure` flag, so the session will silently break in Chrome/Firefox:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: {MyApp.Salt, :get, []},\n  same_site: \"None\",\n  http_only: true\n]\n```\n\nThe developer chose `SameSite=None` to support cross-origin embedding. Rewrite the config so: (a) `secure: true` is added (required with SameSite=None), (b) `http_only: true` remains, (c) a comment notes that SameSite=None requires HTTPS and will NOT work on plain HTTP (even localhost). Consider whether the cross-origin use case is still valid — if the app doesn't need third-party context, downgrade to `same_site: \"Lax\"`. For this challenge, keep `SameSite=None` and add `secure: true`. Write the fix to `lib/my_app_web/endpoint.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/endpoint.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.Endpoint",
+      "same_site: \"None\"",
+      "secure: true",
+      "http_only: true"
+    ],
+    "must_not_contain": []
+  },
+  "scoring": {
+    "primary_capability": "session-and-cookie-security",
+    "secondary_capabilities": [],
+    "criterion": "samesite_none_with_secure",
+    "weight": 0.35
+  },
+  "tier_rationale": "Hard — requires knowing the browser-level SameSite=None + Secure requirement.",
+  "calibration": null,
+  "research_citation": "WebSentry: 'Cookies with SameSite=None must also have the Secure flag; browsers reject SameSite=None cookies without Secure.'"
+}

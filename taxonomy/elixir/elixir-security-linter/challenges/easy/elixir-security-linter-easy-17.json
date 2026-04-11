@@ -1,0 +1,26 @@
+{
+  "id": "elixir-security-linter-easy-17",
+  "tier": "easy",
+  "title": "Spot the missing authorization in a comment LiveView",
+  "prompt": "Identify the security vulnerability in this LiveView event handler and fix it:\n\n```elixir\ndef handle_event(\"edit_comment\", %{\"id\" => id, \"body\" => body}, socket) do\n  comment = MyApp.Repo.get!(MyApp.Blog.Comment, id)\n  {:ok, updated} = MyApp.Blog.update_comment(comment, %{body: body})\n  {:noreply, stream_insert(socket, :comments, updated)}\nend\n```\n\nThe vulnerability is that any authenticated user can edit any comment, not just their own. Rewrite the handler to check `comment.author_id == socket.assigns.current_user.id` before updating. Return a flash error on failure. Write the fix to `lib/my_app_web/live/comment_live.ex`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app_web/live/comment_live.ex"],
+    "must_contain": [
+      "defmodule MyAppWeb.CommentLive",
+      "handle_event(\"edit_comment\"",
+      "author_id"
+    ],
+    "must_not_contain": [
+      "update_comment(comment, %{body: body})\n    {:noreply, stream_insert"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "liveview-handle-event-authz",
+    "secondary_capabilities": [],
+    "criterion": "ownership_check_before_mutation",
+    "weight": 0.3
+  },
+  "tier_rationale": "Short snippet with a clear ownership check missing. Fix is a single guard clause.",
+  "calibration": null
+}
