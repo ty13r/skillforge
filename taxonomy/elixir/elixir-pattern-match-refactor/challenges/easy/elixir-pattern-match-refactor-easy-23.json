@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-23",
+  "tier": "easy",
+  "title": "Extract a fixed-width version prefix with binary pattern matching",
+  "prompt": "Write `MyApp.Versioned.parse/1` that accepts a binary like `\"v12packet-data\"` where the version is always exactly two ASCII bytes after the `v` (i.e., `\"v12\" ++ payload`). Use a single function head: `def parse(<<\"v\", major::utf8, minor::utf8, rest::binary>>)` returning `{:ok, [<<major>>, <<minor>>], rest}`. Add a catch-all clause returning `{:error, :bad_format}`. Output a complete `defmodule MyApp.Versioned do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/versioned.ex"],
+    "must_contain": [
+      "def parse(<<\"v\", major::utf8, minor::utf8, rest::binary>>)",
+      "{:error, :bad_format}"
+    ],
+    "must_not_contain": [
+      "String.slice",
+      "String.starts_with?",
+      ":binary.part"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": [],
+    "criterion": "multi_byte_extract",
+    "weight": 0.4
+  },
+  "tier_rationale": "Straightforward structured-binary pattern. Skill must know the `::utf8` modifier shorthand but there's no ambiguity.",
+  "calibration": null
+}

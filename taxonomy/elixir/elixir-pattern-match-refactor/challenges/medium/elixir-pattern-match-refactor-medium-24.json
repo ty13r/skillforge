@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-24",
+  "tier": "medium",
+  "title": "Refactor max_value/1 to use Enum.max/1",
+  "prompt": "Refactor `MyApp.Accumulators.max_value/1` from test_fixtures/enum_reduce_awkward.ex. The current implementation uses explicit recursion + a case with an `if head > other` check. Rewrite as a single call to `Enum.max/1` with a guard on empty lists returning `nil`. Output a complete `defmodule MyApp.Accumulators do ... end` with just max_value.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "def max_value([])",
+      "def max_value(list)",
+      "Enum.max(list)"
+    ],
+    "must_not_contain": [
+      "def max_value([head | tail])",
+      "if head > other",
+      "case max_value(tail)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "recursion_to_enum_max",
+    "weight": 0.5
+  },
+  "tier_rationale": "Recognize that explicit recursion is wrong tool when Enum.max exists.",
+  "calibration": null
+}

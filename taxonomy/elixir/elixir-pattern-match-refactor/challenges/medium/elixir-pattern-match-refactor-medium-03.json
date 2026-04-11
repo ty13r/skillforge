@@ -1,0 +1,35 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-03",
+  "tier": "medium",
+  "title": "Rewrite permission/2 as pattern-matched function heads with pin-binding",
+  "prompt": "Refactor MyApp.RoleRouter.permission/2 from test_fixtures/cond_role_router.ex as multi-clause function heads. The interesting case is `user.role == \"editor\" and resource.owner_id == user.id` — this needs pinning. Use `def permission(%{role: \"editor\", id: uid}, %{owner_id: uid})` to pattern-match the identity across both arguments. Handle nil user returning `:denied`, admin returning `:full`, editor-as-owner returning `:write`, editor not owning returning `:read`, viewer returning `:read`, catch-all `:denied`. Output only the `permission/2` function inside `defmodule MyApp.RoleRouter do ... end`.",
+  "fixture_files": ["test_fixtures/cond_role_router.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/role_router.ex"],
+    "must_contain": [
+      "def permission(nil",
+      "def permission(%{role: \"admin\"}",
+      "def permission(%{role: \"editor\", id: uid}, %{owner_id: uid})",
+      "def permission(%{role: \"editor\"}",
+      "def permission(%{role: \"viewer\"}",
+      ":full",
+      ":write",
+      ":read",
+      ":denied"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "user.role ==",
+      "is_nil(user)",
+      "resource.owner_id == user.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["cond-and-if-reduction", "map-and-struct-destructuring"],
+    "criterion": "cond_to_heads_with_pin",
+    "weight": 0.5
+  },
+  "tier_rationale": "The cross-argument pinning trick (same bound variable appearing in both parameters) is the multi-step insight. Sonnet typically pattern-matches the role but leaves the owner-id check in the body.",
+  "calibration": null
+}

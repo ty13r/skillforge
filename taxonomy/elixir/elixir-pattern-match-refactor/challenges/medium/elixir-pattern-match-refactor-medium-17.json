@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-17",
+  "tier": "medium",
+  "title": "Replace cond-with-guards-and-fallback into pattern-matched heads",
+  "prompt": "Given:\n\n```\ndef classify(n) when is_integer(n) do\n  cond do\n    n < 0 -> :negative\n    n == 0 -> :zero\n    n > 0 and n < 10 -> :single_digit\n    n >= 10 and n < 100 -> :double_digit\n    true -> :large\n  end\nend\n```\n\nRewrite as multi-clause function heads with guards, preserving the bounds exactly. Output a complete `defmodule MyApp.Classifier do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/classifier.ex"],
+    "must_contain": [
+      "def classify(n) when is_integer(n) and n < 0",
+      "def classify(0)",
+      "def classify(n) when is_integer(n) and n > 0 and n < 10",
+      "def classify(n) when is_integer(n) and n >= 10 and n < 100",
+      "def classify(n) when is_integer(n)",
+      ":negative",
+      ":zero",
+      ":single_digit",
+      ":double_digit",
+      ":large"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "true ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["guard-clauses", "function-head-pattern-matching"],
+    "criterion": "cond_to_guarded_heads",
+    "weight": 0.55
+  },
+  "tier_rationale": "Five clauses including a literal-zero head and a preserved-guard catch-all. Tricky because the cond's `true ->` must become a final guarded clause that still protects against non-integer input.",
+  "calibration": null
+}

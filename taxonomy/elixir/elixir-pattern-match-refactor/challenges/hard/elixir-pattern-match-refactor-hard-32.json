@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-32",
+  "tier": "hard",
+  "title": "Preserve debug logging inside a refactored case-to-heads chain",
+  "prompt": "Given:\n\n```\ndef process(event) do\n  case event.type do\n    :login ->\n      Logger.debug(\"Processing login for #{event.user_id}\")\n      MyApp.Auth.handle_login(event)\n    :logout ->\n      Logger.debug(\"Processing logout for #{event.user_id}\")\n      MyApp.Auth.handle_logout(event)\n    :signup ->\n      Logger.debug(\"Processing signup\")\n      MyApp.Auth.handle_signup(event)\n  end\nend\n```\n\nRefactor to multi-clause function heads. Preserve the `Logger.debug/1` calls — they must still be emitted. Destructure the relevant fields in each head. Hint: you'll need to pattern-match `user_id` in the login/logout heads but not in signup. Output a complete `defmodule MyApp.EventProcessor do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/event_processor.ex"],
+    "must_contain": [
+      "def process(%{type: :login",
+      "def process(%{type: :logout",
+      "def process(%{type: :signup",
+      "Logger.debug",
+      "handle_login",
+      "handle_logout",
+      "handle_signup"
+    ],
+    "must_not_contain": [
+      "case event.type"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["map-and-struct-destructuring", "refactor-philosophy"],
+    "criterion": "preserve_side_effects",
+    "weight": 0.65
+  },
+  "tier_rationale": "Sonnet sometimes loses side effects when converting to function heads. Tests preservation.",
+  "calibration": null
+}

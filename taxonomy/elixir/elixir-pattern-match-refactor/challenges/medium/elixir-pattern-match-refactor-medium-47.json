@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-47",
+  "tier": "medium",
+  "title": "Use Stream instead of Enum for a large-list pipeline",
+  "prompt": "Given:\n\n```\ndef first_ten_even_squares(big_list) do\n  big_list\n  |> Enum.map(&(&1 * &1))\n  |> Enum.filter(&(rem(&1, 2) == 0))\n  |> Enum.take(10)\nend\n```\n\nThe `Enum` chain realizes the full mapped-and-filtered list just to take 10 elements. Rewrite using `Stream.map/2` and `Stream.filter/2`, ending with `Enum.take/2` which forces the pipeline lazily. Output a complete `defmodule MyApp.LazyPipeline do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/lazy_pipeline.ex"],
+    "must_contain": [
+      "def first_ten_even_squares(big_list)",
+      "Stream.map",
+      "Stream.filter",
+      "Enum.take(10)"
+    ],
+    "must_not_contain": [
+      "Enum.map(big_list",
+      "Enum.filter(big_list"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["pipe-operator-flows"],
+    "criterion": "enum_to_stream",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires recognizing that laziness matters when a downstream `take/2` can short-circuit.",
+  "calibration": null
+}

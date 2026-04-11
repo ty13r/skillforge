@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-25",
+  "tier": "medium",
+  "title": "Replace a nested case with a three-clause with",
+  "prompt": "The function below has nested `case` calls that return `{:error, reason}` shapes. Rewrite as a `with` expression that short-circuits to the first error.\n\n```\ndef transfer(from_id, to_id, amount) do\n  case MyApp.Accounts.fetch(from_id) do\n    {:ok, from} ->\n      case MyApp.Accounts.fetch(to_id) do\n        {:ok, to} ->\n          case MyApp.Ledger.move(from, to, amount) do\n            {:ok, txn} -> {:ok, txn}\n            err -> err\n          end\n        err -> err\n      end\n    err -> err\n  end\nend\n```\n\nOutput a complete `defmodule MyApp.Bank do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/bank.ex"],
+    "must_contain": [
+      "def transfer(from_id, to_id, amount)",
+      "with",
+      "<-",
+      "MyApp.Accounts.fetch(from_id)",
+      "MyApp.Accounts.fetch(to_id)",
+      "MyApp.Ledger.move"
+    ],
+    "must_not_contain": [
+      "case MyApp.Accounts.fetch(from_id)",
+      "case MyApp.Accounts.fetch(to_id)",
+      "case MyApp.Ledger.move"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": [],
+    "criterion": "case_nest_to_with",
+    "weight": 0.5
+  },
+  "tier_rationale": "Three-clause nest. Tempting to keep an `else` clause but the pass-through nature means `with` without `else` is cleanest.",
+  "calibration": null
+}

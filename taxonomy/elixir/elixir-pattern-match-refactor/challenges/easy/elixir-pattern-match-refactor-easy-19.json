@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-19",
+  "tier": "easy",
+  "title": "Replace cond with case on a single value",
+  "prompt": "Refactor this function: `def http_status_name(code) do cond do code == 200 -> \"OK\"; code == 404 -> \"Not Found\"; code == 500 -> \"Server Error\"; true -> \"Unknown\" end end`. Use `case code do ... end` with literal patterns. Output a complete `defmodule MyApp.HttpLabels do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/http_labels.ex"],
+    "must_contain": [
+      "case code",
+      "200 -> \"OK\"",
+      "404 -> \"Not Found\"",
+      "500 -> \"Server Error\"",
+      "_ -> \"Unknown\""
+    ],
+    "must_not_contain": [
+      "cond do",
+      "code == 200",
+      "true ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": [],
+    "criterion": "cond_to_case",
+    "weight": 0.4
+  },
+  "tier_rationale": "Single direction refactor. The `cond` with equality comparisons on a single value is a textbook anti-pattern.",
+  "calibration": null
+}

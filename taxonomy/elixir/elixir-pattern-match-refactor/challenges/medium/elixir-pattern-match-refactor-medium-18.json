@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-18",
+  "tier": "medium",
+  "title": "Recognize when `cond` is still the right shape",
+  "prompt": "Given:\n\n```\ndef tax_bracket(income) do\n  cond do\n    income < 10_000 -> 0.0\n    income < 40_000 -> 0.12\n    income < 85_000 -> 0.22\n    income < 160_000 -> 0.24\n    true -> 0.32\n  end\nend\n```\n\nThis function is correctly expressed as a `cond` — the ordered, open-ended range checks can't become multi-clause function heads without awkward guard repetition. Keep it as a `cond` but replace the `true ->` fallback with a guard-style clause that makes the terminal case explicit: `income >= 160_000 -> 0.32`. Output a complete `defmodule MyApp.Tax do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/tax.ex"],
+    "must_contain": [
+      "def tax_bracket(income)",
+      "cond do",
+      "income < 10_000",
+      "income < 40_000",
+      "income < 85_000",
+      "income < 160_000",
+      "income >= 160_000"
+    ],
+    "must_not_contain": [
+      "true -> 0.32"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["cond-and-if-reduction"],
+    "criterion": "dont_over_refactor",
+    "weight": 0.5
+  },
+  "tier_rationale": "Tests the 'don't mechanically convert' judgment. Sonnet typically tries to convert to function heads or removes the cond entirely.",
+  "calibration": null
+}

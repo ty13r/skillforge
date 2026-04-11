@@ -1,0 +1,93 @@
+{
+  "family_slug": "elixir-pattern-match-refactor",
+  "capabilities": {
+    "refactor-philosophy": {
+      "weight": 0.08,
+      "objectives": {
+        "idiomatic_shape": {"weight": 0.5, "description": "Pipe + with + function heads replace if/case/cond chains"},
+        "no_defensive_nil": {"weight": 0.3, "description": "No is_nil() or x && x.field puns"},
+        "no_temp_vars": {"weight": 0.2, "description": "No intermediate temp/tmp/result variables breaking pipe flow"}
+      }
+    },
+    "function-head-pattern-matching": {
+      "weight": 0.15,
+      "objectives": {
+        "multi_clause_heads": {"weight": 0.5, "description": "Same function name has multiple def clauses with different patterns"},
+        "pattern_in_head": {"weight": 0.3, "description": "Patterns live in the function head, not in case inside the body"},
+        "no_case_chain": {"weight": 0.2, "description": "No case chain replaced what should be function heads"}
+      }
+    },
+    "guard-clauses": {
+      "weight": 0.08,
+      "objectives": {
+        "when_clause_used": {"weight": 0.5, "description": "when guard present in function heads"},
+        "composed_guards": {"weight": 0.3, "description": "Guards composed with and/or/not"},
+        "no_complex_calls": {"weight": 0.2, "description": "No disallowed function calls in guards"}
+      }
+    },
+    "pipe-operator-flows": {
+      "weight": 0.10,
+      "objectives": {
+        "pipe_present": {"weight": 0.5, "description": "|> pipe operator used for transformation flow"},
+        "no_temp_vars": {"weight": 0.3, "description": "No intermediate variables breaking the pipe"},
+        "enum_in_pipe": {"weight": 0.2, "description": "Enum.map/filter/flat_map used in the pipe"}
+      }
+    },
+    "with-expressions": {
+      "weight": 0.10,
+      "objectives": {
+        "with_used": {"weight": 0.5, "description": "with <- ... do ... pattern present"},
+        "else_clause": {"weight": 0.3, "description": "else clause handles error branches"},
+        "flat_structure": {"weight": 0.2, "description": "Replaces nested case/if chains"}
+      }
+    },
+    "recursive-functions": {
+      "weight": 0.08,
+      "objectives": {
+        "base_case_head": {"weight": 0.5, "description": "Base case in its own function head"},
+        "tail_recursive": {"weight": 0.3, "description": "Recursive call in tail position"},
+        "pattern_matched_step": {"weight": 0.2, "description": "Step case uses pattern-matched destructure"}
+      }
+    },
+    "enum-vs-recursion-choice": {
+      "weight": 0.08,
+      "objectives": {
+        "enum_when_appropriate": {"weight": 0.5, "description": "Enum.* used where it fits"},
+        "recursion_when_needed": {"weight": 0.3, "description": "Explicit recursion only when Enum cannot express the logic"},
+        "reduce_correct_shape": {"weight": 0.2, "description": "Enum.reduce accumulator is correctly shaped"}
+      }
+    },
+    "map-and-struct-destructuring": {
+      "weight": 0.08,
+      "objectives": {
+        "map_destructure": {"weight": 0.5, "description": "%{key => val} destructure in function head"},
+        "struct_destructure": {"weight": 0.3, "description": "%Struct{field: val} destructure in function head"},
+        "no_map_access_noise": {"weight": 0.2, "description": "No Map.get/Map.fetch where destructure fits"}
+      }
+    },
+    "binary-pattern-matching-basic": {
+      "weight": 0.05,
+      "objectives": {
+        "binary_pattern": {"weight": 0.6, "description": "<<\"prefix\", rest::binary>> pattern present"},
+        "no_string_starts_with": {"weight": 0.4, "description": "String.starts_with?/ends_with? replaced by binary pattern where appropriate"}
+      }
+    },
+    "cond-and-if-reduction": {
+      "weight": 0.10,
+      "objectives": {
+        "few_conditionals": {"weight": 0.5, "description": "Total if/case/cond count is low"},
+        "heads_replace_cond": {"weight": 0.3, "description": "Function head guards replace cond chains"},
+        "with_replaces_nested": {"weight": 0.2, "description": "with expression replaces nested conditionals"}
+      }
+    },
+    "defensive-nil-checks-elimination": {
+      "weight": 0.10,
+      "objectives": {
+        "no_is_nil": {"weight": 0.5, "description": "No is_nil() guards"},
+        "no_safe_nav_pun": {"weight": 0.3, "description": "No x && x.field Ruby-style safe navigation"},
+        "pattern_match_instead": {"weight": 0.2, "description": "Function head pattern match replaces nil check"}
+      }
+    }
+  },
+  "pass_threshold": 0.7
+}

@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-09",
+  "tier": "easy",
+  "title": "Pipe-ify normalize/1 (intermediate-variable chain)",
+  "prompt": "Refactor MyApp.TextProcessor.normalize/1 from test_fixtures/intermediate_vars.ex into a single pipe pipeline. Drop the intermediate variables (`trimmed`, `downcased`, `stripped`, `collapsed`, `final`) and chain the five calls with `|>`. Output only the `normalize/1` function inside `defmodule MyApp.TextProcessor do ... end`.",
+  "fixture_files": ["test_fixtures/intermediate_vars.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/text_processor.ex"],
+    "must_contain": [
+      "def normalize(input)",
+      "|> String.trim()",
+      "|> String.downcase()",
+      "|> String.replace"
+    ],
+    "must_not_contain": [
+      "trimmed = String.trim",
+      "downcased = String.downcase",
+      "collapsed ="
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": [],
+    "criterion": "vars_to_pipe",
+    "weight": 0.5
+  },
+  "tier_rationale": "Straightforward pipe conversion. Well-known pattern.",
+  "calibration": null
+}

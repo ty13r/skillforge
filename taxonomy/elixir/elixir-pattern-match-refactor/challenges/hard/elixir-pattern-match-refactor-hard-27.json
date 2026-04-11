@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-27",
+  "tier": "hard",
+  "title": "Refactor bad_guards.ex preserving compile-legal guard expressions",
+  "prompt": "Refactor ALL functions in test_fixtures/bad_guards.ex. Every function must use guards that would actually compile. Specifically: `validate_age/1` uses guard `when is_integer(age) and age >= 0 and age <= 150`. `validate_email/1` keeps `String.contains?` in the body because it's not allowed in guards. `call_service/1` uses `when is_binary(req)` (not `not is_nil`). `process/1` uses an assertive type guard. `format_user/1` uses `when is_binary(name) and byte_size(name) > 0`. Output a complete `defmodule MyApp.Validator do ... end`.",
+  "fixture_files": ["test_fixtures/bad_guards.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/validator.ex"],
+    "must_contain": [
+      "def validate_age(age) when is_integer(age)",
+      "def validate_email(email) when is_binary(email)",
+      "String.contains?(email, \"@\")",
+      "def call_service(",
+      "when is_binary(req)",
+      "def process(",
+      "def format_user(%{name: name})",
+      "byte_size(name) > 0"
+    ],
+    "must_not_contain": [
+      "when not is_nil(req)",
+      "when not is_nil(thing)",
+      "when is_integer(age) and age >= 0 and age <= 150 and String.contains?"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["function-head-pattern-matching", "defensive-nil-checks-elimination"],
+    "criterion": "full_module_guard_cleanup",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires knowing the guard restriction subset AND applying Credo rules consistently across 5 functions.",
+  "calibration": null
+}

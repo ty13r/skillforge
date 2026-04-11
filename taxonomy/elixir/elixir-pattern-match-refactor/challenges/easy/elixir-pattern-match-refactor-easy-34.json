@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-34",
+  "tier": "easy",
+  "title": "Refactor a two-step `with` into pattern-matched `case`",
+  "prompt": "A `with` expression is overkill for a single clause. Refactor `def get_user(id) do with {:ok, user} <- Repo.fetch(User, id), do: {:ok, user} end` into a direct call `def get_user(id), do: Repo.fetch(User, id)`. Output a complete `defmodule MyApp.Users do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/users.ex"],
+    "must_contain": [
+      "def get_user(id)",
+      "Repo.fetch(User, id)"
+    ],
+    "must_not_contain": [
+      "with {:ok, user}",
+      "<-"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": [],
+    "criterion": "redundant_with_removal",
+    "weight": 0.3
+  },
+  "tier_rationale": "Single-clause `with` → direct call. One canonical answer.",
+  "calibration": null,
+  "research_citation": "lucasvegi/Elixir-Refactorings: 'Remove redundant last clause in with'"
+}

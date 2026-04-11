@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-15",
+  "tier": "medium",
+  "title": "Use binary size modifiers to parse a fixed-header packet",
+  "prompt": "Refactor `MyApp.PacketParser.parse/1` from test_fixtures/binary_header_parser.ex. The fixture uses `:binary.part/3` and `:binary.decode_unsigned/1` to extract a 2-byte version + 4-byte length + payload. Replace with a single function head using binary size modifiers: `def parse(<<version::binary-size(2), length::unsigned-integer-size(32), payload::binary-size(length), _rest::binary>>)`. Add a catch-all clause returning `{:error, :too_short}`. Output a complete `defmodule MyApp.PacketParser do ... end`.",
+  "fixture_files": ["test_fixtures/binary_header_parser.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/packet_parser.ex"],
+    "must_contain": [
+      "def parse(<<",
+      "version::binary-size(2)",
+      "length::",
+      "-size(32)",
+      "payload::binary-size(length)",
+      "{:error, :too_short}"
+    ],
+    "must_not_contain": [
+      ":binary.part(",
+      ":binary.decode_unsigned",
+      "byte_size(input) < 6"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": [],
+    "criterion": "size_modifier_parse",
+    "weight": 0.6
+  },
+  "tier_rationale": "Requires knowing size-modifier syntax and runtime-variable-size binary segments — non-trivial even for Sonnet which often falls back to manual extraction.",
+  "calibration": null
+}

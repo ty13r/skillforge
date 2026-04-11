@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-36",
+  "tier": "hard",
+  "title": "Destructure-and-rebind in function head to avoid re-access",
+  "prompt": "Given:\n\n```\ndef promote(user) do\n  new_role = upgrade_role(user.role)\n  %{user | role: new_role}\nend\n```\n\nRefactor to use the `= <pattern>` bind-and-match form so you can destructure `role` from the struct in the head AND keep the whole-struct binding: `def promote(%User{role: role} = user) do new_role = upgrade_role(role); %{user | role: new_role} end`. Output a complete `defmodule MyApp.UserPromotion do ... end` (with `alias MyApp.User`).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_promotion.ex"],
+    "must_contain": [
+      "def promote(%User{role: role} = user)",
+      "upgrade_role(role)",
+      "%{user | role: "
+    ],
+    "must_not_contain": [
+      "user.role",
+      "def promote(user) do\n    new_role = upgrade_role(user.role)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "bind_and_match",
+    "weight": 0.6
+  },
+  "tier_rationale": "The `%Struct{field: field} = var` bind-and-match form is non-obvious. Sonnet often destructures without re-binding or re-accesses via dot notation.",
+  "calibration": null
+}

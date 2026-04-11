@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-08",
+  "tier": "medium",
+  "title": "Use `then/2` to pipe into a function whose arg is not first",
+  "prompt": "Refactor this code:\n\n```\ndef publish(post) do\n  body = build_body(post)\n  full = String.replace(body, \"{title}\", post.title)\n  String.upcase(full)\nend\n```\n\nRewrite as a pipeline starting from `post`. The tricky step is `String.replace(body, \"{title}\", post.title)` — `post` is not the first argument of `replace/3`. Use `then/2` to pipe through that step. Output a complete `defmodule MyApp.Publisher do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/publisher.ex"],
+    "must_contain": [
+      "def publish(post)",
+      "post",
+      "|> build_body()",
+      "|> then(",
+      "|> String.upcase()"
+    ],
+    "must_not_contain": [
+      "body = build_body",
+      "full = String.replace"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": [],
+    "criterion": "then_for_non_first_arg",
+    "weight": 0.55
+  },
+  "tier_rationale": "Knowledge of `then/2` as the escape hatch for non-first-arg piping. Sonnet often gives up and falls back to intermediate variables.",
+  "calibration": null
+}

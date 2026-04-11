@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-38",
+  "tier": "medium",
+  "title": "Prefer `with` for single-success-path Ecto queries",
+  "prompt": "Given:\n\n```\ndef run_report(id) do\n  case get_run(id) do\n    %MyApp.Run{recommendations: recs} -> {:ok, recs}\n    nil -> {:error, :not_found}\n  end\nend\n```\n\nRefactor to use `with {:ok, %{recommendations: recs}} <- get_run(id), do: recs`. This means `get_run/1` also needs updating to return `{:ok, run}` / `{:error, :not_found}` instead of `run` / `nil`. Refactor `get_run/1` as well — return `{:ok, MyApp.Repo.get(MyApp.Run, id)}` unless nil, in which case return `{:error, :not_found}`. Use a single multi-clause helper or a `case`. Output a complete `defmodule MyApp.Reports do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/reports.ex"],
+    "must_contain": [
+      "def run_report(id)",
+      "with {:ok,",
+      "%{recommendations: recs}",
+      "<- get_run(id)",
+      "defp get_run(id)",
+      ":not_found"
+    ],
+    "must_not_contain": [
+      "case get_run(id) do\n    %"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["defensive-nil-checks-elimination"],
+    "criterion": "case_on_nil_to_with_ok",
+    "weight": 0.55
+  },
+  "tier_rationale": "Requires both updating the callee contract and rewriting the caller. Two-step coordinated refactor.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: 'Prefer with when cases branch on nil: with {:ok, %{recommendations: recs}} <- get_run(id), do: recs'"
+}

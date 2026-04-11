@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-03",
+  "tier": "easy",
+  "title": "Collapse nested if in fetch_profile/1 into a with expression",
+  "prompt": "Refactor MyApp.UserService.fetch_profile/1 in test_fixtures/ruby_style_user_service.ex to use a `with` expression. The three levels of `if is_nil(...)` and `if user.active == true` should be expressed as `with` clauses that short-circuit to the appropriate error tuples. Output only the `fetch_profile/1` function inside a `defmodule MyApp.UserService do ... end` module.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def fetch_profile(user_id)",
+      "with",
+      "<-",
+      "{:error, :not_found}",
+      "{:error, :inactive}",
+      "{:error, :profile_missing}"
+    ],
+    "must_not_contain": [
+      "if is_nil(user)",
+      "if user.active == true",
+      "if is_nil(profile)"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["defensive-nil-checks-elimination"],
+    "criterion": "nested_if_to_with",
+    "weight": 0.55
+  },
+  "tier_rationale": "Single well-known refactor pattern; the three checks map cleanly to `with` clauses. Classic Claude slip where it keeps the if spine; easy tier because the transformation is pattern-matched to a common textbook refactor.",
+  "calibration": null
+}

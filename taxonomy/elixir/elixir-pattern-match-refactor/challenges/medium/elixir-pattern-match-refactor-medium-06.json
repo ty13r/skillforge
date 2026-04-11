@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-06",
+  "tier": "medium",
+  "title": "Collapse defensive nil checks in build_template/1 into function heads",
+  "prompt": "Refactor `MyApp.NotificationSender.build_template/1` from test_fixtures/defensive_nil_pipeline.ex. The function has two levels of `if is_nil(...)` checks — first on `user`, then on `preferences`. Rewrite as multi-clause function heads: `nil` → `nil`, `%{preferences: nil}` → fall back to `default_template/1`, `%{preferences: preferences}` → call `custom_template/2`. Also refactor `default_template/1` and `custom_template/2` to pattern-match on the map shapes in the function head instead of accessing fields via `user && user.preferences`. Output the complete module as `defmodule MyApp.NotificationSender do ... end`.",
+  "fixture_files": ["test_fixtures/defensive_nil_pipeline.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/notification_sender.ex"],
+    "must_contain": [
+      "def build_template(nil)",
+      "def build_template(%{preferences: nil}",
+      "def build_template(%{preferences:",
+      "def default_template(%{name:",
+      "def custom_template("
+    ],
+    "must_not_contain": [
+      "if is_nil(preferences)",
+      "if is_nil(user.name)",
+      "preferences && preferences.language",
+      "user && user.preferences"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["map-and-struct-destructuring", "function-head-pattern-matching"],
+    "criterion": "nil_pun_chain_cleanup",
+    "weight": 0.55
+  },
+  "tier_rationale": "Module-spanning refactor touching three functions. Needs disciplined pattern-matching at boundaries. Sonnet tends to clean one and forget the others.",
+  "calibration": null
+}

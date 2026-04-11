@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-04",
+  "tier": "hard",
+  "title": "Normalize mixed-style PermissionService into one philosophy",
+  "prompt": "Refactor `MyApp.PermissionService` from test_fixtures/mixed_style_module.ex. The module mixes four styles: `case` in body, multi-clause function heads, body `if` checks, and another `case`. Normalize to ONE consistent style — multi-clause function heads pattern-matching on the struct shape directly. Preserve all original semantics. Output a complete `defmodule MyApp.PermissionService do ... end`.",
+  "fixture_files": ["test_fixtures/mixed_style_module.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/permission_service.ex"],
+    "must_contain": [
+      "def can?(%{role: \"admin\"}",
+      "def can?(%{role: \"superadmin\"}",
+      "def can?(%{role: \"viewer\"}",
+      "def can?(%{role: \"editor\"}",
+      "def describe(%{name:"
+    ],
+    "must_not_contain": [
+      "case user.role",
+      "case user do",
+      "if user.role ==",
+      "if action == :delete"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["function-head-pattern-matching", "cond-and-if-reduction"],
+    "criterion": "module_style_consistency",
+    "weight": 0.65
+  },
+  "tier_rationale": "Requires recognizing four distinct styles and unifying them. Sonnet often leaves one branch untouched.",
+  "calibration": null
+}

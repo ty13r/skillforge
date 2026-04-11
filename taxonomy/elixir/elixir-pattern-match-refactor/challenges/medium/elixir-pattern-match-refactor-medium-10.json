@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-10",
+  "tier": "medium",
+  "title": "Fix O(n²) list-append in a recursive collector",
+  "prompt": "Refactor `MyApp.Collector.numbered/1` and its helpers in test_fixtures/list_append_loop.ex. The original uses `acc ++ [{n, head}]` which is O(n) per step, giving O(n²) total. Rewrite the helper to prepend `[{n, head} | acc]` and reverse the final accumulator. Apply the same fix to `positive_only/1` and `chars_to_upper/1`. Output a complete `defmodule MyApp.Collector do ... end`.",
+  "fixture_files": ["test_fixtures/list_append_loop.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/collector.ex"],
+    "must_contain": [
+      "def numbered(",
+      "def positive_only(",
+      "def chars_to_upper(",
+      "Enum.reverse(",
+      "[{n, head} | acc]"
+    ],
+    "must_not_contain": [
+      "acc ++ [{n, head}]",
+      "acc ++ [head]",
+      "acc ++ [String.upcase"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": [],
+    "criterion": "fix_quadratic_append",
+    "weight": 0.5
+  },
+  "tier_rationale": "Three helpers to fix consistently. Pattern is well-known but must be applied uniformly.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: 'Prepend to lists [new | list] not list ++ [new]'"
+}

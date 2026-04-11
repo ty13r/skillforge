@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-12",
+  "tier": "medium",
+  "title": "Extract a defguard macro for a repeated range check",
+  "prompt": "The functions below all use the same guard expression `is_integer(n) and n >= 1 and n <= 99`:\n\n```\ndef percent(n) when is_integer(n) and n >= 1 and n <= 99, do: {:ok, n}\ndef clamp(n) when is_integer(n) and n >= 1 and n <= 99, do: n\ndef above_10?(n) when is_integer(n) and n >= 1 and n <= 99, do: n > 10\n```\n\nExtract a `defguardp is_percent(n)` and use it in all three guards. Output a complete `defmodule MyApp.Percent do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/percent.ex"],
+    "must_contain": [
+      "defguardp is_percent(n)",
+      "when is_percent(n)",
+      "def percent(n)",
+      "def clamp(n)",
+      "def above_10?(n)"
+    ],
+    "must_not_contain": [
+      "when is_integer(n) and n >= 1 and n <= 99, do: {:ok"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": [],
+    "criterion": "defguard_extraction",
+    "weight": 0.5
+  },
+  "tier_rationale": "Requires knowing `defguard`/`defguardp` (non-obvious for Sonnet which defaults to copy-pasting guard expressions).",
+  "calibration": null
+}

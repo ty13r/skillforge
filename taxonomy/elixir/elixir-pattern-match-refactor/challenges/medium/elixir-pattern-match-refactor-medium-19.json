@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-19",
+  "tier": "medium",
+  "title": "Refactor string_prefix_regex into binary pattern matching",
+  "prompt": "Refactor both functions in test_fixtures/string_prefix_regex.ex (`parse/1` and `extract_prefix/1`) to use binary pattern matching in function heads. Do not use `String.starts_with?/2`, `String.slice/3`, or `Regex.run/2`. Each function should have one clause per prefix + a catch-all. Output a complete `defmodule MyApp.CommandParser do ... end`.",
+  "fixture_files": ["test_fixtures/string_prefix_regex.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/command_parser.ex"],
+    "must_contain": [
+      "def parse(<<\"SET \", rest::binary>>)",
+      "def parse(<<\"GET \", rest::binary>>)",
+      "def parse(<<\"DEL \", rest::binary>>)",
+      "def parse(<<\"PING",
+      "def extract_prefix(<<\"v1:\", rest::binary>>)",
+      "def extract_prefix(<<\"v2:\", rest::binary>>)",
+      "{:unknown, input}"
+    ],
+    "must_not_contain": [
+      "String.starts_with?",
+      "String.slice",
+      "Regex.run"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "nested_if_to_binary_heads",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two functions to rewrite, plus the PING case requires handling trailing whitespace correctly.",
+  "calibration": null
+}

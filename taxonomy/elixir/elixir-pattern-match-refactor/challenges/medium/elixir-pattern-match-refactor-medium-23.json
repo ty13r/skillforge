@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-23",
+  "tier": "medium",
+  "title": "Convert Enum.each-with-mutable-accumulator to Enum.filter",
+  "prompt": "Refactor `MyApp.ListUtils.collect_evens/1` from test_fixtures/non_tail_recursive.ex. The function uses `Enum.each/2` with what looks like accumulator mutation — `acc = acc ++ [x]` — which is a no-op in Elixir (the outer `acc` is never updated). The function actually returns `[]` always. Rewrite as a single `Enum.filter/2` call that returns only the even elements. Output a complete `defmodule MyApp.ListUtils do ... end` with just collect_evens.",
+  "fixture_files": ["test_fixtures/non_tail_recursive.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_utils.ex"],
+    "must_contain": [
+      "def collect_evens(list)",
+      "Enum.filter(",
+      "rem("
+    ],
+    "must_not_contain": [
+      "Enum.each(",
+      "acc ++ [x]",
+      "acc = []"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "each_to_filter",
+    "weight": 0.5
+  },
+  "tier_rationale": "Must recognize the non-mutation bug and pick Enum.filter as the correct replacement.",
+  "calibration": null
+}

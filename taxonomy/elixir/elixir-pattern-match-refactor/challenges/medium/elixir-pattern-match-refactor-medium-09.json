@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-09",
+  "tier": "medium",
+  "title": "Rewrite non-tail recursion to use an accumulator",
+  "prompt": "Refactor `MyApp.ListUtils.doubled/1` in test_fixtures/non_tail_recursive.ex. The original calls `[head * 2] ++ doubled(tail)` — not tail-recursive (the `++` wraps the recursive call). Rewrite as a tail-recursive version that passes an accumulator, prepending with `[head * 2 | acc]`, and reverses at the end. Use a public `doubled/1` that calls a private `do_doubled/2`. Output a complete `defmodule MyApp.ListUtils do ... end` with only `doubled/1` and its helper (drop the other functions).",
+  "fixture_files": ["test_fixtures/non_tail_recursive.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_utils.ex"],
+    "must_contain": [
+      "def doubled(list)",
+      "defp do_doubled(",
+      "[head * 2 | acc]",
+      "Enum.reverse("
+    ],
+    "must_not_contain": [
+      "[head * 2] ++",
+      "if list == []"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "tail_recursion_acc",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical recursion transformation. Two-step (drop ++, add accumulator helper). Sonnet often writes the prepend form but forgets the reverse.",
+  "calibration": null
+}

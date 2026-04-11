@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-03",
+  "tier": "hard",
+  "title": "Refactor NotificationSender cross-function nil cleanup",
+  "prompt": "Refactor the entire module MyApp.NotificationSender from test_fixtures/defensive_nil_pipeline.ex. Consistent philosophy: every function should pattern-match on the input shape in its head — no `if is_nil` anywhere, no `&&` nil-punning, no `== nil` comparisons. `send_welcome/1` entry point returns `{:error, :no_user}` / `{:error, :no_email}` / `Mailer.send/2` result. `build_template/1` returns a template string, dispatching to `default_template/1` or `custom_template/2` based on map shape. Output a complete `defmodule MyApp.NotificationSender do ... end`.",
+  "fixture_files": ["test_fixtures/defensive_nil_pipeline.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/notification_sender.ex"],
+    "must_contain": [
+      "def send_welcome(nil)",
+      "def send_welcome(%{email: nil}",
+      "def send_welcome(%{email: email}",
+      "def build_template(",
+      "def default_template(",
+      "def custom_template("
+    ],
+    "must_not_contain": [
+      "if is_nil(",
+      "user && user.email",
+      "preferences && preferences.language",
+      "== nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["refactor-philosophy", "function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "module_wide_nil_cleanup",
+    "weight": 0.7
+  },
+  "tier_rationale": "Four functions to clean consistently. Requires holding the refactor philosophy across all of them.",
+  "calibration": null,
+  "research_citation": "te_chris, BoothIQ post-mortem"
+}

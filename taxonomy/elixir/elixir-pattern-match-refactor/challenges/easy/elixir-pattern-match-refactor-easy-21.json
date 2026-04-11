@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-21",
+  "tier": "easy",
+  "title": "Prepend to a list instead of appending — tail recursion with accumulator",
+  "prompt": "Rewrite this function to use prepend-plus-reverse instead of `acc ++ [x]`. Original: `def squared([]), do: []` / `def squared([h | t]), do: squared(t) ++ [h * h]`. Produce an equivalent function that is tail-recursive using an accumulator. Output a complete `defmodule MyApp.Squares do ... end` with `squared/1` and a private helper.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/squares.ex"],
+    "must_contain": [
+      "def squared(list)",
+      "Enum.reverse(",
+      "[h * h | acc]"
+    ],
+    "must_not_contain": [
+      "++ [h * h]",
+      "acc ++ ["
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": [],
+    "criterion": "prepend_reverse",
+    "weight": 0.4
+  },
+  "tier_rationale": "Canonical Elixir recursion idiom (prepend + reverse). Single transformation.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: 'Prepend to lists [new | list] not list ++ [new]'"
+}

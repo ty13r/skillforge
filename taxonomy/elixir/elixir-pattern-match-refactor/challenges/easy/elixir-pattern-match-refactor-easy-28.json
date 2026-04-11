@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-28",
+  "tier": "easy",
+  "title": "Pipe into Enum.join through a list-of-strings transformation",
+  "prompt": "Rewrite this: `def csv(rows) do strs = Enum.map(rows, &to_string/1); Enum.join(strs, \",\") end`. Use a pipeline that starts from `rows`. Output a complete `defmodule MyApp.Csv do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/csv.ex"],
+    "must_contain": [
+      "def csv(rows)",
+      "rows",
+      "|> Enum.map",
+      "|> Enum.join(\",\")"
+    ],
+    "must_not_contain": [
+      "strs = Enum.map",
+      "Enum.join(strs,"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["enum-vs-recursion-choice"],
+    "criterion": "vars_to_pipe",
+    "weight": 0.3
+  },
+  "tier_rationale": "Canonical single-intermediate-variable pipe refactor.",
+  "calibration": null
+}

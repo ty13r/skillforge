@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-22",
+  "tier": "easy",
+  "title": "Use binary pattern matching for command prefixes",
+  "prompt": "Rewrite MyApp.CommandParser.parse/1 from test_fixtures/string_prefix_regex.ex using binary pattern matching in the function head: `def parse(<<\"SET \", rest::binary>>)`, etc. Include heads for SET, GET, DEL, PING. Add a catch-all returning `{:error, :unknown}`. Do not use `String.starts_with?/2` or `String.slice/3`. Output a complete `defmodule MyApp.CommandParser do ... end`.",
+  "fixture_files": ["test_fixtures/string_prefix_regex.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/command_parser.ex"],
+    "must_contain": [
+      "def parse(<<\"SET \", rest::binary>>)",
+      "def parse(<<\"GET \", rest::binary>>)",
+      "def parse(<<\"DEL \", rest::binary>>)",
+      "{:set, rest}",
+      "{:error, :unknown}"
+    ],
+    "must_not_contain": [
+      "String.starts_with?",
+      "String.slice",
+      "Regex.run"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "string_to_binary_match",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical binary-prefix pattern. Well-known single-direction rewrite.",
+  "calibration": null
+}

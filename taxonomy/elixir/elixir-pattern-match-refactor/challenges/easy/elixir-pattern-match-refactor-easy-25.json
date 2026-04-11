@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-25",
+  "tier": "easy",
+  "title": "Eliminate `&&` nil-punning with pattern-matched function heads",
+  "prompt": "Given: `def maybe_email(user), do: user && user.email`. Replace with two function heads: `def maybe_email(nil)` returning `nil`, and `def maybe_email(%{email: email})` returning `email`. Output a complete `defmodule MyApp.Contact do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/contact.ex"],
+    "must_contain": [
+      "def maybe_email(nil)",
+      "def maybe_email(%{email: email})"
+    ],
+    "must_not_contain": [
+      "user && user.email",
+      "user.email"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "nil_pun_elimination",
+    "weight": 0.4
+  },
+  "tier_rationale": "Single-direction swap from `&&` nil-punning to pattern match.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: 'Avoid value && value.field nil-punning—obscures actual return types'"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-22",
+  "tier": "hard",
+  "title": "Refactor with-multiple-sources where error tags come from two services",
+  "prompt": "Given:\n\n```\ndef merged_profile(user_id) do\n  case MyApp.Users.fetch(user_id) do\n    {:ok, user} ->\n      case MyApp.Analytics.get(user_id) do\n        {:ok, stats} -> {:ok, Map.merge(user, %{stats: stats})}\n        {:error, :analytics_down} -> {:ok, user}\n        {:error, r} -> {:error, {:analytics, r}}\n      end\n    {:error, r} -> {:error, {:users, r}}\n  end\nend\n```\n\nThe `{:error, :analytics_down}` branch gracefully falls back to the user alone. Rewrite as a `with` expression + a fallback match for analytics. Use `with {:ok, user} <- ..., {:ok, stats} <- ...` and handle the `:analytics_down` fallback via an `else` clause that only catches that specific atom (not a complex-else). Output a complete `defmodule MyApp.Profiles do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/profiles.ex"],
+    "must_contain": [
+      "def merged_profile(user_id)",
+      "with",
+      "<-",
+      "MyApp.Users.fetch(user_id)",
+      "MyApp.Analytics.get(user_id)",
+      ":analytics_down",
+      "else"
+    ],
+    "must_not_contain": [
+      "case MyApp.Users.fetch",
+      "case MyApp.Analytics.get"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "with_targeted_else",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires balancing the 'avoid complex else' rule with the need for specific-atom handling.",
+  "calibration": null
+}

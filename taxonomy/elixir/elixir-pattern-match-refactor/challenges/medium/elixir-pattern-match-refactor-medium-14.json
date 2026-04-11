@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-14",
+  "tier": "medium",
+  "title": "Eliminate format_user defensive check chain with head destructuring + guard",
+  "prompt": "Refactor `MyApp.Validator.format_user/1` from test_fixtures/bad_guards.ex. The current body is `if user != nil && is_binary(user.name) && byte_size(user.name) > 0`. Rewrite as two function heads: one matching `%{name: name}` with guard `when is_binary(name) and byte_size(name) > 0`, returning `String.upcase(name)`; another matching anything else, returning `\"UNKNOWN\"`. Output a complete `defmodule MyApp.Validator do ... end` with just format_user.",
+  "fixture_files": ["test_fixtures/bad_guards.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/validator.ex"],
+    "must_contain": [
+      "def format_user(%{name: name})",
+      "when is_binary(name)",
+      "byte_size(name) > 0",
+      "String.upcase(name)",
+      "\"UNKNOWN\""
+    ],
+    "must_not_contain": [
+      "user != nil",
+      "user.name"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "map-and-struct-destructuring"],
+    "criterion": "combined_head_guard",
+    "weight": 0.5
+  },
+  "tier_rationale": "Three things must land together: head destructure, guard with composition, removal of `&&`. Sonnet typically misses the `&&` cleanup.",
+  "calibration": null
+}

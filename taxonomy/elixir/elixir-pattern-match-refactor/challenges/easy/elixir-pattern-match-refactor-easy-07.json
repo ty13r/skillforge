@@ -1,0 +1,36 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-07",
+  "tier": "easy",
+  "title": "Refactor a cond to multi-clause function heads (role router)",
+  "prompt": "Rewrite MyApp.RoleRouter.route/1 from test_fixtures/cond_role_router.ex as multi-clause function heads. Pattern-match on the user map's `:role` and `:active` keys directly in the head (e.g., `def route(%{role: \"admin\", active: true})`). Include a catch-all final clause that returns `:unauthorized`. Output only the `route/1` function inside `defmodule MyApp.RoleRouter do ... end`.",
+  "fixture_files": ["test_fixtures/cond_role_router.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/role_router.ex"],
+    "must_contain": [
+      "def route(%{role: \"admin\", active: true})",
+      "def route(%{role: \"admin\", active: false})",
+      "def route(%{role: \"editor\"})",
+      "def route(%{role: \"viewer\"})",
+      "def route(%{role: \"guest\"})",
+      ":admin_dashboard",
+      ":suspended",
+      ":editor_home",
+      ":viewer_home",
+      ":landing",
+      ":unauthorized"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "user.role ==",
+      "true ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "cond_to_heads",
+    "weight": 0.6
+  },
+  "tier_rationale": "Direct 1:1 mapping from cond clauses to function heads. No ambiguity.",
+  "calibration": null
+}

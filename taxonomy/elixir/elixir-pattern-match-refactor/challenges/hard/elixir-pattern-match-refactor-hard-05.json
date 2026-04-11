@@ -1,0 +1,35 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-05",
+  "tier": "hard",
+  "title": "Pipe-first rewrite of a deeply nested transformation",
+  "prompt": "Rewrite this 30-line imperative function as a pipe pipeline:\n\n```\ndef analyze(events) do\n  filtered = Enum.filter(events, fn e -> e.type == :click end)\n  grouped = Enum.group_by(filtered, fn e -> e.user_id end)\n  counts = Enum.map(grouped, fn {uid, es} -> {uid, length(es)} end)\n  sorted = Enum.sort_by(counts, fn {_, n} -> n end, :desc)\n  top = Enum.take(sorted, 10)\n  result = Enum.map(top, fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  result\nend\n```\n\nOutput a pipe pipeline from `events` through all transformations. No intermediate variables. Output a complete `defmodule MyApp.Analytics do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/analytics.ex"],
+    "must_contain": [
+      "def analyze(events)",
+      "events",
+      "|> Enum.filter",
+      "|> Enum.group_by",
+      "|> Enum.map",
+      "|> Enum.sort_by",
+      "|> Enum.take(10)"
+    ],
+    "must_not_contain": [
+      "filtered = Enum.filter",
+      "grouped = Enum.group_by",
+      "counts = Enum.map",
+      "sorted = Enum.sort_by",
+      "top = Enum.take",
+      "result = Enum.map"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "deep_pipe_rewrite",
+    "weight": 0.65
+  },
+  "tier_rationale": "Six-step pipeline. Must also fold the final `Enum.map` transformation correctly. Sonnet often leaves at least one intermediate.",
+  "calibration": null
+}

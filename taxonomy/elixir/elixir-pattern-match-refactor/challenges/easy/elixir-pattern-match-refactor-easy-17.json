@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-17",
+  "tier": "easy",
+  "title": "Replace map[:key] dynamic access with static map.key in plot_point/1",
+  "prompt": "Refactor MyApp.OrderFormatter.plot_point/1 from test_fixtures/map_access_noise.ex. It currently uses `point[:x]`, `point[:y]`, `point[:z]` — the non-assertive map access anti-pattern. Replace with a pattern-matched function head `def plot_point(%{x: x, y: y, z: z})`. Output only `plot_point/1` inside `defmodule MyApp.OrderFormatter do ... end`.",
+  "fixture_files": ["test_fixtures/map_access_noise.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/order_formatter.ex"],
+    "must_contain": [
+      "def plot_point(%{x: x, y: y, z: z})",
+      "{x, y, z}"
+    ],
+    "must_not_contain": [
+      "point[:x]",
+      "point[:y]",
+      "point[:z]"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": [],
+    "criterion": "dynamic_to_static",
+    "weight": 0.4
+  },
+  "tier_rationale": "Exact refactor from the official anti-patterns guide example.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns guide: 'Non-assertive Map Access — Refactor: def plot(%{x: x, y: y, z: z}), do: {x, y, z}'"
+}

@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-11",
+  "tier": "medium",
+  "title": "Rewrite the entire TextProcessor as a pipe-based module",
+  "prompt": "Refactor all three functions in test_fixtures/intermediate_vars.ex (`normalize/1`, `slugify/1`, `summary/1`) so every function body is a single `|>` pipeline. No intermediate variables. Output a complete `defmodule MyApp.TextProcessor do ... end`.",
+  "fixture_files": ["test_fixtures/intermediate_vars.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/text_processor.ex"],
+    "must_contain": [
+      "def normalize(input)",
+      "def slugify(title)",
+      "def summary(text)",
+      "|> String.trim()",
+      "|> String.downcase()",
+      "|> Enum.take(10)",
+      "|> Enum.join"
+    ],
+    "must_not_contain": [
+      "trimmed = String.trim",
+      "a = String.trim",
+      "words = String.split",
+      "first_ten ="
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "whole_module_pipe",
+    "weight": 0.55
+  },
+  "tier_rationale": "Three-function module-wide refactor; `summary/1` has the trickiest step because concatenating the `...` suffix needs `Kernel.<>/2` piping.",
+  "calibration": null
+}

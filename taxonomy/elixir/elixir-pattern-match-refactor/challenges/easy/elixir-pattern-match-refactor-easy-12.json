@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-12",
+  "tier": "easy",
+  "title": "Collapse a `case x do nil -> \"n/a\"; v -> v end` into `Kernel.||/2`-free pattern match",
+  "prompt": "Given the function `def name_or_default(user) do case user.name do nil -> \"n/a\"; v -> v end end`, refactor into two function heads. One should match `%{name: nil}` and return `\"n/a\"`, the other should match `%{name: name}` and return `name`. Output a complete module `defmodule MyApp.Display do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/display.ex"],
+    "must_contain": [
+      "def name_or_default(%{name: nil})",
+      "def name_or_default(%{name: name})",
+      "\"n/a\""
+    ],
+    "must_not_contain": [
+      "case user.name",
+      "is_nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["map-and-struct-destructuring", "function-head-pattern-matching"],
+    "criterion": "case_nil_to_heads",
+    "weight": 0.4
+  },
+  "tier_rationale": "Tiny transformation; single idiom target. Well-cited failure mode (dnautics), but the fix is mechanical.",
+  "calibration": null,
+  "research_citation": "dnautics, HN 46752907: 'case functioncall() do nil -> ... end'"
+}

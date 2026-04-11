@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-20",
+  "tier": "hard",
+  "title": "Full ListUtils rewrite — three functions to tail-recursive + pipe idioms",
+  "prompt": "Refactor MyApp.ListUtils from test_fixtures/non_tail_recursive.ex. All three functions (`doubled/1`, `build_path/1`, `collect_evens/1`) must be rewritten. `doubled/1` uses tail recursion with prepend-and-reverse. `build_path/1` uses a pipe pipeline. `collect_evens/1` uses `Enum.filter/2`. Output a complete `defmodule MyApp.ListUtils do ... end`.",
+  "fixture_files": ["test_fixtures/non_tail_recursive.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_utils.ex"],
+    "must_contain": [
+      "def doubled(list)",
+      "defp do_doubled",
+      "Enum.reverse(acc)",
+      "def build_path(segments)",
+      "|> Enum.map",
+      "|> Enum.join",
+      "def collect_evens(list)",
+      "Enum.filter"
+    ],
+    "must_not_contain": [
+      "[head * 2] ++",
+      "path = \"\"",
+      "for segment <- segments",
+      "Enum.each(list"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["recursive-functions", "pipe-operator-flows", "enum-vs-recursion-choice"],
+    "criterion": "module_wide_idiom_fix",
+    "weight": 0.7
+  },
+  "tier_rationale": "Module-wide synthesis requiring different idioms per function. Tests that the skill picks the right tool per function.",
+  "calibration": null
+}

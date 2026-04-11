@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-09",
+  "tier": "hard",
+  "title": "Refactor with guard composition using in [...] and when",
+  "prompt": "Given:\n\n```\ndef role_color(user) do\n  cond do\n    user.role == \"owner\" or user.role == \"admin\" -> \"red\"\n    user.role == \"editor\" or user.role == \"contributor\" -> \"blue\"\n    user.role == \"viewer\" or user.role == \"guest\" -> \"gray\"\n    true -> \"black\"\n  end\nend\n```\n\nRewrite as function heads with `when role in [...]` guard composition. Each head pattern-matches `%{role: role}` and uses `when role in [\"owner\", \"admin\"]`, etc. Output a complete `defmodule MyApp.RoleColor do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/role_color.ex"],
+    "must_contain": [
+      "def role_color(%{role: role})",
+      "when role in [\"owner\", \"admin\"]",
+      "when role in [\"editor\", \"contributor\"]",
+      "when role in [\"viewer\", \"guest\"]",
+      "\"red\"",
+      "\"blue\"",
+      "\"gray\"",
+      "\"black\""
+    ],
+    "must_not_contain": [
+      "cond do",
+      "user.role ==",
+      "true ->"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "in_guard_composition",
+    "weight": 0.65
+  },
+  "tier_rationale": "Using `in [...]` in a guard is less common than individual equality checks. Multi-step: match + destructure + guard.",
+  "calibration": null
+}

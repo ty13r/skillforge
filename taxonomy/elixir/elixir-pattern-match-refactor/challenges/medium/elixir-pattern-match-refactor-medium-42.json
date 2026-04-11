@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-42",
+  "tier": "medium",
+  "title": "Replace `case` on a literal atom with `if` binding idiom",
+  "prompt": "Given: `def find_author(id) do case MyApp.Users.get_author(id) do nil -> :anon; author -> author end end`. Rewrite using the `if var = expr` binding idiom: `if author = MyApp.Users.get_author(id), do: author, else: :anon`. Output a complete `defmodule MyApp.Authors do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/authors.ex"],
+    "must_contain": [
+      "def find_author(id)",
+      "if author = MyApp.Users.get_author(id)",
+      ":anon"
+    ],
+    "must_not_contain": [
+      "case MyApp.Users.get_author",
+      "nil -> :anon"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "defensive-nil-checks-elimination",
+    "secondary_capabilities": ["cond-and-if-reduction"],
+    "criterion": "case_nil_to_if_bind",
+    "weight": 0.45
+  },
+  "tier_rationale": "Direct application of dnautics-idiom. Counts as medium because Sonnet consistently reaches for `case` first.",
+  "calibration": null,
+  "research_citation": "dnautics, HN 46752907"
+}

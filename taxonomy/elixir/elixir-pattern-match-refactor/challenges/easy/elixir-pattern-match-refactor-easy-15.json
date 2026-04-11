@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-15",
+  "tier": "easy",
+  "title": "Use Enum.filter and Enum.reject instead of Enum.reduce for a parity split",
+  "prompt": "Given MyApp.Accumulators.group_by_parity/1 from test_fixtures/enum_reduce_awkward.ex, rewrite it as `%{evens: Enum.filter(list, &(rem(&1, 2) == 0)), odds: Enum.reject(list, &(rem(&1, 2) == 0))}`. Do not use `Enum.reduce`. Output a single-function module `defmodule MyApp.Accumulators do ... end`.",
+  "fixture_files": ["test_fixtures/enum_reduce_awkward.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/accumulators.ex"],
+    "must_contain": [
+      "Enum.filter(",
+      "Enum.reject(",
+      "rem(",
+      ":evens",
+      ":odds"
+    ],
+    "must_not_contain": [
+      "Enum.reduce(",
+      "|> Map.put"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "enum-vs-recursion-choice",
+    "secondary_capabilities": [],
+    "criterion": "reduce_to_filter",
+    "weight": 0.4
+  },
+  "tier_rationale": "Direct function replacement; no judgment about which Enum function to pick — filter/reject is the canonical choice for parity.",
+  "calibration": null
+}

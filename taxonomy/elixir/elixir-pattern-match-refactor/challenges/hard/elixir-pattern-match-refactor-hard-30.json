@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-30",
+  "tier": "hard",
+  "title": "Refactor map_access_noise.ex with proper fallback strategies",
+  "prompt": "Refactor ALL of MyApp.OrderFormatter from test_fixtures/map_access_noise.ex. `summary/1`: use head destructuring with a fallback head. `shipping_address/1`: use `with` + `Map.fetch/2`, returning user-friendly fallbacks. `plot_point/1`: head destructuring. Each function should eliminate `map[:key]` access entirely. Output a complete `defmodule MyApp.OrderFormatter do ... end`.",
+  "fixture_files": ["test_fixtures/map_access_noise.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/order_formatter.ex"],
+    "must_contain": [
+      "def summary(%{id: id, items: items, total: total})",
+      "def summary(_)",
+      "def shipping_address(",
+      "with",
+      "Map.fetch",
+      "def plot_point(%{x: x, y: y, z: z})"
+    ],
+    "must_not_contain": [
+      "order[:id]",
+      "order[:items]",
+      "user[:address]",
+      "address[:street]",
+      "if id != nil",
+      "if user != nil"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["with-expressions", "refactor-philosophy"],
+    "criterion": "full_module_destructure",
+    "weight": 0.7
+  },
+  "tier_rationale": "Three-function synthesis. Each function needs a different refactoring approach.",
+  "calibration": null
+}

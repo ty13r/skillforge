@@ -1,0 +1,27 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-32",
+  "tier": "easy",
+  "title": "Simple recursive length counter",
+  "prompt": "Write `MyApp.ListLen.len/1` as an explicit recursive function with two function-head clauses: a base matching `[]` returning `0`, and a step matching `[_head | tail]` returning `1 + len(tail)`. Do NOT use `length/1` or `Enum.count/1`. Output a complete `defmodule MyApp.ListLen do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/list_len.ex"],
+    "must_contain": [
+      "def len([])",
+      "def len([_head | tail])",
+      "1 + len(tail)"
+    ],
+    "must_not_contain": [
+      "length(",
+      "Enum.count"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "base_plus_step",
+    "weight": 0.3
+  },
+  "tier_rationale": "Minimal recursion exercise.",
+  "calibration": null
+}

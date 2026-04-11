@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-16",
+  "tier": "easy",
+  "title": "Head-destructure %User{id: id} instead of user.id access",
+  "prompt": "Write `MyApp.Users.belongs_to?/2` as two function heads. One head should accept `%User{id: id}` and an attrs map `%{user_id: id}` and return `true`. The other head should match everything else and return `false`. Do NOT access `user.id` or `attrs.user_id` inside the function body. Output a complete `defmodule MyApp.Users do ... end` (with `alias MyApp.User`).",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/users.ex"],
+    "must_contain": [
+      "def belongs_to?(%User{id: id}",
+      "%{user_id: id}",
+      "true",
+      "false"
+    ],
+    "must_not_contain": [
+      "user.id",
+      "attrs.user_id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "map-and-struct-destructuring",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "head_destructure",
+    "weight": 0.4
+  },
+  "tier_rationale": "Direct head-destructuring pattern; the pinning-via-rebind trick is the intended lesson but it's a textbook idiom.",
+  "calibration": null
+}

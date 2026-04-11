@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-31",
+  "tier": "easy",
+  "title": "Refactor an if-chain on user.role into pattern-matched function heads",
+  "prompt": "Rewrite this: `def homepage(user) do if user.role == \"admin\", do: \"/admin\", else: if user.role == \"editor\", do: \"/editor\", else: \"/\" end end`. Use three function heads, each pattern-matching on `%{role: ...}`. Output a complete `defmodule MyApp.Router do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/router.ex"],
+    "must_contain": [
+      "def homepage(%{role: \"admin\"})",
+      "def homepage(%{role: \"editor\"})",
+      "def homepage(_)",
+      "\"/admin\"",
+      "\"/editor\"",
+      "\"/\""
+    ],
+    "must_not_contain": [
+      "if user.role ==",
+      "user.role == \"admin\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["map-and-struct-destructuring", "cond-and-if-reduction"],
+    "criterion": "if_chain_to_heads",
+    "weight": 0.4
+  },
+  "tier_rationale": "Straightforward if-chain → function heads.",
+  "calibration": null
+}

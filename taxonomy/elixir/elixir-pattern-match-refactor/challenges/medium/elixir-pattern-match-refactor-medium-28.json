@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-28",
+  "tier": "medium",
+  "title": "Use map_size guard for empty map check",
+  "prompt": "Given: `def empty?(map), do: if map == %{}, do: true, else: false`. The check `map == %{}` is wrong for structs and for non-empty maps with `%{}` patterns. Rewrite as `def empty?(map) when map_size(map) == 0, do: true; def empty?(_), do: false`. Output a complete `defmodule MyApp.MapCheck do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/map_check.ex"],
+    "must_contain": [
+      "def empty?(map)",
+      "when map_size(map) == 0",
+      "def empty?(_)"
+    ],
+    "must_not_contain": [
+      "map == %{}",
+      "if map == %{}"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["cond-and-if-reduction"],
+    "criterion": "map_size_guard",
+    "weight": 0.5
+  },
+  "tier_rationale": "Needs knowledge of the map_size-in-guard idiom. Sonnet often uses == comparison.",
+  "calibration": null,
+  "research_citation": "georgeguimaraes elixir-thinking: '%{} matches ANY map—use map_size(map) == 0 guard for empty maps'"
+}

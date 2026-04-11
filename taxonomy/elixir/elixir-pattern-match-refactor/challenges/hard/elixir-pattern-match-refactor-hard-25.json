@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-25",
+  "tier": "hard",
+  "title": "Refactor a guard-using-forbidden-function into a guard-and-body split",
+  "prompt": "Given: `def valid_email?(email) when is_binary(email) and String.contains?(email, \"@\"), do: true; def valid_email?(_), do: false`. This is a compile error — `String.contains?/2` is not allowed in guards. Split: keep `when is_binary(email)` as the guard, move the `@` check to the body, and add a catch-all clause. Output a complete `defmodule MyApp.EmailCheck do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/email_check.ex"],
+    "must_contain": [
+      "def valid_email?(email) when is_binary(email)",
+      "String.contains?(email, \"@\")",
+      "def valid_email?(_)",
+      "true",
+      "false"
+    ],
+    "must_not_contain": [
+      "when is_binary(email) and String.contains?"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "guard_body_split",
+    "weight": 0.65
+  },
+  "tier_rationale": "Requires knowing the restricted-subset rule for guards. Sonnet often writes this exact anti-pattern.",
+  "calibration": null
+}

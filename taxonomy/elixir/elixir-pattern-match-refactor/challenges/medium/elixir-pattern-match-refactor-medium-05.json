@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-05",
+  "tier": "medium",
+  "title": "Preserve error provenance when collapsing nested case to with",
+  "prompt": "Refactor `MyApp.Signup.create/1` below. When collapsing to `with`, preserve error tags so the caller can distinguish: `{:error, {:invalid_params, reason}}`, `{:error, {:user_exists, _}}`, `{:error, {:db_error, reason}}`. Use pattern-matched normalizers inside the `with` clauses (e.g., `{:ok, _} <- wrap_validate(params)`) so error tagging happens at the boundary and the `with` has no `else` clause at all.\n\nOriginal:\n```\ndefmodule MyApp.Signup do\n  def create(params) do\n    case MyApp.Params.validate(params) do\n      {:ok, valid} ->\n        case MyApp.Users.check_duplicate(valid.email) do\n          :ok ->\n            case MyApp.Repo.insert_user(valid) do\n              {:ok, user} -> {:ok, user}\n              {:error, r} -> {:error, {:db_error, r}}\n            end\n\n          {:error, r} -> {:error, {:user_exists, r}}\n        end\n      {:error, r} -> {:error, {:invalid_params, r}}\n    end\n  end\nend\n```",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/signup.ex"],
+    "must_contain": [
+      "def create(params)",
+      "with",
+      "<-",
+      "{:invalid_params,",
+      "{:user_exists,",
+      "{:db_error,"
+    ],
+    "must_not_contain": [
+      "case MyApp.Params.validate",
+      "case MyApp.Users.check_duplicate",
+      "case MyApp.Repo.insert_user"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "with_preserves_provenance",
+    "weight": 0.55
+  },
+  "tier_rationale": "Collapsing the case nest is easy; the trick is preserving the three distinct error tags. Sonnet typically uses a single `else` block (complex-else anti-pattern) instead of normalizing at the clause boundary.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns guide: 'Complex else clauses in with'"
+}

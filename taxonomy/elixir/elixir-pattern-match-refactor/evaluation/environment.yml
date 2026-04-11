@@ -1,0 +1,17 @@
+runtime:
+  language: python
+  version: "3.12"
+binaries:
+  - python3
+python_packages:
+  - regex
+optional_binaries:
+  - elixir@1.16
+  - mix@1.16
+notes: |
+  score.py uses regex-based structural counting (function heads, if/case/cond
+  keywords, pipe operators, with expressions, is_nil guards) to assess
+  refactor quality. Fewer imperative constructs + more pattern-matched
+  function heads + more pipes = higher score. No Elixir runtime required.
+  Optional binaries are for future rounds where challenges may ask for
+  compile verification.

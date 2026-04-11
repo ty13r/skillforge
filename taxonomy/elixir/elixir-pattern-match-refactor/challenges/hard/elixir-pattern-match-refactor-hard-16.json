@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-16",
+  "tier": "hard",
+  "title": "Mixed-style cleanup across 5 functions in PermissionService",
+  "prompt": "Refactor all of MyApp.PermissionService from test_fixtures/mixed_style_module.ex. Every function must be rewritten: can?/2 is a mix of case, function heads, and body if — unify to heads with guards where applicable. describe/1 mixes a guarded head with a case — unify to heads. Also add a new helper `admin?/1` that's a single pattern-matched head. Output a complete `defmodule MyApp.PermissionService do ... end`.",
+  "fixture_files": ["test_fixtures/mixed_style_module.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/permission_service.ex"],
+    "must_contain": [
+      "def can?(%{role: \"admin\"}",
+      "def can?(%{role: \"superadmin\"}",
+      "def describe(%{name: nil}",
+      "def describe(%{name: name}",
+      "def admin?(%{role:"
+    ],
+    "must_not_contain": [
+      "case user.role do",
+      "case user do",
+      "if user.role == \"admin\"",
+      "if action == :delete"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring", "cond-and-if-reduction"],
+    "criterion": "full_module_rewrite",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires a coherent philosophy + consistency across 5+ functions.",
+  "calibration": null
+}

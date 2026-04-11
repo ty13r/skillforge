@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-13",
+  "tier": "medium",
+  "title": "Use `and`/`or` in guards instead of `&&`/`||`",
+  "prompt": "The following has invalid Elixir (`&&` and `||` are not allowed in guards — they'll raise at compile or runtime in guard position):\n\n```\ndef active?(user) when user.active && user.role != \"banned\", do: true\ndef active?(_), do: false\n\ndef contactable?(user) when user.email != nil || user.phone != nil, do: true\ndef contactable?(_), do: false\n```\n\nFix by: (1) destructuring user in the head, (2) using `and`/`or` in guards, (3) asserting types properly (`is_binary`, not `!= nil`). Output a complete `defmodule MyApp.UserChecks do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_checks.ex"],
+    "must_contain": [
+      "def active?(",
+      "when",
+      " and ",
+      "def contactable?(",
+      " or "
+    ],
+    "must_not_contain": [
+      "when user.active &&",
+      "when user.email != nil",
+      "||"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "guard-clauses",
+    "secondary_capabilities": ["defensive-nil-checks-elimination"],
+    "criterion": "and_or_in_guards",
+    "weight": 0.55
+  },
+  "tier_rationale": "Multiple issues to fix: illegal guard syntax, non-assertive nil checks, non-destructured access. Sonnet typically fixes one and leaves another.",
+  "calibration": null,
+  "research_citation": "Elixir anti-patterns: 'Non-assertive Truthiness — Replace &&, ||, ! with and, or, not when operands are expected to be booleans.'"
+}

@@ -1,0 +1,34 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-14",
+  "tier": "hard",
+  "title": "Refactor error_tuple_handler-adjacent nested case using with + function-head match",
+  "prompt": "Given a function that unwraps error tuples by nesting case chains:\n\n```\ndef pipeline(input) do\n  case step1(input) do\n    {:ok, v1} ->\n      case step2(v1) do\n        {:ok, v2} ->\n          case step3(v2) do\n            {:ok, v3} -> {:ok, v3}\n            {:error, r} -> {:error, {:step3, r}}\n          end\n        {:error, r} -> {:error, {:step2, r}}\n      end\n    {:error, r} -> {:error, {:step1, r}}\n  end\nend\n```\n\nRewrite with a `with` expression that uses per-step normalization helpers `do_step1/1`, `do_step2/1`, `do_step3/1` — each wraps `step<n>/1` and tags errors. The top-level `with` has no `else`. Output a complete `defmodule MyApp.Pipeline do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/pipeline.ex"],
+    "must_contain": [
+      "def pipeline(input)",
+      "with",
+      "<-",
+      "defp do_step1",
+      "defp do_step2",
+      "defp do_step3",
+      "{:step1,",
+      "{:step2,",
+      "{:step3,"
+    ],
+    "must_not_contain": [
+      "case step1",
+      "case step2",
+      "case step3"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "with-expressions",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "with_per_step_tagging",
+    "weight": 0.7
+  },
+  "tier_rationale": "Three-step helper extraction + per-step error tagging. Synthesis of multiple capabilities.",
+  "calibration": null
+}

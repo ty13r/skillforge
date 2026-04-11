@@ -1,0 +1,36 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-16",
+  "tier": "medium",
+  "title": "Rewrite defensive imperative report builder as a pipe pipeline",
+  "prompt": "Refactor `MyApp.ReportBuilder.build/1` from test_fixtures/imperative_report_builder.ex. The original uses `for` comprehensions that rebind `total = total + line_total` and `valid_orders = [order | valid_orders]` — which don't actually mutate outer bindings in Elixir and is a pervasive Ruby/Java-style bug. Rewrite using `Enum.filter/2`, `Enum.reduce/3`, and `Map.new/1`. The final output must be a map with `:subtotal`, `:tax`, `:grand_total`, `:order_count`. Use a pipe pipeline. Output a complete `defmodule MyApp.ReportBuilder do ... end` with just `build/1`.",
+  "fixture_files": ["test_fixtures/imperative_report_builder.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/report_builder.ex"],
+    "must_contain": [
+      "def build(orders)",
+      "Enum.filter",
+      "Enum.reduce",
+      "|>",
+      ":subtotal",
+      ":tax",
+      ":grand_total",
+      ":order_count"
+    ],
+    "must_not_contain": [
+      "valid_orders = []",
+      "for order <- orders do",
+      "total = total +",
+      "valid_orders = [order | valid_orders]",
+      "report = Map.put"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": ["enum-vs-recursion-choice", "refactor-philosophy"],
+    "criterion": "imperative_to_pipe",
+    "weight": 0.6
+  },
+  "tier_rationale": "Classic 'writes Java even if Elixir' fixture. Requires recognizing the non-mutation bug, using Enum functions, then pipelining.",
+  "calibration": null,
+  "research_citation": "troupo, HN 46752907: 'It tends to always write Java even if it's Elixir'"
+}

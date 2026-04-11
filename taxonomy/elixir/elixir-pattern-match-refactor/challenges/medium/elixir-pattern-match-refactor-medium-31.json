@@ -1,0 +1,32 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-31",
+  "tier": "medium",
+  "title": "Consistent philosophy across UserService — four-function cleanup",
+  "prompt": "Refactor MyApp.UserService from test_fixtures/ruby_style_user_service.ex. Apply a consistent style across ALL four functions (fetch_profile, maybe_load_profile, update_role, display_name): use multi-clause function heads where the match is on shape, and `with` expressions for the multi-step fetch_profile flow. Eliminate every `if is_nil`, every `&&` nil-pun, and every `maybe_` prefix. Output a complete `defmodule MyApp.UserService do ... end`.",
+  "fixture_files": ["test_fixtures/ruby_style_user_service.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/user_service.ex"],
+    "must_contain": [
+      "def fetch_profile(",
+      "with",
+      "def load_profile(",
+      "def update_role(",
+      "def display_name("
+    ],
+    "must_not_contain": [
+      "is_nil(",
+      "user && user.name",
+      "maybe_load_profile",
+      "if user != nil",
+      "if role == \"admin\""
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["defensive-nil-checks-elimination", "with-expressions", "function-head-pattern-matching"],
+    "criterion": "full_module_consistent_refactor",
+    "weight": 0.6
+  },
+  "tier_rationale": "Module-wide consistency check. Touches 4+ distinct refactors and requires a consistent philosophy.",
+  "calibration": null
+}

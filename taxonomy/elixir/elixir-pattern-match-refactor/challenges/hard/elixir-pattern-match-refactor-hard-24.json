@@ -1,0 +1,33 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-24",
+  "tier": "hard",
+  "title": "Replace cond with function heads AND a remaining valid cond",
+  "prompt": "Given:\n\n```\ndef classify(record) do\n  cond do\n    record.type == :customer and record.tier == :gold -> :vip\n    record.type == :customer and record.tier == :silver -> :preferred\n    record.type == :customer -> :standard\n    record.type == :staff -> :staff\n    record.created_at && DateTime.diff(DateTime.utc_now(), record.created_at, :day) < 30 -> :new\n    true -> :unknown\n  end\nend\n```\n\nThe first four cond branches should become function heads. The `:new` branch involves a runtime call (`DateTime.diff/3`), which can't go in a guard, so it must stay in a `cond` inside the catch-all head. Refactor accordingly. Output a complete `defmodule MyApp.Classifier do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/classifier.ex"],
+    "must_contain": [
+      "def classify(%{type: :customer, tier: :gold})",
+      "def classify(%{type: :customer, tier: :silver})",
+      "def classify(%{type: :customer}",
+      "def classify(%{type: :staff}",
+      "def classify(record)",
+      "cond do",
+      "DateTime.diff",
+      ":new",
+      ":unknown"
+    ],
+    "must_not_contain": [
+      "record.type == :customer and record.tier == :gold",
+      "record.type == :staff"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "mixed_cond_heads_decision",
+    "weight": 0.7
+  },
+  "tier_rationale": "Requires recognizing which branches can be heads and which need cond + runtime call. Tests the judgment boundary.",
+  "calibration": null
+}

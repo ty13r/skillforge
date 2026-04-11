@@ -1,0 +1,31 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-24",
+  "tier": "easy",
+  "title": "Straight refactor-philosophy: one consistent style across a 3-function module",
+  "prompt": "Given this module:\n\n```\ndefmodule MyApp.StatusService do\n  def label(status) do\n    case status do\n      :active -> \"Active\"\n      :pending -> \"Pending\"\n      _ -> \"Unknown\"\n    end\n  end\n\n  def color(status) do\n    if status == :active do\n      \"green\"\n    else\n      if status == :pending do\n        \"yellow\"\n      else\n        \"gray\"\n      end\n    end\n  end\n\n  def icon(:active), do: \"checkmark\"\n  def icon(:pending), do: \"clock\"\n  def icon(_), do: \"question\"\nend\n```\n\nRefactor so all three functions use the same style: multi-clause function heads matching on the literal atoms. Output a complete `defmodule MyApp.StatusService do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/status_service.ex"],
+    "must_contain": [
+      "def label(:active)",
+      "def label(:pending)",
+      "def color(:active)",
+      "def color(:pending)",
+      "def icon(:active)",
+      "def icon(:pending)"
+    ],
+    "must_not_contain": [
+      "case status",
+      "if status ==",
+      "status = :active"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "refactor-philosophy",
+    "secondary_capabilities": ["function-head-pattern-matching", "cond-and-if-reduction"],
+    "criterion": "consistent_style",
+    "weight": 0.5
+  },
+  "tier_rationale": "Consistent-style refactor across three functions; only one canonical target (function heads). Easy because all three transforms are independent and obvious.",
+  "calibration": null
+}

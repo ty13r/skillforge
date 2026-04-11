@@ -1,0 +1,68 @@
+{
+  "slug": "elixir-pattern-match-refactor",
+  "name": "Elixir Pattern Match Refactor",
+  "language": "elixir",
+  "tier": "A",
+  "curve": "rich",
+  "spec_version": "2.1",
+  "taxonomy": {
+    "domain": "code-quality",
+    "focus": "refactoring",
+    "language": "elixir"
+  },
+  "foundation_dimension": "refactor-philosophy",
+  "capability_dimensions": [
+    "function-head-pattern-matching",
+    "guard-clauses",
+    "pipe-operator-flows",
+    "with-expressions",
+    "recursive-functions",
+    "enum-vs-recursion-choice",
+    "map-and-struct-destructuring",
+    "binary-pattern-matching-basic",
+    "cond-and-if-reduction",
+    "defensive-nil-checks-elimination"
+  ],
+  "challenges": {
+    "total": 120,
+    "by_tier": {
+      "easy": 35,
+      "medium": 47,
+      "hard": 38,
+      "legendary": 0
+    },
+    "held_out_ids": [
+      "elixir-pattern-match-refactor-easy-04",
+      "elixir-pattern-match-refactor-easy-09",
+      "elixir-pattern-match-refactor-easy-15",
+      "elixir-pattern-match-refactor-easy-21",
+      "elixir-pattern-match-refactor-easy-27",
+      "elixir-pattern-match-refactor-easy-33",
+      "elixir-pattern-match-refactor-medium-02",
+      "elixir-pattern-match-refactor-medium-08",
+      "elixir-pattern-match-refactor-medium-14",
+      "elixir-pattern-match-refactor-medium-21",
+      "elixir-pattern-match-refactor-medium-28",
+      "elixir-pattern-match-refactor-medium-34",
+      "elixir-pattern-match-refactor-medium-41",
+      "elixir-pattern-match-refactor-medium-46",
+      "elixir-pattern-match-refactor-hard-03",
+      "elixir-pattern-match-refactor-hard-09",
+      "elixir-pattern-match-refactor-hard-16",
+      "elixir-pattern-match-refactor-hard-22",
+      "elixir-pattern-match-refactor-hard-28",
+      "elixir-pattern-match-refactor-hard-34"
+    ]
+  },
+  "evaluation": {
+    "score_script": "evaluation/score.py",
+    "criteria_file": "evaluation/criteria.json",
+    "environment_file": "evaluation/environment.yml"
+  },
+  "seeded_at": "2026-04-11",
+  "tier_methodology": "heuristic",
+  "tier_methodology_note": "Tiers assigned by drafting agent judgment per SEEDING-PLAN.md item 4. Empirical Haiku+Sonnet calibration is a future workstream. Known gap: legendary tier has 0 challenges (drafting agent was cut off before writing the legendary tier).",
+  "known_gaps": {
+    "legendary_tier_empty": "Legendary tier has 0 challenges vs 30 target (drafting agent cut off). One orphaned legendary golden reference exists (legendary-01.ex) but no corresponding challenge JSON."
+  }
+}

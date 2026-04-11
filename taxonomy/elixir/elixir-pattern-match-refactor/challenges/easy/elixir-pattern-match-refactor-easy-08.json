@@ -1,0 +1,30 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-08",
+  "tier": "easy",
+  "title": "Convert intermediate variable chain to pipe (TextProcessor.slugify/1)",
+  "prompt": "Refactor MyApp.TextProcessor.slugify/1 from test_fixtures/intermediate_vars.ex into a single pipe pipeline. The current function assigns four intermediate variables (a, b, c, d) then returns d. Rewrite as a `|>` pipeline starting from the `title` argument and ending with the final result. Output only the `slugify/1` function inside `defmodule MyApp.TextProcessor do ... end`.",
+  "fixture_files": ["test_fixtures/intermediate_vars.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/text_processor.ex"],
+    "must_contain": [
+      "def slugify(title)",
+      "title",
+      "|> String.trim()",
+      "|> String.downcase()",
+      "|> String.replace"
+    ],
+    "must_not_contain": [
+      "a = String.trim",
+      "b = String.downcase",
+      "c = String.replace"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "pipe-operator-flows",
+    "secondary_capabilities": [],
+    "criterion": "vars_to_pipe",
+    "weight": 0.5
+  },
+  "tier_rationale": "Canonical intermediate-var → pipe rewrite. Single function, no judgment required.",
+  "calibration": null
+}

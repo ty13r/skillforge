@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-easy-13",
+  "tier": "easy",
+  "title": "Write a base-and-step recursive sum/1",
+  "prompt": "Write a `MyApp.Math.sum/1` function that takes a list of integers and returns their sum, implemented as explicit recursion with two clauses: a base clause matching `[]` that returns `0`, and a recursive clause matching `[head | tail]` that returns `head + sum(tail)`. Do NOT use `Enum.sum/1`, `Enum.reduce/3`, or a for comprehension. Output a complete `defmodule MyApp.Math do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/math.ex"],
+    "must_contain": [
+      "def sum([])",
+      "def sum([head | tail])",
+      "head + sum(tail)"
+    ],
+    "must_not_contain": [
+      "Enum.sum",
+      "Enum.reduce",
+      "for x <-"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "recursive-functions",
+    "secondary_capabilities": ["function-head-pattern-matching"],
+    "criterion": "base_plus_step",
+    "weight": 0.4
+  },
+  "tier_rationale": "Canonical recursion exercise. Base + step clauses are the textbook pattern.",
+  "calibration": null
+}

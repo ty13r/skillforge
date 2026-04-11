@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-36",
+  "tier": "medium",
+  "title": "Refactor two-level nested case using pattern-matched heads",
+  "prompt": "Given:\n\n```\ndef dispatch(event) do\n  case event.type do\n    :user ->\n      case event.action do\n        :created -> handle_user_created(event)\n        :updated -> handle_user_updated(event)\n        :deleted -> handle_user_deleted(event)\n      end\n    :order ->\n      case event.action do\n        :created -> handle_order_created(event)\n        :shipped -> handle_order_shipped(event)\n      end\n  end\nend\n```\n\nRewrite as a single-level set of function heads each pattern-matching on `%{type: ..., action: ...}`. Output a complete `defmodule MyApp.EventDispatcher do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/event_dispatcher.ex"],
+    "must_contain": [
+      "def dispatch(%{type: :user, action: :created}",
+      "def dispatch(%{type: :user, action: :updated}",
+      "def dispatch(%{type: :user, action: :deleted}",
+      "def dispatch(%{type: :order, action: :created}",
+      "def dispatch(%{type: :order, action: :shipped}"
+    ],
+    "must_not_contain": [
+      "case event.type",
+      "case event.action"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["map-and-struct-destructuring"],
+    "criterion": "nested_case_flat",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two-level flatten + two-key destructure in each head. Sonnet commonly keeps the nested structure.",
+  "calibration": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "elixir-pattern-match-refactor-medium-34",
+  "tier": "medium",
+  "title": "Extract shared setup across case branches into a helper",
+  "prompt": "Given:\n\n```\ndef process(user, action) do\n  now = DateTime.utc_now()\n  audit_id = gen_audit_id()\n\n  case action do\n    :approve ->\n      audit_log(user, :approve, now, audit_id)\n      MyApp.Workflow.approve(user)\n    :reject ->\n      audit_log(user, :reject, now, audit_id)\n      MyApp.Workflow.reject(user)\n    :escalate ->\n      audit_log(user, :escalate, now, audit_id)\n      MyApp.Workflow.escalate(user)\n  end\nend\n```\n\nRefactor to multi-clause function heads where the shared setup (`now`, `audit_id`, `audit_log`) is handled once in a wrapper function that calls a pattern-matched dispatch. Output a complete `defmodule MyApp.Workflow.Handler do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/workflow/handler.ex"],
+    "must_contain": [
+      "def process(user, action)",
+      "defp do_process(user, :approve",
+      "defp do_process(user, :reject",
+      "defp do_process(user, :escalate",
+      "audit_log(user,"
+    ],
+    "must_not_contain": [
+      "case action do\n      :approve"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "function-head-pattern-matching",
+    "secondary_capabilities": ["refactor-philosophy"],
+    "criterion": "extract_shared_setup",
+    "weight": 0.55
+  },
+  "tier_rationale": "Two-step refactor — extract shared setup, then split into heads. Sonnet typically duplicates setup.",
+  "calibration": null
+}

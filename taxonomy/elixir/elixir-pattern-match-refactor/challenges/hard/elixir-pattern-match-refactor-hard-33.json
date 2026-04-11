@@ -1,0 +1,36 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-33",
+  "tier": "hard",
+  "title": "Refactor a cond-only module into heads + cond where genuinely needed",
+  "prompt": "Refactor `MyApp.RoleRouter` from test_fixtures/cond_role_router.ex. `route/1` becomes pattern-matched heads (no cond). `permission/2` has a dynamic `resource.owner_id == user.id` check that needs cross-arg pinning in heads. Apply both transformations. Output a complete `defmodule MyApp.RoleRouter do ... end`.",
+  "fixture_files": ["test_fixtures/cond_role_router.ex"],
+  "expected_outputs": {
+    "files": ["lib/my_app/role_router.ex"],
+    "must_contain": [
+      "def route(%{role: \"admin\", active: true})",
+      "def route(%{role: \"admin\", active: false})",
+      "def route(%{role: \"editor\"})",
+      "def route(%{role: \"viewer\"})",
+      "def route(%{role: \"guest\"})",
+      "def permission(nil",
+      "def permission(%{role: \"admin\"}",
+      "def permission(%{role: \"editor\", id: uid}, %{owner_id: uid})",
+      "def permission(%{role: \"editor\"}",
+      "def permission(%{role: \"viewer\"}"
+    ],
+    "must_not_contain": [
+      "cond do",
+      "user.role ==",
+      "is_nil(user)",
+      "resource.owner_id == user.id"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "cond-and-if-reduction",
+    "secondary_capabilities": ["function-head-pattern-matching", "map-and-struct-destructuring"],
+    "criterion": "module_wide_cond_removal",
+    "weight": 0.7
+  },
+  "tier_rationale": "Module-wide cond removal plus the cross-arg pinning insight.",
+  "calibration": null
+}

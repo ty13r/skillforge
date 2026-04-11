@@ -1,0 +1,29 @@
+{
+  "id": "elixir-pattern-match-refactor-hard-31",
+  "tier": "hard",
+  "title": "Refactor a command parser into binary pattern-matched dispatch",
+  "prompt": "Given:\n\n```\ndef handle(cmd_bin) do\n  if String.starts_with?(cmd_bin, \"AUTH\") do\n    payload = String.slice(cmd_bin, 5, 1024)\n    auth(payload)\n  else\n    if String.starts_with?(cmd_bin, \"LIST \") do\n      payload = String.slice(cmd_bin, 5, 1024)\n      list(payload)\n    else\n      if String.starts_with?(cmd_bin, \"QUIT\") do\n        quit()\n      else\n        {:error, :unknown}\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads using binary pattern matching in each head. Include `def handle(<<\"AUTH \", payload::binary>>)`, `def handle(<<\"LIST \", payload::binary>>)`, `def handle(\"QUIT\")`, and a catch-all. Output a complete `defmodule MyApp.CommandRouter do ... end`.",
+  "fixture_files": [],
+  "expected_outputs": {
+    "files": ["lib/my_app/command_router.ex"],
+    "must_contain": [
+      "def handle(<<\"AUTH \", payload::binary>>)",
+      "def handle(<<\"LIST \", payload::binary>>)",
+      "def handle(\"QUIT\")",
+      "def handle(_)",
+      "{:error, :unknown}"
+    ],
+    "must_not_contain": [
+      "String.starts_with?",
+      "String.slice"
+    ]
+  },
+  "scoring": {
+    "primary_capability": "binary-pattern-matching-basic",
+    "secondary_capabilities": ["cond-and-if-reduction", "function-head-pattern-matching"],
+    "criterion": "binary_dispatch",
+    "weight": 0.7
+  },
+  "tier_rationale": "Nested if-chain → binary-matched heads. Synthesis of nested-if cleanup + binary pattern matching.",
+  "calibration": null
+}
