@@ -387,6 +387,114 @@
       },
       "challenges": [
         {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "ecto-fragment-injection",
+            "weight": 0.4
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-02",
+          "prompt": "This query casts a column to text before matching a user value \u2014 the fragment is well-pinned, but the casting context itself is attacker-controlled because the column name comes from user input:\n\n```elixir\ndef search(col, value) do\n  from u in User,\n    where: fragment(\"EXTRACT(EPOCH FROM ?)::text = ?\", field(u, ^col), ^value)\nend\n```\n\nThe `field(u, ^col)` lets the user choose the column via a string. If the user picks `:bio` (a text column), the `EXTRACT(EPOCH FROM bio)` call will raise \u2014 but more importantly, a clever attacker can combine this with other parameters to leak timing information about specific columns. Rewrite the function so: (a) `col` is validated against a static allowlist of `[:inserted_at, :updated_at, :published_at]`, (b) the allowlist maps strings to atom field names via a compile-time map, (c) if `col` is not in the allowlist, return an empty result. Write the fix to `lib/my_app/search.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "open-redirect-protection",
+            "weight": 0.45
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-04",
+          "prompt": "The OAuth callback below decodes a user-controlled `state` parameter that encodes a JSON-serialized destination URL. The developer intended `state` to carry deep-link context through the OAuth flow, but it's become an open-redirect vector:\n\n```elixir\ndef oauth_callback(conn, %{\"state\" => state, \"code\" => code}) do\n  %{\"return_to\" => return_to} = Jason.decode!(state)\n  with {:ok, user} <- MyApp.OAuth.exchange(code) do\n    conn\n    |> put_session(:user_id, user.id)\n    |> redirect(external: return_to)\n  end\nend\n```\n\nRewrite the flow so (a) `state` is treated as an OPAQUE TOKEN (a random ID stored in the session before the OAuth redirect), (b) the actual return_to is stored server-side keyed by that token and looked up on callback, (c) the lookup is via `get_session(conn, {:oauth_state, state})` so an attacker can't inject arbitrary destinations, (d) if the lookup fails, redirect to `/dashboard` (static path). Write the fix to `lib/my_app_web/oauth_controller.ex`. The final redirect must use `redirect(conn, to: ...)` with a path, never `external: user_input`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "plug-security-middleware-chain",
+            "weight": 0.45
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-05",
+          "prompt": "`test_fixtures/csp_nonce_liveview.ex` has a CSP that uses `'unsafe-inline'` in both `script-src` and `style-src` because the developer didn't know how to make LiveView's inline socket script work with strict CSP. Rewrite the router so: (a) a plug generates a per-request nonce via `:crypto.strong_rand_bytes(16) |> Base.encode16/1`, (b) the nonce is assigned to `conn.assigns[:csp_nonce]`, (c) `put_secure_browser_headers` is called with an EMPTY CSP string, (d) a follow-up plug sets a dynamic CSP header using the nonce in both `script-src` and `style-src`. The final CSP must contain `'nonce-...'` (literally, with the interpolated hex value) and must NOT contain `'unsafe-inline'` anywhere. Write the fix to `lib/my_app_web/router.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "secrets-in-config",
+            "weight": 0.4
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-09",
+          "prompt": "The following config tree has prod correctly using `System.fetch_env!/1`, but `dev.exs` leaks two production-adjacent secrets as hardcoded values:\n\n```elixir\n# config/runtime.exs (PROD ONLY)\nimport Config\nif config_env() == :prod do\n  config :my_app, :stripe_key, System.fetch_env!(\"STRIPE_KEY\")\n  config :my_app, :webhook_secret, System.fetch_env!(\"WEBHOOK_SECRET\")\nend\n\n# config/dev.exs\nimport Config\nconfig :my_app, :stripe_key, \"sk_test_live_realprodkey_abc\"\nconfig :my_app, :webhook_secret, \"real-webhook-secret-shhh\"\n```\n\nEven though `dev.exs` is for dev, the developer has pasted REAL production keys there for quick testing. Rewrite BOTH files so: (a) `dev.exs` uses `System.get_env/1` with an OBVIOUSLY-FAKE default (`\"sk_test_dev_fake_key\"`, `\"dev-placeholder-secret\"`), (b) `runtime.exs` still fetches the real env vars in prod. The goal is that checking out the repo and reading `dev.exs` never reveals any real production value. Write `dev.exs` to `config/dev.exs` and `runtime.exs` to `config/runtime.exs`. The fake defaults must contain the word 'fake' or 'placeholder'.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "password-hashing-choice",
+            "weight": 0.45
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-10",
+          "prompt": "A developer rolled their own authentication because `mix phx.gen.auth` 'was too much.' The result is a module with multiple issues: SHA-256 for hashing, variable-time `==` for verification, no user-not-found timing equalization, and the verify function leaks which case branch matched via flash messages. Rewrite the module to use `Bcrypt.hash_pwd_salt/1` for hashing, `Bcrypt.verify_pass/2` for verification, `Bcrypt.no_user_verify/0` in the missing-user branch, AND a single generic error message for all failure modes (so the server can't be used as an oracle for 'which emails exist'):\n\n```elixir\ndefmodule MyApp.Accounts.Auth do\n  def register(attrs) do\n    hash = :crypto.hash(:sha256, attrs[\"password\"]) |> Base.encode16()\n    attrs = Map.put(attrs, \"password_hash\", hash)\n    %MyApp.Accounts.User{} |> MyApp.Accounts.User.changeset(attrs) |> MyApp.Repo.insert()\n  end\n\n  def verify(email, password) do\n    case MyApp.Repo.get_by(MyApp.Accounts.User, email: email) do\n      nil -> {:error, \"No such user\"}\n      user ->\n        expected = :crypto.hash(:sha256, password) |> Base.encode16()\n        if expected == user.password_hash do\n          {:ok, user}\n        else\n          {:error, \"Wrong password\"}\n        end\n    end\n  end\nend\n```\n\nWrite the fix to `lib/my_app/accounts/auth.ex`. The error message must be the SAME (`:invalid_credentials`) for both branches.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "atom-exhaustion",
+            "weight": 0.4
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-13",
+          "prompt": "The following Telemetry wrapper creates atoms dynamically from user-provided tag names \u2014 each new request type creates a new atom:\n\n```elixir\ndefmodule MyApp.Telemetry.Tag do\n  def report(metric_name, value, tags \\\\ %{}) do\n    event = [:my_app, :telemetry, String.to_atom(metric_name)]\n    measurements = %{value: value}\n    metadata = for {k, v} <- tags, into: %{}, do: {String.to_atom(k), v}\n    :telemetry.execute(event, measurements, metadata)\n  end\nend\n```\n\nRewrite it so (a) `metric_name` is mapped to a fixed allowlist of known metric atoms at compile time, (b) `tags` keys are validated against a fixed set, (c) unknown metrics or tags result in an error tuple rather than creating new atoms. Write the fix to `lib/my_app/telemetry/tag.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "timing-attack-comparisons",
+            "weight": 0.4
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-16",
+          "prompt": "This SSO callback verifies an HMAC using SHA1 and compares with `==`:\n\n```elixir\ndef verify_sso(params, secret) do\n  payload = params[\"data\"]\n  expected = :crypto.mac(:hmac, :sha, secret, payload) |> Base.encode16()\n  if expected == params[\"sig\"], do: :ok, else: :error\nend\n```\n\nTwo issues: (1) SHA1 is deprecated \u2014 collision attacks have been demonstrated, and any new auth should use SHA256 or stronger, (2) `==` is variable-time. Rewrite the function to use `:crypto.mac(:hmac, :sha256, ...)` and `Plug.Crypto.secure_compare/2`. Also verify the `sig` parameter is present and is binary before comparing. Write the fix to `lib/my_app/sso.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "session-and-cookie-security",
+            "weight": 0.45
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-17",
+          "prompt": "`test_fixtures/session_cookie_config.ex` has FOUR related session weaknesses: (1) hardcoded `signing_salt`, (2) `same_site: \"None\"` without `secure: true`, (3) missing `http_only: true`, (4) 10-year `max_age`. Rewrite the endpoint module to fix all four: (a) `signing_salt` must be a `{module, function, args}` runtime reference (not a literal), (b) `secure: true` AND `http_only: true` must both be present, (c) `same_site: \"Lax\"` (the safe default for first-party apps), (d) `max_age` no more than 7 days in seconds (604800 or less). Write the fix to `lib/my_app_web/endpoint.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "liveview-handle-event-authz",
+            "weight": 0.45
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-hard-18",
+          "prompt": "`test_fixtures/liveview_missing_authz.ex` has three related authorization bugs: (1) `delete` handle_event \u2014 no ownership check, (2) `publish` handle_event \u2014 no ownership check, (3) `promote_to_admin` \u2014 uses variable-time `==` on `current_user.role`. Rewrite the LiveView so every `handle_event/3` clause: (a) loads the record via a user-scoped query (e.g., `Blog.get_user_post!(current_user, id)`), (b) uses a `Policy.can?/3` helper instead of string comparison, (c) returns a flash error on unauthorized attempts. Do NOT include the deprecated `current_user.role == \"admin\"` pattern. Write the fix to `lib/my_app_web/live/post_live/index.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
           "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "atom-exhaustion",
@@ -411,18 +519,6 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "atom-exhaustion",
-            "weight": 0.4
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-13",
-          "prompt": "The following Telemetry wrapper creates atoms dynamically from user-provided tag names \u2014 each new request type creates a new atom:\n\n```elixir\ndefmodule MyApp.Telemetry.Tag do\n  def report(metric_name, value, tags \\\\ %{}) do\n    event = [:my_app, :telemetry, String.to_atom(metric_name)]\n    measurements = %{value: value}\n    metadata = for {k, v} <- tags, into: %{}, do: {String.to_atom(k), v}\n    :telemetry.execute(event, measurements, metadata)\n  end\nend\n```\n\nRewrite it so (a) `metric_name` is mapped to a fixed allowlist of known metric atoms at compile time, (b) `tags` keys are validated against a fixed set, (c) unknown metrics or tags result in an error tuple rather than creating new atoms. Write the fix to `lib/my_app/telemetry/tag.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
           "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "ecto-fragment-injection",
@@ -431,30 +527,6 @@
           "gold_standard_hints": "",
           "id": "elixir-security-linter-medium-05",
           "prompt": "The following analytics function uses `Ecto.Adapters.SQL.query/3` with an interpolated SQL string \u2014 the classic \"escape hatch\" SQL injection:\n\n```elixir\ndef orders_for_customer(customer_id, limit) do\n  sql = \"SELECT * FROM orders WHERE customer_id = #{customer_id} LIMIT #{limit}\"\n  {:ok, %{rows: rows}} = Ecto.Adapters.SQL.query(MyApp.Repo, sql)\n  rows\nend\n```\n\nRewrite it to use parameterized SQL via `Ecto.Adapters.SQL.query/3` with `$1, $2` placeholders, OR better, rewrite it using the Ecto query builder (`from o in Order, where: o.customer_id == ^customer_id, limit: ^limit`). Write the fix to `lib/my_app/sales.ex`. The corrected version must not interpolate `customer_id` or `limit` into the SQL string.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "ecto-fragment-injection",
-            "weight": 0.4
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-02",
-          "prompt": "This query casts a column to text before matching a user value \u2014 the fragment is well-pinned, but the casting context itself is attacker-controlled because the column name comes from user input:\n\n```elixir\ndef search(col, value) do\n  from u in User,\n    where: fragment(\"EXTRACT(EPOCH FROM ?)::text = ?\", field(u, ^col), ^value)\nend\n```\n\nThe `field(u, ^col)` lets the user choose the column via a string. If the user picks `:bio` (a text column), the `EXTRACT(EPOCH FROM bio)` call will raise \u2014 but more importantly, a clever attacker can combine this with other parameters to leak timing information about specific columns. Rewrite the function so: (a) `col` is validated against a static allowlist of `[:inserted_at, :updated_at, :published_at]`, (b) the allowlist maps strings to atom field names via a compile-time map, (c) if `col` is not in the allowlist, return an empty result. Write the fix to `lib/my_app/search.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "raw-xss-prevention",
-            "weight": 0.35
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-medium-10",
-          "prompt": "The controller below builds HTML by string interpolation, bypassing HEEx's auto-escaping:\n\n```elixir\ndef profile(conn, %{\"id\" => id}) do\n  user = MyApp.Accounts.get_user!(id)\n  html(conn, \"<section class=\\\"profile\\\"><h1>#{user.name}</h1><p>#{user.bio}</p></section>\")\nend\n```\n\nRewrite the action to use a HEEx template. Also create a stateless function component `profile/1` that takes `@user` as an assign and renders the section. Write both the controller and the component to `lib/my_app_web/profile_html.ex`. The action must NOT call `html/2` with an interpolated string.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -473,24 +545,24 @@
         {
           "difficulty": "medium",
           "evaluation_criteria": {
+            "primary_capability": "raw-xss-prevention",
+            "weight": 0.35
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-security-linter-medium-10",
+          "prompt": "The controller below builds HTML by string interpolation, bypassing HEEx's auto-escaping:\n\n```elixir\ndef profile(conn, %{\"id\" => id}) do\n  user = MyApp.Accounts.get_user!(id)\n  html(conn, \"<section class=\\\"profile\\\"><h1>#{user.name}</h1><p>#{user.bio}</p></section>\")\nend\n```\n\nRewrite the action to use a HEEx template. Also create a stateless function component `profile/1` that takes `@user` as an assign and renders the section. Write both the controller and the component to `lib/my_app_web/profile_html.ex`. The action must NOT call `html/2` with an interpolated string.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
             "primary_capability": "open-redirect-protection",
             "weight": 0.35
           },
           "gold_standard_hints": "",
           "id": "elixir-security-linter-medium-12",
           "prompt": "This function tries to validate a redirect URL via `URI.parse/1` and a host allowlist, but forgets to reject `javascript:` and `data:` schemes:\n\n```elixir\n@hosts [\"example.com\", \"dashboard.example.com\"]\n\ndef safe_redirect(conn, url) do\n  case URI.parse(url) do\n    %URI{host: host} when host in @hosts ->\n      redirect(conn, external: url)\n    _ ->\n      redirect(conn, to: \"/\")\n  end\nend\n```\n\nRewrite this so the scheme is checked against `[\"https\", \"http\"]` (rejecting `javascript:`, `data:`, `file:`, etc.), the host is still checked against the allowlist, and if ANY check fails the redirect goes to `/`. Write the fix to `lib/my_app_web/safe_redirect.ex`. The fix must include a scheme check that explicitly allows only `\"https\"` or `\"http\"`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "open-redirect-protection",
-            "weight": 0.45
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-04",
-          "prompt": "The OAuth callback below decodes a user-controlled `state` parameter that encodes a JSON-serialized destination URL. The developer intended `state` to carry deep-link context through the OAuth flow, but it's become an open-redirect vector:\n\n```elixir\ndef oauth_callback(conn, %{\"state\" => state, \"code\" => code}) do\n  %{\"return_to\" => return_to} = Jason.decode!(state)\n  with {:ok, user} <- MyApp.OAuth.exchange(code) do\n    conn\n    |> put_session(:user_id, user.id)\n    |> redirect(external: return_to)\n  end\nend\n```\n\nRewrite the flow so (a) `state` is treated as an OPAQUE TOKEN (a random ID stored in the session before the OAuth redirect), (b) the actual return_to is stored server-side keyed by that token and looked up on callback, (c) the lookup is via `get_session(conn, {:oauth_state, state})` so an attacker can't inject arbitrary destinations, (d) if the lookup fails, redirect to `/dashboard` (static path). Write the fix to `lib/my_app_web/oauth_controller.ex`. The final redirect must use `redirect(conn, to: ...)` with a path, never `external: user_input`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -507,18 +579,6 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "timing-attack-comparisons",
-            "weight": 0.4
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-16",
-          "prompt": "This SSO callback verifies an HMAC using SHA1 and compares with `==`:\n\n```elixir\ndef verify_sso(params, secret) do\n  payload = params[\"data\"]\n  expected = :crypto.mac(:hmac, :sha, secret, payload) |> Base.encode16()\n  if expected == params[\"sig\"], do: :ok, else: :error\nend\n```\n\nTwo issues: (1) SHA1 is deprecated \u2014 collision attacks have been demonstrated, and any new auth should use SHA256 or stronger, (2) `==` is variable-time. Rewrite the function to use `:crypto.mac(:hmac, :sha256, ...)` and `Plug.Crypto.secure_compare/2`. Also verify the `sig` parameter is present and is binary before comparing. Write the fix to `lib/my_app/sso.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
           "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "liveview-handle-event-authz",
@@ -527,30 +587,6 @@
           "gold_standard_hints": "",
           "id": "elixir-security-linter-medium-16",
           "prompt": "The LiveView below enforces authorization in `mount/3` (checking that the user is an admin) but forgets to re-check on `handle_event/3`. An attacker who already has a connected socket can issue events without re-mounting:\n\n```elixir\ndefmodule MyAppWeb.AdminLive do\n  use MyAppWeb, :live_view\n\n  def mount(_params, session, socket) do\n    user = MyApp.Accounts.get_user!(session[\"user_id\"])\n    if user.role == \"admin\" do\n      {:ok, assign(socket, :current_user, user)}\n    else\n      {:ok, push_navigate(socket, to: \"/\")}\n    end\n  end\n\n  def handle_event(\"delete_user\", %{\"id\" => id}, socket) do\n    MyApp.Accounts.delete_user!(id)\n    {:noreply, put_flash(socket, :info, \"deleted\")}\n  end\nend\n```\n\nRewrite the LiveView so: (a) every `handle_event` re-checks the current user's permissions, (b) the mount check uses a proper `Policy.admin?/1` helper instead of `==` on `role`, and (c) a helper function handles the common authorization pattern. Write the fix to `lib/my_app_web/admin_live.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "liveview-handle-event-authz",
-            "weight": 0.45
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-18",
-          "prompt": "`test_fixtures/liveview_missing_authz.ex` has three related authorization bugs: (1) `delete` handle_event \u2014 no ownership check, (2) `publish` handle_event \u2014 no ownership check, (3) `promote_to_admin` \u2014 uses variable-time `==` on `current_user.role`. Rewrite the LiveView so every `handle_event/3` clause: (a) loads the record via a user-scoped query (e.g., `Blog.get_user_post!(current_user, id)`), (b) uses a `Policy.can?/3` helper instead of string comparison, (c) returns a flash error on unauthorized attempts. Do NOT include the deprecated `current_user.role == \"admin\"` pattern. Write the fix to `lib/my_app_web/live/post_live/index.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "csrf-and-secure-headers",
-            "weight": 0.35
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-medium-27",
-          "prompt": "The router below has two pipelines that share the same session cookie. The `:api` pipeline handles POST requests but omits `:protect_from_forgery`, creating a cross-site WebSocket hijacking (CSWSH) risk:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :protect_from_forgery\nend\n\npipeline :api do\n  plug :accepts, [\"json\"]\n  plug :fetch_session\nend\n\nscope \"/api\", MyAppWeb do\n  pipe_through :api\n  post \"/posts/:id/delete\", PostController, :delete\nend\n```\n\nEither: (a) add `:protect_from_forgery` to `:api`, OR (b) use a different authentication mechanism for the API (Bearer token) and do NOT fetch the session cookie at all. Implement option (a) \u2014 add `:protect_from_forgery` to the `:api` pipeline. Write the fix to `lib/my_app_web/router.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -569,48 +605,12 @@
         {
           "difficulty": "medium",
           "evaluation_criteria": {
-            "primary_capability": "password-hashing-choice",
-            "weight": 0.3
+            "primary_capability": "secrets-in-config",
+            "weight": 0.4
           },
           "gold_standard_hints": "",
-          "id": "elixir-security-linter-medium-35",
-          "prompt": "This argon2 password-hash config uses a dangerously low memory cost \u2014 the memory-hard property is bypassed:\n\n```elixir\n# config/config.exs\nconfig :argon2_elixir,\n  m_cost: 10,\n  t_cost: 1,\n  parallelism: 1\n```\n\nThe `m_cost: 10` means 2^10 = 1024 KiB (1 MiB). Modern guidance is at least 64 MiB (`m_cost: 16` \u2192 65536 KiB). The `t_cost: 1` is also too low; minimum is 3. Rewrite the config to use `m_cost: 16`, `t_cost: 3`, `parallelism: 1`, and add a comment citing 2026 guidance (m=64MB+, t=3, p=1). Write the fix to `config/config.exs`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "password-hashing-choice",
-            "weight": 0.45
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-10",
-          "prompt": "A developer rolled their own authentication because `mix phx.gen.auth` 'was too much.' The result is a module with multiple issues: SHA-256 for hashing, variable-time `==` for verification, no user-not-found timing equalization, and the verify function leaks which case branch matched via flash messages. Rewrite the module to use `Bcrypt.hash_pwd_salt/1` for hashing, `Bcrypt.verify_pass/2` for verification, `Bcrypt.no_user_verify/0` in the missing-user branch, AND a single generic error message for all failure modes (so the server can't be used as an oracle for 'which emails exist'):\n\n```elixir\ndefmodule MyApp.Accounts.Auth do\n  def register(attrs) do\n    hash = :crypto.hash(:sha256, attrs[\"password\"]) |> Base.encode16()\n    attrs = Map.put(attrs, \"password_hash\", hash)\n    %MyApp.Accounts.User{} |> MyApp.Accounts.User.changeset(attrs) |> MyApp.Repo.insert()\n  end\n\n  def verify(email, password) do\n    case MyApp.Repo.get_by(MyApp.Accounts.User, email: email) do\n      nil -> {:error, \"No such user\"}\n      user ->\n        expected = :crypto.hash(:sha256, password) |> Base.encode16()\n        if expected == user.password_hash do\n          {:ok, user}\n        else\n          {:error, \"Wrong password\"}\n        end\n    end\n  end\nend\n```\n\nWrite the fix to `lib/my_app/accounts/auth.ex`. The error message must be the SAME (`:invalid_credentials`) for both branches.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "session-and-cookie-security",
-            "weight": 0.3
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-medium-32",
-          "prompt": "Identify the security concern in this session config and fix it:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: {MyApp.Salt, :get, []},\n  http_only: true,\n  secure: true,\n  max_age: 60 * 60 * 24 * 365 * 10\n]\n```\n\nA 10-year `max_age` (315_360_000 seconds) means a hijacked session cookie remains valid forever. Shorten `max_age` to 7 days (`60 * 60 * 24 * 7 = 604_800`) or less, and add an explicit comment about the session window. Write the corrected endpoint module to `lib/my_app_web/endpoint.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "session-and-cookie-security",
-            "weight": 0.45
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-17",
-          "prompt": "`test_fixtures/session_cookie_config.ex` has FOUR related session weaknesses: (1) hardcoded `signing_salt`, (2) `same_site: \"None\"` without `secure: true`, (3) missing `http_only: true`, (4) 10-year `max_age`. Rewrite the endpoint module to fix all four: (a) `signing_salt` must be a `{module, function, args}` runtime reference (not a literal), (b) `secure: true` AND `http_only: true` must both be present, (c) `same_site: \"Lax\"` (the safe default for first-party apps), (d) `max_age` no more than 7 days in seconds (604800 or less). Write the fix to `lib/my_app_web/endpoint.ex`.",
+          "id": "elixir-security-linter-medium-25",
+          "prompt": "`test_fixtures/secrets_compile_time_env.ex` has THREE issues: (1) `System.get_env(\"STRIPE_KEY\")` is called in `config.exs`, which means it is read at COMPILE time \u2014 the value is baked into the release at build time, so runtime env changes are ignored, (2) `System.get_env(\"DATABASE_URL\")` has the same problem, (3) the webhook secret has a `||` fallback to a hardcoded dev value. Migrate all three config values from `config.exs` to `runtime.exs`. In `runtime.exs`, use `System.fetch_env!/1` so missing env raises rather than silently returning `nil`. Write the result to `config/runtime.exs`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -627,38 +627,38 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
-            "primary_capability": "plug-security-middleware-chain",
-            "weight": 0.45
+            "primary_capability": "csrf-and-secure-headers",
+            "weight": 0.35
           },
           "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-05",
-          "prompt": "`test_fixtures/csp_nonce_liveview.ex` has a CSP that uses `'unsafe-inline'` in both `script-src` and `style-src` because the developer didn't know how to make LiveView's inline socket script work with strict CSP. Rewrite the router so: (a) a plug generates a per-request nonce via `:crypto.strong_rand_bytes(16) |> Base.encode16/1`, (b) the nonce is assigned to `conn.assigns[:csp_nonce]`, (c) `put_secure_browser_headers` is called with an EMPTY CSP string, (d) a follow-up plug sets a dynamic CSP header using the nonce in both `script-src` and `style-src`. The final CSP must contain `'nonce-...'` (literally, with the interpolated hex value) and must NOT contain `'unsafe-inline'` anywhere. Write the fix to `lib/my_app_web/router.ex`.",
+          "id": "elixir-security-linter-medium-27",
+          "prompt": "The router below has two pipelines that share the same session cookie. The `:api` pipeline handles POST requests but omits `:protect_from_forgery`, creating a cross-site WebSocket hijacking (CSWSH) risk:\n\n```elixir\npipeline :browser do\n  plug :accepts, [\"html\"]\n  plug :fetch_session\n  plug :protect_from_forgery\nend\n\npipeline :api do\n  plug :accepts, [\"json\"]\n  plug :fetch_session\nend\n\nscope \"/api\", MyAppWeb do\n  pipe_through :api\n  post \"/posts/:id/delete\", PostController, :delete\nend\n```\n\nEither: (a) add `:protect_from_forgery` to `:api`, OR (b) use a different authentication mechanism for the API (Bearer token) and do NOT fetch the session cookie at all. Implement option (a) \u2014 add `:protect_from_forgery` to the `:api` pipeline. Write the fix to `lib/my_app_web/router.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
         {
           "difficulty": "medium",
           "evaluation_criteria": {
-            "primary_capability": "secrets-in-config",
-            "weight": 0.4
+            "primary_capability": "session-and-cookie-security",
+            "weight": 0.3
           },
           "gold_standard_hints": "",
-          "id": "elixir-security-linter-medium-25",
-          "prompt": "`test_fixtures/secrets_compile_time_env.ex` has THREE issues: (1) `System.get_env(\"STRIPE_KEY\")` is called in `config.exs`, which means it is read at COMPILE time \u2014 the value is baked into the release at build time, so runtime env changes are ignored, (2) `System.get_env(\"DATABASE_URL\")` has the same problem, (3) the webhook secret has a `||` fallback to a hardcoded dev value. Migrate all three config values from `config.exs` to `runtime.exs`. In `runtime.exs`, use `System.fetch_env!/1` so missing env raises rather than silently returning `nil`. Write the result to `config/runtime.exs`.",
+          "id": "elixir-security-linter-medium-32",
+          "prompt": "Identify the security concern in this session config and fix it:\n\n```elixir\n@session_options [\n  store: :cookie,\n  key: \"_my_app_key\",\n  signing_salt: {MyApp.Salt, :get, []},\n  http_only: true,\n  secure: true,\n  max_age: 60 * 60 * 24 * 365 * 10\n]\n```\n\nA 10-year `max_age` (315_360_000 seconds) means a hijacked session cookie remains valid forever. Shorten `max_age` to 7 days (`60 * 60 * 24 * 7 = 604_800`) or less, and add an explicit comment about the session window. Write the corrected endpoint module to `lib/my_app_web/endpoint.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
-            "primary_capability": "secrets-in-config",
-            "weight": 0.4
+            "primary_capability": "password-hashing-choice",
+            "weight": 0.3
           },
           "gold_standard_hints": "",
-          "id": "elixir-security-linter-hard-09",
-          "prompt": "The following config tree has prod correctly using `System.fetch_env!/1`, but `dev.exs` leaks two production-adjacent secrets as hardcoded values:\n\n```elixir\n# config/runtime.exs (PROD ONLY)\nimport Config\nif config_env() == :prod do\n  config :my_app, :stripe_key, System.fetch_env!(\"STRIPE_KEY\")\n  config :my_app, :webhook_secret, System.fetch_env!(\"WEBHOOK_SECRET\")\nend\n\n# config/dev.exs\nimport Config\nconfig :my_app, :stripe_key, \"sk_test_live_realprodkey_abc\"\nconfig :my_app, :webhook_secret, \"real-webhook-secret-shhh\"\n```\n\nEven though `dev.exs` is for dev, the developer has pasted REAL production keys there for quick testing. Rewrite BOTH files so: (a) `dev.exs` uses `System.get_env/1` with an OBVIOUSLY-FAKE default (`\"sk_test_dev_fake_key\"`, `\"dev-placeholder-secret\"`), (b) `runtime.exs` still fetches the real env vars in prod. The goal is that checking out the repo and reading `dev.exs` never reveals any real production value. Write `dev.exs` to `config/dev.exs` and `runtime.exs` to `config/runtime.exs`. The fake defaults must contain the word 'fake' or 'placeholder'.",
+          "id": "elixir-security-linter-medium-35",
+          "prompt": "This argon2 password-hash config uses a dangerously low memory cost \u2014 the memory-hard property is bypassed:\n\n```elixir\n# config/config.exs\nconfig :argon2_elixir,\n  m_cost: 10,\n  t_cost: 1,\n  parallelism: 1\n```\n\nThe `m_cost: 10` means 2^10 = 1024 KiB (1 MiB). Modern guidance is at least 64 MiB (`m_cost: 16` \u2192 65536 KiB). The `t_cost: 1` is also too low; minimum is 3. Rewrite the config to use `m_cost: 16`, `t_cost: 3`, `parallelism: 1`, and add a comment citing 2026 guidance (m=64MB+, t=3, p=1). Write the fix to `config/config.exs`.",
           "setup_files": {},
           "verification_method": "run_tests"
         }
@@ -674,7 +674,7 @@
         "seed_pipeline: run created for elixir-security-linter at 2026-04-12T03:18:20.822188+00:00",
         "seed_pipeline: finalized at 2026-04-12T03:44:57.813242+00:00 with 13 winning variants, avg fitness=0.947",
         "[integration_report] ## Synthesis\n\nAssembled a single composite SKILL.md for `elixir-security-linter-composite` from 13 winning variants \u2014 1 foundation (exploit-chain-driven philosophy) plus 12 capability variants covering atom exhaustion, Ecto fragment injection, raw-HTML XSS, open redirects, timing attacks, LiveView authz, CSRF/secure headers, mass assignment, password hashing, session/cookie security, CSP rollout, and secrets in config. The foundation's \"hunt chains, not counts\" stance provided the architectural skeleton; every capability section is framed as the structural fix that makes the unsafe primitive unreachable (compile-time vocabularies, virtual fields, signed IDs, opaque types, sensitivity tags, server-side stores, pluggable backends). Mean variant fitness: **0.9470** (highest of the three seed runs shipped so far). Frontmatter description is 244 characters and contains both \"Use when\" and \"NOT for\".\n\n## Conflicts detected and resolved\n\n1. **Philosophy collision: fail-closed per-primitive vs. exploit-chain ranking.** The atom-exhaustion variant explicitly says \"Stop on first violation \u2014 fail closed\" while the foundation says \"Lone primitives go in an `unchained-primitives` appendix \u2014 explicitly NOT prioritized.\" \u2192 Resolved by keeping the chain-driven outer workflow and scoping \"fail-closed defaults\" to structural choices (untagged fields default `:admin`, unknown atom conversions raise, default redirect to `/`). Primitives are still catalogued but only surface as chains in the ranked report.\n\n2. **Two compile-time vocabularies describing the same thing.** Atom-exhaustion variant declares `@sortable_columns ~w(name email inserted_at)a`, Ecto-fragment variant independently declares the same for dynamic column names. \u2192 Resolved by cross-referencing: the atom-exhaustion section mentions \"sort/filter/order column dispatch\" as a trigger, and the fragment section notes the allowlist is the same pattern.\n\n3. **`String.to_existing_atom/1` usage collision.** Mass-assignment normalizes string-keyed params via `String.to_existing_atom/1`; open-redirect uses it for `dest` IDs; atom-exhaustion uses it as the primary defense. \u2192 Resolved by calling out once in the atom-exhaustion section and re-citing it as the \"correct defense\" in mass-assignment and open-redirect common mistakes.\n\n4. **Session cookie `same_site` recommendation.** CSRF variant says \"Move to Strict once OAuth callback is isolated\"; session variant says \"Use `same_site: \"Strict\"` as the default.\" \u2192 Resolved by recommending Strict as the default and mentioning the OAuth carve-out only in the CSRF capability section.\n\n5. **Token comparison scoping.** Timing variant claims `secure_compare/2` \"should appear in exactly one place\" (inside `MyApp.Token`); CSRF variant adds a double-submit plug that also needs constant-time comparison. \u2192 Resolved by clarifying: the double-submit plug delegates to `MyApp.Token.verify/2`, so the \"single audited chokepoint\" principle still holds.\n\n6. **`Argon2.no_user_verify` vs. opaque-token verification.** Timing variant warns \"Do NOT wrap `Argon2.verify_pass/2`\" while password variant mandates `Argon2.no_user_verify/0` in the not-found branch. \u2192 Resolved by noting in the timing capability: password hashes have their own constant-time verifier; the opaque-token model doesn't apply to password pipelines.\n\n7. **CSP in API pipelines.** CSRF variant recommends layered defense on `:api`; plug-security variant says \"CSP on `:api` pipeline \u2014 pointless, no browser. Use CORS instead.\" \u2192 Resolved by scoping CSP headers to `:browser` only and keeping Origin/double-submit/session-cookie protections on `:api` when cookies are shared.\n\n8. **Secrets pattern: `System.fetch_env!/1` \u2014 good or bad?** Session variant uses `System.fetch_env!/1` directly; secrets variant says never. \u2192 Resolved by adopting the secrets-variant stance for multi-environment apps while keeping the explicit carve-out for small apps.\n\n9. **Changeset sanitization: in the changeset vs. the context.** Raw-XSS variant mandates sanitization in the changeset; broader principles could also argue for context-layer. \u2192 Resolved in favor of the changeset: closer to the write boundary, survives being called from multiple contexts.\n\n10. **Ordering of workflow steps across variants.** Every variant has a workflow section; the composite needed a single unified workflow. \u2192 Resolved by collapsing all 13 into the foundation's 6-step chain-hunting skeleton (inventory \u2192 trace \u2192 graph \u2192 name \u2192 rank \u2192 cut \u2192 report).\n\n## Decisions made\n\n- Kept exactly the 13 capability H3 subsections \u2014 one per dimension \u2014 rather than consolidating related pairs to preserve each variant's identity and evaluability.\n- Title-cased the H3 headers for scannability.\n- Cut the long per-variant workflow step lists and kept only the condensed strategic guidance in each capability entry (4-8 lines each); detailed per-variant workflow content belongs in `references/guide.md`.\n- Chose three multi-capability Examples that each chain at least two vulnerability classes together \u2014 this validates the exploit-chain philosophy in code form rather than re-listing single-vuln examples.\n- Deduplicated the Common mistakes list to ~30 entries, merging overlapping items.\n- `Further reading` references exactly the 8 enrichment slots specified \u2014 no `test_fixtures/`, no `references/checklist.md`, no paths that won't be populated.\n- Frontmatter description: 244 characters, explicit \"Use when\" and \"NOT for\".\n\n## Open questions for future iterations\n\n- Should the composite auto-generate per-project vulnerability inventories from a `mix skillforge.scan` command, or stay as a reviewer skill?\n- `starter_primary.ex.template` is expected to ship `MyApp.Secrets`, `MyApp.Token`, AND `MyApp.Schema` as one module drop-in \u2014 a real Phoenix app would split these across three files.\n- Chain-ranking math (`outcome_severity * exploitability * blast_radius`) is asserted but not defined. Future iteration should publish a scoring rubric in `references/guide.md` so reports are reproducible.\n- Some capabilities (session store, secrets backend) require structural refactors that may be out of scope for a PR review. Distinguish \"review finding\" from \"migration project.\"\n- `secure_compare/2` should appear in `MyApp.Token.verify/2` only; the CSRF double-submit plug must delegate rather than call `Plug.Crypto.secure_compare/2` directly.\n- LiveView CSP nonce handling for post-mount diffs is flagged as a known gap but not addressed in the composite.\n- `TestBackend` patterns (Agent-backed secrets, mock Token, etc.) are scattered across variants \u2014 a unified \"testing these security primitives\" section might be worth carving out.\n",
-        "[competition_scores] {\"matches\": [{\"dimension\": \"security-scan-philosophy\", \"tier\": \"foundation\", \"challenge_ids\": [\"elixir-security-linter-medium-01\"], \"variant_1_label\": \"security-scan-philosophy--fail-closed (seed)\", \"variant_2_label\": \"security-scan-philosophy--exploit-chain-driven (spawned)\", \"variant_1_scores\": [0.94], \"variant_2_scores\": [0.94], \"variant_1_mean\": 0.94, \"variant_2_mean\": 0.94, \"winner_slot\": 2, \"winning_fitness\": 0.94}, {\"dimension\": \"atom-exhaustion\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-02\"], \"variant_1_label\": \"atom-exhaustion--allowlist-map (seed)\", \"variant_2_label\": \"atom-exhaustion--existing-atom-vocabulary (spawned)\", \"variant_1_scores\": [0.9125], \"variant_2_scores\": [0.9125], \"variant_1_mean\": 0.9125, \"variant_2_mean\": 0.9125, \"winner_slot\": 2, \"winning_fitness\": 0.9125}, {\"dimension\": \"ecto-fragment-injection\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-05\"], \"variant_1_label\": \"ecto-fragment-injection--pin-operator (seed)\", \"variant_2_label\": \"ecto-fragment-injection--lift-to-query-dsl (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"raw-xss-prevention\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-10\"], \"variant_1_label\": \"raw-xss-prevention--heex-only (seed)\", \"variant_2_label\": \"raw-xss-prevention--schema-taint-tracking (spawned)\", \"variant_1_scores\": [0.9527], \"variant_2_scores\": [0.9527], \"variant_1_mean\": 0.9527, \"variant_2_mean\": 0.9527, \"winner_slot\": 2, \"winning_fitness\": 0.9527}, {\"dimension\": \"open-redirect-protection\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-12\"], \"variant_1_label\": \"open-redirect-protection--path-allowlist (seed)\", \"variant_2_label\": \"open-redirect-protection--signed-redirect-tokens (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"timing-attack-comparisons\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-13\"], \"variant_1_label\": \"timing-attack-comparisons--secure-compare (seed)\", \"variant_2_label\": \"timing-attack-comparisons--opaque-token-type (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"liveview-handle-event-authz\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-16\"], \"variant_1_label\": \"liveview-handle-event-authz--per-event (seed)\", \"variant_2_label\": \"liveview-handle-event-authz--on-mount-command-pipeline (spawned)\", \"variant_1_scores\": [0.9079], \"variant_2_scores\": [0.9079], \"variant_1_mean\": 0.9079, \"variant_2_mean\": 0.9079, \"winner_slot\": 2, \"winning_fitness\": 0.9079}, {\"dimension\": \"csrf-and-secure-headers\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-27\"], \"variant_1_label\": \"csrf-and-secure-headers--framework-defaults (seed)\", \"variant_2_label\": \"csrf-and-secure-headers--token-binding-strict-double-submit (spawned)\", \"variant_1_scores\": [0.9079], \"variant_2_scores\": [0.9079], \"variant_1_mean\": 0.9079, \"variant_2_mean\": 0.9079, \"winner_slot\": 2, \"winning_fitness\": 0.9079}, {\"dimension\": \"mass-assignment-in-changesets\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-20\"], \"variant_1_label\": \"mass-assignment-in-changesets--split-changesets (seed)\", \"variant_2_label\": \"mass-assignment-in-changesets--field-sensitivity-tags (spawned)\", \"variant_1_scores\": [0.9391], \"variant_2_scores\": [0.9391], \"variant_1_mean\": 0.9391, \"variant_2_mean\": 0.9391, \"winner_slot\": 2, \"winning_fitness\": 0.9391}, {\"dimension\": \"password-hashing-choice\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-35\"], \"variant_1_label\": \"password-hashing-choice--bcrypt-verify-pass (seed)\", \"variant_2_label\": \"password-hashing-choice--argon2id-cost-justified (spawned)\", \"variant_1_scores\": [0.8753], \"variant_2_scores\": [0.8753], \"variant_1_mean\": 0.8753, \"variant_2_mean\": 0.8753, \"winner_slot\": 2, \"winning_fitness\": 0.8753}, {\"dimension\": \"session-and-cookie-security\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-32\"], \"variant_1_label\": \"session-and-cookie-security--all-flags-set (seed)\", \"variant_2_label\": \"session-and-cookie-security--server-side-store (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"plug-security-middleware-chain\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-26\"], \"variant_1_label\": \"plug-security-middleware-chain--strict-csp (seed)\", \"variant_2_label\": \"plug-security-middleware-chain--csp-report-only-rollout (spawned)\", \"variant_1_scores\": [0.8761], \"variant_2_scores\": [0.8761], \"variant_1_mean\": 0.8761, \"variant_2_mean\": 0.8761, \"winner_slot\": 2, \"winning_fitness\": 0.8761}, {\"dimension\": \"secrets-in-config\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-25\"], \"variant_1_label\": \"secrets-in-config--runtime-fetch-env (seed)\", \"variant_2_label\": \"secrets-in-config--pluggable-secret-store (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}], \"generation\": 0, \"total_generations\": 1, \"challenges_per_variant\": 1, \"baseline_ran\": false, \"scorer\": \"score.py (L1 deterministic)\"}"
+        "[competition_scores] {\"matches\": [{\"dimension\": \"security-scan-philosophy\", \"tier\": \"foundation\", \"challenge_ids\": [\"elixir-security-linter-medium-01\"], \"variant_1_label\": \"security-scan-philosophy--fail-closed (seed)\", \"variant_2_label\": \"security-scan-philosophy--exploit-chain-driven (spawned)\", \"variant_1_scores\": [0.97], \"variant_2_scores\": [0.94], \"variant_1_mean\": 0.97, \"variant_2_mean\": 0.94, \"winner_slot\": 1, \"winning_fitness\": 0.97}, {\"dimension\": \"atom-exhaustion\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-02\"], \"variant_1_label\": \"atom-exhaustion--allowlist-map (seed)\", \"variant_2_label\": \"atom-exhaustion--existing-atom-vocabulary (spawned)\", \"variant_1_scores\": [0.256], \"variant_2_scores\": [0.9125], \"variant_1_mean\": 0.256, \"variant_2_mean\": 0.9125, \"winner_slot\": 2, \"winning_fitness\": 0.9125}, {\"dimension\": \"ecto-fragment-injection\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-05\"], \"variant_1_label\": \"ecto-fragment-injection--pin-operator (seed)\", \"variant_2_label\": \"ecto-fragment-injection--lift-to-query-dsl (spawned)\", \"variant_1_scores\": [0.6915], \"variant_2_scores\": [1.0], \"variant_1_mean\": 0.6915, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"raw-xss-prevention\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-10\"], \"variant_1_label\": \"raw-xss-prevention--heex-only (seed)\", \"variant_2_label\": \"raw-xss-prevention--schema-taint-tracking (spawned)\", \"variant_1_scores\": [0.5274], \"variant_2_scores\": [0.9527], \"variant_1_mean\": 0.5274, \"variant_2_mean\": 0.9527, \"winner_slot\": 2, \"winning_fitness\": 0.9527}, {\"dimension\": \"open-redirect-protection\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-12\"], \"variant_1_label\": \"open-redirect-protection--path-allowlist (seed)\", \"variant_2_label\": \"open-redirect-protection--signed-redirect-tokens (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"timing-attack-comparisons\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-13\"], \"variant_1_label\": \"timing-attack-comparisons--secure-compare (seed)\", \"variant_2_label\": \"timing-attack-comparisons--opaque-token-type (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"liveview-handle-event-authz\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-16\"], \"variant_1_label\": \"liveview-handle-event-authz--per-event (seed)\", \"variant_2_label\": \"liveview-handle-event-authz--on-mount-command-pipeline (spawned)\", \"variant_1_scores\": [0.7236], \"variant_2_scores\": [0.9079], \"variant_1_mean\": 0.7236, \"variant_2_mean\": 0.9079, \"winner_slot\": 2, \"winning_fitness\": 0.9079}, {\"dimension\": \"csrf-and-secure-headers\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-27\"], \"variant_1_label\": \"csrf-and-secure-headers--framework-defaults (seed)\", \"variant_2_label\": \"csrf-and-secure-headers--token-binding-strict-double-submit (spawned)\", \"variant_1_scores\": [0.9539], \"variant_2_scores\": [0.9079], \"variant_1_mean\": 0.9539, \"variant_2_mean\": 0.9079, \"winner_slot\": 1, \"winning_fitness\": 0.9539}, {\"dimension\": \"mass-assignment-in-changesets\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-20\"], \"variant_1_label\": \"mass-assignment-in-changesets--split-changesets (seed)\", \"variant_2_label\": \"mass-assignment-in-changesets--field-sensitivity-tags (spawned)\", \"variant_1_scores\": [0.0], \"variant_2_scores\": [0.9391], \"variant_1_mean\": 0.0, \"variant_2_mean\": 0.9391, \"winner_slot\": 2, \"winning_fitness\": 0.9391}, {\"dimension\": \"password-hashing-choice\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-35\"], \"variant_1_label\": \"password-hashing-choice--bcrypt-verify-pass (seed)\", \"variant_2_label\": \"password-hashing-choice--argon2id-cost-justified (spawned)\", \"variant_1_scores\": [0.5448], \"variant_2_scores\": [0.8753], \"variant_1_mean\": 0.5448, \"variant_2_mean\": 0.8753, \"winner_slot\": 2, \"winning_fitness\": 0.8753}, {\"dimension\": \"session-and-cookie-security\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-32\"], \"variant_1_label\": \"session-and-cookie-security--all-flags-set (seed)\", \"variant_2_label\": \"session-and-cookie-security--server-side-store (spawned)\", \"variant_1_scores\": [1.0], \"variant_2_scores\": [1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"plug-security-middleware-chain\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-26\"], \"variant_1_label\": \"plug-security-middleware-chain--strict-csp (seed)\", \"variant_2_label\": \"plug-security-middleware-chain--csp-report-only-rollout (spawned)\", \"variant_1_scores\": [0.9587], \"variant_2_scores\": [0.8761], \"variant_1_mean\": 0.9587, \"variant_2_mean\": 0.8761, \"winner_slot\": 1, \"winning_fitness\": 0.9587}, {\"dimension\": \"secrets-in-config\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-security-linter-medium-25\"], \"variant_1_label\": \"secrets-in-config--runtime-fetch-env (seed)\", \"variant_2_label\": \"secrets-in-config--pluggable-secret-store (spawned)\", \"variant_1_scores\": [0.6088], \"variant_2_scores\": [1.0], \"variant_1_mean\": 0.6088, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}], \"generation\": 0, \"total_generations\": 1, \"challenges_per_variant\": 1, \"baseline_ran\": true, \"scorer\": \"score.py (L1 deterministic)\"}"
       ],
       "max_budget_usd": 10.0,
       "mode": "domain",
@@ -765,7 +765,7 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Security Linter \u00b7 seed pipeline run over 13 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "specialization": "Elixir Security Linter \u00b7 seed pipeline run over 13 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_v2af4d0e6b308]",
       "status": "complete",
       "total_cost_usd": 32.0
     }
