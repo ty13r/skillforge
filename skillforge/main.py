@@ -19,7 +19,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+import html
+import re
+
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 
@@ -160,6 +163,25 @@ def _mount_frontend_spa() -> None:
     async def root_spa() -> FileResponse:
         return FileResponse(str(_FRONTEND_DIST / "index.html"))
 
+    # Explicit static-asset routes for root-level files in dist/ that the
+    # /assets mount doesn't cover. Must come BEFORE the catch-all so the
+    # PNG isn't swallowed and served as index.html.
+    @app.get("/og-image.png")
+    async def og_image() -> FileResponse:
+        return FileResponse(
+            str(_FRONTEND_DIST / "og-image.png"),
+            media_type="image/png",
+        )
+
+    @app.get("/favicon.ico")
+    async def favicon_ico() -> FileResponse:
+        # Browsers hit /favicon.ico automatically; serve the OG image as a
+        # reasonable fallback so we don't leak 404s into server logs.
+        return FileResponse(
+            str(_FRONTEND_DIST / "og-image.png"),
+            media_type="image/png",
+        )
+
     # Catch-all: any GET that didn't match a registered API route, the
     # /assets mount, or the explicit "/" above falls through to here and
     # gets index.html back so the SPA router can hydrate and render the
@@ -167,10 +189,132 @@ def _mount_frontend_spa() -> None:
     # /api/* or /ws/* path that somehow reaches this fallback.
     from fastapi import HTTPException
 
-    @app.get("/{full_path:path}")
-    async def spa_catchall(full_path: str) -> FileResponse:
+    from skillforge.db.queries import get_run
+
+    _RUN_PATH_RE = re.compile(r"^runs/([a-z0-9][a-z0-9\-_]*)(?:/.*)?$")
+    _MAX_OG_DESC = 200
+    _SITE_URL = "https://skld.run"
+
+    def _clean_specialization(text: str) -> str:
+        """Strip `[seed_v...]` / `[mock_v...]` markers for display."""
+        return re.sub(r"\s*\[(mock|seed)_v[a-f0-9]+\]\s*", " ", text).strip()
+
+    def _truncate(text: str, limit: int) -> str:
+        text = text.strip()
+        if len(text) <= limit:
+            return text
+        return text[: limit - 1].rstrip() + "…"
+
+    async def _run_meta_tags(run_id: str) -> dict[str, str] | None:
+        """Build per-run OG + Twitter meta tags from the DB.
+
+        Returns a mapping of replacement-target → replacement-value, or
+        ``None`` if the run is unknown (caller falls back to static tags).
+        """
+        try:
+            run = await get_run(run_id)
+        except Exception:  # noqa: BLE001 - meta injection must never break page render
+            return None
+        if run is None:
+            return None
+
+        skill_name: str = ""
+        if run.best_skill and run.best_skill.frontmatter:
+            skill_name = str(
+                run.best_skill.frontmatter.get("name", "")
+            ).strip()
+
+        specialization = _clean_specialization(run.specialization or "")
+        fitness_str = ""
+        if run.best_skill and run.best_skill.pareto_objectives:
+            try:
+                fitness = max(run.best_skill.pareto_objectives.values())
+                fitness_str = f"fitness {fitness:.2f} · "
+            except Exception:  # noqa: BLE001
+                fitness_str = ""
+
+        title_display = skill_name or specialization or run_id
+        title = f"{title_display} — SKLD"
+
+        desc_parts = []
+        if specialization:
+            desc_parts.append(specialization)
+        if fitness_str:
+            desc_parts.append(f"{fitness_str}status {run.status}")
+        desc = " · ".join(desc_parts) or specialization or "Evolved Claude Agent Skill on SKLD."
+        desc = _truncate(desc, _MAX_OG_DESC)
+
+        run_url = f"{_SITE_URL}/runs/{run_id}"
+
+        return {
+            "title": html.escape(title, quote=True),
+            "description": html.escape(desc, quote=True),
+            "url": html.escape(run_url, quote=True),
+        }
+
+    def _inject_meta(raw_html: str, meta: dict[str, str]) -> str:
+        """Replace the static og/twitter tags with run-specific values."""
+        title = meta["title"]
+        description = meta["description"]
+        url = meta["url"]
+
+        patterns = [
+            (
+                r"<title>.*?</title>",
+                f"<title>{title}</title>",
+            ),
+            (
+                r'(<meta name="description" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{description}{m.group(2)}',
+            ),
+            (
+                r'(<meta property="og:title" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{title}{m.group(2)}',
+            ),
+            (
+                r'(<meta property="og:description" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{description}{m.group(2)}',
+            ),
+            (
+                r'(<meta property="og:url" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{url}{m.group(2)}',
+            ),
+            (
+                r'(<meta name="twitter:title" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{title}{m.group(2)}',
+            ),
+            (
+                r'(<meta name="twitter:description" content=")[^"]*(")',
+                lambda m: f'{m.group(1)}{description}{m.group(2)}',
+            ),
+        ]
+        for pattern, repl in patterns:
+            raw_html = re.sub(pattern, repl, raw_html, count=1)
+        return raw_html
+
+    @app.get("/{full_path:path}", response_model=None)
+    async def spa_catchall(full_path: str) -> FileResponse | HTMLResponse:
         if full_path.startswith(("api/", "ws", "assets/")):
             raise HTTPException(status_code=404, detail="Not Found")
+
+        # Per-run meta tag injection for /runs/:runId paths so Discord,
+        # Slack, iMessage, Twitter, etc. show a rich preview card with the
+        # run's specific skill name + specialization + fitness instead of
+        # the generic site-wide fallback.
+        match = _RUN_PATH_RE.match(full_path)
+        if match:
+            run_id = match.group(1)
+            meta = await _run_meta_tags(run_id)
+            if meta is not None:
+                try:
+                    raw = (_FRONTEND_DIST / "index.html").read_text(
+                        encoding="utf-8"
+                    )
+                    patched = _inject_meta(raw, meta)
+                    return HTMLResponse(content=patched)
+                except Exception:  # noqa: BLE001 - degrade to static tags
+                    pass
+
         return FileResponse(str(_FRONTEND_DIST / "index.html"))
 
 
