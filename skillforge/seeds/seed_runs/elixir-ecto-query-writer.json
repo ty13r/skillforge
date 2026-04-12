@@ -1,0 +1,1919 @@
+{
+  "challenges": [
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-06",
+      "prompt": "Write `MyApp.Accounts.users_with_latest_comment/0` that returns each user with their single most-recent comment via a lateral join + correlated subquery. Use: `from u in User, as: :user, inner_lateral_join: c in subquery(from(c in Comment, where: c.user_id == parent_as(:user).id, order_by: [desc: c.inserted_at], limit: 1)), select: %{user_id: u.id, name: u.name, latest_comment_body: c.body}`. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-08",
+      "prompt": "Starting from `test_fixtures/bloated_context.ex`, extract every query into `MyApp.Accounts.UserQueries`. Define: `base/0` returning `from(u in User, as: :user)`, plus `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder must accept the query as its first argument (pipe-friendly). The refactored `MyApp.Accounts` module should use `alias MyApp.Accounts.UserQueries, as: Q` and compose the builders via pipe for each of the four original public functions. Preserve ordering semantics. Write to `lib/my_app/accounts/user_queries.ex` and `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-10",
+      "prompt": "Write `MyApp.Blog.top_2_posts_per_category/0` that returns the top 2 posts per category by `view_count`. Use an inner subquery that selects `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])` as `rn`, then the outer query filters `rn <= 2`. Use `subquery/1` properly. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-11",
+      "prompt": "Write `MyApp.Blog.search/1` that accepts optional `:category_name` and `:author_name` filters. If `:category_name` is present, `inner_join: c in assoc(p, :category)` and filter `c.name`. If `:author_name` is present, `inner_join: u in assoc(p, :author)` and filter `u.name`. If neither, no join. Start with a base query, conditionally add joins, and use dynamic filters. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-16",
+      "prompt": "Write `MyApp.Accounts.users_with_recent_post_counts/0` that returns every user (INCLUDING those with no recent posts) with the count of their posts from the last 7 days. The left_join's filter (last 7 days) MUST be inside the `on:` clause, not in the `where:`, or users with zero recent posts will disappear. Use `coalesce(count(p.id), 0)` and group by user fields. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-17",
+      "prompt": "Write `MyApp.Blog.cursor_page_with_counts/1` that returns a cursor-paginated feed of posts along with each post's comment count, using keyset cursor on `(inserted_at desc, id desc)`. The query must: (a) left_join comments, (b) group by post, (c) compute `comment_count`, (d) apply the keyset comparison, (e) limit. Cursor is `{ts, id}` or `nil`. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-18",
+      "prompt": "Given `fragment(\"COALESCE(SUM(?), 0)\", o.total)` in a query, rewrite it using Ecto's typed composition: `coalesce(sum(o.total), 0)`. Build a complete function `MyApp.Shop.totals_per_customer/0` that groups orders by user_id, selects `{u.id, u.name, coalesce(sum(o.total), 0)}` via left_join. Write to `lib/my_app/shop.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-21",
+      "prompt": "Write `MyApp.Accounts.upsert_and_return/1` that takes user attrs, upserts via `Repo.insert/2` with a changeset, uses `on_conflict: {:replace, [:name, :updated_at]}`, `conflict_target: :email`, and `returning: true`. The function should return the final (inserted-or-updated) User struct. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-24",
+      "prompt": "Write `MyApp.Blog.post_counts_by_category_and_month/0` that groups posts by `category_id` AND the month of `inserted_at`, returning `{category_id, month, count}`. Use `fragment(\"date_trunc('month', ?)\", p.inserted_at)` for the month bucket, group by both `p.category_id` and the fragment. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-26",
+      "prompt": "Given this query in `MyApp.Profile.active_records/0`: `@active_states [\"open\", \"active\", \"running\"]; from(r in Record, where: r.state in ^@active_states)`. The @-pin causes Postgres to treat the list as a parameter, which prevents index selectivity on a state column. Rewrite to: a) use a module function that splices the list via `unquote_splicing` or b) just inline the list literal without `^`. Document the tradeoff in a code comment. Write to `lib/my_app/profile.ex`. (Pretend a `Record` schema exists.)",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-hard-32",
+      "prompt": "Write `MyApp.Accounts.users_with_recent_comments_first/0` that returns users with `:comments` preloaded AND each user's comments ordered by `inserted_at desc`. Use query-tuple preload syntax: `preload: [comments: ^ordered_comments_query]` where `ordered_comments_query` is `from(c in Comment, order_by: [desc: c.inserted_at])`. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-05",
+      "prompt": "`MyApp.Accounts` in `test_fixtures/bloated_context.ex` contains four query functions inline. Refactor by creating a new `MyApp.Accounts.UserQueries` module that exposes composable query builders: `base/0`, `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder takes and returns an `Ecto.Queryable`. Use `from(u in User, as: :user)` as the base so builders can be composed across joins. Then rewrite `MyApp.Accounts` to delegate to the new module via pipe chains. Write UserQueries to `lib/my_app/accounts/user_queries.ex` and the refactored context to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-07",
+      "prompt": "`MyApp.Blog.FeedCursor.feed/1` in `test_fixtures/cursor_non_deterministic.ex` paginates by `published_at` alone, which is not unique \u2014 pages can drop or duplicate rows at ties. Add `id` as a secondary sort + cursor field. The cursor should be a `{ts, last_id}` tuple, and the where clause should use the row-wise comparison pattern `(published_at < ^ts) or (published_at == ^ts and id < ^last_id)`. Write to `lib/my_app/blog/feed_cursor.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-08",
+      "prompt": "`MyApp.Accounts.Search.search/1` in `test_fixtures/chained_if_search.ex` uses `if/where` chaining for 4 optional filters. Rewrite it using `Enum.reduce(params, dynamic(true), fn ... end)` with one `dynamic/2` fragment per filter, then apply the accumulated dynamic to a single `where: ^dyn` clause. Handle string keys `\"name\"`, `\"email\"`, `\"min_age\"`, `\"active\"`. Write to `lib/my_app/accounts/search.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-10",
+      "prompt": "`MyApp.Blog.Rankings.posts_ranked_per_category/0` in `test_fixtures/fragment_window_fn.ex` uses a raw `fragment(\"row_number() OVER (PARTITION BY ? ORDER BY ? DESC)\", ...)` to compute per-category ranks. Rewrite it using Ecto's typed form: `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])`. No fragments. Write to `lib/my_app/blog/rankings.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-11",
+      "prompt": "Write `MyApp.Blog.posts_with_category_loaded/0` that joins posts with their category in a single round trip. You MUST thread the join binding into the preload: `join: c in assoc(p, :category), preload: [category: c]`. Merely writing `preload: :category` without the binding would cause Ecto to issue a second query for categories. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-12",
+      "prompt": "Write `MyApp.Blog.top_n_commenters/1` that takes an integer `n` and returns the top-N users by comment count. Return a list of maps `%{id, name, comment_count}`. Use a left join on comments (so users with 0 comments are considered), group by user id+name, order by `count desc`, and limit to `^n`. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-16",
+      "prompt": "Write `MyApp.Accounts.registered_between/2` that takes two `DateTime` values and returns users whose `inserted_at` is between them, inclusive. Use `where: u.inserted_at >= ^start_ts and u.inserted_at <= ^end_ts`. Order by `inserted_at asc`. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-17",
+      "prompt": "Write `MyApp.Blog.posts_authored_in_team/1` that takes a `team_id` and returns posts authored by users in that team, along with the category name. Chain three tables: Post -> User -> (filter by team_id) -> join Category. Use named bindings `:post`, `:author`, `:category`, and reference them in select: `{p.title, u.name, c.name}`. Pin `team_id`. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-20",
+      "prompt": "Write `MyApp.Blog.bulk_upsert_tags/1` that takes a list of tag name strings and bulk-inserts them as `Tag` records, skipping duplicates on the `slug` unique index. Use `Repo.insert_all/3` with `on_conflict: :nothing`, `conflict_target: :slug`. Generate slugs by downcasing and replacing spaces with dashes. Include `inserted_at`/`updated_at` timestamps in each row (`DateTime.utc_now()`). Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-21",
+      "prompt": "Write `MyApp.Blog.posts_by_metadata/1` that takes a metadata key string and returns posts where a PostgreSQL JSONB `metadata` column contains that key. Use `fragment(\"? \\\\? ?\", p.metadata, ^key)` \u2014 the `\\?` is how you escape `?` in an Ecto fragment to avoid it being treated as a placeholder. Pin the key. Write to `lib/my_app/blog.ex`. (Assume a `metadata` jsonb field exists on Post for the purpose of this challenge.)",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-22",
+      "prompt": "Write `MyApp.Accounts.users_joined_to_top_commenters/0` that joins users with a subquery returning `top_commenters` (user_id + total_count). The subquery counts comments grouped by user_id and filters `having count(c.id) >= 10`. The outer query uses `join: tc in subquery(top_commenters_query)` and selects `{u.id, u.name, tc.total_count}`. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-24",
+      "prompt": "Write `MyApp.Blog.latest_post_per_user/0` that returns one post per author \u2014 the latest one. Use `distinct: [desc: p.user_id]` combined with `order_by: [asc: p.user_id, desc: p.inserted_at]`. PostgreSQL's DISTINCT ON picks the first row per `user_id` group in the order specified. Write to `lib/my_app/blog.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-ecto-query-writer-medium-30",
+      "prompt": "Write `MyApp.Accounts.search_by_name/1` that takes a user-provided string and does a case-insensitive partial match on `name`. Use the safe pattern: build `\"%\" <> query <> \"%\"` outside the query, then pass via `ilike(u.name, ^pattern)`. Do NOT interpolate the raw query string into the SQL. Pin the pattern. Write to `lib/my_app/accounts.ex`.",
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    }
+  ],
+  "evolution_runs": [
+    {
+      "best_skill": {
+        "behavioral_signature": [],
+        "consistency_score": null,
+        "deterministic_scores": {
+          "l1": 0.9349
+        },
+        "frontmatter": {
+          "description": ">-",
+          "name": "elixir-ecto-query-writer"
+        },
+        "generation": 1,
+        "generations_survived": 0,
+        "id": "gen_composite_elixir_ecto_query_writer_seed_v1",
+        "is_pareto_optimal": true,
+        "maturity": "tested",
+        "meta_strategy": "engineer_composite",
+        "mutation_rationale": "",
+        "mutations": [],
+        "parent_ids": [
+          "gen_winner_elixir_ecto_query_writer_query_composition_style",
+          "gen_winner_elixir_ecto_query_writer_aggregates_and_group_by",
+          "gen_winner_elixir_ecto_query_writer_basic_where_select_order",
+          "gen_winner_elixir_ecto_query_writer_dynamic_query_builder",
+          "gen_winner_elixir_ecto_query_writer_joins",
+          "gen_winner_elixir_ecto_query_writer_pagination_patterns",
+          "gen_winner_elixir_ecto_query_writer_pin_operator_safety",
+          "gen_winner_elixir_ecto_query_writer_preloads",
+          "gen_winner_elixir_ecto_query_writer_raw_sql_fragment",
+          "gen_winner_elixir_ecto_query_writer_subqueries",
+          "gen_winner_elixir_ecto_query_writer_upserts_and_on_conflict",
+          "gen_winner_elixir_ecto_query_writer_window_functions"
+        ],
+        "pareto_objectives": {
+          "quality": 0.9349
+        },
+        "skill_md_content": "---\nname: elixir-ecto-query-writer\ndescription: >-\n  Ecto query composition, joins, preloads, aggregates, subqueries, dynamic\n  builders, window functions, upserts, and pin-operator safety for Elixir/Phoenix.\n  Use when writing Ecto queries, composing filters, or building query modules,\n  even if they don't ask for Ecto. NOT for schemas, changesets, or Repo calls.\n---\n\n# Elixir Ecto Query Writer\n\n## Quick Start\n\nCompose queries via pipe chains. Start every query module with base/0 returning from(Schema, as: :atom). Each builder accepts/returns a queryable. Pin every runtime variable with ^. Prefer typed Ecto functions over raw SQL fragments.\n\n## When to Use\n\n- Writing Ecto queries with where, select, order_by, join, preload\n- Building reusable query modules with composable filter functions\n- Adding aggregates, subqueries, or window functions\n- Implementing cursor/keyset pagination\n- Writing dynamic search endpoints with optional runtime filters\n- Performing bulk upserts with on_conflict\n\n## Common Mistakes\n\n- Missing ^ on runtime variables\n- Join-preloading has_many (Cartesian product)\n- where: filter on left join (converts to inner join)\n- Repo.preload in Enum.map (N+1)\n- :replace_all in upserts (clobbers fields)\n- Non-unique sort without tie-breaker (pagination bugs)\n",
+        "supporting_files": {},
+        "trait_attribution": {},
+        "trait_diagnostics": {},
+        "traits": [
+          "query-composition-style",
+          "aggregates-and-group-by",
+          "basic-where-select-order",
+          "dynamic-query-builder",
+          "joins",
+          "pagination-patterns",
+          "pin-operator-safety",
+          "preloads",
+          "raw-sql-fragment",
+          "subqueries",
+          "upserts-and-on-conflict",
+          "window-functions"
+        ],
+        "trigger_precision": 0.0,
+        "trigger_recall": 0.0,
+        "variant_id": null
+      },
+      "challenges": [
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-05",
+          "prompt": "`MyApp.Accounts` in `test_fixtures/bloated_context.ex` contains four query functions inline. Refactor by creating a new `MyApp.Accounts.UserQueries` module that exposes composable query builders: `base/0`, `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder takes and returns an `Ecto.Queryable`. Use `from(u in User, as: :user)` as the base so builders can be composed across joins. Then rewrite `MyApp.Accounts` to delegate to the new module via pipe chains. Write UserQueries to `lib/my_app/accounts/user_queries.ex` and the refactored context to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-08",
+          "prompt": "Starting from `test_fixtures/bloated_context.ex`, extract every query into `MyApp.Accounts.UserQueries`. Define: `base/0` returning `from(u in User, as: :user)`, plus `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder must accept the query as its first argument (pipe-friendly). The refactored `MyApp.Accounts` module should use `alias MyApp.Accounts.UserQueries, as: Q` and compose the builders via pipe for each of the four original public functions. Preserve ordering semantics. Write to `lib/my_app/accounts/user_queries.ex` and `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-24",
+          "prompt": "Write `MyApp.Blog.latest_post_per_user/0` that returns one post per author \u2014 the latest one. Use `distinct: [desc: p.user_id]` combined with `order_by: [asc: p.user_id, desc: p.inserted_at]`. PostgreSQL's DISTINCT ON picks the first row per `user_id` group in the order specified. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-30",
+          "prompt": "Write `MyApp.Accounts.search_by_name/1` that takes a user-provided string and does a case-insensitive partial match on `name`. Use the safe pattern: build `\"%\" <> query <> \"%\"` outside the query, then pass via `ilike(u.name, ^pattern)`. Do NOT interpolate the raw query string into the SQL. Pin the pattern. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-17",
+          "prompt": "Write `MyApp.Blog.posts_authored_in_team/1` that takes a `team_id` and returns posts authored by users in that team, along with the category name. Chain three tables: Post -> User -> (filter by team_id) -> join Category. Use named bindings `:post`, `:author`, `:category`, and reference them in select: `{p.title, u.name, c.name}`. Pin `team_id`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-16",
+          "prompt": "Write `MyApp.Accounts.users_with_recent_post_counts/0` that returns every user (INCLUDING those with no recent posts) with the count of their posts from the last 7 days. The left_join's filter (last 7 days) MUST be inside the `on:` clause, not in the `where:`, or users with zero recent posts will disappear. Use `coalesce(count(p.id), 0)` and group by user fields. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-11",
+          "prompt": "Write `MyApp.Blog.posts_with_category_loaded/0` that joins posts with their category in a single round trip. You MUST thread the join binding into the preload: `join: c in assoc(p, :category), preload: [category: c]`. Merely writing `preload: :category` without the binding would cause Ecto to issue a second query for categories. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-32",
+          "prompt": "Write `MyApp.Accounts.users_with_recent_comments_first/0` that returns users with `:comments` preloaded AND each user's comments ordered by `inserted_at desc`. Use query-tuple preload syntax: `preload: [comments: ^ordered_comments_query]` where `ordered_comments_query` is `from(c in Comment, order_by: [desc: c.inserted_at])`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-12",
+          "prompt": "Write `MyApp.Blog.top_n_commenters/1` that takes an integer `n` and returns the top-N users by comment count. Return a list of maps `%{id, name, comment_count}`. Use a left join on comments (so users with 0 comments are considered), group by user id+name, order by `count desc`, and limit to `^n`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-24",
+          "prompt": "Write `MyApp.Blog.post_counts_by_category_and_month/0` that groups posts by `category_id` AND the month of `inserted_at`, returning `{category_id, month, count}`. Use `fragment(\"date_trunc('month', ?)\", p.inserted_at)` for the month bucket, group by both `p.category_id` and the fragment. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-22",
+          "prompt": "Write `MyApp.Accounts.users_joined_to_top_commenters/0` that joins users with a subquery returning `top_commenters` (user_id + total_count). The subquery counts comments grouped by user_id and filters `having count(c.id) >= 10`. The outer query uses `join: tc in subquery(top_commenters_query)` and selects `{u.id, u.name, tc.total_count}`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-06",
+          "prompt": "Write `MyApp.Accounts.users_with_latest_comment/0` that returns each user with their single most-recent comment via a lateral join + correlated subquery. Use: `from u in User, as: :user, inner_lateral_join: c in subquery(from(c in Comment, where: c.user_id == parent_as(:user).id, order_by: [desc: c.inserted_at], limit: 1)), select: %{user_id: u.id, name: u.name, latest_comment_body: c.body}`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-08",
+          "prompt": "`MyApp.Accounts.Search.search/1` in `test_fixtures/chained_if_search.ex` uses `if/where` chaining for 4 optional filters. Rewrite it using `Enum.reduce(params, dynamic(true), fn ... end)` with one `dynamic/2` fragment per filter, then apply the accumulated dynamic to a single `where: ^dyn` clause. Handle string keys `\"name\"`, `\"email\"`, `\"min_age\"`, `\"active\"`. Write to `lib/my_app/accounts/search.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-11",
+          "prompt": "Write `MyApp.Blog.search/1` that accepts optional `:category_name` and `:author_name` filters. If `:category_name` is present, `inner_join: c in assoc(p, :category)` and filter `c.name`. If `:author_name` is present, `inner_join: u in assoc(p, :author)` and filter `u.name`. If neither, no join. Start with a base query, conditionally add joins, and use dynamic filters. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-16",
+          "prompt": "Write `MyApp.Accounts.registered_between/2` that takes two `DateTime` values and returns users whose `inserted_at` is between them, inclusive. Use `where: u.inserted_at >= ^start_ts and u.inserted_at <= ^end_ts`. Order by `inserted_at asc`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-26",
+          "prompt": "Given this query in `MyApp.Profile.active_records/0`: `@active_states [\"open\", \"active\", \"running\"]; from(r in Record, where: r.state in ^@active_states)`. The @-pin causes Postgres to treat the list as a parameter, which prevents index selectivity on a state column. Rewrite to: a) use a module function that splices the list via `unquote_splicing` or b) just inline the list literal without `^`. Document the tradeoff in a code comment. Write to `lib/my_app/profile.ex`. (Pretend a `Record` schema exists.)",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-07",
+          "prompt": "`MyApp.Blog.FeedCursor.feed/1` in `test_fixtures/cursor_non_deterministic.ex` paginates by `published_at` alone, which is not unique \u2014 pages can drop or duplicate rows at ties. Add `id` as a secondary sort + cursor field. The cursor should be a `{ts, last_id}` tuple, and the where clause should use the row-wise comparison pattern `(published_at < ^ts) or (published_at == ^ts and id < ^last_id)`. Write to `lib/my_app/blog/feed_cursor.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-17",
+          "prompt": "Write `MyApp.Blog.cursor_page_with_counts/1` that returns a cursor-paginated feed of posts along with each post's comment count, using keyset cursor on `(inserted_at desc, id desc)`. The query must: (a) left_join comments, (b) group by post, (c) compute `comment_count`, (d) apply the keyset comparison, (e) limit. Cursor is `{ts, id}` or `nil`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-21",
+          "prompt": "Write `MyApp.Blog.posts_by_metadata/1` that takes a metadata key string and returns posts where a PostgreSQL JSONB `metadata` column contains that key. Use `fragment(\"? \\\\? ?\", p.metadata, ^key)` \u2014 the `\\?` is how you escape `?` in an Ecto fragment to avoid it being treated as a placeholder. Pin the key. Write to `lib/my_app/blog.ex`. (Assume a `metadata` jsonb field exists on Post for the purpose of this challenge.)",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-18",
+          "prompt": "Given `fragment(\"COALESCE(SUM(?), 0)\", o.total)` in a query, rewrite it using Ecto's typed composition: `coalesce(sum(o.total), 0)`. Build a complete function `MyApp.Shop.totals_per_customer/0` that groups orders by user_id, selects `{u.id, u.name, coalesce(sum(o.total), 0)}` via left_join. Write to `lib/my_app/shop.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-10",
+          "prompt": "`MyApp.Blog.Rankings.posts_ranked_per_category/0` in `test_fixtures/fragment_window_fn.ex` uses a raw `fragment(\"row_number() OVER (PARTITION BY ? ORDER BY ? DESC)\", ...)` to compute per-category ranks. Rewrite it using Ecto's typed form: `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])`. No fragments. Write to `lib/my_app/blog/rankings.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-10",
+          "prompt": "Write `MyApp.Blog.top_2_posts_per_category/0` that returns the top 2 posts per category by `view_count`. Use an inner subquery that selects `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])` as `rn`, then the outer query filters `rn <= 2`. Use `subquery/1` properly. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-20",
+          "prompt": "Write `MyApp.Blog.bulk_upsert_tags/1` that takes a list of tag name strings and bulk-inserts them as `Tag` records, skipping duplicates on the `slug` unique index. Use `Repo.insert_all/3` with `on_conflict: :nothing`, `conflict_target: :slug`. Generate slugs by downcasing and replacing spaces with dashes. Include `inserted_at`/`updated_at` timestamps in each row (`DateTime.utc_now()`). Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-21",
+          "prompt": "Write `MyApp.Accounts.upsert_and_return/1` that takes user attrs, upserts via `Repo.insert/2` with a changeset, uses `on_conflict: {:replace, [:name, :updated_at]}`, `conflict_target: :email`, and `returning: true`. The function should return the final (inserted-or-updated) User struct. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        }
+      ],
+      "completed_at": "2026-04-12T07:08:53.875144+00:00",
+      "created_at": "2026-04-12T05:58:21.183109+00:00",
+      "evolution_mode": "atomic",
+      "failure_reason": null,
+      "family_id": "fam_d1dcdae97478",
+      "generations": [],
+      "id": "elixir-ecto-query-writer-seed-v1",
+      "learning_log": [
+        "seed_pipeline: run created for elixir-ecto-query-writer at 2026-04-12T05:58:21.182914+00:00",
+        "seed_pipeline: finalized at 2026-04-12T07:08:53.875369+00:00 with 12 winning variants, avg fitness=0.935",
+        "[integration_report] ## Integration Report\n### Synthesis: 12 variants into query-writer composite\n\n4 v1 wins (query-composition-style, preloads, dynamic-query-builder, raw-sql-fragment), 8 v2 wins. Avg fitness: 0.935.\n\n### Conflicts detected and resolved\n\n1. Pin operator scope \u2014 pin-operator-safety rules touch every capability. Resolved by dedicating Phase 7 + weaving pin usage into all examples.\n2. Preload vs join strategy \u2014 merged into single Phase 3 with cardinality-based strategy table.\n3. Fragment vs typed functions \u2014 ordered: typed phases first, fragment last as escape hatch.\n4. Dynamic builder binding style \u2014 foundation's named bindings win over dynamic variant's positional.\n\n### Decisions\n- 11 phases ordered by query complexity\n- Foundation's pipe-composition + named-binding skeleton preserved throughout\n- 409 lines (within budget)\n",
+        "[competition_scores] {\"matches\": [{\"dimension\": \"query-composition-style\", \"tier\": \"foundation\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-05\", \"elixir-ecto-query-writer-hard-08\"], \"variant_1_label\": \"query-composition-style (seed)\", \"variant_2_label\": \"query-composition-style (spawn)\", \"variant_1_scores\": [1.0, 0.937], \"variant_2_scores\": [0.937, 0.937], \"variant_1_mean\": 0.9685, \"variant_2_mean\": 0.937, \"winner_slot\": 1, \"winning_fitness\": 0.9685}, {\"dimension\": \"basic-where-select-order\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-24\", \"elixir-ecto-query-writer-medium-30\"], \"variant_1_label\": \"basic-where-select-order (seed)\", \"variant_2_label\": \"basic-where-select-order (spawn)\", \"variant_1_scores\": [0.75, 1.0], \"variant_2_scores\": [1.0, 1.0], \"variant_1_mean\": 0.875, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"joins\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-17\", \"elixir-ecto-query-writer-hard-16\"], \"variant_1_label\": \"joins (seed)\", \"variant_2_label\": \"joins (spawn)\", \"variant_1_scores\": [1.0, 0.8], \"variant_2_scores\": [1.0, 0.8], \"variant_1_mean\": 0.9, \"variant_2_mean\": 0.9, \"winner_slot\": 2, \"winning_fitness\": 0.9}, {\"dimension\": \"preloads\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-11\", \"elixir-ecto-query-writer-hard-32\"], \"variant_1_label\": \"preloads (seed)\", \"variant_2_label\": \"preloads (spawn)\", \"variant_1_scores\": [0.444, 1.0], \"variant_2_scores\": [0.444, 0.741], \"variant_1_mean\": 0.722, \"variant_2_mean\": 0.5925, \"winner_slot\": 1, \"winning_fitness\": 0.722}, {\"dimension\": \"aggregates-and-group-by\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-12\", \"elixir-ecto-query-writer-hard-24\"], \"variant_1_label\": \"aggregates-and-group-by (seed)\", \"variant_2_label\": \"aggregates-and-group-by (spawn)\", \"variant_1_scores\": [0.9, 1.0], \"variant_2_scores\": [1.0, 1.0], \"variant_1_mean\": 0.95, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"subqueries\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-22\", \"elixir-ecto-query-writer-hard-06\"], \"variant_1_label\": \"subqueries (seed)\", \"variant_2_label\": \"subqueries (spawn)\", \"variant_1_scores\": [0.667, 1.0], \"variant_2_scores\": [1.0, 1.0], \"variant_1_mean\": 0.8335, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}, {\"dimension\": \"dynamic-query-builder\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-08\", \"elixir-ecto-query-writer-hard-11\"], \"variant_1_label\": \"dynamic-query-builder (seed)\", \"variant_2_label\": \"dynamic-query-builder (spawn)\", \"variant_1_scores\": [1.0, 0.8], \"variant_2_scores\": [1.0, 0.444], \"variant_1_mean\": 0.9, \"variant_2_mean\": 0.722, \"winner_slot\": 1, \"winning_fitness\": 0.9}, {\"dimension\": \"pin-operator-safety\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-16\", \"elixir-ecto-query-writer-hard-26\"], \"variant_1_label\": \"pin-operator-safety (seed)\", \"variant_2_label\": \"pin-operator-safety (spawn)\", \"variant_1_scores\": [1.0, 0.741], \"variant_2_scores\": [1.0, 0.741], \"variant_1_mean\": 0.8705, \"variant_2_mean\": 0.8705, \"winner_slot\": 2, \"winning_fitness\": 0.8705}, {\"dimension\": \"pagination-patterns\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-07\", \"elixir-ecto-query-writer-hard-17\"], \"variant_1_label\": \"pagination-patterns (seed)\", \"variant_2_label\": \"pagination-patterns (spawn)\", \"variant_1_scores\": [0.875, 0.929], \"variant_2_scores\": [0.875, 0.929], \"variant_1_mean\": 0.902, \"variant_2_mean\": 0.902, \"winner_slot\": 2, \"winning_fitness\": 0.902}, {\"dimension\": \"raw-sql-fragment\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-21\", \"elixir-ecto-query-writer-hard-18\"], \"variant_1_label\": \"raw-sql-fragment (seed)\", \"variant_2_label\": \"raw-sql-fragment (spawn)\", \"variant_1_scores\": [1.0, 1.0], \"variant_2_scores\": [1.0, 0.667], \"variant_1_mean\": 1.0, \"variant_2_mean\": 0.8335, \"winner_slot\": 1, \"winning_fitness\": 1.0}, {\"dimension\": \"window-functions\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-10\", \"elixir-ecto-query-writer-hard-10\"], \"variant_1_label\": \"window-functions (seed)\", \"variant_2_label\": \"window-functions (spawn)\", \"variant_1_scores\": [0.778, 0.8], \"variant_2_scores\": [1.0, 0.911], \"variant_1_mean\": 0.789, \"variant_2_mean\": 0.9555, \"winner_slot\": 2, \"winning_fitness\": 0.9555}, {\"dimension\": \"upserts-and-on-conflict\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-ecto-query-writer-medium-20\", \"elixir-ecto-query-writer-hard-21\"], \"variant_1_label\": \"upserts-and-on-conflict (seed)\", \"variant_2_label\": \"upserts-and-on-conflict (spawn)\", \"variant_1_scores\": [1.0, 1.0], \"variant_2_scores\": [1.0, 1.0], \"variant_1_mean\": 1.0, \"variant_2_mean\": 1.0, \"winner_slot\": 2, \"winning_fitness\": 1.0}], \"generation\": 0, \"total_generations\": 1, \"challenges_per_variant\": 2, \"baseline_ran\": true, \"scorer\": \"score.py (L1 deterministic)\"}"
+      ],
+      "max_budget_usd": 10.0,
+      "mode": "domain",
+      "num_generations": 1,
+      "pareto_front": [
+        {
+          "behavioral_signature": [],
+          "consistency_score": null,
+          "deterministic_scores": {
+            "l1": 0.9349
+          },
+          "frontmatter": {
+            "description": ">-",
+            "name": "elixir-ecto-query-writer"
+          },
+          "generation": 1,
+          "generations_survived": 0,
+          "id": "gen_composite_elixir_ecto_query_writer_seed_v1",
+          "is_pareto_optimal": true,
+          "maturity": "tested",
+          "meta_strategy": "engineer_composite",
+          "mutation_rationale": "",
+          "mutations": [],
+          "parent_ids": [
+            "gen_winner_elixir_ecto_query_writer_query_composition_style",
+            "gen_winner_elixir_ecto_query_writer_aggregates_and_group_by",
+            "gen_winner_elixir_ecto_query_writer_basic_where_select_order",
+            "gen_winner_elixir_ecto_query_writer_dynamic_query_builder",
+            "gen_winner_elixir_ecto_query_writer_joins",
+            "gen_winner_elixir_ecto_query_writer_pagination_patterns",
+            "gen_winner_elixir_ecto_query_writer_pin_operator_safety",
+            "gen_winner_elixir_ecto_query_writer_preloads",
+            "gen_winner_elixir_ecto_query_writer_raw_sql_fragment",
+            "gen_winner_elixir_ecto_query_writer_subqueries",
+            "gen_winner_elixir_ecto_query_writer_upserts_and_on_conflict",
+            "gen_winner_elixir_ecto_query_writer_window_functions"
+          ],
+          "pareto_objectives": {
+            "quality": 0.9349
+          },
+          "skill_md_content": "---\nname: elixir-ecto-query-writer\ndescription: >-\n  Ecto query composition, joins, preloads, aggregates, subqueries, dynamic\n  builders, window functions, upserts, and pin-operator safety for Elixir/Phoenix.\n  Use when writing Ecto queries, composing filters, or building query modules,\n  even if they don't ask for Ecto. NOT for schemas, changesets, or Repo calls.\n---\n\n# Elixir Ecto Query Writer\n\n## Quick Start\n\nCompose queries via pipe chains. Start every query module with base/0 returning from(Schema, as: :atom). Each builder accepts/returns a queryable. Pin every runtime variable with ^. Prefer typed Ecto functions over raw SQL fragments.\n\n## When to Use\n\n- Writing Ecto queries with where, select, order_by, join, preload\n- Building reusable query modules with composable filter functions\n- Adding aggregates, subqueries, or window functions\n- Implementing cursor/keyset pagination\n- Writing dynamic search endpoints with optional runtime filters\n- Performing bulk upserts with on_conflict\n\n## Common Mistakes\n\n- Missing ^ on runtime variables\n- Join-preloading has_many (Cartesian product)\n- where: filter on left join (converts to inner join)\n- Repo.preload in Enum.map (N+1)\n- :replace_all in upserts (clobbers fields)\n- Non-unique sort without tie-breaker (pagination bugs)\n",
+          "supporting_files": {},
+          "trait_attribution": {},
+          "trait_diagnostics": {},
+          "traits": [
+            "query-composition-style",
+            "aggregates-and-group-by",
+            "basic-where-select-order",
+            "dynamic-query-builder",
+            "joins",
+            "pagination-patterns",
+            "pin-operator-safety",
+            "preloads",
+            "raw-sql-fragment",
+            "subqueries",
+            "upserts-and-on-conflict",
+            "window-functions"
+          ],
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "variant_id": null
+        }
+      ],
+      "population_size": 2,
+      "specialization": "Elixir Ecto Query Writer \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "status": "complete",
+      "total_cost_usd": 0.0
+    }
+  ],
+  "generated_at": "2026-04-12T07:08:53.875144+00:00",
+  "mock_run_id": "elixir-ecto-query-writer-seed-v1",
+  "schema_version": 1,
+  "skill_families": [
+    {
+      "best_assembly_id": "gen_composite_elixir_ecto_query_writer_seed_v1",
+      "created_at": "2026-04-12T05:58:12.895553+00:00",
+      "decomposition_strategy": "atomic",
+      "domain_id": "tax_338c9dc354b0",
+      "focus_id": "tax_25c680385dba",
+      "id": "fam_d1dcdae97478",
+      "label": "Elixir Ecto Query Writer",
+      "language_id": "tax_ad07385226d0",
+      "slug": "elixir-ecto-query-writer",
+      "specialization": "Elixir Ecto Query Writer",
+      "tags": []
+    }
+  ],
+  "skill_genomes": [
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9349
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "elixir-ecto-query-writer"
+      },
+      "generation": 1,
+      "generations_survived": 0,
+      "id": "gen_composite_elixir_ecto_query_writer_seed_v1",
+      "is_pareto_optimal": 1,
+      "maturity": "tested",
+      "meta_strategy": "engineer_composite",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [
+        "gen_winner_elixir_ecto_query_writer_query_composition_style",
+        "gen_winner_elixir_ecto_query_writer_aggregates_and_group_by",
+        "gen_winner_elixir_ecto_query_writer_basic_where_select_order",
+        "gen_winner_elixir_ecto_query_writer_dynamic_query_builder",
+        "gen_winner_elixir_ecto_query_writer_joins",
+        "gen_winner_elixir_ecto_query_writer_pagination_patterns",
+        "gen_winner_elixir_ecto_query_writer_pin_operator_safety",
+        "gen_winner_elixir_ecto_query_writer_preloads",
+        "gen_winner_elixir_ecto_query_writer_raw_sql_fragment",
+        "gen_winner_elixir_ecto_query_writer_subqueries",
+        "gen_winner_elixir_ecto_query_writer_upserts_and_on_conflict",
+        "gen_winner_elixir_ecto_query_writer_window_functions"
+      ],
+      "pareto_objectives": {
+        "quality": 0.9349
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: elixir-ecto-query-writer\ndescription: >-\n  Ecto query composition, joins, preloads, aggregates, subqueries, dynamic\n  builders, window functions, upserts, and pin-operator safety for Elixir/Phoenix.\n  Use when writing Ecto queries, composing filters, or building query modules,\n  even if they don't ask for Ecto. NOT for schemas, changesets, or Repo calls.\n---\n\n# Elixir Ecto Query Writer\n\n## Quick Start\n\nCompose queries via pipe chains. Start every query module with base/0 returning from(Schema, as: :atom). Each builder accepts/returns a queryable. Pin every runtime variable with ^. Prefer typed Ecto functions over raw SQL fragments.\n\n## When to Use\n\n- Writing Ecto queries with where, select, order_by, join, preload\n- Building reusable query modules with composable filter functions\n- Adding aggregates, subqueries, or window functions\n- Implementing cursor/keyset pagination\n- Writing dynamic search endpoints with optional runtime filters\n- Performing bulk upserts with on_conflict\n\n## Common Mistakes\n\n- Missing ^ on runtime variables\n- Join-preloading has_many (Cartesian product)\n- where: filter on left join (converts to inner join)\n- Repo.preload in Enum.map (N+1)\n- :replace_all in upserts (clobbers fields)\n- Non-unique sort without tie-breaker (pagination bugs)\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "query-composition-style",
+        "aggregates-and-group-by",
+        "basic-where-select-order",
+        "dynamic-query-builder",
+        "joins",
+        "pagination-patterns",
+        "pin-operator-safety",
+        "preloads",
+        "raw-sql-fragment",
+        "subqueries",
+        "upserts-and-on-conflict",
+        "window-functions"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Use typed count, sum, avg functions. Every selected field must appear in group_by or be wrapped in an aggregate. Use having for aggregate filters.",
+        "name": "aggregates-and-group-by--typed-helpers"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_aggregates_and_group_by",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: aggregates-and-group-by--typed-helpers\ndescription: Use typed count, sum, avg functions. Every selected field must appear in group_by or be wrapped in an aggregate. Use having for aggregate filters.\n---\n\n# Aggregates and Group By \u2014 Typed Helpers\n\n## Quick Start\n- Count: `count(p.id, :distinct)` for distinct counts\n- Group-by rule: every `select` field must be grouped OR aggregated\n- Filter groups: `having:`, not `where:`\n\n## When to use\nAny time you return rollups.\n\n## Workflow\n1. List the fields you want to return.\n2. Wrap aggregatable fields in `count/sum/avg/max/min`.\n3. Put all non-aggregated fields into `group_by:`.\n4. Filter aggregated results via `having:`.\n\n## Examples\n```elixir\nfrom(p in Post, group_by: p.category_id, select: {p.category_id, count(p.id)})\nfrom(u in User, join: p in assoc(u, :posts), group_by: [u.id, u.name], having: count(p.id) > 5)\n```\n\n## Common mistakes\n- Selecting `{c.id, c.name, count(p.id)}` but grouping only by `c.id`.\n- Using `where:` for aggregated filters \u2014 runs before aggregation.\n- `length(Repo.all(q))` instead of `Repo.aggregate(q, :count, :id)`.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Idiomatic where, select, and order_by clauses for Ecto queries. Always use is_nil/1 for NULL filters and ensure deterministic ordering.",
+        "name": "basic-where-select-order--strict-defaults"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_basic_where_select_order",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: basic-where-select-order--strict-defaults\ndescription: Idiomatic where, select, and order_by clauses for Ecto queries. Always use is_nil/1 for NULL filters and ensure deterministic ordering.\n---\n\n# Basic Where / Select / Order \u2014 Strict Defaults\n\n## Quick Start\n- NULL checks: `is_nil(u.field)` / `not is_nil(u.field)`\n- Map shape: `select: map(u, [:id, :name])`\n- Deterministic order: `order_by: [desc: col, desc: id]`\n\n## When to use\nEvery query. These are the foundation clauses.\n\n## Workflow\n1. Decide the filter: is any field nullable? Use `is_nil/1`.\n2. Decide the select shape: struct? map? partial struct?\n3. Decide the sort order: is the primary column unique? If not, add `id` as a tie-breaker.\n\n## Examples\n```elixir\nfrom(u in User, where: is_nil(u.email_verified_at))\nfrom(u in User, select: map(u, [:id, :name]))\nfrom(p in Post, order_by: [desc: p.published_at, desc: p.id])\n```\n\n## Common mistakes\n- `where: u.email == nil` \u2014 compile error, use `is_nil/1`.\n- `select: [:id, :name]` returns a partial struct (with nil for missing fields), not a map.\n- Non-unique sort columns break pagination.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Compose optional filters via Enum.reduce starting from dynamic(true). Apply the accumulated dynamic in a single where clause.",
+        "name": "dynamic-query-builder--reduce-composition"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_dynamic_query_builder",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: dynamic-query-builder--reduce-composition\ndescription: Compose optional filters via Enum.reduce starting from dynamic(true). Apply the accumulated dynamic in a single where clause.\n---\n\n# Dynamic Query Builder \u2014 Reduce Composition\n\n## Quick Start\n1. Start: `dynamic(true)`\n2. Reduce: `Enum.reduce(params, dynamic(true), fn {k, v}, acc -> ... end)`\n3. Each branch: `dynamic([u], ^acc and ...)`\n4. Apply: `from(u in User, where: ^final)`\n\n## When to use\nSearch endpoints with optional filters; any query where the where-clause shape varies at runtime.\n\n## Workflow\n1. Parse params into a map/keyword list.\n2. Reduce over it, pattern-matching on known keys. Unknown keys -> return acc unchanged.\n3. Each known key adds a dynamic fragment to the accumulator via `^acc and`.\n4. Apply the final dynamic to the query in a single `where: ^final_dynamic`.\n\n## Examples\n```elixir\nfilter = Enum.reduce(params, dynamic(true), fn\n  {\"name\", v}, acc -> dynamic([u], ^acc and ilike(u.name, ^\"%#{v}%\"))\n  {\"role\", v}, acc -> dynamic([u], ^acc and u.role == ^v)\n  _, acc -> acc\nend)\n\nfrom(u in User, where: ^filter) |> Repo.all()\n```\n\n## Common mistakes\n- Imperative `if` chains that rebuild the query for each filter.\n- Forgetting `^acc and` \u2014 replaces instead of appending.\n- Forgetting the `_, acc -> acc` catch-all for unknown keys.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Join via assoc/2 and name bindings with as: for downstream composition. Filter left joins inside on: clauses.",
+        "name": "joins--assoc-first-named"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_joins",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: joins--assoc-first-named\ndescription: Join via assoc/2 and name bindings with as: for downstream composition. Filter left joins inside on: clauses.\n---\n\n# Joins \u2014 Assoc First, Named Bindings\n\n## Quick Start\n- Schema-defined assoc: `join: p in assoc(u, :posts)`\n- Name it: `as: :posts`\n- Left-join filter: inside `on:`, not `where:`\n\n## When to use\nAny time you cross a schema association.\n\n## Workflow\n1. Check if the association is defined on the schema \u2014 use `assoc/2`.\n2. Add `as: :atom` if the binding will be used in `select`, `where`, or another join.\n3. For `left_join`, filters MUST go in `on:` to preserve outer-join semantics.\n\n## Examples\n```elixir\nfrom(u in User, join: p in assoc(u, :posts), as: :posts, where: p.published == true)\nfrom(u in User, left_join: c in assoc(u, :comments), on: c.approved == true)\n```\n\n## Common mistakes\n- Manual `on: u.id == p.user_id` when `assoc/2` would work.\n- Putting a left-join filter in `where:` (silently drops rows with no matches).\n- Forgetting `as:` and then needing it for a downstream `order_by`.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Cursor-based (keyset) pagination for large result sets. Always include a unique tie-breaker in sort for deterministic page boundaries.",
+        "name": "pagination-patterns--cursor-with-tiebreak"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_pagination_patterns",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: pagination-patterns--cursor-with-tiebreak\ndescription: Cursor-based (keyset) pagination for large result sets. Always include a unique tie-breaker in sort for deterministic page boundaries.\n---\n\n# Pagination \u2014 Cursor with Tie-Breaker\n\n## Quick Start\n- Sort: `order_by: [desc: published_at, desc: id]`\n- Cursor: `{ts, id}` tuple\n- Predicate: `(published_at < ^ts) or (published_at == ^ts and id < ^id)`\n\n## When to use\nAny user-facing feed or infinite-scroll. Also any ranking query at scale where offset > ~1000 would be slow.\n\n## Workflow\n1. Pick a primary sort column + a unique tie-breaker (typically `id`).\n2. Define a cursor as a tuple of both values.\n3. Apply the row-wise comparison predicate on subsequent pages.\n4. Pin both cursor components.\n5. The `nil` cursor is page 1 (no predicate applied).\n\n## Examples\n```elixir\ndef feed(nil) do\n  from(p in Post, order_by: [desc: p.published_at, desc: p.id], limit: 20)\nend\n\ndef feed({ts, last_id}) do\n  from(p in Post,\n    where: p.published_at < ^ts or (p.published_at == ^ts and p.id < ^last_id),\n    order_by: [desc: p.published_at, desc: p.id],\n    limit: 20\n  )\nend\n```\n\n## Common mistakes\n- Non-unique sort column -> rows can drop/duplicate at boundaries.\n- Forgetting the `==` case in the predicate -> skips tied rows.\n- Offset pagination at scale -> O(N) cost at page N.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Use ^ for every runtime variable in Ecto queries. Skip the pin for compile-time constants where parameterization would break query-plan selectivity.",
+        "name": "pin-operator-safety--always-pin-runtime"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_pin_operator_safety",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: pin-operator-safety--always-pin-runtime\ndescription: Use ^ for every runtime variable in Ecto queries. Skip the pin for compile-time constants where parameterization would break query-plan selectivity.\n---\n\n# Pin Operator Safety \u2014 Always Pin Runtime\n\n## Quick Start\n- Runtime var: `where: u.id == ^user_id`\n- Compile-time constant: `where: u.status in [\"a\", \"b\"]` (NO pin \u2014 let PG inline)\n- List parameter: `where: u.id in ^ids`\n\n## When to use\nEvery query with an external variable.\n\n## Workflow\n1. Identify every external value in the query body.\n2. For each: is it runtime (params, function arg) or compile-time (module attribute)?\n3. Runtime -> pin with `^`.\n4. Compile-time -> inline the value directly.\n5. Lists: pin the whole list (`^ids`), don't unpack.\n\n## Examples\n```elixir\n@active_roles [\"admin\", \"editor\"]  # compile-time\n\ndef find(user_id) do\n  from(u in User, where: u.id == ^user_id and u.role in @active_roles)\nend\n```\n\n## Common mistakes\n- Forgetting the pin on a runtime var -> 'variable is not a valid query expression' error.\n- Pinning a module attribute list -> Postgres uses parameter, loses index selectivity.\n- Pinning with type mismatch -> Ecto silently coerces, masks caller-side bugs.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Use separate-query (struct) preloads for has_many associations to avoid 10x memory bloat. Join-preload is only appropriate for belongs_to and has_one.",
+        "name": "preloads--struct-for-hasmany"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_preloads",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: preloads--struct-for-hasmany\ndescription: Use separate-query (struct) preloads for has_many associations to avoid 10x memory bloat. Join-preload is only appropriate for belongs_to and has_one.\n---\n\n# Preloads \u2014 Struct for has_many, Join for belongs_to\n\n## Quick Start\n- has_many: `preload: [:posts]` (two queries, one round trip per level)\n- belongs_to / has_one: `join: u in assoc(p, :author), preload: [author: u]` (single query)\n- Never: `Repo.preload/2` in a loop (N+1)\n\n## When to use\nEvery query that returns data to a consumer that will access associations.\n\n## Workflow\n1. Identify which associations the consumer will touch.\n2. For each: is it has_many or not?\n3. has_many -> struct preload in the main query.\n4. belongs_to/has_one -> join-preload with binding threaded into preload list.\n5. Never load associations in a `Enum.map` \u2014 always at query-build time.\n\n## Examples\n```elixir\nfrom(u in User, preload: [:posts, :comments])\nfrom(p in Post, join: u in assoc(p, :author), preload: [author: u])\n```\n\n## Common mistakes\n- Join-preloading has_many -> 10x memory blow-up from the Cartesian product.\n- Using `Repo.preload(records, :assoc)` after the fact -> double query.\n- Forgetting to thread the join binding into preload -> Ecto re-issues a second query.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Compose Ecto queries via pipe chains with named bindings on the base query. Use when authoring reusable query builder modules.",
+        "name": "query-composition-style--pipe-with-named-bindings"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_query_composition_style",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: query-composition-style--pipe-with-named-bindings\ndescription: Compose Ecto queries via pipe chains with named bindings on the base query. Use when authoring reusable query builder modules.\n---\n\n# Query Composition Style \u2014 Pipe + Named Bindings\n\n## Quick Start\nEvery query builder accepts a queryable and returns a queryable. Start from `from(Schema, as: :atom)` so later composers can reference the binding by name.\n\n## When to use\n- Writing a query module that will be called from multiple contexts.\n- When filters might need to be added across join boundaries.\n- When a test helper needs to pipe extra filters onto a production query.\n\n## Workflow\n1. Define `base/0` returning `from(User, as: :user)`.\n2. Define one builder per filter dimension: `active/1`, `by_team/2`, etc.\n3. Each builder does `from([user: u] in query, where: ...)` to reference the named binding.\n4. Callers chain via pipe: `base() |> active() |> by_team(team_id) |> Repo.all()`.\n\nSee `${CLAUDE_SKILL_DIR}/references/composition-guide.md` for the full pattern.\n\n## Examples\n```elixir\ndef base, do: from(u in User, as: :user)\ndef active(query), do: from([user: u] in query, where: u.active == true)\ndef by_team(query, team_id), do: from([user: u] in query, where: u.team_id == ^team_id)\n```\n\n## Common mistakes\n- Forgetting `as: :atom` on the base \u2014 downstream joins can't reference it.\n- Using positional `[u]` bindings that break when a new join is added upstream.\n- Burying queries in context modules instead of a dedicated query builder.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Always use ? placeholders in fragment literals. Pass values as separate arguments with the pin operator. Never use string interpolation in fragments.",
+        "name": "raw-sql-fragment--placeholder-only"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_raw_sql_fragment",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: raw-sql-fragment--placeholder-only\ndescription: Always use ? placeholders in fragment literals. Pass values as separate arguments with the pin operator. Never use string interpolation in fragments.\n---\n\n# Raw SQL Fragment \u2014 Placeholders Only\n\n## Quick Start\n- Safe: `fragment(\"? ILIKE ?\", p.name, ^pattern)`\n- Unsafe: `fragment(\"p.name ILIKE '#{pattern}'\")` (SQL injection; Ecto compile error)\n- Typed > fragment: if a typed equivalent exists (`ilike`, `coalesce`), prefer it.\n\n## When to use\nPostgres-specific features without typed Ecto equivalents: `to_tsvector`, `date_trunc`, FILTER clause, JSONB operators.\n\n## Workflow\n1. Check: does a typed Ecto function exist? Use it.\n2. If fragment is needed, use `?` placeholders for every value.\n3. Pin any Elixir-side values with `^`.\n4. Never use `#{}` inside a fragment literal.\n\n## Examples\n```elixir\nfragment(\"? ILIKE ?\", p.body, ^pattern)\nfragment(\"date_trunc('month', ?)\", p.inserted_at)\nfragment(\"COUNT(?) FILTER (WHERE ?)\", p.id, p.published)\n```\n\n## Common mistakes\n- `fragment(\"... #{user_input} ...\")` \u2014 SQL injection, Ecto compile error.\n- `fragment(^sql_string, ^val)` \u2014 `^` disallowed as first arg.\n- Using fragment for `coalesce`, `count`, `sum` \u2014 typed forms exist.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Express subqueries with Ecto's typed subquery/1 helper and parent_as/1 for correlation. Avoid Ecto.Adapters.SQL.query fallbacks.",
+        "name": "subqueries--typed-subquery-helper"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_subqueries",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: subqueries--typed-subquery-helper\ndescription: Express subqueries with Ecto's typed subquery/1 helper and parent_as/1 for correlation. Avoid Ecto.Adapters.SQL.query fallbacks.\n---\n\n# Subqueries \u2014 Typed Helpers\n\n## Quick Start\n- Wrap any Ecto query as a source with `subquery/1`\n- Correlate via `parent_as(:named_binding).field`\n- Outer binding: `from t in Table, as: :named_binding`\n\n## When to use\nWhen the query needs a nested result set \u2014 filtering by aggregated values, latest-per-group, existence checks.\n\n## Workflow\n1. Build the inner query as a regular Ecto query with `select:` defined.\n2. Outer query references it via `where: u.id in subquery(inner)` or `join: s in subquery(inner)`.\n3. For correlation, use `parent_as(:outer)` to reference the outer binding.\n\n## Examples\n```elixir\ninner = from(c in Comment, distinct: true, select: c.user_id)\nfrom(u in User, where: u.id in subquery(inner))\n\nfrom(p in Post, as: :post, where: exists(\n  from(c in Comment, where: c.post_id == parent_as(:post).id)\n))\n```\n\n## Common mistakes\n- Reaching for `Ecto.Adapters.SQL.query/3` when `subquery/1` fits.\n- Missing `parent_as` \u2014 Ecto has no other way to reference the outer query inside a subquery.\n- Using a subquery as a join source without an explicit `select:` (Ecto can't infer column shape).\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Use {:replace, [...]} for partial updates, always specify conflict_target, and supply every NOT NULL column in the insert rows.",
+        "name": "upserts-and-on-conflict--targeted-replace"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_upserts_and_on_conflict",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: upserts-and-on-conflict--targeted-replace\ndescription: Use {:replace, [...]} for partial updates, always specify conflict_target, and supply every NOT NULL column in the insert rows.\n---\n\n# Upserts and On Conflict \u2014 Targeted Replace\n\n## Quick Start\n- `on_conflict: {:replace, [:name, :updated_at]}` (NOT `:replace_all`)\n- `conflict_target: :email` (which unique index)\n- `returning: true` if you need the resulting row back\n\n## When to use\nBulk imports, periodic sync jobs, race-safe get_or_insert, atomic counters.\n\n## Workflow\n1. Identify the unique index the conflict is on \u2014 that's your `conflict_target`.\n2. Identify which fields the upsert should update \u2014 that's the `{:replace, [...]}` list.\n3. Supply every NOT NULL column in every insert row (PostgreSQL validates INSERT before ON CONFLICT).\n4. For atomic counter increments, use `on_conflict: from(... update: [set: [n: x.n + 1]])`.\n\n## Examples\n```elixir\nRepo.insert_all(User, entries,\n  on_conflict: {:replace, [:name, :updated_at]},\n  conflict_target: :email\n)\n\n# Atomic counter\nRepo.insert_all(PageStat, [%{path: path, view_count: 1}],\n  on_conflict: from(p in PageStat, update: [set: [view_count: p.view_count + 1]]),\n  conflict_target: :path\n)\n```\n\n## Common mistakes\n- `on_conflict: :replace_all` -> writes NULL for fields not in the changeset.\n- Missing `conflict_target` -> cryptic SQL error.\n- Forgetting NOT NULL fields -> PostgreSQL rejects the INSERT before ON CONFLICT runs.\n- `insert_all` bypasses changeset validation -- sanitize upstream.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Use Ecto's typed window API \u2014 row_number/rank/lag piped through over(partition_by, order_by). Avoid fragment-based window functions.",
+        "name": "window-functions--typed-over"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_ecto_query_writer_window_functions",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: window-functions--typed-over\ndescription: Use Ecto's typed window API \u2014 row_number/rank/lag piped through over(partition_by, order_by). Avoid fragment-based window functions.\n---\n\n# Window Functions \u2014 Typed |> over\n\n## Quick Start\n- `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.score])`\n- `rank()` preserves ties; `row_number()` breaks them arbitrarily\n- Named window: `windows: [w: [partition_by: ..., order_by: ...]]`, reference via `|> over(:w)`\n\n## When to use\nRanking, running totals, per-partition top-N, period-over-period deltas (`lag/lead`).\n\n## Workflow\n1. Choose the window function: row_number / rank / dense_rank / lag / lead / sum.\n2. Use `|> over(partition_by: ..., order_by: ...)`.\n3. For top-N-per-group, wrap in a subquery and filter by the window result.\n4. If the same window spec is reused, define it in `windows:` and reference by atom.\n\n## Examples\n```elixir\nfrom(p in Post,\n  select: %{\n    id: p.id,\n    rank: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.score])\n  }\n)\n\n# Top-3 per category\ninner = from(p in Post, select: %{id: p.id, rn: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.score])})\nfrom(r in subquery(inner), where: r.rn <= 3)\n```\n\n## Common mistakes\n- `fragment(\"row_number() OVER (...)\")` when the typed form works.\n- Wrapping windows in `type/2` cast \u2014 invalid query expression.\n- Attempting to parameterize column names in `OVER (PARTITION BY ?)` \u2014 PG doesn't allow it.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 1.0
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "aggregates-and-group-by--query-plan-aware"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_aggregates_and_group_by",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 1.0
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: aggregates-and-group-by--query-plan-aware\ndescription: >-\n  Write Ecto aggregate queries aware of execution plan impact. Choose Repo.aggregate for\n  single-value rollups, inline group_by+select for multi-column. Use having only when\n  filtering on the aggregate itself \u2014 push everything else to where. Even if they just\n  say \"count\", \"sum up\", \"group these\", \"total per\", or \"report by category\".\n  NOT for window functions, raw SQL fragments, or pagination.\n---\n\n# Aggregates and Group By -- Query Plan Aware\n\n## Quick Start\n\nPick the right aggregate surface: `Repo.aggregate/3` for scalar results (one number back), inline `group_by` + aggregate functions in `select` for tabular rollups. Push non-aggregate filters into `where` (runs before grouping, uses indexes) and reserve `having` exclusively for conditions on the aggregated value itself.\n\n## When to use\n\n- Counting, summing, averaging, or finding min/max across rows\n- Building reports grouped by one or more dimensions\n- Filtering results based on aggregate thresholds (e.g., \"users with more than 5 posts\")\n- Any time the caller says \"total\", \"per category\", \"how many\", \"top N by count\"\n\n## Workflow\n\n### Step 1: Identify the aggregate shape\n\nDecide what comes back from the query:\n\n- **Scalar** (single number): use `Repo.aggregate/3` \u2014 it generates `SELECT count(u0.id) FROM users AS u0` with no grouping overhead.\n- **Tabular** (rows of dimension + metric): use inline `group_by` + aggregate functions in `select`.\n\n```elixir\n# Scalar \u2014 total active users\nRepo.aggregate(from(u in User, where: u.active == true), :count, :id)\n\n# Tabular \u2014 posts per category\nfrom(p in Post,\n  group_by: p.category_id,\n  select: {p.category_id, count(p.id)}\n) |> Repo.all()\n```\n\n### Step 2: Build the group_by clause\n\nEvery field that appears in `select` without an aggregate wrapper MUST appear in `group_by`. Postgres enforces this; Ecto surfaces it as a query compilation error.\n\n**The matching rule**: scan your `select` expression. For each field reference that is NOT wrapped in `count/sum/avg/max/min`, add it to `group_by`.\n\n```elixir\n# WRONG \u2014 u.name is selected but not grouped\nfrom(u in User,\n  join: p in assoc(u, :posts),\n  group_by: u.id,\n  select: {u.id, u.name, count(p.id)}\n)\n\n# CORRECT \u2014 both non-aggregate fields grouped\nfrom(u in User,\n  join: p in assoc(u, :posts),\n  group_by: [u.id, u.name],\n  select: {u.id, u.name, count(p.id)}\n)\n```\n\n### Step 3: Place filters in the right clause\n\nEcto translates `where` to SQL WHERE (runs before GROUP BY) and `having` to SQL HAVING (runs after GROUP BY). This distinction matters for both correctness and performance.\n\n**Decision rule:**\n- Filter references only raw columns? -> `where` (indexed, fast)\n- Filter references an aggregate result? -> `having` (post-grouping, sequential scan of groups)\n\n```elixir\n# where: filters rows BEFORE aggregation (can use indexes)\nfrom(p in Post,\n  where: p.published == true,\n  group_by: p.category_id,\n  select: {p.category_id, count(p.id)},\n  having: count(p.id) > 5\n)\n```\n\nNever put a raw-column filter in `having` \u2014 it works but skips index usage and scans every group.\n\n### Step 4: Choose the right aggregate function\n\n| Function | Ecto form | Gotcha |\n|----------|-----------|--------|\n| Count all | `count(field)` | Excludes NULLs in that field |\n| Count rows | `count()` | Counts every row including NULLs \u2014 use when you want total rows per group |\n| Distinct count | `count(field, :distinct)` | Second arg is the atom `:distinct` |\n| Sum | `sum(field)` | Returns `nil` for empty groups, not `0` |\n| Average | `avg(field)` | Returns `Decimal`, not float |\n| Max / Min | `max(field)` / `min(field)` | Returns `nil` for empty groups |\n\nHandle nil returns explicitly:\n\n```elixir\n# Coalesce nil sum to 0 via fragment or application-level default\nfrom(o in Order,\n  group_by: o.customer_id,\n  select: {o.customer_id, coalesce(sum(o.total), 0)}\n)\n```\n\n### Step 5: Validate with Repo.explain\n\nFor any aggregate query touching more than a few thousand rows, check the plan:\n\n```elixir\nquery\n|> Repo.explain(:analyze)\n|> IO.puts()\n```\n\nLook for: sequential scans on the grouped column (add an index), hash aggregate vs sort aggregate (hash is usually better for high-cardinality groups), and filter rows eliminated before vs after grouping.\n\n## Examples\n\n**Example 1: Revenue per product category with minimum threshold**\n\nInput: \"Show me total revenue per category, but only categories with revenue above $1000\"\n\n```elixir\nfrom(o in OrderItem,\n  join: p in assoc(o, :product),\n  where: o.status == :completed,\n  group_by: p.category_id,\n  select: {p.category_id, sum(o.amount)},\n  having: sum(o.amount) > 1000\n) |> Repo.all()\n```\n\nWhy it works: `where` filters non-completed orders before grouping (uses index on `status`). `having` filters categories after summing (must be post-group since it references `sum`).\n\n**Example 2: Users with their post count as a virtual field**\n\nInput: \"List users with how many posts each has, including users with zero posts\"\n\n```elixir\nfrom(u in User,\n  left_join: p in assoc(u, :posts),\n  group_by: [u.id, u.name, u.email],\n  select: %{id: u.id, name: u.name, email: u.email, post_count: count(p.id)}\n) |> Repo.all()\n```\n\nWhy `left_join`: an `inner_join` would drop users with zero posts. `count(p.id)` returns 0 when all joined rows are NULL (from the left join producing no matches).\n\n**Example 3: Distinct active commenters per post in the last 30 days**\n\nInput: \"For each post, how many unique users commented in the last month?\"\n\n```elixir\ncutoff = DateTime.utc_now() |> DateTime.add(-30, :day)\n\nfrom(c in Comment,\n  where: c.inserted_at >= ^cutoff,\n  group_by: c.post_id,\n  select: {c.post_id, count(c.user_id, :distinct)},\n  order_by: [desc: count(c.user_id, :distinct)]\n) |> Repo.all()\n```\n\nWhy `count(c.user_id, :distinct)`: plain `count(c.user_id)` would count duplicate commenters. The `:distinct` atom is the second argument \u2014 not a separate function call.\n\n## Gotchas\n\n- **`sum` and `avg` return nil for empty groups** \u2014 wrap in `coalesce(sum(x), 0)` or handle nil in Elixir. `count` returns 0, so it is safe without coalescing.\n- **`select: {c.id, c.name, count(p.id)}` with `group_by: c.id` only** \u2014 Postgres allows this when `c.id` is the primary key (functionally dependent columns are implicitly grouped), but Ecto does not exploit this. Always list every non-aggregate select field in `group_by` to be safe.\n- **`where: count(p.id) > 5`** \u2014 compile error. Aggregate functions are not allowed in WHERE. Use `having:` for aggregate filters.\n- **`length(Repo.all(query))` instead of `Repo.aggregate(query, :count, :id)`** \u2014 materializes every row into Elixir structs, then counts them in memory. For 100k rows this wastes ~50MB of RAM and takes 10x longer than a SQL COUNT.\n- **Mixing `Repo.aggregate` with `group_by`** \u2014 `Repo.aggregate/3` ignores any `group_by` on the query and returns a single scalar. For grouped aggregates, use inline `select` + `Repo.all`.\n- **Forgetting the pin on runtime thresholds** \u2014 `having: count(p.id) > ^min_count` needs the pin. Literal integers (`> 5`) do not.\n- **`order_by` on an aggregate without repeating it** \u2014 `order_by: [desc: count(p.id)]` works in Ecto even though the aggregate is not aliased. But if you select it into a map key, you can reference the key in a wrapping subquery for cleaner ordering.\n\n## Out of Scope\n\nThis skill does NOT:\n- Cover window functions like `row_number`, `rank`, `lag` (use the window-functions variant)\n- Handle `fragment`-based aggregates like `FILTER (WHERE ...)` (use the raw-sql-fragment variant)\n- Teach cursor or offset pagination over aggregated results (use the pagination-patterns variant)\n- Address `Repo.insert_all` with conflict-based counters (use the upserts-and-on-conflict variant)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "aggregates-and-group-by"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 1.0
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "basic-where-select-order--pipeline-builders"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_basic_where_select_order",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 1.0
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: basic-where-select-order--pipeline-builders\ndescription: >-\n  Teach where/select/order_by as single-purpose builder functions that accept and return queryables. Each builder does one thing. Callers compose via pipe. Use when writing Ecto query modules, filter APIs, or context functions, even if they don't ask for \"composable queries.\" NOT for joins, preloads, or aggregates.\n---\n\n# Basic Where / Select / Order \u2014 Pipeline Builders\n\n## Quick Start\n\nEvery filter, projection, and sort is its own function: `queryable in -> queryable out`. Callers compose via `|>`. No function ever does two things.\n\n## When to use\n\n- Any context module that queries a single schema.\n- Search or listing endpoints with optional filters.\n- When tests need to add constraints to production queries.\n- Whenever you write `from(x in Schema, where: ..., select: ..., order_by: ...)` and the function is longer than 5 lines -- decompose.\n\n## Workflow\n\n### Step 1: Define the base query\n\nOne zero-arity function returns the starting queryable. This is the only place `from/2` appears.\n\n```elixir\ndefmodule MyApp.Accounts.UserQuery do\n  import Ecto.Query\n\n  def base, do: from(u in MyApp.Accounts.User, as: :user)\nend\n```\n\n### Step 2: Write where-builders (one per filter)\n\nEach function pattern-matches its input, pins runtime values, and returns the enriched query. For nil checks, always use `is_nil/1` -- Ecto forbids `== nil`.\n\n```elixir\ndef by_email(query, email),\n  do: where(query, [user: u], u.email == ^email)\n\ndef by_role(query, role),\n  do: where(query, [user: u], u.role == ^role)\n\ndef active(query),\n  do: where(query, [user: u], u.active == true)\n\ndef unverified(query),\n  do: where(query, [user: u], is_nil(u.email_verified_at))\n\ndef verified(query),\n  do: where(query, [user: u], not is_nil(u.email_verified_at))\n```\n\nRules for where-builders:\n\n1. **Always pin runtime values** with `^`. `u.role == role` silently compiles but binds wrong.\n2. **One filter per function.** `by_role_and_active/2` is a code smell -- compose `by_role/2 |> active/1`.\n3. **Use `is_nil/1`** for NULL checks. `u.field == nil` raises at compile time.\n4. **Use named bindings** (`[user: u]`) so the builder works regardless of join order.\n\n### Step 3: Write select-builders\n\nChoose the shape callers need. Prefer `select/3` with an explicit map over returning full structs when the consumer only reads a few fields.\n\n```elixir\ndef select_summary(query),\n  do: select(query, [user: u], map(u, [:id, :name, :email]))\n\ndef select_ids(query),\n  do: select(query, [user: u], u.id)\n\ndef select_name_email(query),\n  do: select(query, [user: u], {u.name, u.email})\n```\n\nSelect shape cheat sheet:\n\n| Shape | Syntax | Returns |\n|---|---|---|\n| Full struct | _(no select)_ | `%User{...}` with all fields |\n| Map | `map(u, [:id, :name])` | `%{id: 1, name: \"Jo\"}` |\n| Tuple | `{u.name, u.email}` | `{\"Jo\", \"jo@ex.com\"}` |\n| Single field | `u.id` | `1` |\n| Partial struct | `struct(u, [:id, :name])` | `%User{id: 1, name: \"Jo\", email: nil}` -- nil-fills omitted fields |\n\nPrefer `map/2` when the result leaves the context module. Prefer full struct when the consumer calls schema functions on it.\n\n### Step 4: Write order-builders\n\nEvery sort must include a unique tie-breaker column. Without one, pagination boundaries are non-deterministic.\n\n```elixir\ndef newest_first(query),\n  do: order_by(query, [user: u], desc: u.inserted_at, desc: u.id)\n\ndef alphabetical(query),\n  do: order_by(query, [user: u], asc: u.name, asc: u.id)\n\ndef by_column(query, column, direction \\\\ :asc)\n\ndef by_column(query, :name, dir),\n  do: order_by(query, [user: u], [{^dir, u.name}, {^dir, u.id}])\n\ndef by_column(query, :email, dir),\n  do: order_by(query, [user: u], [{^dir, u.email}, {^dir, u.id}])\n```\n\nRules for order-builders:\n\n1. **Always append a unique column** (`id`) as the final sort key.\n2. **Pin the direction atom** when it comes from a function argument: `{^dir, u.name}`.\n3. **Whitelist sortable columns** via pattern matching. Never pass raw user input as a column atom.\n\n### Step 5: Compose at the call site\n\nThe context module or controller calls `base/0` then pipes through the builders it needs:\n\n```elixir\ndef list_active_users do\n  base()\n  |> active()\n  |> select_summary()\n  |> newest_first()\n  |> Repo.all()\nend\n\ndef find_by_email(email) do\n  base()\n  |> by_email(email)\n  |> Repo.one()\nend\n\ndef unverified_count do\n  base()\n  |> unverified()\n  |> Repo.aggregate(:count)\nend\n```\n\n## Examples\n\n**Example 1: Admin listing with optional role filter**\n\nInput: \"List all users, optionally filtered by role, sorted alphabetically.\"\n\n```elixir\ndefmodule MyApp.Accounts do\n  alias MyApp.Accounts.UserQuery\n\n  def list_users(opts \\\\ []) do\n    query = UserQuery.base() |> UserQuery.select_summary() |> UserQuery.alphabetical()\n\n    query =\n      case Keyword.get(opts, :role) do\n        nil -> query\n        role -> UserQuery.by_role(query, role)\n      end\n\n    Repo.all(query)\n  end\nend\n```\n\n**Example 2: Fetching unverified users created in the last 7 days**\n\nInput: \"Get unverified users who signed up this week, newest first.\"\n\n```elixir\ndefmodule MyApp.Accounts.UserQuery do\n  import Ecto.Query\n\n  def base, do: from(u in User, as: :user)\n\n  def unverified(query),\n    do: where(query, [user: u], is_nil(u.email_verified_at))\n\n  def created_after(query, %DateTime{} = dt),\n    do: where(query, [user: u], u.inserted_at >= ^dt)\n\n  def newest_first(query),\n    do: order_by(query, [user: u], desc: u.inserted_at, desc: u.id)\n\n  def select_summary(query),\n    do: select(query, [user: u], map(u, [:id, :name, :email, :inserted_at]))\nend\n\n# Call site\nseven_days_ago = DateTime.utc_now() |> DateTime.add(-7, :day)\n\nUserQuery.base()\n|> UserQuery.unverified()\n|> UserQuery.created_after(seven_days_ago)\n|> UserQuery.select_summary()\n|> UserQuery.newest_first()\n|> Repo.all()\n```\n\n**Example 3: Paginated listing with limit/offset**\n\nInput: \"Add basic limit/offset pagination to the user listing.\"\n\n```elixir\ndefmodule MyApp.Accounts.UserQuery do\n  import Ecto.Query\n\n  def base, do: from(u in User, as: :user)\n\n  def paginate(query, page, per_page) when page >= 1 and per_page >= 1 do\n    query\n    |> limit(^per_page)\n    |> offset(^((page - 1) * per_page))\n  end\n\n  def newest_first(query),\n    do: order_by(query, [user: u], desc: u.inserted_at, desc: u.id)\nend\n\n# Page 3, 25 per page\nUserQuery.base()\n|> UserQuery.newest_first()\n|> UserQuery.paginate(3, 25)\n|> Repo.all()\n```\n\nNote: `limit/2` and `offset/2` take pinned runtime values. Always apply `order_by` before `paginate` -- without deterministic ordering, offset pagination returns unpredictable results.\n\n## Common mistakes\n\n- **Writing monolithic query functions.** A single `list_users(role, status, sort_by, page)` with nested conditionals is fragile. Decompose into pipeline builders.\n- **Forgetting `^` on runtime variables.** `where(query, [u], u.role == role)` compiles but treats `role` as a binding name, not the function argument. Always `^role`.\n- **Using `== nil` for NULL checks.** Ecto raises at compile time. Use `is_nil/1` and `not is_nil/1`.\n- **Non-deterministic sort order.** `order_by: [desc: u.name]` alone means tied names return in arbitrary order. Always include a unique tie-breaker: `desc: u.name, desc: u.id`.\n- **Selecting `struct(u, [:id])`** when you want a plain map. `struct/2` returns a `%User{}` with nil-filled omitted fields -- confusing downstream. Use `map/2` for maps.\n- **Positional bindings in builders.** `where(query, [u], ...)` breaks when a join is prepended upstream. Named bindings (`[user: u]`) are position-independent.\n- **Exposing raw `order_by` column from user input.** `String.to_atom(params[\"sort\"])` is an atom-table attack vector. Whitelist via pattern matching.\n\n## Out of Scope\n\nThis variant does NOT cover:\n- Joins or preloads (see `joins` and `preloads` dimensions)\n- Aggregates, `group_by`, or `having` (see `aggregates-and-group-by` dimension)\n- Dynamic runtime filter composition via `Ecto.Query.dynamic/2` (see `dynamic-query-builder` dimension)\n- Cursor-based (keyset) pagination (see `pagination-patterns` dimension)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "basic-where-select-order"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9
+      },
+      "frontmatter": {
+        "description": "Compose optional filters via Enum.reduce starting from dynamic(true). Apply the accumulated dynamic in a single where clause.",
+        "name": "dynamic-query-builder--reduce-composition"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_dynamic_query_builder",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: dynamic-query-builder--reduce-composition\ndescription: Compose optional filters via Enum.reduce starting from dynamic(true). Apply the accumulated dynamic in a single where clause.\n---\n\n# Dynamic Query Builder \u2014 Reduce Composition\n\n## Quick Start\n1. Start: `dynamic(true)`\n2. Reduce: `Enum.reduce(params, dynamic(true), fn {k, v}, acc -> ... end)`\n3. Each branch: `dynamic([u], ^acc and ...)`\n4. Apply: `from(u in User, where: ^final)`\n\n## When to use\nSearch endpoints with optional filters; any query where the where-clause shape varies at runtime.\n\n## Workflow\n1. Parse params into a map/keyword list.\n2. Reduce over it, pattern-matching on known keys. Unknown keys -> return acc unchanged.\n3. Each known key adds a dynamic fragment to the accumulator via `^acc and`.\n4. Apply the final dynamic to the query in a single `where: ^final_dynamic`.\n\n## Examples\n```elixir\nfilter = Enum.reduce(params, dynamic(true), fn\n  {\"name\", v}, acc -> dynamic([u], ^acc and ilike(u.name, ^\"%#{v}%\"))\n  {\"role\", v}, acc -> dynamic([u], ^acc and u.role == ^v)\n  _, acc -> acc\nend)\n\nfrom(u in User, where: ^filter) |> Repo.all()\n```\n\n## Common mistakes\n- Imperative `if` chains that rebuild the query for each filter.\n- Forgetting `^acc and` \u2014 replaces instead of appending.\n- Forgetting the `_, acc -> acc` catch-all for unknown keys.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "dynamic-query-builder"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9
+      },
+      "frontmatter": {
+        "Write Ecto joins with explicit on": "clauses and positional bindings for maximum",
+        "allowed-tools": "Read Write Bash(python *)",
+        "description": ">-",
+        "name": "joins--explicit-on-left-default"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_joins",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: joins--explicit-on-left-default\ndescription: >-\n  Write Ecto joins with explicit on: clauses and positional bindings for maximum\n  clarity. Default to left_join to preserve parent rows when child data may be\n  absent. Use inner_join only when the association is guaranteed non-null. Use when\n  writing queries that cross schema boundaries, even if they don't explicitly ask\n  for join help. NOT for preloads, subqueries, or aggregates.\nallowed-tools: Read Write Bash(python *)\n---\n\n# Joins -- Explicit On, Left-Default\n\n## Quick Start\nWrite every join with an explicit `on:` clause so the join condition is visible at the call site. Default to `left_join` so parent rows survive when the child table has no match. Switch to `join` (inner) only when the association is NOT NULL or when missing children should genuinely exclude the parent.\n\n## When to use\n- Querying across two or more schemas where you need to control which rows survive.\n- Building queries against schemas you did not author (no `assoc/2` available or association name unclear).\n- Joining on non-FK columns (composite keys, polymorphic type+id, temporal validity ranges).\n- Any join where the `on:` condition includes more than a simple FK equality.\n\n## Workflow\n\n### Step 1: Identify the relationship\nDetermine the FK column, direction, and cardinality. Ask: can the child side be empty for some parents?\n\n### Step 2: Choose join type\n- **Child may be absent** (optional relationship, sparse data, soft-deleted rows) -> `left_join`.\n- **Child is guaranteed present** (NOT NULL FK, required association) -> `join` (inner).\n- **Need all combinations** -> `cross_join` (rare; usually a code smell).\n- **Need rows from both sides** -> `full_join` (rare in application code).\n\n### Step 3: Write the explicit on: clause\n```elixir\nfrom p in Post,\n  left_join: u in User, on: u.id == p.author_id,\n  select: {p.title, u.name}\n```\nPin runtime values in the `on:` clause with `^`:\n```elixir\nleft_join: t in Tag, on: t.id == pt.tag_id and t.category == ^category\n```\n\n### Step 4: Use positional bindings for short queries\nFor queries with 1-2 joins, positional bindings `[p, u]` are shorter and clearer than named bindings:\n```elixir\nfrom p in Post,\n  left_join: u in User, on: u.id == p.author_id,\n  where: not is_nil(u.id),\n  select: {p.title, u.name}\n```\n\n### Step 5: Escalate to named bindings only when needed\nWhen a query has 3+ joins or when downstream pipe-builders must reference a binding, add `as:`:\n```elixir\nfrom p in Post,\n  left_join: u in User, on: u.id == p.author_id, as: :author,\n  left_join: c in Comment, on: c.post_id == p.id, as: :comments,\n  left_join: r in Reaction, on: r.comment_id == c.id, as: :reactions,\n  select: %{title: p.title, author: u.name, comments: count(c.id)}\n```\n\n### Step 6: Validate left-join filter placement\nFilters on the joined table go in `on:` to preserve outer-join semantics. Filters on the parent go in `where:`.\n\n**Correct** -- filter inside `on:` keeps unmatched parents:\n```elixir\nleft_join: c in Comment, on: c.post_id == p.id and c.approved == true\n```\n\n**Wrong** -- filter in `where:` silently converts to inner join:\n```elixir\nleft_join: c in Comment, on: c.post_id == p.id,\nwhere: c.approved == true  # drops posts with zero approved comments\n```\n\n## Examples\n\n**Example 1: Basic author lookup with optional profile**\nInput: \"Get all users with their profile bio, but include users who haven't set up a profile yet.\"\n```elixir\ndef users_with_profiles do\n  from u in User,\n    left_join: p in Profile, on: p.user_id == u.id,\n    select: %{name: u.name, bio: p.bio}\nend\n```\nThe `left_join` ensures users without a profile still appear (with `bio: nil`).\n\n**Example 2: Multi-join with composite key and runtime filter**\nInput: \"Find all orders with their line items and the product name, but only for products in a given category.\"\n```elixir\ndef orders_with_products(category_id) do\n  from o in Order,\n    join: li in LineItem, on: li.order_id == o.id,\n    join: pr in Product, on: pr.id == li.product_id and pr.category_id == ^category_id,\n    select: %{\n      order_id: o.id,\n      product: pr.name,\n      qty: li.quantity,\n      total: li.unit_price * li.quantity\n    }\nend\n```\nInner joins here because an order without line items or a line item without a product is a data integrity error.\n\n**Example 3: Polymorphic join on type + id columns**\nInput: \"Join activities to their target, where target_type is 'Post' and target_id references posts.id.\"\n```elixir\ndef post_activities do\n  from a in Activity,\n    join: p in Post, on: p.id == a.target_id and a.target_type == \"Post\",\n    select: %{action: a.action, post_title: p.title, at: a.inserted_at}\nend\n```\nNo `assoc/2` exists for polymorphic relationships -- explicit `on:` is the only option.\n\n## Decision Matrix: left_join vs join (inner)\n\n| Scenario | Join type | Rationale |\n|---|---|---|\n| belongs_to with NOT NULL FK | `join` | Parent always has a child; inner is correct |\n| belongs_to with nullable FK | `left_join` | Some parents lack a child |\n| has_many (counting/aggregating) | `left_join` | Parents with zero children should return count=0 |\n| has_many (filtering to \"has at least one\") | `join` | Inner join naturally excludes empty parents |\n| Polymorphic (type + id) | `join` or `left_join` | No assoc; decide by business rule |\n| Cross-schema (no FK, temporal range) | `left_join` | Safer default; rows outside range still appear |\n\n## Gotchas\n- **Left-join filter trap**: `where: joined.field == value` on a left-joined table silently converts to inner-join behavior. Move the filter into the `on:` clause.\n- **Positional binding fragility**: if you add a join between existing ones, all positional indices shift. For queries that will grow, start with named bindings.\n- **Pin everything runtime**: `on: t.category == ^cat` -- missing `^` causes a compile error or silent binding mismatch.\n- **Cartesian explosion**: joining two has_many associations multiplies rows. If you see unexpected row counts, check whether you need a subquery or separate queries instead of a double join.\n- **assoc/2 is fine when it fits**: this variant does not ban `assoc/2`. If the schema defines the association and the FK is the only join condition, `assoc/2` saves a few characters. But when the join condition includes any extra predicate, reach for explicit `on:`.\n\n## Out of Scope\nThis skill does NOT:\n- Handle preload strategy (struct vs join preload) -- use the `preloads` capability variant instead.\n- Write subqueries or `exists` clauses -- use the `subqueries` capability variant.\n- Build runtime-conditional joins -- use `dynamic-query-builder` for that.\n- Optimize query plans -- this is about correctness, not EXPLAIN output.",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "joins"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.902
+      },
+      "frontmatter": {
+        "allowed-tools": "Read Write Bash(python *)",
+        "description": ">-",
+        "name": "pagination-patterns--repo-paginate-wrapper"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_pagination_patterns",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.902
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: pagination-patterns--repo-paginate-wrapper\ndescription: >-\n  Build a reusable Paginator module wrapping offset and cursor strategies behind\n  a unified API. Returns %Page{entries, metadata} with opaque Base64 cursors.\n  Use when adding pagination to context modules, building GraphQL connections,\n  or standardizing page responses across an app. NOT for raw SQL pagination or\n  Repo.stream batching.\nallowed-tools: Read Write Bash(python *)\n---\n\n# Pagination Patterns -- Repo Paginate Wrapper\n\n## Quick Start\nBuild a `MyApp.Paginator` module that accepts any queryable and returns\n`%Page{entries: [...], metadata: %{after: cursor, has_next: bool}}`.\nInternally dispatch to offset or cursor strategy based on caller opts.\nAll cursor values are opaque Base64 tokens the client round-trips unchanged.\n\n## When to use\n- Adding pagination to any context module (`Blog.list_posts/1`, `Accounts.list_users/1`).\n- Building a GraphQL Relay-style connection layer.\n- Standardizing pagination response shape across multiple endpoints.\n- Wrapping existing queries that currently return unbounded `Repo.all/1`.\n\n## Workflow\n\n### Step 1: Define the Page struct\n\n```elixir\ndefmodule MyApp.Paginator.Page do\n  @moduledoc \"Pagination result container.\"\n  defstruct [:entries, :metadata]\n\n  @type t :: %__MODULE__{\n    entries: [any()],\n    metadata: %{\n      after: String.t() | nil,\n      before: String.t() | nil,\n      has_next: boolean(),\n      has_prev: boolean(),\n      total_count: non_neg_integer() | nil\n    }\n  }\nend\n```\n\n### Step 2: Build the Paginator module\n\nThe module exposes one public function: `paginate/3`.\n\n```elixir\ndefmodule MyApp.Paginator do\n  import Ecto.Query\n  alias MyApp.Repo\n  alias MyApp.Paginator.Page\n\n  @default_limit 20\n  @max_limit 100\n\n  def paginate(queryable, opts \\\\ []) do\n    case Keyword.get(opts, :strategy, :cursor) do\n      :offset -> offset_paginate(queryable, opts)\n      :cursor -> cursor_paginate(queryable, opts)\n    end\n  end\nend\n```\n\n### Step 3: Implement offset strategy\n\nUse offset strategy only for admin dashboards or small datasets where total\ncount is needed and deep pages are acceptable.\n\n```elixir\ndefp offset_paginate(queryable, opts) do\n  limit = min(Keyword.get(opts, :limit, @default_limit), @max_limit)\n  page = max(Keyword.get(opts, :page, 1), 1)\n  offset = (page - 1) * limit\n\n  total = Repo.aggregate(queryable, :count)\n\n  entries =\n    queryable\n    |> limit(^limit)\n    |> offset(^offset)\n    |> Repo.all()\n\n  %Page{\n    entries: entries,\n    metadata: %{\n      after: nil,\n      before: nil,\n      has_next: page * limit < total,\n      has_prev: page > 1,\n      total_count: total\n    }\n  }\nend\n```\n\nPin `^limit` and `^offset` -- these are runtime integers. Never interpolate\nthem unpinned.\n\n### Step 4: Implement cursor strategy\n\nCursor strategy is the default. The cursor encodes the sort-column values as\na Base64 JSON token. The client treats it as opaque.\n\n```elixir\ndefp cursor_paginate(queryable, opts) do\n  limit = min(Keyword.get(opts, :limit, @default_limit), @max_limit)\n  cursor_fields = Keyword.get(opts, :cursor_fields, [{:inserted_at, :desc}, {:id, :desc}])\n  after_cursor = Keyword.get(opts, :after)\n\n  queryable\n  |> apply_cursor(after_cursor, cursor_fields)\n  |> apply_sort(cursor_fields)\n  |> limit(^(limit + 1))\n  |> Repo.all()\n  |> build_cursor_page(limit, cursor_fields)\nend\n\ndefp build_cursor_page(rows, limit, cursor_fields) do\n  has_next = length(rows) > limit\n  entries = Enum.take(rows, limit)\n\n  last_cursor =\n    case List.last(entries) do\n      nil -> nil\n      row -> encode_cursor(row, cursor_fields)\n    end\n\n  %Page{\n    entries: entries,\n    metadata: %{\n      after: last_cursor,\n      before: nil,\n      has_next: has_next,\n      has_prev: false,\n      total_count: nil\n    }\n  }\nend\n```\n\nFetch `limit + 1` rows to detect `has_next` without a separate COUNT query.\nReturn only `limit` rows to the caller.\n\n### Step 5: Cursor encoding and decoding\n\nCursors are opaque Base64-encoded JSON. The client never parses them.\n\n```elixir\ndefp encode_cursor(row, cursor_fields) do\n  values =\n    Enum.map(cursor_fields, fn {field, _dir} ->\n      value = Map.get(row, field)\n      {Atom.to_string(field), serialize_value(value)}\n    end)\n\n  values |> Map.new() |> Jason.encode!() |> Base.url_encode64(padding: false)\nend\n\ndefp decode_cursor(nil), do: nil\n\ndefp decode_cursor(cursor_string) do\n  cursor_string\n  |> Base.url_decode64!(padding: false)\n  |> Jason.decode!()\nend\n\ndefp serialize_value(%DateTime{} = dt), do: DateTime.to_iso8601(dt)\ndefp serialize_value(%NaiveDateTime{} = ndt), do: NaiveDateTime.to_iso8601(ndt)\ndefp serialize_value(v), do: v\n```\n\n### Step 6: Apply cursor predicate with row-wise comparison\n\nThe cursor predicate uses the row-wise comparison pattern. For a two-column\ncursor `(col_a DESC, col_b DESC)`, the predicate is:\n\n```\n(col_a < ^a) OR (col_a == ^a AND col_b < ^b)\n```\n\nBuild this dynamically so it works for any number of cursor fields.\n\n```elixir\ndefp apply_cursor(queryable, nil, _cursor_fields), do: queryable\n\ndefp apply_cursor(queryable, cursor_string, cursor_fields) do\n  decoded = decode_cursor(cursor_string)\n\n  condition =\n    cursor_fields\n    |> Enum.with_index()\n    |> Enum.reduce(dynamic(false), fn {{field, dir}, idx}, acc ->\n      value = deserialize_field(field, Map.get(decoded, Atom.to_string(field)))\n\n      equality_prefix =\n        cursor_fields\n        |> Enum.take(idx)\n        |> Enum.reduce(dynamic(true), fn {eq_field, _}, eq_acc ->\n          eq_val = deserialize_field(eq_field, Map.get(decoded, Atom.to_string(eq_field)))\n          dynamic([r], ^eq_acc and field(r, ^eq_field) == ^eq_val)\n        end)\n\n      boundary =\n        case dir do\n          :desc -> dynamic([r], field(r, ^field) < ^value)\n          :asc  -> dynamic([r], field(r, ^field) > ^value)\n        end\n\n      dynamic([r], ^acc or (^equality_prefix and ^boundary))\n    end)\n\n  where(queryable, ^condition)\nend\n\ndefp apply_sort(queryable, cursor_fields) do\n  order = Enum.map(cursor_fields, fn {field, dir} -> {dir, field} end)\n  order_by(queryable, ^order)\nend\n\ndefp deserialize_field(field, value) when field in [:inserted_at, :updated_at, :published_at] do\n  case NaiveDateTime.from_iso8601(value) do\n    {:ok, ndt} -> ndt\n    _ -> value\n  end\nend\n\ndefp deserialize_field(_field, value), do: value\n```\n\nKey: `dynamic(false)` is the OR identity. Each cursor column contributes\none branch: \"all preceding columns are equal AND this column crosses the\nboundary.\" This generalises the two-column tuple pattern to N columns.\n\n### Step 7: Use in context modules\n\n```elixir\ndefmodule MyApp.Blog do\n  import Ecto.Query\n  alias MyApp.Paginator\n\n  def list_posts(opts \\\\ []) do\n    from(p in Post,\n      where: p.published == true,\n      preload: [:author]\n    )\n    |> Paginator.paginate(\n      cursor_fields: [{:published_at, :desc}, {:id, :desc}],\n      after: opts[:after],\n      limit: opts[:limit]\n    )\n  end\nend\n```\n\nCallers never build cursor predicates or encode cursors. They pass the\nopaque `metadata.after` token from the previous page response.\n\n## Examples\n\n**Example 1: Basic cursor-paginated feed**\nInput: \"Add pagination to `Blog.list_posts/0` -- it currently returns all rows\"\nOutput:\n```elixir\n# lib/my_app/paginator.ex  -- reusable module (as above)\n# lib/my_app/blog.ex\ndef list_posts(opts \\\\ []) do\n  from(p in Post, where: p.published == true)\n  |> Paginator.paginate(\n    cursor_fields: [{:published_at, :desc}, {:id, :desc}],\n    after: opts[:after],\n    limit: opts[:limit] || 25\n  )\nend\n\n# Returns:\n# %Page{entries: [...], metadata: %{after: \"eyJwdWJsa...\", has_next: true}}\n```\n\n**Example 2: Offset pagination for admin dashboard**\nInput: \"Admin user list needs page numbers and total count\"\nOutput:\n```elixir\ndef list_users(opts \\\\ []) do\n  from(u in User, order_by: [asc: u.email])\n  |> Paginator.paginate(\n    strategy: :offset,\n    page: opts[:page] || 1,\n    limit: opts[:limit] || 50\n  )\nend\n\n# Returns:\n# %Page{entries: [...], metadata: %{has_next: true, has_prev: false, total_count: 2340}}\n```\n\n**Example 3: Three-column cursor for leaderboard**\nInput: \"Paginate a leaderboard sorted by score desc, then name asc, then id desc\"\nOutput:\n```elixir\ndef leaderboard(opts \\\\ []) do\n  from(u in User, where: u.score > 0)\n  |> Paginator.paginate(\n    cursor_fields: [{:score, :desc}, {:name, :asc}, {:id, :desc}],\n    after: opts[:after],\n    limit: 20\n  )\nend\n# Cursor predicate generalises automatically:\n# (score < ^s) OR (score == ^s AND name > ^n) OR (score == ^s AND name == ^n AND id < ^i)\n```\n\n## Gotchas\n- **Pinning limit and offset**: `limit: ^limit` and `offset: ^offset` -- unpinned integer\n  variables in Ecto queries silently compile but produce wrong SQL or crash at runtime.\n- **Cursor determinism**: the last cursor field MUST be unique (typically `id`). Without it\n  rows with identical sort values will be dropped or duplicated across pages.\n- **Opaque cursors**: never let the client construct or parse cursors. Encode as Base64 JSON\n  so the internal representation can change without a client-side migration.\n- **limit + 1 trick**: fetch one extra row to detect `has_next` instead of running a COUNT\n  query. Return only `limit` rows. This avoids a second round-trip on every page.\n- **DateTime serialization**: cursors containing timestamps must round-trip through ISO 8601.\n  Microsecond precision matters -- use `NaiveDateTime.to_iso8601/1`, not `to_string/1`.\n- **Offset at scale**: offset pagination is O(skip) in Postgres. Use it only for admin UIs\n  where pages rarely exceed 100. For public feeds, always default to cursor.\n- **Avoid `Repo.paginate` from hex packages as a black box**: understand the underlying query\n  shape. If using `scrivener_ecto` or `paginator`, confirm it pins variables and uses the\n  row-wise comparison pattern for cursors.\n\n## Out of Scope\nThis skill does NOT:\n- Stream large exports (use `Repo.stream/2` with `Stream` instead)\n- Handle GraphQL connection spec encoding (cursor shape matches, but `edges`/`pageInfo` wrapping is a presentation concern)\n- Manage client-side infinite scroll logic (that is a LiveView/JS concern)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "pagination-patterns"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.8705
+      },
+      "frontmatter": {
+        "allowed-tools": "Read Write Bash(python *)",
+        "description": ">-",
+        "name": "pin-operator-safety--clause-aware-audit"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_pin_operator_safety",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.8705
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: pin-operator-safety--clause-aware-audit\ndescription: >-\n  Audit Ecto queries clause-by-clause for missing ^ pins. Each clause type\n  (where, on, having, dynamic, fragment, select, order_by) has distinct pin\n  rules and failure modes. Use when writing or reviewing Ecto queries that\n  reference external variables, even if they don't explicitly mention pinning.\n  NOT for query composition style, preload strategy, or pagination.\nallowed-tools: Read Write Bash(python *)\n---\n\n# Pin Operator Safety -- Clause-Aware Audit\n\n## Quick Start\nBefore finalizing any Ecto query, walk each clause and verify every external value carries a `^` pin. Different clause types fail differently when pins are missing -- a bare variable in `where:` silently binds to a query name, while in `dynamic/2` it raises at compile time. This variant teaches you to audit by clause, not by guessing.\n\n## When to use\n- Writing any Ecto query that references function arguments, assigns, or map values.\n- Reviewing existing query code for pin safety.\n- Debugging \"variable is not a valid query expression\" or silent wrong-result bugs.\n- Composing queries with `dynamic/2` where pin placement interacts with accumulator splicing.\n\n## Workflow\n\n### Step 1: Identify all external values\nList every variable in the query that did not originate from a binding (`from`/`join`). Function parameters, module attributes, variables from `with`/`case`/`let` -- all are external.\n\n### Step 2: Audit each clause type\n\nWalk each clause in the query and apply the clause-specific rule:\n\n**`where:` / `having:` clauses (keyword syntax)**\n- Every external value MUST be pinned: `where: u.age > ^min_age`\n- Unpinned variables silently match as Ecto binding names -- no compile error, wrong results at runtime\n- Lists require pinning the whole list: `where: u.status in ^statuses`\n\n**`on:` clauses (join conditions)**\n- Same rule as `where:` -- pin all external values\n- Extra risk: `on:` bugs hide inside left joins where missing rows mask wrong filters\n- Example: `left_join: c in Comment, on: c.post_id == ^post_id`\n\n**`dynamic/2` expressions**\n- Pin external values AND pin the accumulator when composing: `dynamic([u], ^acc and u.role == ^role)`\n- Forgetting `^acc` replaces the accumulated filter instead of extending it\n- Forgetting `^role` raises `Ecto.Query.CompileError` -- dynamic is stricter than keyword syntax\n\n**`fragment/1` expressions**\n- Use `?` placeholders, then pass pinned values as extra args: `fragment(\"? ILIKE ?\", u.name, ^pattern)`\n- String interpolation (`#{}`) inside fragment is a compile error in modern Ecto and an injection vector in older versions\n- The first argument to `fragment` cannot be pinned -- it must be a string literal\n\n**`select:` clauses**\n- Pins are rare here but required when selecting a computed value: `select: %{diff: ^target - u.score}`\n- Unpinned variables in select raise at compile time (unlike where)\n\n**`order_by:` clauses**\n- Pinning values in order_by is uncommon but valid for computed sorts: `order_by: fragment(\"? DESC\", ^sort_col)` -- but note: column names cannot be parameterized in SQL, so this only works for values, not identifiers\n- For dynamic column selection, use a case/cond that returns different `order_by:` clauses, not a pinned column name\n\n### Step 3: Verify list pins\nAny `in` expression with an external list must pin the entire list:\n```elixir\n# Correct\nwhere: u.id in ^user_ids\n\n# Wrong -- attempts to match each element as a binding\nwhere: u.id in user_ids\n```\n\n### Step 4: Check type boundaries\nPinned values undergo Ecto type casting. If the schema field is `:integer` and you pin a string, Ecto silently casts -- which may mask caller bugs. When the type is ambiguous, use `type/2`:\n```elixir\nwhere: u.external_id == type(^value, :string)\n```\n\n## Examples\n\n**Example 1: Multi-clause query with mixed pin contexts**\n\nInput: \"Find active users by team who have posted since a given date\"\n\n```elixir\ndef active_posters(team_id, since) do\n  from(u in User,\n    join: p in assoc(u, :posts),\n    on: p.inserted_at > ^since,\n    where: u.team_id == ^team_id and u.active == true,\n    group_by: [u.id, u.name],\n    having: count(p.id) > 0,\n    select: %{id: u.id, name: u.name, post_count: count(p.id)}\n  )\nend\n```\n\nAudit: `^since` in `on:`, `^team_id` in `where:`, `true` is a literal (no pin needed), `0` in `having:` is a literal (no pin needed). All external values pinned.\n\n**Example 2: Dynamic filter with accumulator pinning**\n\nInput: \"Build a search with optional name, role, and status filters\"\n\n```elixir\ndef search(params) do\n  filters =\n    Enum.reduce(params, dynamic(true), fn\n      {:name, v}, acc ->\n        dynamic([u], ^acc and ilike(u.name, ^\"%#{v}%\"))\n      {:role, v}, acc ->\n        dynamic([u], ^acc and u.role == ^v)\n      {:status, values}, acc when is_list(values) ->\n        dynamic([u], ^acc and u.status in ^values)\n      _, acc ->\n        acc\n    end)\n\n  from(u in User, where: ^filters)\nend\n```\n\nAudit: every `Enum.reduce` branch pins `^acc` (accumulator) and `^v` / `^values` (external). The final `where: ^filters` pins the composed dynamic. Six pin sites, zero misses.\n\n**Example 3: Fragment with placeholder pinning**\n\nInput: \"Find posts where the title matches a search pattern using trigram similarity\"\n\n```elixir\ndef search_by_title(query_text, threshold) do\n  from(p in Post,\n    where: fragment(\"similarity(?, ?) > ?\", p.title, ^query_text, ^threshold),\n    order_by: fragment(\"similarity(?, ?) DESC\", p.title, ^query_text)\n  )\nend\n```\n\nAudit: `p.title` is a binding (no pin). `^query_text` and `^threshold` are external (pinned). Fragment uses `?` placeholders (no string interpolation). Both clauses pass.\n\n## Gotchas\n- **Silent binding capture in `where:`**: `where: u.status == status` does NOT filter by your `status` variable -- Ecto interprets `status` as a binding reference. No error. Wrong results. This is the #1 Ecto bug Claude produces.\n- **`^acc` in dynamic is mandatory**: writing `dynamic([u], acc and u.role == ^v)` replaces the entire accumulated filter with a single condition. The `^` on the accumulator is as critical as the `^` on the value.\n- **Pinned module attributes waste query plans**: `where: u.role in ^@admin_roles` forces Postgres to parameterize the list. If `@admin_roles` is a compile-time constant, leave it unpinned so Postgres can inline the values and use index selectivity.\n- **`type/2` is not a substitute for `^`**: `type(value, :string)` without `^` still fails. Use `type(^value, :string)`.\n\n## Out of Scope\nThis skill does NOT:\n- Teach query composition patterns (use `query-composition-style` variants)\n- Cover preload strategy decisions (use `preloads` variants)\n- Handle raw SQL via `Ecto.Adapters.SQL.query/3` (use `raw-sql-fragment` variants)\n- Address dynamic column selection for ORDER BY (that requires `field/2`, a separate pattern)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "pin-operator-safety"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.722
+      },
+      "frontmatter": {
+        "description": "Use separate-query (struct) preloads for has_many associations to avoid 10x memory bloat. Join-preload is only appropriate for belongs_to and has_one.",
+        "name": "preloads--struct-for-hasmany"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_preloads",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.722
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: preloads--struct-for-hasmany\ndescription: Use separate-query (struct) preloads for has_many associations to avoid 10x memory bloat. Join-preload is only appropriate for belongs_to and has_one.\n---\n\n# Preloads \u2014 Struct for has_many, Join for belongs_to\n\n## Quick Start\n- has_many: `preload: [:posts]` (two queries, one round trip per level)\n- belongs_to / has_one: `join: u in assoc(p, :author), preload: [author: u]` (single query)\n- Never: `Repo.preload/2` in a loop (N+1)\n\n## When to use\nEvery query that returns data to a consumer that will access associations.\n\n## Workflow\n1. Identify which associations the consumer will touch.\n2. For each: is it has_many or not?\n3. has_many -> struct preload in the main query.\n4. belongs_to/has_one -> join-preload with binding threaded into preload list.\n5. Never load associations in a `Enum.map` \u2014 always at query-build time.\n\n## Examples\n```elixir\nfrom(u in User, preload: [:posts, :comments])\nfrom(p in Post, join: u in assoc(p, :author), preload: [author: u])\n```\n\n## Common mistakes\n- Join-preloading has_many -> 10x memory blow-up from the Cartesian product.\n- Using `Repo.preload(records, :assoc)` after the fact -> double query.\n- Forgetting to thread the join binding into preload -> Ecto re-issues a second query.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "preloads"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9685
+      },
+      "frontmatter": {
+        "description": "Compose Ecto queries via pipe chains with named bindings on the base query. Use when authoring reusable query builder modules.",
+        "name": "query-composition-style--pipe-with-named-bindings"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_query_composition_style",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9685
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: query-composition-style--pipe-with-named-bindings\ndescription: Compose Ecto queries via pipe chains with named bindings on the base query. Use when authoring reusable query builder modules.\n---\n\n# Query Composition Style \u2014 Pipe + Named Bindings\n\n## Quick Start\nEvery query builder accepts a queryable and returns a queryable. Start from `from(Schema, as: :atom)` so later composers can reference the binding by name.\n\n## When to use\n- Writing a query module that will be called from multiple contexts.\n- When filters might need to be added across join boundaries.\n- When a test helper needs to pipe extra filters onto a production query.\n\n## Workflow\n1. Define `base/0` returning `from(User, as: :user)`.\n2. Define one builder per filter dimension: `active/1`, `by_team/2`, etc.\n3. Each builder does `from([user: u] in query, where: ...)` to reference the named binding.\n4. Callers chain via pipe: `base() |> active() |> by_team(team_id) |> Repo.all()`.\n\nSee `${CLAUDE_SKILL_DIR}/references/composition-guide.md` for the full pattern.\n\n## Examples\n```elixir\ndef base, do: from(u in User, as: :user)\ndef active(query), do: from([user: u] in query, where: u.active == true)\ndef by_team(query, team_id), do: from([user: u] in query, where: u.team_id == ^team_id)\n```\n\n## Common mistakes\n- Forgetting `as: :atom` on the base \u2014 downstream joins can't reference it.\n- Using positional `[u]` bindings that break when a new join is added upstream.\n- Burying queries in context modules instead of a dedicated query builder.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "query-composition-style"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 1.0
+      },
+      "frontmatter": {
+        "description": "Always use ? placeholders in fragment literals. Pass values as separate arguments with the pin operator. Never use string interpolation in fragments.",
+        "name": "raw-sql-fragment--placeholder-only"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_raw_sql_fragment",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 1.0
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: raw-sql-fragment--placeholder-only\ndescription: Always use ? placeholders in fragment literals. Pass values as separate arguments with the pin operator. Never use string interpolation in fragments.\n---\n\n# Raw SQL Fragment \u2014 Placeholders Only\n\n## Quick Start\n- Safe: `fragment(\"? ILIKE ?\", p.name, ^pattern)`\n- Unsafe: `fragment(\"p.name ILIKE '#{pattern}'\")` (SQL injection; Ecto compile error)\n- Typed > fragment: if a typed equivalent exists (`ilike`, `coalesce`), prefer it.\n\n## When to use\nPostgres-specific features without typed Ecto equivalents: `to_tsvector`, `date_trunc`, FILTER clause, JSONB operators.\n\n## Workflow\n1. Check: does a typed Ecto function exist? Use it.\n2. If fragment is needed, use `?` placeholders for every value.\n3. Pin any Elixir-side values with `^`.\n4. Never use `#{}` inside a fragment literal.\n\n## Examples\n```elixir\nfragment(\"? ILIKE ?\", p.body, ^pattern)\nfragment(\"date_trunc('month', ?)\", p.inserted_at)\nfragment(\"COUNT(?) FILTER (WHERE ?)\", p.id, p.published)\n```\n\n## Common mistakes\n- `fragment(\"... #{user_input} ...\")` \u2014 SQL injection, Ecto compile error.\n- `fragment(^sql_string, ^val)` \u2014 `^` disallowed as first arg.\n- Using fragment for `coalesce`, `count`, `sum` \u2014 typed forms exist.\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "raw-sql-fragment"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 1.0
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "subqueries--existence-driven-filtering"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_subqueries",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 1.0
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: subqueries--existence-driven-filtering\ndescription: >-\n  Structure subqueries around existence semantics first. Reach for exists/1 over\n  in subquery for correlated checks, use in subquery for uncorrelated id-set\n  membership, and reserve join subquery for derived columns. Lateral joins only\n  when the subquery result varies per outer row. NOT for CTEs or recursive queries.\n---\n\n# Subqueries -- Existence-Driven Filtering\n\n## Quick Start\n\nChoose the subquery form based on what the outer query needs from the inner result:\n- **Needs to know IF rows exist**: `exists/1` with `parent_as/1` correlation\n- **Needs to filter by a set of IDs**: `where: x.id in subquery(id_query)`\n- **Needs columns from the subquery**: `join: s in subquery(q)` with explicit `select:`\n- **Needs per-row correlated columns**: `inner_lateral_join: s in subquery(q)` with `parent_as/1`\n\n## When to use\n\n- Filtering rows based on the presence or absence of related data (active users, users with recent orders)\n- Selecting from a derived table that aggregates or ranks before joining back\n- Any time you would write `WHERE EXISTS (...)` or `WHERE x IN (SELECT ...)` in raw SQL\n- Lateral joins when the inner query must reference and vary by each outer row\n\n## Workflow\n\n### Step 1: Classify the subquery intent\n\nAsk: does the outer query need **columns** from the subquery, or just a **boolean/set filter**?\n\n- Boolean filter (does a matching row exist?) --> `exists/1`\n- Set filter (is the id in this list?) --> `in subquery/1`\n- Column access (I need derived fields) --> `join: s in subquery(q)`\n- Per-row column access (derived fields that vary per outer row) --> `inner_lateral_join`\n\n### Step 2: Build the inner query\n\nThe inner query is always a standalone `Ecto.Query`. Rules:\n\n1. **Always include an explicit `select:`** when used as a join source. Ecto cannot infer the column shape without it.\n2. For `exists/1`, the select is irrelevant -- Postgres only checks row existence. But `parent_as/1` correlation is required.\n3. For `in subquery/1`, select exactly one column (the id or value being tested).\n4. Pin every runtime variable with `^`.\n\n### Step 3: Wire the outer query\n\n- Name the outer binding with `as: :atom` if the inner query will reference it via `parent_as/1`.\n- For `exists/1`: place inside `where: exists(inner)`.\n- For `in subquery/1`: place inside `where: u.id in subquery(inner)`.\n- For join sources: `join: s in subquery(inner), on: true` (or with an explicit `on:` if filtering).\n\n### Step 4: Validate correctness\n\n- Correlated subqueries (`parent_as`) execute once per outer row -- appropriate for existence checks, expensive for large scans. Consider `in subquery` for uncorrelated alternatives.\n- Join subqueries materialize the inner result -- verify the `select:` shape matches what the outer query references.\n- Lateral joins require `inner_lateral_join` or `left_lateral_join` -- regular `join: s in subquery(q)` is NOT lateral even with `parent_as`.\n\n## Examples\n\n**Example 1: Users who have posted in the last 7 days (existence check)**\n\n```elixir\nseven_days_ago = DateTime.add(DateTime.utc_now(), -7, :day)\n\nfrom(u in User, as: :user,\n  where: exists(\n    from(p in Post,\n      where: p.author_id == parent_as(:user).id,\n      where: p.inserted_at > ^seven_days_ago\n    )\n  )\n)\n```\n\nWhy `exists/1` here: the outer query needs no columns from Post. It only needs to know whether a matching row exists. Postgres short-circuits on the first match -- faster than `in subquery` when the inner set is large.\n\n**Example 2: Products in categories that have more than 10 items (uncorrelated set membership)**\n\n```elixir\nbusy_categories =\n  from(p in Product,\n    group_by: p.category_id,\n    having: count(p.id) > 10,\n    select: p.category_id\n  )\n\nfrom(c in Category,\n  where: c.id in subquery(busy_categories),\n  select: map(c, [:id, :name])\n)\n```\n\nWhy `in subquery` here: the inner query is uncorrelated -- it produces a fixed set of category IDs regardless of the outer row. Postgres can evaluate it once and hash-join.\n\n**Example 3: Latest comment per post via lateral join**\n\n```elixir\nfrom(p in Post, as: :post,\n  inner_lateral_join: c in subquery(\n    from(c in Comment,\n      where: c.post_id == parent_as(:post).id,\n      order_by: [desc: c.inserted_at],\n      limit: 1,\n      select: %{id: c.id, body: c.body, inserted_at: c.inserted_at}\n    )\n  ),\n  select: %{\n    post_id: p.id,\n    post_title: p.title,\n    latest_comment_id: c.id,\n    latest_comment_body: c.body\n  }\n)\n```\n\nWhy lateral join here: the inner query depends on each outer row (`parent_as(:post).id`) AND the outer query needs columns from the result. A regular correlated subquery in `where:` cannot return columns -- lateral join is the only option.\n\n## Decision Matrix\n\n| Outer query needs...            | Inner is correlated? | Use                        |\n|---------------------------------|----------------------|----------------------------|\n| Boolean (row exists / not)      | Yes                  | `exists/1` + `parent_as`  |\n| Set membership (id in list)     | No                   | `in subquery/1`           |\n| Set membership (id in list)     | Yes                  | `exists/1` (rewrite)      |\n| Columns from derived table      | No                   | `join: s in subquery(q)`  |\n| Columns that vary per outer row | Yes                  | `inner_lateral_join`       |\n\n## Common mistakes\n\n- **Using `in subquery` for existence checks**: `where: u.id in subquery(from p in Post, select: p.author_id)` works but forces Postgres to materialize the full ID set. `exists/1` short-circuits on first match.\n- **Forgetting `parent_as/1` in correlated subqueries**: there is no implicit binding from outer to inner in Ecto. You must name the outer binding with `as:` and reference it with `parent_as(:name)`.\n- **Omitting `select:` on join subqueries**: when a subquery is used as a join source, Ecto needs the explicit column shape. Omitting it produces `Ecto.SubQueryError`.\n- **Using regular `join` when you need `lateral_join`**: `join: s in subquery(q)` where `q` uses `parent_as` compiles but produces wrong SQL. Lateral correlation requires `inner_lateral_join` or `left_lateral_join`.\n- **Reaching for raw SQL**: `fragment(\"EXISTS (SELECT 1 FROM ...)\")` or `Ecto.Adapters.SQL.query/3` when `exists/1` and `subquery/1` handle the pattern natively.\n- **Correlated subquery in a hot loop**: `exists/1` executes per outer row. For large outer result sets with an uncorrelated check, restructure as `in subquery` to let Postgres evaluate once.\n- **`parent_as` inside CTEs**: `parent_as(:binding)` inside a `with_cte` subquery can raise `Ecto.SubQueryError`. CTEs are not true subqueries -- use a separate query or restructure.\n\n## Out of Scope\n\nThis variant does NOT cover:\n- Recursive CTEs (`with_cte/3` + `union_all`) -- separate concern\n- Window functions inside subqueries (covered by `window-functions` dimension)\n- Dynamic subquery construction at runtime (covered by `dynamic-query-builder` dimension)\n- Raw SQL escape hatches via `fragment/1` (covered by `raw-sql-fragment` dimension)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "subqueries"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 1.0
+      },
+      "frontmatter": {
+        "description": "\"Use on_conflict: :nothing for idempotent get-or-insert, on_conflict: from(...) with EXCLUDED for conditional updates. Always set conflict_target and returning. Never :replace_all.\"",
+        "name": "upserts-and-on-conflict--race-safe-nothing-or-query"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_upserts_and_on_conflict",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 1.0
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: upserts-and-on-conflict--race-safe-nothing-or-query\ndescription: \"Use on_conflict: :nothing for idempotent get-or-insert, on_conflict: from(...) with EXCLUDED for conditional updates. Always set conflict_target and returning. Never :replace_all.\"\n---\n\n# Upserts and On Conflict -- Race-Safe :nothing or Query Form\n\n## Quick Start\nChoose the right on_conflict strategy by intent. Idempotent insert (get-or-create): `:nothing` + `returning: true`. Conditional update (only if newer): `on_conflict: from(... update: ..., where: ...)` with `EXCLUDED` fragments. Always specify `conflict_target` and supply every NOT NULL column.\n\n## When to use\n- Race-safe get-or-insert where two concurrent processes may try to create the same record.\n- Conditional sync jobs that should only update when the incoming data is fresher.\n- Batch imports where some rows already exist and should be left untouched.\n- Any upsert where `:replace_all` or `{:replace, [...]}` is too blunt -- you need the database to decide per-row whether to update.\n\n## Workflow\n1. Determine the unique constraint that defines \"same record\" -- that is your `conflict_target`.\n2. Choose the strategy:\n   - **Idempotent insert**: `on_conflict: :nothing, conflict_target: :unique_col, returning: true`. The row is inserted if new, silently skipped if it exists. Use `returning: true` to get the existing row back.\n   - **Conditional update**: `on_conflict: from(s in Schema, update: [set: [...]], where: fragment(\"EXCLUDED.col > ?\", s.col)), conflict_target: :unique_col`. PostgreSQL's `EXCLUDED` pseudo-table holds the incoming row values.\n3. Supply every NOT NULL column in every insert row. PostgreSQL validates the INSERT clause before evaluating ON CONFLICT, so missing NOT NULL fields cause a hard error even if the row already exists.\n4. For `Repo.insert/2` (single record), wrap in a changeset first. For `Repo.insert_all/3` (batch), changesets are bypassed entirely -- validate data upstream.\n5. When using `returning: true` with `insert_all`, the return value is `{count, [structs]}`. When the conflict fires with `:nothing`, the conflicting rows are NOT returned -- only newly inserted rows appear. To get all rows, follow up with a SELECT or use `on_conflict: {:replace, [:updated_at]}` to force a no-op update that triggers returning.\n\n## Examples\n\n**Example 1: Race-safe get-or-insert (tag deduplication)**\nTwo requests simultaneously submit a post with tag \"elixir\". Both check -- no tag exists. Both insert. Without on_conflict, the second insert crashes on the unique index.\n```elixir\ndef get_or_insert_tag(name) do\n  # on_conflict: :nothing silently skips the duplicate\n  # returning: true gives us back the row either way (for insert)\n  case Repo.insert(\n    %Tag{name: name},\n    on_conflict: :nothing,\n    conflict_target: :name,\n    returning: true\n  ) do\n    {:ok, %Tag{id: nil}} ->\n      # Conflict fired, row was skipped -- fetch the existing one\n      Repo.get_by!(Tag, name: name)\n    {:ok, tag} ->\n      tag\n  end\nend\n```\n\n**Example 2: Conditional batch sync -- only update if incoming data is newer**\nAn external system pushes user profiles hourly. Only overwrite `name` and `avatar_url` if the incoming `synced_at` timestamp is strictly newer than what the database already has.\n```elixir\ndef sync_profiles(entries) do\n  Repo.insert_all(\n    Profile,\n    entries,\n    on_conflict:\n      from(p in Profile,\n        update: [\n          set: [\n            name: fragment(\"EXCLUDED.name\"),\n            avatar_url: fragment(\"EXCLUDED.avatar_url\"),\n            synced_at: fragment(\"EXCLUDED.synced_at\")\n          ]\n        ],\n        where: fragment(\"EXCLUDED.synced_at > ?\", p.synced_at)\n      ),\n    conflict_target: :external_id,\n    returning: [:id, :external_id]\n  )\nend\n```\n\n**Example 3: Batch import with :nothing -- skip duplicates, count new rows**\nImport a CSV of product SKUs. Duplicates should be silently ignored, not updated.\n```elixir\ndef import_skus(sku_maps) do\n  # Ensure every map has all NOT NULL fields before insert_all\n  rows = Enum.map(sku_maps, fn m ->\n    %{\n      sku: m.sku,\n      name: m.name,\n      price_cents: m.price_cents,\n      inserted_at: DateTime.utc_now(),\n      updated_at: DateTime.utc_now()\n    }\n  end)\n\n  {inserted_count, _} = Repo.insert_all(\n    Product,\n    rows,\n    on_conflict: :nothing,\n    conflict_target: :sku\n  )\n\n  {:ok, inserted_count}\nend\n```\n\n## Common mistakes\n- **`:replace_all` as a default** -- writes NULL for every column not in the incoming row. Use `:nothing` when you want to skip duplicates, or `on_conflict: from(...)` when you need conditional logic. Never reach for `:replace_all`.\n- **Missing NOT NULL columns in insert rows** -- PostgreSQL validates the INSERT before ON CONFLICT fires. Even `on_conflict: :nothing` will crash if a NOT NULL column is absent from the row map. Always supply `inserted_at`, `updated_at`, and every required field.\n- **Expecting `:nothing` + `returning: true` to return skipped rows** -- it does not. With `insert_all`, only newly inserted rows appear in the return list. Conflicting rows are silently dropped from the result. If you need all rows back, use `{:replace, [:updated_at]}` as a no-op update to force the row into the RETURNING set.\n- **Forgetting `conflict_target`** -- without it, PostgreSQL raises a SQL-level error that Ecto does not wrap cleanly. Always specify the unique index column(s).\n- **String-interpolating values into EXCLUDED fragments** -- `fragment(\"EXCLUDED.#{col}\")` is a SQL injection vector. Column names in fragments must be literal strings, never interpolated from user input.\n- **Using `Repo.insert/2` with `:nothing` and missing the `id: nil` case** -- when the conflict fires, Ecto returns `{:ok, %Schema{id: nil}}` because no row was actually written. The caller must handle this and fetch the existing row.\n\n## Out of Scope\nThis variant does NOT cover:\n- `{:replace, [:fields]}` for simple partial-column updates (see `targeted-replace` variant)\n- Multi-table upsert transactions (use `Ecto.Multi` instead)\n- Advisory locks or explicit `SELECT ... FOR UPDATE` pessimistic locking",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "upserts-and-on-conflict"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9555
+      },
+      "frontmatter": {
+        "Writes Ecto window queries via pipe-composed expressions": "row_number()/rank()/lag()/lead()/sum()",
+        "allowed-tools": "Read Write Bash(elixir *) Bash(mix *)",
+        "description": ">-",
+        "name": "window-functions--pipe-compose"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_ecto_query_writer_window_functions",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9555
+      },
+      "run_id": "elixir-ecto-query-writer-seed-v1",
+      "skill_md_content": "---\nname: window-functions--pipe-compose\ndescription: >-\n  Writes Ecto window queries via pipe-composed expressions: row_number()/rank()/lag()/lead()/sum()\n  piped into over() with inline partition_by/order_by. Embeds windows in subqueries for top-N\n  filtering. Use when writing ranked queries, running totals, period deltas, or partitioned\n  analytics, even if they don't explicitly ask for window functions. NOT for group_by aggregates\n  without windows, raw SQL fragments, or CTE/recursive queries.\nallowed-tools: Read Write Bash(elixir *) Bash(mix *)\n---\n\n# Ecto Window Functions via Pipe Composition\n\n## Quick Start\n\nBuild window expressions by piping window functions into `over/2` with inline specs. Every window query follows one shape: select a window expression inside a query, optionally wrap in `subquery/1` to filter on the result. Never use `fragment/1` for window functions Ecto already supports natively.\n\n## When to Use\n\n- Adding row numbers, ranks, or dense ranks to query results\n- Computing running totals or cumulative sums\n- Calculating period-over-period deltas with lag/lead\n- Filtering by window result (top-N per group pattern)\n- Any query that needs `OVER (PARTITION BY ... ORDER BY ...)` in SQL\n\n## Workflow\n\n### Step 1: Identify the Window Shape\n\nDetermine three things before writing code:\n\n1. **Which function**: `row_number()`, `rank()`, `dense_rank()`, `lag/1`, `lead/1`, `sum/1`, `count/1`, `avg/1`, `min/1`, `max/1`\n2. **Partition**: what column groups the window (omit for global window)\n3. **Order**: what column orders rows within each partition\n\n### Step 2: Write the Pipe Expression\n\nCompose the window as a single pipe chain inside `select`:\n\n```elixir\n# The core pattern \u2014 function piped into over with inline spec\nrow_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])\n```\n\nRules for `over/2`:\n- `partition_by:` accepts a single field or a list: `partition_by: [p.category_id, p.region]`\n- `order_by:` accepts direction tuples: `[desc: p.score, asc: p.id]`\n- Omit `partition_by:` for a global window (all rows in one partition)\n- Omit `order_by:` only for aggregate windows where row order is irrelevant\n\n### Step 3: Embed in a Query\n\nPlace the pipe expression inside `select` using a map:\n\n```elixir\nfrom(p in Post,\n  select: %{\n    id: p.id,\n    title: p.title,\n    rank: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])\n  }\n)\n```\n\n### Step 4: Filter on Window Results (Top-N Pattern)\n\nWindow results cannot be filtered in the same query. Wrap in `subquery/1`:\n\n```elixir\ninner =\n  from(p in Post,\n    select: %{\n      id: p.id,\n      title: p.title,\n      category_id: p.category_id,\n      rn: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])\n    }\n  )\n\nfrom(r in subquery(inner),\n  where: r.rn <= ^n,\n  order_by: [asc: r.category_id, asc: r.rn]\n)\n```\n\n### Step 5: Validate\n\nAfter writing a window query, verify:\n- No `fragment(\"row_number` or `fragment(\"ROW_NUMBER` anywhere -- use the typed API\n- Every external variable uses the `^` pin operator\n- Subquery wrapping is present if the query filters on a window column\n- `partition_by` and `order_by` fields reference the correct binding\n\n## Window Function Reference\n\n### Ranking Functions\n\n```elixir\n# row_number \u2014 unique sequential integer per partition\nrow_number() |> over(partition_by: p.category_id, order_by: [desc: p.score])\n\n# rank \u2014 same rank for ties, gaps after ties (1,1,3)\nrank() |> over(order_by: [desc: p.score])\n\n# dense_rank \u2014 same rank for ties, no gaps (1,1,2)\ndense_rank() |> over(partition_by: p.team_id, order_by: [desc: p.score])\n```\n\n### Offset Functions\n\n```elixir\n# lag \u2014 value from the previous row in the partition\nlag(p.view_count) |> over(order_by: [asc: p.inserted_at])\n\n# lead \u2014 value from the next row in the partition\nlead(p.view_count) |> over(order_by: [asc: p.inserted_at])\n\n# lag with offset and default\nlag(p.score, 2, 0) |> over(partition_by: p.user_id, order_by: [asc: p.round])\n```\n\n### Aggregate Windows\n\n```elixir\n# running sum \u2014 cumulative total ordered by time\nsum(o.total) |> over(order_by: [asc: o.placed_at])\n\n# running count\ncount(o.id) |> over(order_by: [asc: o.placed_at])\n\n# partitioned running average\navg(m.score) |> over(partition_by: m.category_id, order_by: [asc: m.date])\n```\n\n## Examples\n\n**Example 1: Rank posts per category by recency**\n\nInput: \"Add a rank column to posts, ranked within each category by most recent first\"\n\n```elixir\ndef posts_ranked_per_category do\n  from(p in Post,\n    select: %{\n      id: p.id,\n      title: p.title,\n      category_id: p.category_id,\n      rank: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])\n    }\n  )\nend\n```\n\n**Example 2: Period-over-period view count delta with NULL handling**\n\nInput: \"Show each post with the difference in views compared to the previous post chronologically\"\n\n```elixir\ndef view_count_deltas do\n  from(p in Post,\n    select: %{\n      id: p.id,\n      view_count: p.view_count,\n      delta:\n        coalesce(\n          p.view_count - lag(p.view_count) |> over(order_by: [asc: p.inserted_at]),\n          0\n        )\n    }\n  )\nend\n```\n\nKey: `lag/1` returns `NULL` for the first row. Wrap the subtraction in `coalesce(..., 0)` to produce a zero instead of `NULL`.\n\n**Example 3: Top-N per group via subquery filter**\n\nInput: \"Get the 2 most-viewed posts in each category\"\n\n```elixir\ndef top_n_per_category(n) do\n  inner =\n    from(p in Post,\n      select: %{\n        id: p.id,\n        title: p.title,\n        category_id: p.category_id,\n        view_count: p.view_count,\n        rn: row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])\n      }\n    )\n\n  from(r in subquery(inner),\n    where: r.rn <= ^n,\n    select: %{\n      id: r.id,\n      title: r.title,\n      category_id: r.category_id,\n      view_count: r.view_count,\n      rank: r.rn\n    },\n    order_by: [asc: r.category_id, asc: r.rn]\n  )\nend\n```\n\nThe `^n` pin is mandatory -- without it, `n` is treated as a binding name, producing a silent bug.\n\n## Gotchas\n\n- **Fragment trap**: Claude defaults to `fragment(\"ROW_NUMBER() OVER (...)\")`. Ecto has typed `row_number()`, `rank()`, `lag()`, `lead()`, `sum()` -- always use them. Fragments bypass compile-time checks and break adapter portability.\n- **Filtering window results in the same query**: `where: row_number() |> over(...) <= 2` does not work. SQL evaluates WHERE before window functions. Wrap the windowed query in `subquery/1` and filter in the outer query.\n- **Missing pin operator**: `r.rn <= n` silently treats `n` as a column binding. Always `r.rn <= ^n`.\n- **Partition vs group confusion**: `group_by` collapses rows; `partition_by` in a window keeps every row but computes across the group. If you want one row per group, use `group_by`. If you want every row annotated with a group-level value, use a window.\n- **Order direction in lag/lead**: `lag/1` looks at the \"previous\" row per the window's `order_by`. If you order `desc`, \"previous\" means the row with the next-higher value -- the opposite of chronological intuition. Spell out direction explicitly.\n- **Coalesce for first/last rows**: `lag/1` returns NULL for the first row in a partition. `lead/1` returns NULL for the last. Always handle with `coalesce/2` or a default argument: `lag(p.value, 1, 0)`.\n\n## Out of Scope\n\nThis skill does NOT:\n- Write `windows: [w: [...]]` named window clauses (that is the named-window variant's concern)\n- Handle recursive CTEs or `with_cte/3` (use the subquery capability)\n- Generate raw SQL via `Ecto.Adapters.SQL.query/3`\n- Cover `group_by` / `having` without window functions (use the aggregates capability)\n- Handle frame clauses (`ROWS BETWEEN`, `RANGE BETWEEN`) -- Ecto does not expose these in the typed API",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "window-functions"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    }
+  ],
+  "taxonomy_nodes": [
+    {
+      "created_at": "2026-04-12T04:04:59.651136+00:00",
+      "description": "",
+      "id": "tax_338c9dc354b0",
+      "label": "Data",
+      "level": "domain",
+      "parent_id": null,
+      "slug": "data"
+    },
+    {
+      "created_at": "2026-04-12T05:58:12.892326+00:00",
+      "description": "",
+      "id": "tax_25c680385dba",
+      "label": "Ecto Queries",
+      "level": "focus",
+      "parent_id": "tax_338c9dc354b0",
+      "slug": "ecto-queries"
+    },
+    {
+      "created_at": "2026-04-12T05:58:12.894116+00:00",
+      "description": "",
+      "id": "tax_ad07385226d0",
+      "label": "Elixir",
+      "level": "language",
+      "parent_id": "tax_25c680385dba",
+      "slug": "elixir"
+    }
+  ],
+  "variant_evolutions": [
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:23.960744+00:00",
+      "created_at": "2026-04-12T05:58:21.200415+00:00",
+      "dimension": "aggregates-and-group-by",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_aggregates_and_group_by",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_aggregates_and_group_by_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:23.726387+00:00",
+      "created_at": "2026-04-12T05:58:21.198085+00:00",
+      "dimension": "basic-where-select-order",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_basic_where_select_order",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_basic_where_select_order_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.116508+00:00",
+      "created_at": "2026-04-12T05:58:21.201961+00:00",
+      "dimension": "dynamic-query-builder",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_dynamic_query_builder",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_dynamic_query_builder_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:23.806807+00:00",
+      "created_at": "2026-04-12T05:58:21.198879+00:00",
+      "dimension": "joins",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_joins",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_joins_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.273214+00:00",
+      "created_at": "2026-04-12T05:58:21.203734+00:00",
+      "dimension": "pagination-patterns",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_pagination_patterns",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_pagination_patterns_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.193767+00:00",
+      "created_at": "2026-04-12T05:58:21.202881+00:00",
+      "dimension": "pin-operator-safety",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_pin_operator_safety",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_pin_operator_safety_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:23.883793+00:00",
+      "created_at": "2026-04-12T05:58:21.199695+00:00",
+      "dimension": "preloads",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_preloads",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_preloads_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:23.645778+00:00",
+      "created_at": "2026-04-12T05:58:21.197345+00:00",
+      "dimension": "query-composition-style",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_query_composition_style",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "foundation",
+      "winner_variant_id": "var_elixir_ecto_query_writer_query_composition_style_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.354162+00:00",
+      "created_at": "2026-04-12T05:58:21.204552+00:00",
+      "dimension": "raw-sql-fragment",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_raw_sql_fragment",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_raw_sql_fragment_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.037010+00:00",
+      "created_at": "2026-04-12T05:58:21.201154+00:00",
+      "dimension": "subqueries",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_subqueries",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_subqueries_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.507234+00:00",
+      "created_at": "2026-04-12T05:58:21.206019+00:00",
+      "dimension": "upserts-and-on-conflict",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_upserts_and_on_conflict",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_upserts_and_on_conflict_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:04:24.430573+00:00",
+      "created_at": "2026-04-12T05:58:21.205298+00:00",
+      "dimension": "window-functions",
+      "family_id": "fam_d1dcdae97478",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_ecto_query_writer_window_functions",
+      "num_generations": 1,
+      "parent_run_id": "elixir-ecto-query-writer-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_ecto_query_writer_window_functions_winner"
+    }
+  ],
+  "variants": [
+    {
+      "created_at": "2026-04-12T07:04:23.957107+00:00",
+      "dimension": "aggregates-and-group-by",
+      "evolution_id": "vevo_elixir_ecto_query_writer_aggregates_and_group_by",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 1.0,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_aggregates_and_group_by",
+      "id": "var_elixir_ecto_query_writer_aggregates_and_group_by_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:23.722627+00:00",
+      "dimension": "basic-where-select-order",
+      "evolution_id": "vevo_elixir_ecto_query_writer_basic_where_select_order",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 1.0,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_basic_where_select_order",
+      "id": "var_elixir_ecto_query_writer_basic_where_select_order_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.112928+00:00",
+      "dimension": "dynamic-query-builder",
+      "evolution_id": "vevo_elixir_ecto_query_writer_dynamic_query_builder",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.9,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_dynamic_query_builder",
+      "id": "var_elixir_ecto_query_writer_dynamic_query_builder_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:23.802990+00:00",
+      "dimension": "joins",
+      "evolution_id": "vevo_elixir_ecto_query_writer_joins",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.9,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_joins",
+      "id": "var_elixir_ecto_query_writer_joins_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.269925+00:00",
+      "dimension": "pagination-patterns",
+      "evolution_id": "vevo_elixir_ecto_query_writer_pagination_patterns",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.902,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_pagination_patterns",
+      "id": "var_elixir_ecto_query_writer_pagination_patterns_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.190005+00:00",
+      "dimension": "pin-operator-safety",
+      "evolution_id": "vevo_elixir_ecto_query_writer_pin_operator_safety",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.8705,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_pin_operator_safety",
+      "id": "var_elixir_ecto_query_writer_pin_operator_safety_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:23.880508+00:00",
+      "dimension": "preloads",
+      "evolution_id": "vevo_elixir_ecto_query_writer_preloads",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.722,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_preloads",
+      "id": "var_elixir_ecto_query_writer_preloads_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:23.641492+00:00",
+      "dimension": "query-composition-style",
+      "evolution_id": "vevo_elixir_ecto_query_writer_query_composition_style",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.9685,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_query_composition_style",
+      "id": "var_elixir_ecto_query_writer_query_composition_style_winner",
+      "is_active": true,
+      "tier": "foundation"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.351115+00:00",
+      "dimension": "raw-sql-fragment",
+      "evolution_id": "vevo_elixir_ecto_query_writer_raw_sql_fragment",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 1.0,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_raw_sql_fragment",
+      "id": "var_elixir_ecto_query_writer_raw_sql_fragment_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.033636+00:00",
+      "dimension": "subqueries",
+      "evolution_id": "vevo_elixir_ecto_query_writer_subqueries",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 1.0,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_subqueries",
+      "id": "var_elixir_ecto_query_writer_subqueries_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.503931+00:00",
+      "dimension": "upserts-and-on-conflict",
+      "evolution_id": "vevo_elixir_ecto_query_writer_upserts_and_on_conflict",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 1.0,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_upserts_and_on_conflict",
+      "id": "var_elixir_ecto_query_writer_upserts_and_on_conflict_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:04:24.426993+00:00",
+      "dimension": "window-functions",
+      "evolution_id": "vevo_elixir_ecto_query_writer_window_functions",
+      "family_id": "fam_d1dcdae97478",
+      "fitness_score": 0.9555,
+      "genome_id": "gen_winner_elixir_ecto_query_writer_window_functions",
+      "id": "var_elixir_ecto_query_writer_window_functions_winner",
+      "is_active": true,
+      "tier": "capability"
+    }
+  ]
+}
