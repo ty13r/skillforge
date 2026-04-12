@@ -1,0 +1,1776 @@
+{
+  "challenges": [
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-01",
+      "prompt": "Refactor `MyApp.UserService.fetch_profile/1` from test_fixtures/ruby_style_user_service.ex using a `with` expression that has an `else` clause. The original has three failure shapes: `{:error, :not_found}` when `Repo.get` returns nil, `{:error, :inactive}` when `user.active` is false, `{:error, :profile_missing}` when the profile is nil. The `with` must preserve all three. Use match expressions in the with clauses (`%User{active: true} = user <- Repo.get(...) || {:error, :not_found}`) so each mismatch lands on a distinct `else` clause that returns the correct error. Output a complete `defmodule MyApp.UserService do ... end` with just fetch_profile + helpers.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-05",
+      "prompt": "Rewrite this 30-line imperative function as a pipe pipeline:\n\n```\ndef analyze(events) do\n  filtered = Enum.filter(events, fn e -> e.type == :click end)\n  grouped = Enum.group_by(filtered, fn e -> e.user_id end)\n  counts = Enum.map(grouped, fn {uid, es} -> {uid, length(es)} end)\n  sorted = Enum.sort_by(counts, fn {_, n} -> n end, :desc)\n  top = Enum.take(sorted, 10)\n  result = Enum.map(top, fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  result\nend\n```\n\nOutput a pipe pipeline from `events` through all transformations. No intermediate variables. Output a complete `defmodule MyApp.Analytics do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-15",
+      "prompt": "Given:\n\n```\ndef process_all(items) do\n  Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->\n    case transform(item) do\n      {:ok, v} -> {:cont, {:ok, acc ++ [v]}}\n      {:error, r} -> {:halt, {:error, {item.id, r}}}\n    end\n  end)\nend\n```\n\nTwo problems: `acc ++ [v]` is O(n\u00b2), and the reduce_while is clunkier than explicit recursion here. Rewrite as explicit multi-clause recursion with a helper `do_process/2` that accepts `{items, acc}`, prepends to acc on success, halts with `{:error, {id, reason}}` on failure, and reverses the final acc. Output a complete `defmodule MyApp.Batch do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-23",
+      "prompt": "Given:\n\n```\ndefmodule MyApp.Profile do\n  def title(u), do: if is_nil(u), do: \"\", else: u.title || \"\"\n  def bio(u), do: if is_nil(u), do: \"\", else: u.bio || \"\"\n  def avatar(u), do: if is_nil(u), do: \"/default.png\", else: u.avatar || \"/default.png\"\n  def url(u), do: if is_nil(u), do: \"/\", else: u.url || \"/\"\n  def display_name(u), do: if is_nil(u), do: \"Guest\", else: u.display_name || \"Guest\"\nend\n```\n\nRefactor so each function is two heads: one for `nil`, one for `%{<field>: v} when is_binary(v) and v != \"\"`, and a catch-all that returns the default. Do NOT use `||`. Output a complete `defmodule MyApp.Profile do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-26",
+      "prompt": "Given:\n\n```\ndef handle_webhook(payload) do\n  cond do\n    is_nil(payload) -> {:error, :empty}\n    not is_map(payload) -> {:error, :bad_format}\n    not Map.has_key?(payload, \"event\") -> {:error, :missing_event}\n    true ->\n      MyApp.Webhook.dispatch(payload)\n  end\nend\n```\n\nThis is at a system boundary \u2014 the payload comes from an untrusted source, so defensive checks ARE warranted. Refactor to multi-clause function heads but KEEP the validation logic (don't drop the missing-event check). Use `def handle_webhook(nil)`, `def handle_webhook(payload) when is_map(payload)` with a guard on map_size + key presence where possible, plus body check for the `\"event\"` key. Output a complete `defmodule MyApp.WebhookHandler do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-27",
+      "prompt": "Refactor ALL functions in test_fixtures/bad_guards.ex. Every function must use guards that would actually compile. Specifically: `validate_age/1` uses guard `when is_integer(age) and age >= 0 and age <= 150`. `validate_email/1` keeps `String.contains?` in the body because it's not allowed in guards. `call_service/1` uses `when is_binary(req)` (not `not is_nil`). `process/1` uses an assertive type guard. `format_user/1` uses `when is_binary(name) and byte_size(name) > 0`. Output a complete `defmodule MyApp.Validator do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-31",
+      "prompt": "Given:\n\n```\ndef handle(cmd_bin) do\n  if String.starts_with?(cmd_bin, \"AUTH\") do\n    payload = String.slice(cmd_bin, 5, 1024)\n    auth(payload)\n  else\n    if String.starts_with?(cmd_bin, \"LIST \") do\n      payload = String.slice(cmd_bin, 5, 1024)\n      list(payload)\n    else\n      if String.starts_with?(cmd_bin, \"QUIT\") do\n        quit()\n      else\n        {:error, :unknown}\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads using binary pattern matching in each head. Include `def handle(<<\"AUTH \", payload::binary>>)`, `def handle(<<\"LIST \", payload::binary>>)`, `def handle(\"QUIT\")`, and a catch-all. Output a complete `defmodule MyApp.CommandRouter do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-32",
+      "prompt": "Given:\n\n```\ndef process(event) do\n  case event.type do\n    :login ->\n      Logger.debug(\"Processing login for #{event.user_id}\")\n      MyApp.Auth.handle_login(event)\n    :logout ->\n      Logger.debug(\"Processing logout for #{event.user_id}\")\n      MyApp.Auth.handle_logout(event)\n    :signup ->\n      Logger.debug(\"Processing signup\")\n      MyApp.Auth.handle_signup(event)\n  end\nend\n```\n\nRefactor to multi-clause function heads. Preserve the `Logger.debug/1` calls \u2014 they must still be emitted. Destructure the relevant fields in each head. Hint: you'll need to pattern-match `user_id` in the login/logout heads but not in signup. Output a complete `defmodule MyApp.EventProcessor do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-33",
+      "prompt": "Refactor `MyApp.RoleRouter` from test_fixtures/cond_role_router.ex. `route/1` becomes pattern-matched heads (no cond). `permission/2` has a dynamic `resource.owner_id == user.id` check that needs cross-arg pinning in heads. Apply both transformations. Output a complete `defmodule MyApp.RoleRouter do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-35",
+      "prompt": "Given:\n\n```\ndef running_max(list) do\n  running_max(list, nil, [])\nend\n\ndefp running_max([], _max, acc), do: Enum.reverse(acc)\ndefp running_max([h | t], nil, acc), do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc) when h > max, do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc), do: running_max(t, max, [max | acc])\n```\n\nThe current implementation works but uses a 3-arg helper with three distinct heads. Rewrite so `running_max/1` is a single call to `Enum.scan/2` \u2014 `list |> Enum.scan(&max/2)` \u2014 which is MUCH cleaner. Output a complete `defmodule MyApp.RunningStats do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "hard",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-hard-36",
+      "prompt": "Given:\n\n```\ndef promote(user) do\n  new_role = upgrade_role(user.role)\n  %{user | role: new_role}\nend\n```\n\nRefactor to use the `= <pattern>` bind-and-match form so you can destructure `role` from the struct in the head AND keep the whole-struct binding: `def promote(%User{role: role} = user) do new_role = upgrade_role(role); %{user | role: new_role} end`. Output a complete `defmodule MyApp.UserPromotion do ... end` (with `alias MyApp.User`).",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-10",
+      "prompt": "Refactor `MyApp.Collector.numbered/1` and its helpers in test_fixtures/list_append_loop.ex. The original uses `acc ++ [{n, head}]` which is O(n) per step, giving O(n\u00b2) total. Rewrite the helper to prepend `[{n, head} | acc]` and reverse the final accumulator. Apply the same fix to `positive_only/1` and `chars_to_upper/1`. Output a complete `defmodule MyApp.Collector do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-11",
+      "prompt": "Refactor all three functions in test_fixtures/intermediate_vars.ex (`normalize/1`, `slugify/1`, `summary/1`) so every function body is a single `|>` pipeline. No intermediate variables. Output a complete `defmodule MyApp.TextProcessor do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-13",
+      "prompt": "The following has invalid Elixir (`&&` and `||` are not allowed in guards \u2014 they'll raise at compile or runtime in guard position):\n\n```\ndef active?(user) when user.active && user.role != \"banned\", do: true\ndef active?(_), do: false\n\ndef contactable?(user) when user.email != nil || user.phone != nil, do: true\ndef contactable?(_), do: false\n```\n\nFix by: (1) destructuring user in the head, (2) using `and`/`or` in guards, (3) asserting types properly (`is_binary`, not `!= nil`). Output a complete `defmodule MyApp.UserChecks do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-15",
+      "prompt": "Refactor `MyApp.PacketParser.parse/1` from test_fixtures/binary_header_parser.ex. The fixture uses `:binary.part/3` and `:binary.decode_unsigned/1` to extract a 2-byte version + 4-byte length + payload. Replace with a single function head using binary size modifiers: `def parse(<<version::binary-size(2), length::unsigned-integer-size(32), payload::binary-size(length), _rest::binary>>)`. Add a catch-all clause returning `{:error, :too_short}`. Output a complete `defmodule MyApp.PacketParser do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-18",
+      "prompt": "Given:\n\n```\ndef tax_bracket(income) do\n  cond do\n    income < 10_000 -> 0.0\n    income < 40_000 -> 0.12\n    income < 85_000 -> 0.22\n    income < 160_000 -> 0.24\n    true -> 0.32\n  end\nend\n```\n\nThis function is correctly expressed as a `cond` \u2014 the ordered, open-ended range checks can't become multi-clause function heads without awkward guard repetition. Keep it as a `cond` but replace the `true ->` fallback with a guard-style clause that makes the terminal case explicit: `income >= 160_000 -> 0.32`. Output a complete `defmodule MyApp.Tax do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-20",
+      "prompt": "Refactor `MyApp.OrderFormatter.summary/1` from test_fixtures/map_access_noise.ex. The function uses `order[:id]`, `order[:items]`, `order[:total]`, and then inner `item[:name]`, `item[:quantity]`. Replace with head destructuring: `def summary(%{id: id, items: items, total: total})` and inside `Enum.map/2` use `fn %{name: name, quantity: qty} -> ... end`. Also add a catch-all clause returning `\"Invalid order\"`. You may also refactor `plot_point/1` in the same module. Output a complete `defmodule MyApp.OrderFormatter do ... end` containing summary + plot_point only.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-24",
+      "prompt": "Refactor `MyApp.Accumulators.max_value/1` from test_fixtures/enum_reduce_awkward.ex. The current implementation uses explicit recursion + a case with an `if head > other` check. Rewrite as a single call to `Enum.max/1` with a guard on empty lists returning `nil`. Output a complete `defmodule MyApp.Accumulators do ... end` with just max_value.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-29",
+      "prompt": "Given:\n\n```\ndef deliver(params) do\n  if valid?(params) do\n    case lookup_user(params.id) do\n      {:ok, user} ->\n        if can_mail?(user) do\n          MyApp.Mailer.send(user, params.body)\n        else\n          {:error, :opted_out}\n        end\n      :not_found -> {:error, :not_found}\n    end\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nRewrite as a `with` expression. Helper functions: `valid?/1`, `lookup_user/1`, `can_mail?/1`. Output a complete `defmodule MyApp.Delivery do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-35",
+      "prompt": "Given:\n\n```\ndef rating(score) do\n  if score >= 90 do\n    :excellent\n  else\n    if score >= 70 do\n      :good\n    else\n      if score >= 50 do\n        :fair\n      else\n        :poor\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads. Use guards `when is_number(score) and score >= 90`, etc. Order matters \u2014 Elixir checks heads top-to-bottom. Output a complete `defmodule MyApp.Rating do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-36",
+      "prompt": "Given:\n\n```\ndef dispatch(event) do\n  case event.type do\n    :user ->\n      case event.action do\n        :created -> handle_user_created(event)\n        :updated -> handle_user_updated(event)\n        :deleted -> handle_user_deleted(event)\n      end\n    :order ->\n      case event.action do\n        :created -> handle_order_created(event)\n        :shipped -> handle_order_shipped(event)\n      end\n  end\nend\n```\n\nRewrite as a single-level set of function heads each pattern-matching on `%{type: ..., action: ...}`. Output a complete `defmodule MyApp.EventDispatcher do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    },
+    {
+      "difficulty": "medium",
+      "evaluation_criteria": {
+        "primary_capability": "",
+        "weight": 1.0
+      },
+      "gold_standard_hints": "",
+      "id": "elixir-pattern-match-refactor-medium-45",
+      "prompt": "Given:\n\n```\ndef display(name) do\n  if name in [nil, \"\"] do\n    \"Anonymous\"\n  else\n    String.upcase(name)\n  end\nend\n```\n\nRewrite with two function heads \u2014 one matching `nil`, one matching `\"\"`, one pattern-matching a non-empty binary with a `when is_binary(name)` guard. Do not use `in [nil, \"\"]`. Output a complete `defmodule MyApp.Display do ... end`.",
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "setup_files": {},
+      "verification_method": "run_tests"
+    }
+  ],
+  "evolution_runs": [
+    {
+      "best_skill": {
+        "behavioral_signature": [],
+        "consistency_score": null,
+        "deterministic_scores": {
+          "l1": 0.9447
+        },
+        "frontmatter": {
+          "description": ">-",
+          "name": "elixir-pattern-match-refactor"
+        },
+        "generation": 1,
+        "generations_survived": 0,
+        "id": "gen_composite_elixir_pattern_match_refactor_seed_v1",
+        "is_pareto_optimal": true,
+        "maturity": "tested",
+        "meta_strategy": "engineer_composite",
+        "mutation_rationale": "",
+        "mutations": [],
+        "parent_ids": [
+          "gen_winner_elixir_pattern_match_refactor_refactor_philosophy",
+          "gen_winner_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+          "gen_winner_elixir_pattern_match_refactor_cond_and_if_reduction",
+          "gen_winner_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+          "gen_winner_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+          "gen_winner_elixir_pattern_match_refactor_function_head_pattern_matching",
+          "gen_winner_elixir_pattern_match_refactor_guard_clauses",
+          "gen_winner_elixir_pattern_match_refactor_map_and_struct_destructuring",
+          "gen_winner_elixir_pattern_match_refactor_pipe_operator_flows",
+          "gen_winner_elixir_pattern_match_refactor_recursive_functions",
+          "gen_winner_elixir_pattern_match_refactor_with_expressions"
+        ],
+        "pareto_objectives": {
+          "quality": 0.9447
+        },
+        "skill_md_content": "---\nname: elixir-pattern-match-refactor\ndescription: >-\n  Elixir pattern matching refactoring \u2014 function heads, guards, pipes, with\n  expressions, recursion, destructuring, binary matching, and defensive nil\n  elimination. Use when refactoring Elixir code to be more idiomatic. NOT for\n  schemas, queries, or Phoenix-specific patterns.\n---\n\n# Elixir Pattern Match Refactor\n\n## Quick Start\n\nReplace nested case/cond/if with multi-clause function heads. Use guards for type/range checks. Pipe for data transformations. with for multi-step happy paths. Pattern match maps/structs in function heads. Eliminate defensive nil checks with explicit pattern clauses.\n\n## When to Use\n\n- Refactoring nested case/cond/if into function heads\n- Replacing invalid guard expressions (&&, ||) with and/or\n- Converting imperative code to pipe pipelines\n- Flattening nested conditionals with with expressions\n- Choosing between Enum and manual recursion\n- Destructuring maps and structs in function heads\n- Parsing binary data with pattern matching\n- Eliminating defensive nil/Map.get chains\n\n## Common Mistakes\n\n- && and || in guards (use and/or instead)\n- acc ++ [item] in recursion (O(n\u00b2) \u2014 prepend + reverse)\n- String.contains? in guards (not allowed \u2014 move to body)\n- true -> fallback in cond (make terminal case explicit)\n- Nested case when function heads would be clearer\n- Map.get chains instead of pattern-matching the shape\n",
+        "supporting_files": {},
+        "trait_attribution": {},
+        "trait_diagnostics": {},
+        "traits": [
+          "refactor-philosophy",
+          "binary-pattern-matching-basic",
+          "cond-and-if-reduction",
+          "defensive-nil-checks-elimination",
+          "enum-vs-recursion-choice",
+          "function-head-pattern-matching",
+          "guard-clauses",
+          "map-and-struct-destructuring",
+          "pipe-operator-flows",
+          "recursive-functions",
+          "with-expressions"
+        ],
+        "trigger_precision": 0.0,
+        "trigger_recall": 0.0,
+        "variant_id": null
+      },
+      "challenges": [
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-18",
+          "prompt": "Given:\n\n```\ndef tax_bracket(income) do\n  cond do\n    income < 10_000 -> 0.0\n    income < 40_000 -> 0.12\n    income < 85_000 -> 0.22\n    income < 160_000 -> 0.24\n    true -> 0.32\n  end\nend\n```\n\nThis function is correctly expressed as a `cond` \u2014 the ordered, open-ended range checks can't become multi-clause function heads without awkward guard repetition. Keep it as a `cond` but replace the `true ->` fallback with a guard-style clause that makes the terminal case explicit: `income >= 160_000 -> 0.32`. Output a complete `defmodule MyApp.Tax do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-26",
+          "prompt": "Given:\n\n```\ndef handle_webhook(payload) do\n  cond do\n    is_nil(payload) -> {:error, :empty}\n    not is_map(payload) -> {:error, :bad_format}\n    not Map.has_key?(payload, \"event\") -> {:error, :missing_event}\n    true ->\n      MyApp.Webhook.dispatch(payload)\n  end\nend\n```\n\nThis is at a system boundary \u2014 the payload comes from an untrusted source, so defensive checks ARE warranted. Refactor to multi-clause function heads but KEEP the validation logic (don't drop the missing-event check). Use `def handle_webhook(nil)`, `def handle_webhook(payload) when is_map(payload)` with a guard on map_size + key presence where possible, plus body check for the `\"event\"` key. Output a complete `defmodule MyApp.WebhookHandler do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-36",
+          "prompt": "Given:\n\n```\ndef dispatch(event) do\n  case event.type do\n    :user ->\n      case event.action do\n        :created -> handle_user_created(event)\n        :updated -> handle_user_updated(event)\n        :deleted -> handle_user_deleted(event)\n      end\n    :order ->\n      case event.action do\n        :created -> handle_order_created(event)\n        :shipped -> handle_order_shipped(event)\n      end\n  end\nend\n```\n\nRewrite as a single-level set of function heads each pattern-matching on `%{type: ..., action: ...}`. Output a complete `defmodule MyApp.EventDispatcher do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-32",
+          "prompt": "Given:\n\n```\ndef process(event) do\n  case event.type do\n    :login ->\n      Logger.debug(\"Processing login for #{event.user_id}\")\n      MyApp.Auth.handle_login(event)\n    :logout ->\n      Logger.debug(\"Processing logout for #{event.user_id}\")\n      MyApp.Auth.handle_logout(event)\n    :signup ->\n      Logger.debug(\"Processing signup\")\n      MyApp.Auth.handle_signup(event)\n  end\nend\n```\n\nRefactor to multi-clause function heads. Preserve the `Logger.debug/1` calls \u2014 they must still be emitted. Destructure the relevant fields in each head. Hint: you'll need to pattern-match `user_id` in the login/logout heads but not in signup. Output a complete `defmodule MyApp.EventProcessor do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-13",
+          "prompt": "The following has invalid Elixir (`&&` and `||` are not allowed in guards \u2014 they'll raise at compile or runtime in guard position):\n\n```\ndef active?(user) when user.active && user.role != \"banned\", do: true\ndef active?(_), do: false\n\ndef contactable?(user) when user.email != nil || user.phone != nil, do: true\ndef contactable?(_), do: false\n```\n\nFix by: (1) destructuring user in the head, (2) using `and`/`or` in guards, (3) asserting types properly (`is_binary`, not `!= nil`). Output a complete `defmodule MyApp.UserChecks do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-27",
+          "prompt": "Refactor ALL functions in test_fixtures/bad_guards.ex. Every function must use guards that would actually compile. Specifically: `validate_age/1` uses guard `when is_integer(age) and age >= 0 and age <= 150`. `validate_email/1` keeps `String.contains?` in the body because it's not allowed in guards. `call_service/1` uses `when is_binary(req)` (not `not is_nil`). `process/1` uses an assertive type guard. `format_user/1` uses `when is_binary(name) and byte_size(name) > 0`. Output a complete `defmodule MyApp.Validator do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-11",
+          "prompt": "Refactor all three functions in test_fixtures/intermediate_vars.ex (`normalize/1`, `slugify/1`, `summary/1`) so every function body is a single `|>` pipeline. No intermediate variables. Output a complete `defmodule MyApp.TextProcessor do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-05",
+          "prompt": "Rewrite this 30-line imperative function as a pipe pipeline:\n\n```\ndef analyze(events) do\n  filtered = Enum.filter(events, fn e -> e.type == :click end)\n  grouped = Enum.group_by(filtered, fn e -> e.user_id end)\n  counts = Enum.map(grouped, fn {uid, es} -> {uid, length(es)} end)\n  sorted = Enum.sort_by(counts, fn {_, n} -> n end, :desc)\n  top = Enum.take(sorted, 10)\n  result = Enum.map(top, fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  result\nend\n```\n\nOutput a pipe pipeline from `events` through all transformations. No intermediate variables. Output a complete `defmodule MyApp.Analytics do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-29",
+          "prompt": "Given:\n\n```\ndef deliver(params) do\n  if valid?(params) do\n    case lookup_user(params.id) do\n      {:ok, user} ->\n        if can_mail?(user) do\n          MyApp.Mailer.send(user, params.body)\n        else\n          {:error, :opted_out}\n        end\n      :not_found -> {:error, :not_found}\n    end\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nRewrite as a `with` expression. Helper functions: `valid?/1`, `lookup_user/1`, `can_mail?/1`. Output a complete `defmodule MyApp.Delivery do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-01",
+          "prompt": "Refactor `MyApp.UserService.fetch_profile/1` from test_fixtures/ruby_style_user_service.ex using a `with` expression that has an `else` clause. The original has three failure shapes: `{:error, :not_found}` when `Repo.get` returns nil, `{:error, :inactive}` when `user.active` is false, `{:error, :profile_missing}` when the profile is nil. The `with` must preserve all three. Use match expressions in the with clauses (`%User{active: true} = user <- Repo.get(...) || {:error, :not_found}`) so each mismatch lands on a distinct `else` clause that returns the correct error. Output a complete `defmodule MyApp.UserService do ... end` with just fetch_profile + helpers.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-10",
+          "prompt": "Refactor `MyApp.Collector.numbered/1` and its helpers in test_fixtures/list_append_loop.ex. The original uses `acc ++ [{n, head}]` which is O(n) per step, giving O(n\u00b2) total. Rewrite the helper to prepend `[{n, head} | acc]` and reverse the final accumulator. Apply the same fix to `positive_only/1` and `chars_to_upper/1`. Output a complete `defmodule MyApp.Collector do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-15",
+          "prompt": "Given:\n\n```\ndef process_all(items) do\n  Enum.reduce_while(items, {:ok, []}, fn item, {:ok, acc} ->\n    case transform(item) do\n      {:ok, v} -> {:cont, {:ok, acc ++ [v]}}\n      {:error, r} -> {:halt, {:error, {item.id, r}}}\n    end\n  end)\nend\n```\n\nTwo problems: `acc ++ [v]` is O(n\u00b2), and the reduce_while is clunkier than explicit recursion here. Rewrite as explicit multi-clause recursion with a helper `do_process/2` that accepts `{items, acc}`, prepends to acc on success, halts with `{:error, {id, reason}}` on failure, and reverses the final acc. Output a complete `defmodule MyApp.Batch do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-24",
+          "prompt": "Refactor `MyApp.Accumulators.max_value/1` from test_fixtures/enum_reduce_awkward.ex. The current implementation uses explicit recursion + a case with an `if head > other` check. Rewrite as a single call to `Enum.max/1` with a guard on empty lists returning `nil`. Output a complete `defmodule MyApp.Accumulators do ... end` with just max_value.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-35",
+          "prompt": "Given:\n\n```\ndef running_max(list) do\n  running_max(list, nil, [])\nend\n\ndefp running_max([], _max, acc), do: Enum.reverse(acc)\ndefp running_max([h | t], nil, acc), do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc) when h > max, do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc), do: running_max(t, max, [max | acc])\n```\n\nThe current implementation works but uses a 3-arg helper with three distinct heads. Rewrite so `running_max/1` is a single call to `Enum.scan/2` \u2014 `list |> Enum.scan(&max/2)` \u2014 which is MUCH cleaner. Output a complete `defmodule MyApp.RunningStats do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-20",
+          "prompt": "Refactor `MyApp.OrderFormatter.summary/1` from test_fixtures/map_access_noise.ex. The function uses `order[:id]`, `order[:items]`, `order[:total]`, and then inner `item[:name]`, `item[:quantity]`. Replace with head destructuring: `def summary(%{id: id, items: items, total: total})` and inside `Enum.map/2` use `fn %{name: name, quantity: qty} -> ... end`. Also add a catch-all clause returning `\"Invalid order\"`. You may also refactor `plot_point/1` in the same module. Output a complete `defmodule MyApp.OrderFormatter do ... end` containing summary + plot_point only.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-36",
+          "prompt": "Given:\n\n```\ndef promote(user) do\n  new_role = upgrade_role(user.role)\n  %{user | role: new_role}\nend\n```\n\nRefactor to use the `= <pattern>` bind-and-match form so you can destructure `role` from the struct in the head AND keep the whole-struct binding: `def promote(%User{role: role} = user) do new_role = upgrade_role(role); %{user | role: new_role} end`. Output a complete `defmodule MyApp.UserPromotion do ... end` (with `alias MyApp.User`).",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-15",
+          "prompt": "Refactor `MyApp.PacketParser.parse/1` from test_fixtures/binary_header_parser.ex. The fixture uses `:binary.part/3` and `:binary.decode_unsigned/1` to extract a 2-byte version + 4-byte length + payload. Replace with a single function head using binary size modifiers: `def parse(<<version::binary-size(2), length::unsigned-integer-size(32), payload::binary-size(length), _rest::binary>>)`. Add a catch-all clause returning `{:error, :too_short}`. Output a complete `defmodule MyApp.PacketParser do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-31",
+          "prompt": "Given:\n\n```\ndef handle(cmd_bin) do\n  if String.starts_with?(cmd_bin, \"AUTH\") do\n    payload = String.slice(cmd_bin, 5, 1024)\n    auth(payload)\n  else\n    if String.starts_with?(cmd_bin, \"LIST \") do\n      payload = String.slice(cmd_bin, 5, 1024)\n      list(payload)\n    else\n      if String.starts_with?(cmd_bin, \"QUIT\") do\n        quit()\n      else\n        {:error, :unknown}\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads using binary pattern matching in each head. Include `def handle(<<\"AUTH \", payload::binary>>)`, `def handle(<<\"LIST \", payload::binary>>)`, `def handle(\"QUIT\")`, and a catch-all. Output a complete `defmodule MyApp.CommandRouter do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-35",
+          "prompt": "Given:\n\n```\ndef rating(score) do\n  if score >= 90 do\n    :excellent\n  else\n    if score >= 70 do\n      :good\n    else\n      if score >= 50 do\n        :fair\n      else\n        :poor\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads. Use guards `when is_number(score) and score >= 90`, etc. Order matters \u2014 Elixir checks heads top-to-bottom. Output a complete `defmodule MyApp.Rating do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-33",
+          "prompt": "Refactor `MyApp.RoleRouter` from test_fixtures/cond_role_router.ex. `route/1` becomes pattern-matched heads (no cond). `permission/2` has a dynamic `resource.owner_id == user.id` check that needs cross-arg pinning in heads. Apply both transformations. Output a complete `defmodule MyApp.RoleRouter do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-45",
+          "prompt": "Given:\n\n```\ndef display(name) do\n  if name in [nil, \"\"] do\n    \"Anonymous\"\n  else\n    String.upcase(name)\n  end\nend\n```\n\nRewrite with two function heads \u2014 one matching `nil`, one matching `\"\"`, one pattern-matching a non-empty binary with a `when is_binary(name)` guard. Do not use `in [nil, \"\"]`. Output a complete `defmodule MyApp.Display do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-23",
+          "prompt": "Given:\n\n```\ndefmodule MyApp.Profile do\n  def title(u), do: if is_nil(u), do: \"\", else: u.title || \"\"\n  def bio(u), do: if is_nil(u), do: \"\", else: u.bio || \"\"\n  def avatar(u), do: if is_nil(u), do: \"/default.png\", else: u.avatar || \"/default.png\"\n  def url(u), do: if is_nil(u), do: \"/\", else: u.url || \"/\"\n  def display_name(u), do: if is_nil(u), do: \"Guest\", else: u.display_name || \"Guest\"\nend\n```\n\nRefactor so each function is two heads: one for `nil`, one for `%{<field>: v} when is_binary(v) and v != \"\"`, and a catch-all that returns the default. Do NOT use `||`. Output a complete `defmodule MyApp.Profile do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        }
+      ],
+      "completed_at": "2026-04-12T07:18:08.872124+00:00",
+      "created_at": "2026-04-12T05:58:21.281655+00:00",
+      "evolution_mode": "atomic",
+      "failure_reason": null,
+      "family_id": "fam_bdecc59e3e4f",
+      "generations": [],
+      "id": "elixir-pattern-match-refactor-seed-v1",
+      "learning_log": [
+        "seed_pipeline: run created for elixir-pattern-match-refactor at 2026-04-12T05:58:21.281441+00:00",
+        "seed_pipeline: finalized at 2026-04-12T07:18:08.872300+00:00 with 11 winning variants, avg fitness=0.945",
+        "[integration_report] ## Integration Report\n### Synthesis: 11 variants into pattern-match-refactor composite\n\n1 v1 win (refactor-philosophy), 10 v2 wins. Avg fitness: 0.945.\n\n### Conflicts detected and resolved\n1. refactor-philosophy (foundation) says \"keep cond when it's the right shape\" while cond-and-if-reduction says \"reduce cond to guards.\" Resolved: foundation wins \u2014 cond stays when ranges are ordered and open-ended; reduction applies only when guards can express the logic cleanly.\n2. guard-clauses and function-head-pattern-matching both cover multi-clause dispatch. Scoped: guards own type/range checks, function heads own structural dispatch.\n\n### Decisions\n- Foundation's \"extract-and-name\" philosophy preserved as organizing principle\n- 11 refactoring patterns ordered from basic (function heads) to advanced (binary matching, nil elimination)\n",
+        "[competition_scores] {\"matches\": [{\"dimension\": \"refactor-philosophy\", \"tier\": \"foundation\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-18\", \"elixir-pattern-match-refactor-hard-26\"], \"variant_1_label\": \"refactor-philosophy (seed)\", \"variant_2_label\": \"refactor-philosophy (spawn)\", \"variant_1_scores\": [0.9117, 0.8328], \"variant_2_scores\": [0.9117, 0.7333], \"variant_1_mean\": 0.8722, \"variant_2_mean\": 0.8225, \"winner_slot\": 1, \"winning_fitness\": 0.8722}, {\"dimension\": \"function-head-pattern-matching\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-36\", \"elixir-pattern-match-refactor-hard-32\"], \"variant_1_label\": \"function-head-pattern-matching (seed)\", \"variant_2_label\": \"function-head-pattern-matching (spawn)\", \"variant_1_scores\": [0.8704, 0.8978], \"variant_2_scores\": [0.8704, 0.8978], \"variant_1_mean\": 0.8841, \"variant_2_mean\": 0.8841, \"winner_slot\": 2, \"winning_fitness\": 0.8841}, {\"dimension\": \"guard-clauses\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-13\", \"elixir-pattern-match-refactor-hard-27\"], \"variant_1_label\": \"guard-clauses (seed)\", \"variant_2_label\": \"guard-clauses (spawn)\", \"variant_1_scores\": [0.9153, 0.9796], \"variant_2_scores\": [0.9153, 0.9796], \"variant_1_mean\": 0.9475, \"variant_2_mean\": 0.9475, \"winner_slot\": 2, \"winning_fitness\": 0.9475}, {\"dimension\": \"pipe-operator-flows\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-11\", \"elixir-pattern-match-refactor-hard-05\"], \"variant_1_label\": \"pipe-operator-flows (seed)\", \"variant_2_label\": \"pipe-operator-flows (spawn)\", \"variant_1_scores\": [0.9639, 0.9912], \"variant_2_scores\": [0.9639, 0.9912], \"variant_1_mean\": 0.9775, \"variant_2_mean\": 0.9775, \"winner_slot\": 2, \"winning_fitness\": 0.9775}, {\"dimension\": \"with-expressions\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-29\", \"elixir-pattern-match-refactor-hard-01\"], \"variant_1_label\": \"with-expressions (seed)\", \"variant_2_label\": \"with-expressions (spawn)\", \"variant_1_scores\": [0.9741, 0.9733], \"variant_2_scores\": [0.9741, 0.9733], \"variant_1_mean\": 0.9737, \"variant_2_mean\": 0.9737, \"winner_slot\": 2, \"winning_fitness\": 0.9737}, {\"dimension\": \"recursive-functions\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-10\", \"elixir-pattern-match-refactor-hard-15\"], \"variant_1_label\": \"recursive-functions (seed)\", \"variant_2_label\": \"recursive-functions (spawn)\", \"variant_1_scores\": [1.0, 0.9644], \"variant_2_scores\": [1.0, 0.9644], \"variant_1_mean\": 0.9822, \"variant_2_mean\": 0.9822, \"winner_slot\": 2, \"winning_fitness\": 0.9822}, {\"dimension\": \"enum-vs-recursion-choice\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-24\", \"elixir-pattern-match-refactor-hard-35\"], \"variant_1_label\": \"enum-vs-recursion-choice (seed)\", \"variant_2_label\": \"enum-vs-recursion-choice (spawn)\", \"variant_1_scores\": [0.9516, 0.8788], \"variant_2_scores\": [0.9516, 0.8788], \"variant_1_mean\": 0.9152, \"variant_2_mean\": 0.9152, \"winner_slot\": 2, \"winning_fitness\": 0.9152}, {\"dimension\": \"map-and-struct-destructuring\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-20\", \"elixir-pattern-match-refactor-hard-36\"], \"variant_1_label\": \"map-and-struct-destructuring (seed)\", \"variant_2_label\": \"map-and-struct-destructuring (spawn)\", \"variant_1_scores\": [0.933, 0.9095], \"variant_2_scores\": [0.933, 0.9095], \"variant_1_mean\": 0.9213, \"variant_2_mean\": 0.9213, \"winner_slot\": 2, \"winning_fitness\": 0.9213}, {\"dimension\": \"binary-pattern-matching-basic\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-15\", \"elixir-pattern-match-refactor-hard-31\"], \"variant_1_label\": \"binary-pattern-matching-basic (seed)\", \"variant_2_label\": \"binary-pattern-matching-basic (spawn)\", \"variant_1_scores\": [0.9742, 0.97], \"variant_2_scores\": [0.9742, 0.97], \"variant_1_mean\": 0.9721, \"variant_2_mean\": 0.9721, \"winner_slot\": 2, \"winning_fitness\": 0.9721}, {\"dimension\": \"cond-and-if-reduction\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-35\", \"elixir-pattern-match-refactor-hard-33\"], \"variant_1_label\": \"cond-and-if-reduction (seed)\", \"variant_2_label\": \"cond-and-if-reduction (spawn)\", \"variant_1_scores\": [0.9794, 0.9628], \"variant_2_scores\": [0.9794, 0.9628], \"variant_1_mean\": 0.9711, \"variant_2_mean\": 0.9711, \"winner_slot\": 2, \"winning_fitness\": 0.9711}, {\"dimension\": \"defensive-nil-checks-elimination\", \"tier\": \"capability\", \"challenge_ids\": [\"elixir-pattern-match-refactor-medium-45\", \"elixir-pattern-match-refactor-hard-23\"], \"variant_1_label\": \"defensive-nil-checks-elimination (seed)\", \"variant_2_label\": \"defensive-nil-checks-elimination (spawn)\", \"variant_1_scores\": [0.9707, 0.9778], \"variant_2_scores\": [0.9707, 0.9778], \"variant_1_mean\": 0.9743, \"variant_2_mean\": 0.9743, \"winner_slot\": 2, \"winning_fitness\": 0.9743}], \"generation\": 0, \"total_generations\": 1, \"challenges_per_variant\": 2, \"baseline_ran\": true, \"scorer\": \"score.py (L1 deterministic)\"}"
+      ],
+      "max_budget_usd": 10.0,
+      "mode": "domain",
+      "num_generations": 1,
+      "pareto_front": [
+        {
+          "behavioral_signature": [],
+          "consistency_score": null,
+          "deterministic_scores": {
+            "l1": 0.9447
+          },
+          "frontmatter": {
+            "description": ">-",
+            "name": "elixir-pattern-match-refactor"
+          },
+          "generation": 1,
+          "generations_survived": 0,
+          "id": "gen_composite_elixir_pattern_match_refactor_seed_v1",
+          "is_pareto_optimal": true,
+          "maturity": "tested",
+          "meta_strategy": "engineer_composite",
+          "mutation_rationale": "",
+          "mutations": [],
+          "parent_ids": [
+            "gen_winner_elixir_pattern_match_refactor_refactor_philosophy",
+            "gen_winner_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+            "gen_winner_elixir_pattern_match_refactor_cond_and_if_reduction",
+            "gen_winner_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+            "gen_winner_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+            "gen_winner_elixir_pattern_match_refactor_function_head_pattern_matching",
+            "gen_winner_elixir_pattern_match_refactor_guard_clauses",
+            "gen_winner_elixir_pattern_match_refactor_map_and_struct_destructuring",
+            "gen_winner_elixir_pattern_match_refactor_pipe_operator_flows",
+            "gen_winner_elixir_pattern_match_refactor_recursive_functions",
+            "gen_winner_elixir_pattern_match_refactor_with_expressions"
+          ],
+          "pareto_objectives": {
+            "quality": 0.9447
+          },
+          "skill_md_content": "---\nname: elixir-pattern-match-refactor\ndescription: >-\n  Elixir pattern matching refactoring \u2014 function heads, guards, pipes, with\n  expressions, recursion, destructuring, binary matching, and defensive nil\n  elimination. Use when refactoring Elixir code to be more idiomatic. NOT for\n  schemas, queries, or Phoenix-specific patterns.\n---\n\n# Elixir Pattern Match Refactor\n\n## Quick Start\n\nReplace nested case/cond/if with multi-clause function heads. Use guards for type/range checks. Pipe for data transformations. with for multi-step happy paths. Pattern match maps/structs in function heads. Eliminate defensive nil checks with explicit pattern clauses.\n\n## When to Use\n\n- Refactoring nested case/cond/if into function heads\n- Replacing invalid guard expressions (&&, ||) with and/or\n- Converting imperative code to pipe pipelines\n- Flattening nested conditionals with with expressions\n- Choosing between Enum and manual recursion\n- Destructuring maps and structs in function heads\n- Parsing binary data with pattern matching\n- Eliminating defensive nil/Map.get chains\n\n## Common Mistakes\n\n- && and || in guards (use and/or instead)\n- acc ++ [item] in recursion (O(n\u00b2) \u2014 prepend + reverse)\n- String.contains? in guards (not allowed \u2014 move to body)\n- true -> fallback in cond (make terminal case explicit)\n- Nested case when function heads would be clearer\n- Map.get chains instead of pattern-matching the shape\n",
+          "supporting_files": {},
+          "trait_attribution": {},
+          "trait_diagnostics": {},
+          "traits": [
+            "refactor-philosophy",
+            "binary-pattern-matching-basic",
+            "cond-and-if-reduction",
+            "defensive-nil-checks-elimination",
+            "enum-vs-recursion-choice",
+            "function-head-pattern-matching",
+            "guard-clauses",
+            "map-and-struct-destructuring",
+            "pipe-operator-flows",
+            "recursive-functions",
+            "with-expressions"
+          ],
+          "trigger_precision": 0.0,
+          "trigger_recall": 0.0,
+          "variant_id": null
+        }
+      ],
+      "population_size": 2,
+      "specialization": "Elixir Pattern Match Refactor \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "status": "complete",
+      "total_cost_usd": 0.0
+    }
+  ],
+  "generated_at": "2026-04-12T07:18:08.872124+00:00",
+  "mock_run_id": "elixir-pattern-match-refactor-seed-v1",
+  "schema_version": 1,
+  "skill_families": [
+    {
+      "best_assembly_id": "gen_composite_elixir_pattern_match_refactor_seed_v1",
+      "created_at": "2026-04-12T05:58:12.972657+00:00",
+      "decomposition_strategy": "atomic",
+      "domain_id": "tax_711b848ecdf1",
+      "focus_id": "tax_018cd9dcce05",
+      "id": "fam_bdecc59e3e4f",
+      "label": "Elixir Pattern Match Refactor",
+      "language_id": "tax_78b0f6285395",
+      "slug": "elixir-pattern-match-refactor",
+      "specialization": "Elixir Pattern Match Refactor",
+      "tags": []
+    }
+  ],
+  "skill_genomes": [
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9447
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "elixir-pattern-match-refactor"
+      },
+      "generation": 1,
+      "generations_survived": 0,
+      "id": "gen_composite_elixir_pattern_match_refactor_seed_v1",
+      "is_pareto_optimal": 1,
+      "maturity": "tested",
+      "meta_strategy": "engineer_composite",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [
+        "gen_winner_elixir_pattern_match_refactor_refactor_philosophy",
+        "gen_winner_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+        "gen_winner_elixir_pattern_match_refactor_cond_and_if_reduction",
+        "gen_winner_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+        "gen_winner_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+        "gen_winner_elixir_pattern_match_refactor_function_head_pattern_matching",
+        "gen_winner_elixir_pattern_match_refactor_guard_clauses",
+        "gen_winner_elixir_pattern_match_refactor_map_and_struct_destructuring",
+        "gen_winner_elixir_pattern_match_refactor_pipe_operator_flows",
+        "gen_winner_elixir_pattern_match_refactor_recursive_functions",
+        "gen_winner_elixir_pattern_match_refactor_with_expressions"
+      ],
+      "pareto_objectives": {
+        "quality": 0.9447
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: elixir-pattern-match-refactor\ndescription: >-\n  Elixir pattern matching refactoring \u2014 function heads, guards, pipes, with\n  expressions, recursion, destructuring, binary matching, and defensive nil\n  elimination. Use when refactoring Elixir code to be more idiomatic. NOT for\n  schemas, queries, or Phoenix-specific patterns.\n---\n\n# Elixir Pattern Match Refactor\n\n## Quick Start\n\nReplace nested case/cond/if with multi-clause function heads. Use guards for type/range checks. Pipe for data transformations. with for multi-step happy paths. Pattern match maps/structs in function heads. Eliminate defensive nil checks with explicit pattern clauses.\n\n## When to Use\n\n- Refactoring nested case/cond/if into function heads\n- Replacing invalid guard expressions (&&, ||) with and/or\n- Converting imperative code to pipe pipelines\n- Flattening nested conditionals with with expressions\n- Choosing between Enum and manual recursion\n- Destructuring maps and structs in function heads\n- Parsing binary data with pattern matching\n- Eliminating defensive nil/Map.get chains\n\n## Common Mistakes\n\n- && and || in guards (use and/or instead)\n- acc ++ [item] in recursion (O(n\u00b2) \u2014 prepend + reverse)\n- String.contains? in guards (not allowed \u2014 move to body)\n- true -> fallback in cond (make terminal case explicit)\n- Nested case when function heads would be clearer\n- Map.get chains instead of pattern-matching the shape\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "refactor-philosophy",
+        "binary-pattern-matching-basic",
+        "cond-and-if-reduction",
+        "defensive-nil-checks-elimination",
+        "enum-vs-recursion-choice",
+        "function-head-pattern-matching",
+        "guard-clauses",
+        "map-and-struct-destructuring",
+        "pipe-operator-flows",
+        "recursive-functions",
+        "with-expressions"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "<<\"prefix\", rest::binary>> binary patterns for string parsing.",
+        "name": "binary-pattern-matching-basic--prefix-match"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: binary-pattern-matching-basic--prefix-match\ndescription: <<\"prefix\", rest::binary>> binary patterns for string parsing.\n---\n\n# Binary Prefix Pattern\n\n## Quick Start\n`def parse(<<\"http://\", rest::binary>>), do: ...` replaces `def parse(url), do: if String.starts_with?(url, \"http://\"), do: ...`\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Replace cond chains with function heads + guards.",
+        "name": "cond-and-if-reduction--heads-with-guards"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_cond_and_if_reduction",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: cond-and-if-reduction--heads-with-guards\ndescription: Replace cond chains with function heads + guards.\n---\n\n# Heads With Guards Replace Cond\n\n## Workflow\n1. Each `cond` branch becomes a function head with a guard\n2. Nested `if` chains become `with` expressions\n3. Single `if-else` with different types is usually a sign you need pattern matching instead\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Eliminates defensive nil checks via pattern matching.",
+        "name": "defensive-nil-checks-elimination--pattern-match"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: defensive-nil-checks-elimination--pattern-match\ndescription: Eliminates defensive nil checks via pattern matching.\n---\n\n# Pattern Match Over Nil Check\n\n## Quick Start\n`def display_name(%User{name: name}) when is_binary(name) and name != \"\", do: name; def display_name(_), do: \"Anonymous\"` replaces `def display_name(user), do: if user && user.name && user.name != \"\", do: user.name, else: \"Anonymous\"`.\n\n## Common mistakes\n- Leaving `is_nil` as a \"safety net\"\n- Pattern-matching only the nil case and delegating to an if\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Choose Enum over explicit recursion unless Enum cannot express the logic.",
+        "name": "enum-vs-recursion-choice--enum-first"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: enum-vs-recursion-choice--enum-first\ndescription: Choose Enum over explicit recursion unless Enum cannot express the logic.\n---\n\n# Enum First, Recursion When Needed\n\n## Quick Start\nEnum is faster, clearer, and more familiar. Use recursion only when necessary.\n\n## When to use recursion instead of Enum\n- Early termination (`Enum.reduce_while` is an alternative)\n- Paired iteration over two lists\n- Non-list data structures\n- When the accumulator shape is non-trivial\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Replaces case chains with multi-clause function heads.",
+        "name": "function-head-pattern-matching--multi-clause"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_function_head_pattern_matching",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: function-head-pattern-matching--multi-clause\ndescription: Replaces case chains with multi-clause function heads.\n---\n\n# Multi-Clause Function Heads\n\n## Quick Start\n`def foo(%{type: :a}), do: ...; def foo(%{type: :b}), do: ...` replaces `def foo(x), do: case x.type do ...`\n\n## Workflow\n1. Each branch of the case becomes a separate function head\n2. Put the pattern in the head, not in a case inside the body\n3. Order matters \u2014 Elixir tries heads top-to-bottom\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "when guards in function heads.",
+        "name": "guard-clauses--when"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_guard_clauses",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: guard-clauses--when\ndescription: when guards in function heads.\n---\n\n# When Guards\n\n## Quick Start\n`def foo(n) when is_integer(n) and n > 0, do: ...` narrows the match beyond the head.\n\n## Workflow\n1. Use guards for type/shape/range checks\n2. Compose with `and`, `or`, `not`\n3. Only use allowed guard functions (is_*, ==, >, <, etc.)\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Destructure map/struct fields in function heads.",
+        "name": "map-and-struct-destructuring--in-head"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_map_and_struct_destructuring",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: map-and-struct-destructuring--in-head\ndescription: Destructure map/struct fields in function heads.\n---\n\n# Destructure In Function Head\n\n## Quick Start\n`def process(%User{id: id, email: email} = user)` instead of `def process(user), do: (id = user.id; email = user.email; ...)`\n\n## Workflow\n1. Put the pattern in the head\n2. Bind the whole value with `= user` if you need it\n3. Use struct destructure for schema-backed types\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "|> pipe operator chains over intermediate temp vars.",
+        "name": "pipe-operator-flows--no-temps"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_pipe_operator_flows",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: pipe-operator-flows--no-temps\ndescription: |> pipe operator chains over intermediate temp vars.\n---\n\n# No Temp Vars In Pipes\n\n## Quick Start\n`input |> step1() |> step2() |> step3()` replaces `a = step1(input); b = step2(a); step3(b)`.\n\n## When to break the pipe\n- Side effects (log, persist) that don't return the flow value\n- When an explicit intermediate name improves readability\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Tail-recursive functions with pattern-matched base/step cases.",
+        "name": "recursive-functions--tail-recursive"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_recursive_functions",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: recursive-functions--tail-recursive\ndescription: Tail-recursive functions with pattern-matched base/step cases.\n---\n\n# Tail-Recursive With Pattern Matching\n\n## Workflow\n1. Base case: `def foo([], acc), do: acc`\n2. Step case: `def foo([h | t], acc), do: foo(t, [h * 2 | acc])`\n3. Tail position means the recursive call is the last expression\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "Refactors non-idiomatic Elixir (Ruby/Java-style if/case chains, defensive nil checks, manual loops) into idiomatic Elixir using function heads, guards, pipes, with, and pattern-matched destructures. Use when asked to improve Elixir code style or to refactor imperative patterns. NOT for writing new code from scratch.",
+        "name": "refactor-philosophy--in-place-idiomatic"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_refactor_philosophy",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: refactor-philosophy--in-place-idiomatic\ndescription: Refactors non-idiomatic Elixir (Ruby/Java-style if/case chains, defensive nil checks, manual loops) into idiomatic Elixir using function heads, guards, pipes, with, and pattern-matched destructures. Use when asked to improve Elixir code style or to refactor imperative patterns. NOT for writing new code from scratch.\n---\n\n# In-Place Idiomatic Rewrite\n\n## Quick Start\nKeep the module structure and API. Rewrite the bodies.\n\n## When to use\n- Refactoring imperative Elixir into idiomatic Elixir\n- Fixing Ruby/Java-style code written by LLMs\n- Reviewing PRs for idiomatic style\n\n## Workflow\n1. Identify if/case/cond chains \u2192 rewrite as function heads with guards\n2. Identify intermediate temp vars \u2192 rewrite as pipes\n3. Identify nested conditionals \u2192 rewrite as `with <- ... do ... else ...`\n4. Identify `is_nil` / `x && x.field` \u2192 rewrite as function head pattern match\n5. Identify Map.get chains \u2192 rewrite as map destructure in head\n\n## Common mistakes\n- Leaving one `case` where a function head would work\n- Keeping `is_nil` as a \"defensive\" fallback\n- Using `Enum.reduce` where `for` comprehension is cleaner\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {},
+      "frontmatter": {
+        "description": "with expressions for multi-step error handling.",
+        "name": "with-expressions--happy-path"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_seed_elixir_pattern_match_refactor_with_expressions",
+      "is_pareto_optimal": 0,
+      "maturity": "hardened",
+      "meta_strategy": "gen0_seed",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {},
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: with-expressions--happy-path\ndescription: with expressions for multi-step error handling.\n---\n\n# Happy-Path With Expressions\n\n## Quick Start\n```elixir\nwith {:ok, user} <- fetch_user(id),\n     {:ok, post} <- create_post(user, params),\n     :ok <- notify_subscribers(post) do\n  {:ok, post}\nelse\n  {:error, _} = error -> error\nend\n```\n\n## When to use\n- 3+ steps that each return `{:ok, _}` / `{:error, _}`\n- Nested case chains you want to flatten\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9721
+      },
+      "frontmatter": {
+        "Refactors": "binary.part/String.slice calls into binary pattern matching with",
+        "allowed-tools": "Read Write Bash(mix *) Bash(elixir *)",
+        "description": ">-",
+        "name": "binary-pattern-matching-basic--typed-segment-extract",
+        "typed segment modifiers (": ":binary-size(n), ::integer-size(n), ::utf8, ::8)."
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9721
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: binary-pattern-matching-basic--typed-segment-extract\ndescription: >-\n  Refactors :binary.part/String.slice calls into binary pattern matching with\n  typed segment modifiers (::binary-size(n), ::integer-size(n), ::utf8, ::8).\n  Use when parsing fixed-width fields, length-prefixed payloads, or byte-level\n  protocol frames. NOT for simple string prefix matching or regex replacement.\nallowed-tools: Read Write Bash(mix *) Bash(elixir *)\n---\n\n# Typed Segment Extraction via Binary Pattern Matching\n\n## Quick Start\nReplace manual `:binary.part`, `String.slice`, and byte arithmetic with binary pattern matching in function heads. Each field in the binary gets a typed segment modifier -- `::binary-size(n)` for fixed-width chunks, `::8` or `::16` for integer bytes, `::utf8` for codepoints.\n\n## When to Use\n- Code uses `:binary.part(bin, offset, length)` to carve up a binary\n- Code uses `String.slice` or `:binary.first` for byte-level access\n- A function manually computes `byte_size - offset` remainders\n- Protocol parsing with known field widths (headers, TLV, length-prefixed frames)\n- Extracting individual UTF-8 codepoints with `String.codepoints` or `String.at`\n\n## Workflow\n\n### Step 1: Identify the Binary Layout\nRead the existing code and determine what fields are being extracted. Map each field to a segment spec:\n\n| Extraction pattern | Binary segment |\n|---|---|\n| `:binary.part(bin, 0, 4)` | `field::binary-size(4)` |\n| `:binary.first(bin)` | `byte::8` |\n| `String.slice(bin, 0..1)` | `two_chars::binary-size(2)` |\n| Manual UTF-8 decode | `codepoint::utf8` |\n| `:binary.part(bin, n, byte_size(bin) - n)` | `rest::binary` |\n\n### Step 2: Build the Match Expression\nCompose segments left-to-right in a `<<...>>` pattern. The final segment is typically `rest::binary` to capture the remainder.\n\n**Fixed-width fields:**\n```elixir\n# Before: manual slicing\ndef parse(data) do\n  header = :binary.part(data, 0, 4)\n  flags = :binary.at(data, 4)\n  payload = :binary.part(data, 5, byte_size(data) - 5)\n  {header, flags, payload}\nend\n\n# After: one pattern in the head\ndef parse(<<header::binary-size(4), flags::8, payload::binary>>) do\n  {header, flags, payload}\nend\n```\n\n**Length-prefixed payloads (dependent sizes):**\n```elixir\n# Before\ndefp decode(bin, acc) do\n  len = :binary.first(bin)\n  payload = :binary.part(bin, 1, len)\n  rest = :binary.part(bin, 1 + len, byte_size(bin) - 1 - len)\n  decode(rest, [payload | acc])\nend\n\n# After: len flows into binary-size(len)\ndefp decode(<<len::8, payload::binary-size(len), rest::binary>>, acc) do\n  decode(rest, [payload | acc])\nend\n```\n\n**UTF-8 codepoint extraction:**\n```elixir\n# Before\ndef first_char(str) do\n  case String.codepoints(str) do\n    [c | _] -> {:ok, c}\n    [] -> :error\n  end\nend\n\n# After: utf8 modifier handles multi-byte boundaries\ndef first_char(<<c::utf8, _rest::binary>>), do: {:ok, <<c::utf8>>}\ndef first_char(<<>>), do: :error\n```\n\n### Step 3: Handle Edge Cases\n- Add a catch-all head for binaries shorter than expected: `def parse(<<_too_short::binary>>), do: {:error, :incomplete}`\n- Empty binary base case for recursive parsers: `defp decode(<<>>, acc), do: Enum.reverse(acc)`\n- Guard with `byte_size` when minimum length matters: `def parse(data) when byte_size(data) < 5, do: {:error, :too_short}`\n\n### Step 4: Validate\n- The refactored code must handle the same inputs as the original\n- No `:binary.part`, `:binary.first`, `String.slice`, or `String.at` calls remain\n- Each function head's pattern fully documents the binary layout\n\n## Examples\n\n**Example 1: Parse a fixed-width network header**\nInput: \"This module uses :binary.part to extract a 2-byte type field, 4-byte length, and payload from a packet binary. Refactor to use binary pattern matching.\"\nOutput:\n```elixir\ndefmodule MyApp.Packet do\n  def decode(<<type::16, length::32, payload::binary-size(length), rest::binary>>) do\n    {:ok, %{type: type, length: length, payload: payload}, rest}\n  end\n\n  def decode(<<_::binary>>) do\n    {:error, :incomplete}\n  end\nend\n```\n\n**Example 2: Replace String.slice with UTF-8-safe extraction**\nInput: \"Rewrite this function that uses String.slice(input, 0, 3) to get the first 3 UTF-8 characters. Use binary pattern matching with ::utf8 to handle multi-byte characters correctly.\"\nOutput:\n```elixir\ndefmodule MyApp.Utf8Extract do\n  def take_three(<<a::utf8, b::utf8, c::utf8, _rest::binary>>) do\n    {:ok, <<a::utf8, b::utf8, c::utf8>>}\n  end\n\n  def take_three(_), do: {:error, :too_short}\nend\n```\n\n**Example 3: Recursive length-prefixed list decoder**\nInput: \"This decoder uses :binary.first and :binary.part to read a length byte, extract that many bytes as payload, then advance. Refactor the recursive helper to use binary pattern matching in the function head.\"\nOutput:\n```elixir\ndefmodule MyApp.LenPrefixed do\n  def decode_all(bin), do: decode_all(bin, [])\n\n  defp decode_all(<<>>, acc), do: {:ok, Enum.reverse(acc)}\n\n  defp decode_all(<<len::8, chunk::binary-size(len), rest::binary>>, acc) do\n    decode_all(rest, [chunk | acc])\n  end\n\n  defp decode_all(<<_::binary>>, _acc), do: {:error, :truncated}\nend\n```\n\n## Segment Modifier Reference\n\n| Modifier | Meaning | Example |\n|---|---|---|\n| `::binary` | Greedy remaining bytes | `rest::binary` |\n| `::binary-size(n)` | Exactly n bytes | `header::binary-size(4)` |\n| `::8` | 1-byte unsigned integer | `flags::8` |\n| `::16` | 2-byte big-endian unsigned | `port::16` |\n| `::32` | 4-byte big-endian unsigned | `ip::32` |\n| `::integer-size(n)` | n-bit unsigned integer | `val::integer-size(12)` |\n| `::little-16` | 2-byte little-endian | `len::little-16` |\n| `::utf8` | One UTF-8 codepoint (1-4 bytes) | `c::utf8` |\n| `::bits` or `::bitstring` | Remaining bits (not byte-aligned) | `tail::bits` |\n\n## Gotchas\n- `::binary-size(len)` requires `len` to be bound earlier in the same pattern -- put the length field to the left of the payload field\n- `::utf8` matches one codepoint, which may be 1-4 bytes -- do not confuse with `::8` which is always one byte\n- Elixir binaries default to unsigned big-endian integers -- specify `::little` explicitly for little-endian protocols\n- A pattern like `<<_::binary-size(4), rest::binary>>` silently fails to match if the input is fewer than 4 bytes -- always add a catch-all or guard\n\n## Out of Scope\nThis skill does NOT:\n- Handle literal string prefix matching like `<<\"GET \", rest::binary>>` (use prefix-match variant)\n- Refactor non-binary data structures (maps, lists, tuples)\n- Implement full protocol state machines (this handles single-frame parsing only)\n- Work with Erlang bit-level protocols requiring non-byte-aligned fields beyond basic `::bits`",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "binary-pattern-matching-basic"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9711
+      },
+      "frontmatter": {
+        "name": "cond-and-if-reduction--guard-clause-cascade"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_cond_and_if_reduction",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9711
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: cond-and-if-reduction--guard-clause-cascade\n---\n# Cond/If Reduction via Guard Clause Cascade\n\nReplace cond and if/else chains with pattern-matched function heads using cascading guard clauses. Each branch becomes a separate function clause where guards handle boundary checks and the final catch-all uses a guardless match.\n\n## When to Use\n\n- Refactoring `cond` blocks with 3+ branches into multi-clause functions\n- Replacing nested `if/else if/else` with guard-based dispatch\n- Simplifying conditional logic where each branch tests a single variable against ranges or predicates\n- NOT for `case` expressions matching on structure \u2014 use pattern-match-extraction instead\n- NOT for boolean flag checks \u2014 use simple `when is_boolean/1` guards\n\n## Workflow\n\n1. **Identify the target**: Find `cond do` or `if/else if/else` chains with 3+ branches\n2. **Extract the discriminant**: Determine which variable(s) each branch tests\n3. **Order guards from most specific to least specific** \u2014 Elixir matches top-down, so put narrow guards first\n4. **Convert each branch to a function head** with a `when` guard capturing that branch's condition\n5. **Make the final branch guardless** \u2014 it becomes the catch-all clause\n6. **Verify exhaustiveness** \u2014 ensure no input falls through without a match\n7. **Run validation**: `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh <file>`\n\n### Guard Ordering Rules\n\n- Exact value matches (`when x == 0`) before range checks (`when x > 0`)\n- Narrow ranges (`when x in 1..10`) before wide ranges (`when x > 0`)\n- Type guards (`when is_binary(x)`) before value guards (`when x == \"\"`)\n- Compound guards (`when x > 0 and x < 100`) before single guards (`when x > 0`)\n- Guardless catch-all always last\n\n### Supported Guard Expressions\n\nElixir restricts guard clauses to a subset of expressions. Valid guards include:\n\n- Comparison: `==`, `!=`, `>`, `<`, `>=`, `<=`, `===`, `!==`\n- Boolean: `and`, `or`, `not`\n- Type checks: `is_atom/1`, `is_binary/1`, `is_integer/1`, `is_float/1`, `is_list/1`, `is_map/1`, `is_nil/1`, `is_tuple/1`, `is_number/1`, `is_boolean/1`\n- Arithmetic: `+`, `-`, `*`, `/`, `abs/1`, `rem/2`, `div/2`\n- List/tuple: `hd/1`, `tl/1`, `length/1`, `tuple_size/1`, `elem/2`\n- Map: `map_size/1`, `is_map_key/2`\n- String: `byte_size/1`, `bit_size/1`\n- Membership: `in` (only with compile-time lists or ranges)\n\nDo NOT use custom functions, `Enum` calls, or `String` module functions in guards.\n\n## Examples\n\n### Example 1: HTTP Status Classifier\n\nBefore \u2014 cond chain testing status code:\n\n```elixir\ndef classify_status(code) do\n  cond do\n    code == 200 -> :ok\n    code == 201 -> :created\n    code >= 300 and code < 400 -> :redirect\n    code >= 400 and code < 500 -> :client_error\n    code >= 500 -> :server_error\n    true -> :unknown\n  end\nend\n```\n\nAfter \u2014 guard clause cascade with most specific first:\n\n```elixir\ndef classify_status(200), do: :ok\ndef classify_status(201), do: :created\ndef classify_status(code) when code >= 300 and code < 400, do: :redirect\ndef classify_status(code) when code >= 400 and code < 500, do: :client_error\ndef classify_status(code) when code >= 500, do: :server_error\ndef classify_status(_code), do: :unknown\n```\n\n### Example 2: Discount Calculator with Nested If\n\nBefore \u2014 nested if/else computing discount tier:\n\n```elixir\ndef discount_rate(customer) do\n  if customer.loyalty_years >= 10 do\n    if customer.total_spent >= 10_000 do\n      0.25\n    else\n      0.15\n    end\n  else\n    if customer.loyalty_years >= 5 do\n      0.10\n    else\n      if customer.total_spent >= 5_000 do\n        0.05\n      else\n        0.0\n      end\n    end\n  end\nend\n```\n\nAfter \u2014 flat guard cascade extracting fields via pattern match:\n\n```elixir\ndef discount_rate(%{loyalty_years: years, total_spent: spent})\n    when years >= 10 and spent >= 10_000,\n    do: 0.25\n\ndef discount_rate(%{loyalty_years: years})\n    when years >= 10,\n    do: 0.15\n\ndef discount_rate(%{loyalty_years: years})\n    when years >= 5,\n    do: 0.10\n\ndef discount_rate(%{total_spent: spent})\n    when spent >= 5_000,\n    do: 0.05\n\ndef discount_rate(_customer), do: 0.0\n```\n\n### Example 3: Temperature Converter with Cond\n\nBefore \u2014 cond dispatching on unit atom:\n\n```elixir\ndef to_celsius(value, unit) do\n  cond do\n    unit == :fahrenheit -> (value - 32) * 5 / 9\n    unit == :kelvin -> value - 273.15\n    unit == :celsius -> value\n    true -> raise ArgumentError, \"unknown unit: #{unit}\"\n  end\nend\n```\n\nAfter \u2014 pattern match on the unit atom directly, no guards needed for exact matches:\n\n```elixir\ndef to_celsius(value, :fahrenheit), do: (value - 32) * 5 / 9\ndef to_celsius(value, :kelvin), do: value - 273.15\ndef to_celsius(value, :celsius), do: value\ndef to_celsius(_value, unit), do: raise(ArgumentError, \"unknown unit: #{unit}\")\n```\n\nNote: When every branch tests equality against a literal, prefer direct pattern matching over guards. Guards are for range checks, type checks, and compound conditions.\n\n## Common Mistakes\n\n- **Wrong guard order**: Putting wide guards before narrow ones causes unreachable clauses. Elixir warns about this \u2014 heed the warnings.\n- **Using non-guard expressions**: `String.length(x) > 5` is not valid in a guard. Use `byte_size(x) > 5` or move the check into the function body.\n- **Forgetting the catch-all**: Without a guardless final clause, you get `FunctionClauseError` on unexpected input. Always add one unless you intentionally want to crash.\n- **Over-extracting into guards**: If a condition requires `Enum.any?/2` or database lookups, keep it as a `case` or `cond` inside the function body. Guards must be pure and side-effect free.\n- **Duplicating guard logic**: If two clauses share a guard prefix, consider whether the shared part belongs in a separate function that dispatches to this one.",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "cond-and-if-reduction"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9743
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "defensive-nil-checks-elimination--pattern-match-nil-away"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9743
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: defensive-nil-checks-elimination--pattern-match-nil-away\ndescription: >-\n  Eliminates defensive nil checking (is_nil, x && x.field, maybe_do_* wrappers, case x do nil ->) by matching the expected shape in one function head and handling absence in another. Use when refactoring nil-polluted Elixir, cleaning up BoothIQ-style defensive code, or removing maybe_ helpers, even if they don't explicitly mention nil. NOT for with-expression refactors, pipe rewrites, or cond/if reduction.\n---\n\n# Pattern Match Nil Away\n\n## Quick Start\n\nStop checking for nil. Match the shape you expect. Let a separate function head (or the caller's contract) handle the absent case. Two heads -- one for the thing, one for `nil` -- replace every `if is_nil(x)` chain.\n\n## When to use\n\n- `if is_nil(x) do ... else ... end` or `unless is_nil(x)` patterns\n- `x && x.field` nil-punning to access nested values\n- `maybe_do_*` wrapper functions that guard against nil before delegating\n- `case func() do nil -> ...; val -> ... end` where an `if` binding or function heads would be cleaner\n- `when not is_nil(x)` guards (Credo `NegatedIsNil` violation)\n- Functions that re-check nil on values the caller already guaranteed\n\n## Workflow\n\n### Step 1: Audit nil check sites\n\nRead the module top-to-bottom. Mark every line that mentions `nil`, `is_nil`, `not is_nil`, `== nil`, `!= nil`, `&& x.field`, or has a `maybe_` prefix. Count them. A typical LLM-generated Elixir module has 5-15 nil checks that should be 0-2.\n\n### Step 2: Classify each nil check\n\nFor each site, ask: **is this a boundary check or an interior check?**\n\n- **Boundary check** (system edge: HTTP handler, public API, GenServer callback): the input genuinely might be nil because it comes from outside your trust boundary. These checks stay, but become pattern-matched function heads, not `if is_nil`.\n- **Interior check** (private function, downstream of a previous match): the caller already proved non-nil. Remove the check entirely. If the value could be nil here, fix the caller instead.\n\n### Step 3: Replace boundary nil checks with function heads\n\nThe nil case becomes its own function head. The happy-path head matches the expected shape.\n\n```elixir\n# BEFORE: defensive nil check in body\ndef send_welcome(user) do\n  if is_nil(user) do\n    {:error, :no_user}\n  else\n    Mailer.send(user.email, build_template(user))\n  end\nend\n\n# AFTER: nil is a separate head, happy path matches the struct\ndef send_welcome(nil), do: {:error, :no_user}\ndef send_welcome(%User{email: email} = user) do\n  Mailer.send(email, build_template(user))\nend\n```\n\n### Step 4: Replace `x && x.field` with destructuring\n\nThe `&&` nil-punning pattern obscures what the function actually returns. Destructure instead.\n\n```elixir\n# BEFORE: nil-punning chain\npreferences = user && user.preferences\nlanguage = preferences && preferences.language\nlang = if is_nil(language), do: \"en\", else: language\n\n# AFTER: destructure in one shot, default in the head\ndef extract_language(%{preferences: %{language: lang}}) when is_binary(lang), do: lang\ndef extract_language(_), do: \"en\"\n```\n\n### Step 5: Eliminate maybe_* wrappers\n\n`maybe_load_profile/1`, `maybe_send_email/1` -- these exist because the author didn't trust the input. If the caller guarantees the input, delete the wrapper and inline the call. If the caller doesn't guarantee it, fix the caller to pattern-match before calling.\n\n```elixir\n# BEFORE: maybe_ wrapper that just re-checks nil\ndef maybe_load_profile(user) do\n  case Repo.get_by(Profile, user_id: user.id) do\n    nil -> nil\n    profile -> profile\n  end\nend\n\n# AFTER: delete the wrapper, the call is already the lookup\n# Repo.get_by/2 already returns nil on miss \u2014 the case was a no-op.\n# Callers should handle the nil from Repo.get_by directly.\n```\n\n### Step 6: Replace `when not is_nil(x)` with assertive guards\n\nCredo flags `when not is_nil(x)`. Instead of saying what you don't want, say what you do want.\n\n```elixir\n# BEFORE: negated nil guard\ndef call_service(%{req: req}) when not is_nil(req), do: do_call(req)\n\n# AFTER: assert the type you expect\ndef call_service(%{req: req}) when is_binary(req), do: do_call(req)\n# Or if any non-nil is valid:\ndef call_service(%{req: req}) when is_map(req), do: do_call(req)\n```\n\n### Step 7: Replace `case func() do nil ->` with `if` binding\n\nThe dnautics pattern: when you call a function and branch on nil vs value, use Elixir's `if` binding idiom.\n\n```elixir\n# BEFORE: case-on-nil\ncase Repo.get(User, id) do\n  nil -> {:error, :not_found}\n  user -> {:ok, user}\nend\n\n# AFTER: if-binding (idiomatic when the result is used only in the truthy branch)\nif user = Repo.get(User, id) do\n  {:ok, user}\nelse\n  {:error, :not_found}\nend\n```\n\n## Examples\n\n**Example 1: Full module cleanup (multi-function nil pollution)**\n\nInput: \"This module has defensive nil checks everywhere. Clean it up.\"\n```elixir\ndefmodule MyApp.NotificationSender do\n  def send_welcome(user) do\n    if is_nil(user) do\n      {:error, :no_user}\n    else\n      email = user && user.email\n      if is_nil(email) do\n        {:error, :no_email}\n      else\n        template = build_template(user)\n        if is_nil(template) do\n          {:error, :template_failed}\n        else\n          Mailer.send(email, template)\n        end\n      end\n    end\n  end\n\n  def build_template(user) do\n    if user == nil do\n      nil\n    else\n      preferences = user && user.preferences\n      if is_nil(preferences) do\n        default_template(user)\n      else\n        custom_template(user, preferences)\n      end\n    end\n  end\nend\n```\n\nOutput:\n```elixir\ndefmodule MyApp.NotificationSender do\n  def send_welcome(nil), do: {:error, :no_user}\n  def send_welcome(%{email: nil}), do: {:error, :no_email}\n  def send_welcome(%{email: email} = user) do\n    with {:ok, template} <- build_template(user) do\n      Mailer.send(email, template)\n    end\n  end\n\n  def build_template(%{preferences: %{} = prefs} = user), do: {:ok, custom_template(user, prefs)}\n  def build_template(%{} = user), do: {:ok, default_template(user)}\nend\n```\n\nChanges: 25 lines to 11. Three `is_nil` checks eliminated. `&&` nil-punning gone. `build_template` no longer returns bare `nil` -- it returns `{:ok, _}` tuples so the caller can use `with`. The nil-user head on `build_template` is removed because `send_welcome/1` already handles that case.\n\n**Example 2: Display name with nil + empty string (common pattern)**\n\nInput: \"Make this more Elixir-like:\"\n```elixir\ndef display_name(user) do\n  name = user && user.name\n  if is_nil(name) || name == \"\" do\n    \"Anonymous\"\n  else\n    name\n  end\nend\n```\n\nOutput:\n```elixir\ndef display_name(%{name: name}) when is_binary(name) and name != \"\", do: name\ndef display_name(_), do: \"Anonymous\"\n```\n\nThe guard `when is_binary(name) and name != \"\"` handles both nil and empty string in one clause. No `is_nil`, no `||`, no intermediate variable.\n\n**Example 3: Keep a boundary nil check (system edge)**\n\nInput: \"Should I remove this nil check too?\"\n```elixir\n# In a Phoenix controller\ndef show(conn, %{\"id\" => id}) do\n  user = Repo.get(User, id)\n  if is_nil(user) do\n    conn |> put_status(404) |> json(%{error: \"not found\"})\n  else\n    conn |> json(user)\n  end\nend\n```\n\nOutput: **Keep the check, but rewrite it idiomatically.**\n```elixir\ndef show(conn, %{\"id\" => id}) do\n  if user = Repo.get(User, id) do\n    json(conn, user)\n  else\n    conn |> put_status(404) |> json(%{error: \"not found\"})\n  end\nend\n```\n\nThis is a boundary -- `Repo.get/2` genuinely returns `nil` for missing rows. The nil check stays. But it becomes an `if` binding (the dnautics idiom), not `is_nil`. The `user` variable is bound in the truthy branch only.\n\n## Gotchas\n\n- **Don't remove boundary nil checks at system edges.** HTTP handlers, GenServer callbacks, and public APIs receive untrusted input. Pattern match them, but don't delete them. The refactor is `is_nil` to function head, not `is_nil` to nothing.\n- **`user && user.email` is a code smell, not a safety feature.** It masks the actual type flowing through the function. If `user` can be nil at this point, fix the caller to not pass nil. If it can't, delete the `&&`.\n- **`maybe_*` wrappers are almost always wrong.** A function named `maybe_load_profile` signals that the author didn't trust the contract. Delete the wrapper and fix the contract.\n- **`when not is_nil(x)` triggers Credo `NegatedIsNil`.** Replace with an assertive type guard: `when is_binary(x)`, `when is_map(x)`, `when is_struct(x, User)`. State what you expect, not what you don't.\n- **Refactoring nil checks can change error semantics.** `if is_nil(user)` returns `{:error, :no_user}`. A function head matching `nil` raises `FunctionClauseError` if there is no `nil` head. Always add the `nil` head explicitly when the function should handle nil gracefully.\n- **Nested nil checks often hide a `with` expression.** Three levels of `if is_nil` is usually a multi-step happy path. After eliminating the nil checks, check whether the remaining code is a `with` chain.\n\n## Out of Scope\n\nThis skill does NOT:\n- Refactor `cond` blocks or nested `if` chains that test non-nil conditions (role checks, range checks) -- use `cond-and-if-reduction` instead\n- Restructure `with` expressions or flatten nested `case` chains -- use `with-expressions` instead\n- Rewrite pipe operator flows -- use `pipe-operator-flows` instead\n- Replace `case` statements with function heads when the branching is on values, not nil -- use `function-head-pattern-matching` instead",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "defensive-nil-checks-elimination"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9152
+      },
+      "frontmatter": {
+        "description": ">-",
+        "name": "enum-vs-recursion-choice--shape-driven"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9152
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: enum-vs-recursion-choice--shape-driven\ndescription: >-\n  Chooses Enum or recursion based on the data shape and access pattern, not a\n  blanket default. Structural recursion for trees/nested/variable-depth data;\n  Stream for lazy/infinite/IO-bound; Enum for flat collections with known\n  transforms. Use when refactoring iteration in Elixir. NOT for OTP GenServer\n  loops or comprehension-only rewrites.\n---\n\n# Shape-Driven Iteration Choice\n\n## Quick Start\n\nRead the data shape first. Flat list with a named transform? Enum. Tree, nested structure, or variable-depth traversal? Recursion. Large or IO-bound pipeline? Stream. The shape of the data picks the tool -- never apply a blanket \"always Enum\" or \"always recurse\" rule.\n\n## When to Use\n\n- Refactoring loops, reduces, or recursive functions in Elixir\n- Choosing between Enum, Stream, and explicit recursion\n- Reviewing code where the wrong iteration strategy was chosen\n- Converting imperative accumulator patterns to idiomatic Elixir\n\n## Decision Framework\n\n### Step 1: Classify the Data Shape\n\nIdentify which category the input data falls into:\n\n1. **Flat collection** (list, map, MapSet) with uniform elements\n2. **Nested/tree structure** (AST, JSON tree, recursive data type)\n3. **Paired/zipped iteration** (two+ collections consumed together)\n4. **Stateful sequence** (output element N depends on elements 1..N-1)\n5. **Stream source** (file lines, HTTP chunks, infinite generator)\n\n### Step 2: Match Shape to Tool\n\n| Shape | Tool | Why |\n|-------|------|-----|\n| Flat + named transform exists | `Enum.map/filter/reduce/find/split_with/map_join/scan/...` | One function call, zero boilerplate |\n| Flat + early exit needed | `Enum.reduce_while/3` or `Enum.find/2` | Avoids processing the full list |\n| Flat + index needed | `Enum.with_index/2` piped to `Enum.map/2` | Cleaner than manual counter |\n| Nested / tree / recursive type | Explicit recursion with pattern-matched heads | Enum cannot descend into children |\n| Paired lists | `Enum.zip_with/3` or explicit two-arg recursion | zip_with when transform is uniform; recurse when branches diverge |\n| Stateful running value | `Enum.scan/2` or `Enum.scan/3` | Each output depends on prior state |\n| Large / IO-bound / lazy | `Stream.map/filter/...` piped to single terminal `Enum.*` | Avoids materializing intermediate lists |\n| Infinite generator | `Stream.iterate/2` or `Stream.unfold/2` | Enum would hang |\n\n### Step 3: Validate the Choice\n\nAfter choosing, verify:\n- **Enum choice**: confirm a single Enum function expresses the full logic. If you need `Enum.reduce` with a complex accumulator tuple, reconsider recursion -- the accumulator is doing the job of function heads.\n- **Recursion choice**: confirm base and step cases are clean separate heads. If the step case is just `[h | t] -> process(h) ++ recurse(t)`, it is probably `Enum.flat_map`.\n- **Stream choice**: confirm there is a real benefit (large data, lazy evaluation, IO). Stream over a 10-element list is noise.\n\n### Step 4: Refactor\n\nApply the chosen tool. Preserve the public API and return type exactly.\n\n## Examples\n\n**Example 1: Flat collection -- pick the right Enum function**\n\nInput: \"Refactor this recursive doubler\"\n```elixir\ndef doubled([]), do: []\ndef doubled([h | t]), do: [h * 2 | doubled(t)]\n```\n\nOutput:\n```elixir\ndef doubled(list), do: Enum.map(list, &(&1 * 2))\n```\nReasoning: flat list, uniform transform, named Enum function exists. No recursion needed.\n\n**Example 2: Stateful running value -- reach for Enum.scan**\n\nInput: \"Refactor this running max tracker\"\n```elixir\ndef running_max(list), do: running_max(list, nil, [])\ndefp running_max([], _max, acc), do: Enum.reverse(acc)\ndefp running_max([h | t], nil, acc), do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc) when h > max, do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc), do: running_max(t, max, [max | acc])\n```\n\nOutput:\n```elixir\ndef running_max(list), do: Enum.scan(list, &max/2)\n```\nReasoning: each output depends on the prior maximum -- this is a scan (stateful sequence), not a map. The 3-arg recursive helper with accumulator is doing what `Enum.scan` does natively.\n\n**Example 3: Tree structure -- recursion is correct, Enum would be wrong**\n\nInput: \"Should I use Enum here?\"\n```elixir\ndef count_nodes(%{children: children} = _node) do\n  1 + Enum.sum(Enum.map(children, &count_nodes/1))\nend\ndef count_nodes(_leaf), do: 1\n```\n\nOutput: Keep recursion. This is structural recursion over a tree -- Enum handles the children list at each level, but the recursive descent through depth is inherently recursive. The hybrid (Enum for siblings, recursion for depth) is already idiomatic. Do not flatten this into a single Enum call.\n\n## Gotchas\n\n- **Complex reduce accumulators signal wrong tool.** If your `Enum.reduce` accumulator is a tuple `{state1, state2, buffer}` with branching logic inside the reducer, you have reinvented recursion with extra syntax. Extract into explicit recursive function heads where each state combination is a separate head.\n- **`Enum.each` + rebinding is a bug, not a pattern.** `acc = acc ++ [x]` inside `Enum.each` is a no-op in Elixir. The binding never escapes the anonymous function. Replace with `Enum.map`, `Enum.filter`, or `Enum.reduce` depending on intent.\n- **Stream is not always better for \"large\" data.** Stream adds per-element overhead. For in-memory lists under ~10,000 elements with simple transforms, `Enum.map` is faster. Use Stream when you need laziness (avoiding materializing intermediate lists) or when the source is truly streaming (file IO, network).\n- **`Enum.reduce_while` exists.** Before writing recursion for \"early termination,\" check whether `Enum.reduce_while` or `Enum.find` solves it. Recursion for early exit is only justified when the termination condition is complex (depends on accumulated state across multiple dimensions).\n- **Don't flatten structural recursion.** When the data is a tree, graph, or nested structure, recursion is the correct tool. Attempting to use `Enum.flat_map` to \"avoid recursion\" on a tree usually produces worse code -- harder to read, same computational complexity, and loses the pattern-matching base/step clarity.\n\n## Out of Scope\n\nThis skill does NOT:\n- Choose between `for` comprehensions and Enum (see pipe-operator-flows)\n- Decide recursion style (tail vs body) -- that is the recursive-functions dimension\n- Handle GenServer receive loops or OTP process iteration\n- Optimize performance of existing correct code -- focus is on idiomatic choice, not benchmarking",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "enum-vs-recursion-choice"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.8841
+      },
+      "frontmatter": {
+        "Decomposes case/cond into function heads organized by dispatch groups": "shared",
+        "description": ">-",
+        "name": "function-head-pattern-matching--dispatch-decompose"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_function_head_pattern_matching",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.8841
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: function-head-pattern-matching--dispatch-decompose\ndescription: >-\n  Decomposes case/cond into function heads organized by dispatch groups: shared\n  public entry head delegates to private per-pattern helpers. Merges related\n  patterns via guards on a single head instead of duplicating logic. Use when\n  refactoring branchy Elixir functions, splitting case statements, or organizing\n  multi-clause dispatch. NOT for with-expressions, pipe refactoring, or binary\n  pattern matching.\n---\n\n# Function Head Pattern Matching -- Dispatch Decompose\n\n## Quick Start\nIdentify each branch in a case/cond as a dispatch target. Group related branches\nunder a shared function head with a guard. Unrelated branches get their own head.\nPrivate helpers carry per-branch logic so public heads stay shallow.\n\n## When to use\n- A function has a `case` or `cond` with 3+ branches dispatching on the same argument\n- Multiple branches share logic except for a single parameter difference\n- A function has a `case arg do` as its entire body (the function IS the case)\n- Refactoring a god-function that handles too many shapes in one body\n\n## Workflow\n\n### Step 1: Identify the dispatch argument\nFind the argument the `case`/`cond` dispatches on. This is your pattern-match\ntarget. If the function signature is `def foo(arg)` and the body is\n`case arg.type do ...`, the dispatch argument is the shape of `arg`.\n\n### Step 2: Classify branches into groups\n- **Unique branches**: each branch has distinct logic and a distinct pattern.\n  These become separate function heads.\n- **Sibling branches**: branches that share 80%+ of their logic but differ on a\n  single value or guard condition. These share one function head with a guard\n  that covers both, and the differing bit is extracted to a tiny private helper.\n- **Fallback branches**: `_` or catch-all. Always the last function head.\n\n### Step 3: Write public heads (shallow dispatch)\nEach public head pattern-matches the dispatch argument and either:\n- Returns directly for one-liner logic\n- Delegates to a private helper for multi-line logic\n\n```elixir\n# BEFORE: one function with a case\ndef process(event) do\n  case event.type do\n    :click -> handle_click(event.target, event.x, event.y)\n    :hover -> handle_hover(event.target, event.x, event.y)\n    :keydown -> handle_key(event.key, event.modifiers)\n    :keyup -> handle_key(event.key, [])\n    _ -> {:error, :unknown_event}\n  end\nend\n\n# AFTER: dispatch-decomposed heads\ndef process(%{type: :click} = event), do: do_pointer(event, :click)\ndef process(%{type: :hover} = event), do: do_pointer(event, :hover)\ndef process(%{type: type} = event) when type in [:keydown, :keyup], do: do_key(event)\ndef process(_event), do: {:error, :unknown_event}\n\ndefp do_pointer(%{target: target, x: x, y: y}, :click), do: handle_click(target, x, y)\ndefp do_pointer(%{target: target, x: x, y: y}, :hover), do: handle_hover(target, x, y)\n\ndefp do_key(%{type: :keydown, key: key, modifiers: mods}), do: handle_key(key, mods)\ndefp do_key(%{type: :keyup, key: key}), do: handle_key(key, [])\n```\n\n### Step 4: Order heads from most specific to least specific\nElixir tries function heads top-to-bottom. Place:\n1. Heads with struct matches (`%User{}`) before map matches (`%{}`)\n2. Heads with literal matches (`\"admin\"`) before variable matches (`role`)\n3. Heads with guards before heads without guards\n4. Catch-all (`_`) last\n\n### Step 5: Verify no dead heads\nA head is dead if a less-specific head above it would always match first.\nCheck by asking: \"Can I construct an argument that reaches head N but not\nhead N-1?\" If not, head N is dead -- reorder or tighten the head above.\n\n### Step 6: Apply the naming convention\n- Public heads: the original function name, unchanged\n- Private helpers: `do_` prefix + semantic group name\n- If a private helper itself dispatches, it gets its own multi-clause heads\n\n## Examples\n\n**Example 1: Role-based access control with sibling grouping**\n\nInput: \"I have an authorize/2 function with a case on user.role. Admin and superadmin\nshare the same logic except superadmin can also delete. Editor and viewer share\nread-only logic.\"\n\nOutput:\n```elixir\ndefmodule MyApp.Authz do\n  def authorize(%{role: role}, action) when role in [\"admin\", \"superadmin\"],\n    do: do_admin_authorize(role, action)\n\n  def authorize(%{role: role}, action) when role in [\"editor\", \"viewer\"],\n    do: do_readonly_authorize(role, action)\n\n  def authorize(_, _), do: {:error, :unauthorized}\n\n  defp do_admin_authorize(_role, :delete), do: :ok\n  defp do_admin_authorize(\"superadmin\", :purge), do: :ok\n  defp do_admin_authorize(_role, action) when action in [:read, :write, :update], do: :ok\n  defp do_admin_authorize(_role, _action), do: {:error, :forbidden}\n\n  defp do_readonly_authorize(\"editor\", :write), do: :ok\n  defp do_readonly_authorize(_role, :read), do: :ok\n  defp do_readonly_authorize(_role, _action), do: {:error, :forbidden}\nend\n```\n\n**Example 2: HTTP response handler -- merging status code ranges**\n\nInput: \"This function has a case on status_code with branches for 200, 201, 204,\n301, 302, 400, 401, 403, 404, 500, 502, 503. Twelve branches.\"\n\nOutput:\n```elixir\ndefmodule MyApp.ResponseHandler do\n  def handle_response(%{status: status} = resp) when status in [200, 201],\n    do: do_success(resp)\n\n  def handle_response(%{status: 204}), do: {:ok, :no_content}\n\n  def handle_response(%{status: status} = resp) when status in [301, 302],\n    do: do_redirect(resp)\n\n  def handle_response(%{status: status} = resp) when status in 400..499,\n    do: do_client_error(resp)\n\n  def handle_response(%{status: status} = resp) when status in 500..599,\n    do: do_server_error(resp)\n\n  def handle_response(resp), do: {:error, :unexpected_status, resp}\n\n  defp do_success(%{body: body}), do: {:ok, Jason.decode!(body)}\n\n  defp do_redirect(%{headers: headers}),\n    do: {:redirect, List.keyfind(headers, \"location\", 0)}\n\n  defp do_client_error(%{status: 401}), do: {:error, :unauthorized}\n  defp do_client_error(%{status: 403}), do: {:error, :forbidden}\n  defp do_client_error(%{status: 404}), do: {:error, :not_found}\n  defp do_client_error(%{status: status, body: body}),\n    do: {:error, :client_error, %{status: status, detail: body}}\n\n  defp do_server_error(%{status: status}),\n    do: {:error, :server_error, %{status: status, retry: true}}\nend\n```\n\n**Example 3: Message parser with nested dispatch**\n\nInput: \"Parse incoming WebSocket frames. Text frames need JSON decoding, binary\nframes need protobuf decoding, control frames (ping/pong/close) just need ack.\"\n\nOutput:\n```elixir\ndefmodule MyApp.FrameParser do\n  def parse({:text, payload}), do: do_parse_text(payload)\n  def parse({:binary, payload}), do: do_parse_binary(payload)\n  def parse({control, _payload}) when control in [:ping, :pong, :close],\n    do: do_control(control)\n  def parse(unknown), do: {:error, :unknown_frame, unknown}\n\n  defp do_parse_text(payload) do\n    case Jason.decode(payload) do\n      {:ok, decoded} -> {:ok, :text, decoded}\n      {:error, _} -> {:error, :invalid_json}\n    end\n  end\n\n  defp do_parse_binary(payload) do\n    case Protobuf.decode(payload, MyApp.Message) do\n      {:ok, msg} -> {:ok, :binary, msg}\n      {:error, reason} -> {:error, :invalid_protobuf, reason}\n    end\n  end\n\n  defp do_control(:close), do: {:close, :normal}\n  defp do_control(type), do: {:ack, type}\nend\n```\n\n## Gotchas\n- **Over-decomposing**: if a case has 2 branches and no shared logic, just use\n  2 function heads directly. The dispatch-decompose pattern pays off at 4+\n  branches or when sibling grouping is possible.\n- **Guard-allowed functions only**: `String.length/1`, `Map.get/3`, and most\n  module functions are NOT allowed in guards. Stick to `is_*`, arithmetic,\n  comparisons, `in`, `and`/`or`/`not`. When you need a module function, match\n  the value in the head and guard on the bound variable.\n- **Dead heads from wrong ordering**: `def foo(%{})` before `def foo(%User{})`\n  makes the struct head unreachable. Structs are maps, so the map head matches\n  first. Always put struct heads above map heads.\n- **Losing the full value**: when destructuring in the head, bind the whole\n  argument too: `def foo(%{type: :bar} = event)` so the private helper can\n  access other fields without re-destructuring.\n- **Sibling collapse trap**: only merge siblings when they truly share logic.\n  If merging requires an `if` inside the helper to re-branch, you have not\n  actually simplified -- keep them as separate heads.\n\n## Out of scope\nThis skill does NOT:\n- Refactor `with` expressions (use `with-expressions` dimension instead)\n- Rewrite pipe operator flows (use `pipe-operator-flows` dimension instead)\n- Handle binary/bitstring pattern matching (use `binary-pattern-matching-basic` instead)\n- Decide between Enum vs recursion (use `enum-vs-recursion-choice` instead)\n- Write new functionality from scratch -- this is refactoring only",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "function-head-pattern-matching"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9475
+      },
+      "frontmatter": {
+        "description": "Refactors conditional logic into guard clauses by applying the complete guard-safe expression catalog. Knows every allowed guard function, operator, and type check. Extracts repeated guard logic into defguard/defguardp macros. Use when refactoring cond/if chains into guards or when a guard raises an ArgumentError. NOT for pattern matching without guards or pipe operator refactoring.",
+        "name": "guard-clauses--guard-safe-catalog"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_guard_clauses",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9475
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: guard-clauses--guard-safe-catalog\ndescription: Refactors conditional logic into guard clauses by applying the complete guard-safe expression catalog. Knows every allowed guard function, operator, and type check. Extracts repeated guard logic into defguard/defguardp macros. Use when refactoring cond/if chains into guards or when a guard raises an ArgumentError. NOT for pattern matching without guards or pipe operator refactoring.\n---\n\n# Guard-Safe Catalog\n\n## Quick Start\nGuards are a restricted subset of Elixir. Not every expression is allowed. This variant knows exactly which functions, operators, and macros are guard-safe and uses that knowledge to convert imperative conditionals into correct, compilable guard clauses. When a guard expression repeats across multiple function heads, extract it into a `defguard` or `defguardp` macro.\n\n## When to use\n- Converting `cond`/`if`/`case` branches into function heads with `when` clauses\n- Debugging `ArgumentError: invalid expression in guard` at compile time\n- Extracting duplicated guard logic into reusable `defguard` macros\n- Deciding whether a check belongs in a guard or in the function body\n\n## Workflow\n\n### Step 1: Identify the conditional to replace\nLook for `cond do`, nested `if`, or `case` with equality checks. Each branch becomes a function head. The branch condition becomes the `when` clause.\n\n### Step 2: Verify every expression is guard-safe\nBefore writing the guard, check every sub-expression against the allowed list below. If ANY part is not guard-safe, it must stay in the function body or be restructured.\n\n#### Allowed guard expressions (complete list)\n\n**Comparison operators:**\n`==`, `!=`, `===`, `!==`, `<`, `>`, `<=`, `>=`\n\n**Boolean and negation:**\n`and`, `or`, `not`, `!` (but NOT `&&`, `||` -- these are NOT guard-safe)\n\n**Arithmetic:**\n`+`, `-`, `*`, `/`, `div/2`, `rem/2`, `abs/1`, `ceil/1`, `floor/1`\n\n**Type-check functions (is_* family):**\n`is_atom/1`, `is_binary/1`, `is_bitstring/1`, `is_boolean/1`, `is_float/1`, `is_function/1`, `is_function/2`, `is_integer/1`, `is_list/1`, `is_map/1`, `is_map_key/2`, `is_nil/1`, `is_number/1`, `is_pid/1`, `is_port/1`, `is_reference/1`, `is_struct/1`, `is_struct/2`, `is_tuple/1`\n\n**Collection/element access:**\n`elem/2`, `hd/1`, `tl/1`, `length/1`, `map_size/1`, `tuple_size/1`, `in/2` (the `in` operator for membership), `../2` (range creation)\n\n**Binary/bitstring:**\n`binary_part/3`, `bit_size/1`, `byte_size/1`\n\n**String-related (limited):**\n`is_binary/1` only. `String.length/1`, `String.contains?/2`, regex -- all NOT guard-safe.\n\n**Map field access:**\n`map.field` dot syntax works in guards. `Map.get/2` does NOT.\n\n**Erlang BIF guards:**\n`:erlang.node/0`, `:erlang.node/1`, `:erlang.self/0`, `round/1`, `trunc/1`\n\n#### NOT allowed in guards (common mistakes)\n- `&&` and `||` -- use `and` / `or` instead\n- `Enum.any?/2`, `Enum.member?/2` -- use `in [...]` instead\n- `String.length/1` -- use `byte_size/1` if checking binary length\n- `Map.get/2`, `Map.has_key?/2` -- use `is_map_key/2` and dot access\n- `match?/2` -- not guard-safe\n- Any function you defined yourself (unless wrapped in `defguard`)\n- `try`, `receive`, `send`, `spawn`, or any side effect\n\n### Step 3: Write the guard clause\n\nStructure: `def name(pattern) when guard_expr, do: body`\n\nCompose multiple checks with `and` / `or`:\n```elixir\ndef process(x) when is_integer(x) and x > 0 and x < 100, do: ...\n```\n\nUse `in` for membership:\n```elixir\ndef handle(%{status: s}) when s in [:active, :pending], do: ...\n```\n\nUse `not` or `!` for negation:\n```elixir\ndef reject(x) when not is_nil(x) and x != \"\", do: ...\n```\n\n### Step 4: Extract repeated guards into defguard\n\nWhen the same guard expression appears in 2+ function heads, extract it:\n\n```elixir\ndefguardp is_valid_age(age) when is_integer(age) and age >= 0 and age <= 150\n\ndef categorize(age) when is_valid_age(age) and age < 18, do: :minor\ndef categorize(age) when is_valid_age(age) and age < 65, do: :adult\ndef categorize(age) when is_valid_age(age), do: :senior\n```\n\nRules for `defguard` / `defguardp`:\n- `defguard` is public (usable by other modules that `import` or `require` yours)\n- `defguardp` is private (same module only)\n- The body must contain ONLY guard-safe expressions\n- Defined at module level, before the functions that use it\n- Can compose: one defguard can call another defguard\n\n### Step 5: Order function heads correctly\nElixir tries heads top-to-bottom. Place more specific guards before less specific ones. The catch-all (no guard) goes last.\n\n```elixir\ndef price(qty) when is_integer(qty) and qty >= 100, do: qty * 0.80\ndef price(qty) when is_integer(qty) and qty >= 10,  do: qty * 0.90\ndef price(qty) when is_integer(qty) and qty >= 1,   do: qty * 1.00\ndef price(_), do: {:error, :invalid_quantity}\n```\n\n## Examples\n\n**Example 1: Cond chain to guarded function heads**\nInput: \"Refactor this pricing function that uses a cond block\"\n```elixir\ndef shipping_cost(weight) do\n  cond do\n    weight <= 0 -> {:error, :invalid}\n    weight < 1.0 -> 5.99\n    weight < 5.0 -> 9.99\n    weight < 20.0 -> 14.99\n    true -> 24.99\n  end\nend\n```\nOutput:\n```elixir\ndef shipping_cost(weight) when is_number(weight) and weight <= 0,\n  do: {:error, :invalid}\ndef shipping_cost(weight) when is_number(weight) and weight < 1.0,\n  do: 5.99\ndef shipping_cost(weight) when is_number(weight) and weight < 5.0,\n  do: 9.99\ndef shipping_cost(weight) when is_number(weight) and weight < 20.0,\n  do: 14.99\ndef shipping_cost(weight) when is_number(weight),\n  do: 24.99\ndef shipping_cost(_), do: {:error, :invalid}\n```\n\n**Example 2: Extract defguard from repeated checks**\nInput: \"These three functions repeat the same age validation\"\n```elixir\ndef can_vote?(age) when is_integer(age) and age >= 18 and age <= 150, do: true\ndef can_drive?(age) when is_integer(age) and age >= 16 and age <= 150, do: true\ndef can_retire?(age) when is_integer(age) and age >= 65 and age <= 150, do: true\n```\nOutput:\n```elixir\ndefguardp is_valid_age(age) when is_integer(age) and age >= 0 and age <= 150\n\ndef can_vote?(age) when is_valid_age(age) and age >= 18, do: true\ndef can_vote?(_), do: false\n\ndef can_drive?(age) when is_valid_age(age) and age >= 16, do: true\ndef can_drive?(_), do: false\n\ndef can_retire?(age) when is_valid_age(age) and age >= 65, do: true\ndef can_retire?(_), do: false\n```\n\n**Example 3: Fix an invalid guard expression**\nInput: \"This guard won't compile: `def find(list) when Enum.member?(list, :admin), do: ...`\"\nOutput:\n```elixir\n# Enum.member?/2 is NOT guard-safe. Use `in` for literal lists:\ndef find(role) when role in [:admin, :superadmin], do: ...\n\n# If checking list membership at runtime, move to function body:\ndef find(list) when is_list(list) do\n  if Enum.member?(list, :admin), do: ..., else: ...\nend\n```\n\n## Gotchas\n- `&&` and `||` silently compile in some contexts but are NOT guard-safe -- always use `and` / `or` in guards. Using `&&` in a guard raises at compile time in modern Elixir but older versions may produce confusing runtime errors.\n- `in` only works with compile-time-known literal lists or ranges in guards. `when x in my_var` will not compile. Use `Enum.member?/2` in the body if the list is dynamic.\n- `is_struct/2` checks the `__struct__` field. `is_struct(x, User)` works in guards but `x.__struct__ == User` also works and is sometimes clearer.\n- When composing guards with `or`, wrap each alternative in parentheses to avoid precedence surprises: `when (is_integer(x) and x > 0) or is_nil(x)`.\n- `defguard` must be defined before the first function that uses it in the module, or the compiler raises an undefined error.\n\n## Out of Scope\nThis skill does NOT:\n- Replace `case` with function heads (use `function-head-pattern-matching` for that)\n- Refactor pipe operator chains (use `pipe-operator-flows`)\n- Handle `with` expression refactoring (use `with-expressions`)\n- Write new business logic -- it only restructures existing conditionals into guards",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "guard-clauses"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9213
+      },
+      "frontmatter": {
+        "description": "Replaces non-assertive map access (map[:key], Map.get) with assertive patterns (map.key, Map.fetch!, clause destructuring). Chooses between head destructuring and body-level case/with destructuring based on clause count and field usage. Prevents the complex-extractions anti-pattern. Use when refactoring defensive map access. NOT for binary patterns or pipe rewrites.",
+        "name": "map-and-struct-destructuring--assertive-access"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_map_and_struct_destructuring",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9213
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: map-and-struct-destructuring--assertive-access\ndescription: Replaces non-assertive map access (map[:key], Map.get) with assertive patterns (map.key, Map.fetch!, clause destructuring). Chooses between head destructuring and body-level case/with destructuring based on clause count and field usage. Prevents the complex-extractions anti-pattern. Use when refactoring defensive map access. NOT for binary patterns or pipe rewrites.\n---\n\n# Assertive Access Over Defensive Lookup\n\n## Quick Start\nKeys that must exist get assertive access (`map.key` or `Map.fetch!/2`). Keys that might be absent get pattern-matched in a multi-clause head or `with` clause. Never `map[:key]` for required keys -- it hides bugs.\n\n## When to use\n- Functions littered with `map[:key]` or `Map.get(map, :key)` for keys that are structurally guaranteed\n- `if map[:key] != nil` guards wrapping logic that should fail fast on missing keys\n- Struct fields accessed via `user.field` in the body when the struct module is not pinned in the head\n- Nested map access chains like `params[:user][:address][:street]` that obscure structure\n\n## Workflow\n\n### Step 1: Classify every map/struct access in the function\nFor each access, determine:\n- **Required key** (structurally guaranteed by caller contract): use `map.key` dot-syntax or destructure in head\n- **Optional key** (legitimately absent in some paths): use `Map.fetch/2` in a `with` clause or a multi-clause head with/without the key\n- **Struct field**: pin the struct module in the head (`%User{} = user`) even if you access fields in the body\n\n### Step 2: Choose WHERE to destructure\nThis is the critical decision. Apply these rules in order:\n\n**Destructure in the function head when:**\n- The function has 1-2 clauses AND extracts 1-3 fields AND every extracted field is used for logic (not just passed through)\n- The struct module matters for dispatch (multiple heads matching different struct types)\n\n**Destructure in a case/with clause when:**\n- The match is conditional (some paths skip it)\n- The function already has 3+ clauses -- adding destructured fields to the head creates the complex-extractions anti-pattern\n- The field is used only in one branch of a `with` chain\n\n**Use dot-syntax in the body when:**\n- The struct is already pinned in the head and you need 4+ fields -- extracting all in the head is noise\n- You are passing the value through to another function (`Repo.update(user)`) and only reading one field for a log message\n\n### Step 3: Rewrite access patterns\n- `map[:key]` where key must exist --> `map.key` (raises `KeyError` on missing -- this is correct)\n- `Map.get(map, :key)` where key must exist --> `map.key`\n- `Map.get(map, :key, default)` where you want the default --> keep, or use a two-clause head\n- `map[:key]` where key is optional --> `Map.fetch(map, :key)` in a `with` clause\n- `user.field` on an unpinned map --> add `%User{} = user` to head or `%User{field: field} = user` if dispatching\n\n### Step 4: Verify you did NOT introduce complex extractions\nAfter rewriting, check each function head:\n- Does it destructure fields from 2+ arguments? If yes, simplify.\n- Does it extract fields only used in the body (not for pattern dispatch)? If yes, move to body.\n- Can a reader tell which parts of the head are for matching vs extraction? If not, simplify.\n\n## Examples\n\n**Example 1: Required keys -- dynamic to dot-syntax**\n\nBefore:\n```elixir\ndef format_order(order) do\n  id = order[:id]\n  total = order[:total]\n  items = order[:items]\n  \"Order ##{id}: #{length(items)} items, $#{total}\"\nend\n```\n\nAfter:\n```elixir\ndef format_order(%{id: id, items: items, total: total}) do\n  \"Order ##{id}: #{length(items)} items, $#{total}\"\nend\n```\nAll three keys are required and used directly. Head destructuring is correct because there is one clause and three fields.\n\n**Example 2: Mixed required/optional keys -- with clause for optional**\n\nBefore:\n```elixir\ndef shipping_label(user) do\n  name = user[:name]\n  addr = user[:address]\n  if addr != nil do\n    street = addr[:street]\n    city = addr[:city]\n    \"#{name}\\n#{street}\\n#{city}\"\n  else\n    \"#{name}\\nNo address on file\"\n  end\nend\n```\n\nAfter:\n```elixir\ndef shipping_label(%{name: name, address: %{street: street, city: city}}) do\n  \"#{name}\\n#{street}\\n#{city}\"\nend\n\ndef shipping_label(%{name: name}) do\n  \"#{name}\\nNo address on file\"\nend\n```\n`name` is required in both paths. `address` presence determines dispatch -- two clause heads are clearer than an `if` in the body.\n\n**Example 3: Avoiding complex extractions -- keep dot-syntax in body**\n\nBefore (already uses head destructuring but over-extracts):\n```elixir\ndef process(%User{id: id, name: name, email: email, role: role, org_id: org_id} = user, %Org{id: oid, plan: plan}) do\n  if role == \"admin\" do\n    Admin.grant(user, plan)\n  else\n    Logger.info(\"User #{name} (#{email}) skipped\")\n    {:ok, user}\n  end\nend\n```\n\nAfter:\n```elixir\ndef process(%User{role: \"admin\"} = user, %Org{plan: plan}) do\n  Admin.grant(user, plan)\nend\n\ndef process(%User{name: name, email: email} = user, %Org{}) do\n  Logger.info(\"User #{name} (#{email}) skipped\")\n  {:ok, user}\nend\n```\nFirst head: `role` drives dispatch, only `user` and `plan` are used in body. Second head: `name` and `email` are used for logging. Neither head extracts unused fields. `id`, `org_id` are gone from the signature because they are not used.\n\n## Gotchas\n- `map.key` raises `KeyError` on missing keys -- this is the POINT, not a bug. If the key might be absent, use a multi-clause head or `Map.fetch/2`.\n- `%{}` in a function head matches ANY map, including structs. If you need to assert the struct type, pin it: `%User{}`. If you need to assert an empty map, use a guard: `when map_size(m) == 0`.\n- Nested destructuring (`%{address: %{street: s}}`) is fine for 2 levels. At 3+ levels, extract into a helper function.\n- `Map.get/3` with a default is sometimes the right choice. Do not mechanically convert every `Map.get` into head destructuring -- if the default value is meaningful business logic, keep it visible.\n- Structs enforce keys at compile time; plain maps do not. Pinning `%User{}` in the head gets you a `MatchError` on wrong struct type -- this is free type safety.\n\n## Out of Scope\nThis variant does NOT:\n- Rewrite `case` chains into function heads (see `function-head-pattern-matching` dimension)\n- Add or modify guard clauses (see `guard-clauses` dimension)\n- Restructure pipe chains (see `pipe-operator-flows` dimension)\n- Handle binary/string pattern matching (see `binary-pattern-matching-basic` dimension)\n\n## Decision Heuristic (cheat sheet)\n\n| Situation | Action |\n|---|---|\n| 1 clause, 1-3 required fields | Destructure in head |\n| 1 clause, 4+ fields | Pin struct in head, dot-access in body |\n| 2+ clauses dispatching on a field value | Destructure the dispatch field in each head |\n| 2+ clauses, shared fields not used for dispatch | Pin struct in head, dot-access shared fields in body |\n| Optional key determines branching | Two-clause head: one matching the key, one without |\n| Optional key in a multi-step pipeline | `with {:ok, val} <- Map.fetch(map, :key)` |\n| Nested map 2 levels deep | Inline nested destructure |\n| Nested map 3+ levels deep | Extract helper, destructure at each level |",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "map-and-struct-destructuring"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9775
+      },
+      "frontmatter": {
+        "Refactors Elixir code using |> pipes with a strict readability budget": "max 5 steps per pipeline, extract named helpers above 5, use then/2 for non-first-arg positions, never start a pipe from a control structure. Judges each chain on cognitive cost, not line count. Use when refactoring imperative Elixir into pipelines or reviewing pipe chain length. NOT for with expressions or recursion.",
+        "description": ">-",
+        "name": "pipe-operator-flows--readability-budget"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_pipe_operator_flows",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9775
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: pipe-operator-flows--readability-budget\ndescription: >-\n  Refactors Elixir code using |> pipes with a strict readability budget: max 5 steps per pipeline, extract named helpers above 5, use then/2 for non-first-arg positions, never start a pipe from a control structure. Judges each chain on cognitive cost, not line count. Use when refactoring imperative Elixir into pipelines or reviewing pipe chain length. NOT for with expressions or recursion.\n---\n\n# Pipe Operator Flows -- Readability Budget\n\n## Quick Start\nEvery pipe chain has a cognitive budget. If a pipeline exceeds 5 steps, split it: extract a named helper for the first N steps, then pipe the helper's return value through the remaining steps. Use `then/2` when the piped value is not the first argument. Never start a pipe from `case`, `if`, or `cond` -- extract a helper first.\n\n## When to use\n- Converting intermediate-variable chains to `|>` pipelines\n- Reviewing existing pipes that are too long or too short\n- Deciding whether a pipe chain or a named binding is clearer\n- Cleaning up pipelines that start from control structures\n- Handling non-first-argument positions in a pipe chain\n\n## Workflow\n\n### Step 1: Identify pipe candidates\nScan the function for sequential variable bindings where each binding feeds into the next. Count the steps. If the chain is 2-5 steps and the data flows linearly (each step's output is the next step's first argument), convert to a pipe.\n\n### Step 2: Apply the 5-step budget\nIf the chain exceeds 5 steps, split at a natural semantic boundary:\n- Steps 1-N become a private helper with a name describing the intermediate result\n- Steps N+1-end form the public function's pipeline, starting from the helper call\n\n```elixir\n# BAD: 7-step pipeline is hard to scan\ndef process(events) do\n  events\n  |> Enum.filter(&(&1.type == :click))\n  |> Enum.group_by(& &1.user_id)\n  |> Enum.map(fn {uid, es} -> {uid, length(es)} end)\n  |> Enum.sort_by(&elem(&1, 1), :desc)\n  |> Enum.take(10)\n  |> Enum.map(fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  |> format_report()\nend\n\n# GOOD: split at the semantic boundary (aggregate vs present)\ndef process(events) do\n  events\n  |> aggregate_clicks()\n  |> Enum.take(10)\n  |> Enum.map(fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  |> format_report()\nend\n\ndefp aggregate_clicks(events) do\n  events\n  |> Enum.filter(&(&1.type == :click))\n  |> Enum.group_by(& &1.user_id)\n  |> Enum.map(fn {uid, es} -> {uid, length(es)} end)\n  |> Enum.sort_by(&elem(&1, 1), :desc)\nend\n```\n\n### Step 3: Handle non-first-argument positions with `then/2`\nWhen the piped value is not the first argument of the next function, use `then/2` instead of breaking the pipe:\n\n```elixir\n# BAD: breaking the pipe for a non-first-arg call\ndef publish(post) do\n  body = build_body(post)\n  full = String.replace(body, \"{title}\", post.title)\n  String.upcase(full)\nend\n\n# GOOD: then/2 keeps the pipe flowing\ndef publish(post) do\n  post\n  |> build_body()\n  |> then(&String.replace(&1, \"{title}\", post.title))\n  |> String.upcase()\nend\n```\n\n### Step 4: Never start a pipe from a control structure\nIf a pipeline begins with `case`, `if`, or `cond`, extract that control flow into a helper:\n\n```elixir\n# BAD: pipe starts from case\ndef process(input) do\n  case parse(input) do\n    {:ok, val} -> val\n    {:error, _} -> default()\n  end\n  |> normalize()\n  |> String.upcase()\nend\n\n# GOOD: extract the control flow\ndef process(input) do\n  input\n  |> extract_parsed()\n  |> normalize()\n  |> String.upcase()\nend\n\ndefp extract_parsed(input) do\n  case parse(input) do\n    {:ok, val} -> val\n    {:error, _} -> default()\n  end\nend\n```\n\n### Step 5: Decide when NOT to pipe\nKeep a named binding instead of a pipe when:\n- The value is used more than once downstream (piping duplicates computation or forces a variable anyway)\n- The chain is 1 step (single-step pipes add noise: `x |> foo()` is worse than `foo(x)`)\n- The function is a side effect with no meaningful return (e.g., `Logger.info`)\n- The transformation changes the data type in a way that makes the next step's input surprising\n\n```elixir\n# BAD: single-step pipe adds noise\ntitle |> String.upcase()\n\n# GOOD: direct call\nString.upcase(title)\n\n# BAD: piped value used twice \u2014 forced to bind anyway\nresult = data |> transform()\nsend_to_api(result)\nlog_result(result)\n\n# GOOD: just bind it\nresult = transform(data)\nsend_to_api(result)\nlog_result(result)\n```\n\n### Step 6: Validate the refactored code\nAfter rewriting, verify:\n- No intermediate variables remain in pure linear flows\n- No pipeline exceeds 5 steps\n- No pipeline starts from a control structure\n- Every `then/2` usage is necessary (the arg genuinely is not first)\n- Single-step pipes have been collapsed to direct calls\n\n## Examples\n\n**Example 1: Intermediate variables to pipeline (straightforward)**\nInput: \"Refactor this function that uses four intermediate variables to slugify a title\"\n```elixir\ndef slugify(title) do\n  a = String.trim(title)\n  b = String.downcase(a)\n  c = String.replace(b, ~r/[^a-z0-9\\s]/, \"\")\n  d = String.replace(c, ~r/\\s+/, \"-\")\n  d\nend\n```\nOutput:\n```elixir\ndef slugify(title) do\n  title\n  |> String.trim()\n  |> String.downcase()\n  |> String.replace(~r/[^a-z0-9\\s]/, \"\")\n  |> String.replace(~r/\\s+/, \"-\")\nend\n```\nRationale: 4 steps, linear flow, each output feeds the next as first arg. Clean pipe.\n\n**Example 2: Long chain that needs splitting**\nInput: \"Convert this 8-step data processing function to use pipes\"\n```elixir\ndef analyze(events) do\n  filtered = Enum.filter(events, fn e -> e.type == :click end)\n  grouped = Enum.group_by(filtered, fn e -> e.user_id end)\n  counts = Enum.map(grouped, fn {uid, es} -> {uid, length(es)} end)\n  sorted = Enum.sort_by(counts, fn {_, n} -> n end, :desc)\n  top = Enum.take(sorted, 10)\n  formatted = Enum.map(top, fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  report = build_report(formatted)\n  send_report(report)\nend\n```\nOutput:\n```elixir\ndef analyze(events) do\n  events\n  |> top_clickers()\n  |> Enum.map(fn {uid, n} -> %{user_id: uid, clicks: n} end)\n  |> build_report()\n  |> send_report()\nend\n\ndefp top_clickers(events) do\n  events\n  |> Enum.filter(&(&1.type == :click))\n  |> Enum.group_by(& &1.user_id)\n  |> Enum.map(fn {uid, es} -> {uid, length(es)} end)\n  |> Enum.sort_by(&elem(&1, 1), :desc)\n  |> Enum.take(10)\nend\n```\nRationale: 8 steps split at the semantic boundary. `top_clickers` is the aggregation phase (5 steps at the max budget), the public function is the presentation phase (4 steps).\n\n**Example 3: Mixed -- some steps pipe, one must stay bound**\nInput: \"Refactor this function where the intermediate result is used twice\"\n```elixir\ndef notify(user) do\n  message = build_welcome(user)\n  send_email(user.email, message)\n  send_sms(user.phone, message)\n  log_notification(user.id, message)\nend\n```\nOutput (keep the binding -- do NOT pipe):\n```elixir\ndef notify(user) do\n  message = build_welcome(user)\n  send_email(user.email, message)\n  send_sms(user.phone, message)\n  log_notification(user.id, message)\nend\n```\nRationale: `message` is consumed three times. Piping would either duplicate the computation or force a binding anyway. Leave it as is.\n\n## Common mistakes\n- **Piping everything**: Not every sequence of calls benefits from `|>`. Single-step pipes and multi-use values should stay as direct calls or named bindings.\n- **Mega-pipelines**: Chains of 8+ steps become unreadable walls. Split at semantic boundaries into named helpers that describe what the intermediate result represents.\n- **Forgetting `then/2`**: Breaking a pipe to handle a non-first-arg position when `then/2` keeps it flowing cleanly.\n- **Pipe from control structure**: Starting `case do ... end |> foo()` is an official Elixir anti-pattern. Always extract to a helper.\n- **Single-step pipe**: `x |> foo()` is strictly worse than `foo(x)`. The pipe adds syntax for zero clarity gain.\n- **Splitting too early**: A 4-step pipeline does not need a helper. The budget is 5, not 3.\n\n## Out of Scope\nThis variant does NOT cover:\n- `with` expressions for multi-step error handling (use `with-expressions` variant)\n- Choosing between `Enum` pipeline and explicit recursion (use `enum-vs-recursion-choice` variant)\n- Pattern matching in function heads (use `function-head-pattern-matching` variant)\n- When to keep `case` vs convert to function heads (use `cond-and-if-reduction` variant)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "pipe-operator-flows"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9822
+      },
+      "frontmatter": {
+        "Refactors recursive Elixir functions to use multi-head structural dispatch": "",
+        "allowed-tools": "Read Write Bash(python *)",
+        "description": ">-",
+        "name": "recursive-functions--structural-dispatch"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_recursive_functions",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9822
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: recursive-functions--structural-dispatch\ndescription: >-\n  Refactors recursive Elixir functions to use multi-head structural dispatch:\n  separate function clauses match each data shape (leaf, branch, empty, tagged\n  tuple) so the recursion pattern is encoded in the heads, not in if/case\n  bodies. Use when refactoring tree walkers, nested structures, or tagged\n  recursive types. NOT for simple list iteration or Enum replacements.\nallowed-tools: Read Write Bash(python *)\n---\n\n# Structural Dispatch Recursion\n\n## Quick Start\nEvery recursive data shape gets its own function head. The pattern match in the head drives which branch recurses -- no `if`, no `case`, no `is_nil` checks inside the body.\n\n## When to use\n- Recursive functions that use `if`/`case` to inspect data shape before recursing\n- Tree traversals guarded by `is_nil` or `== nil` checks\n- Functions that dispatch on tagged tuples (`{:leaf, _}`, `{:node, _, _}`) via case\n- Nested map/struct walkers with `Map.has_key?` or `is_map` conditionals\n- Any recursion where the body starts with \"what kind of thing is this?\"\n\n## Workflow\n\n### Step 1: Identify the recursive data shapes\nRead the function. List every distinct shape the input can take. Each shape becomes a function head.\n\nCommon shapes in Elixir recursive code:\n- **Empty / terminal**: `nil`, `[]`, `\"\"`, `{:leaf, value}`\n- **Compound / branching**: `%{left: _, right: _}`, `[h | t]`, `{:node, left, right}`\n- **Tagged variants**: `{:ok, _}` vs `{:error, _}`, `:done` vs `{:more, rest}`\n- **Guard-distinguished**: same structure but different value ranges (`n when n > 0` vs `0`)\n\n### Step 2: Write one function head per shape\nEach head pattern-matches the shape directly. The body handles only that shape -- no further dispatch needed.\n\nRules:\n1. Put the **most specific** head first (Elixir tries top-to-bottom)\n2. Terminal/base heads before recursive heads\n3. Use `when` guards only when the pattern alone cannot distinguish shapes\n4. Bind substructure in the head: `%{left: left, right: right}` not `tree.left`\n5. Never write `if is_nil(x)` or `case x do nil ->` -- add a head for `nil` instead\n\n### Step 3: Verify tail position when accumulating\nIf the function builds a result:\n- Prepend `[new | acc]` and `Enum.reverse/1` at the base case for lists\n- For trees/nested structures, body recursion is often correct (no tail-call needed when combining left + right results)\n- Do NOT force tail recursion on tree-shaped data -- `sum_leaves(left) + sum_leaves(right)` is the right form\n\n### Step 4: Validate\n- Run: `python ${CLAUDE_SKILL_DIR}/scripts/main_helper.py --check \"$FILE\"`\n- Confirm: zero `if`/`case`/`cond` statements remain that dispatch on data shape\n- Confirm: each function head's body is 1-5 lines (if longer, extract a helper)\n- Run: `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh`\n\n## Examples\n\n**Example 1: Tree walker -- replace nested if with three heads**\n\nInput:\n```elixir\ndef sum_leaves(tree) do\n  if tree == nil do\n    0\n  else\n    if is_integer(tree) do\n      tree\n    else\n      sum_leaves(tree.left) + sum_leaves(tree.right)\n    end\n  end\nend\n```\n\nOutput:\n```elixir\ndef sum_leaves(nil), do: 0\ndef sum_leaves(n) when is_integer(n), do: n\ndef sum_leaves(%{left: left, right: right}) do\n  sum_leaves(left) + sum_leaves(right)\nend\n```\n\nWhy: Three data shapes (nil, integer leaf, map branch) become three heads. No `if`, no dot-access. The pattern match in the head binds `left` and `right` directly. Body recursion is correct here -- you need both subtree results before you can add them.\n\n**Example 2: Tagged-tuple recursive parser -- replace case with heads**\n\nInput:\n```elixir\ndef eval(expr) do\n  case expr do\n    {:num, n} -> n\n    {:add, a, b} -> eval(a) + eval(b)\n    {:mul, a, b} -> eval(a) * eval(b)\n    {:neg, inner} -> -eval(inner)\n  end\nend\n```\n\nOutput:\n```elixir\ndef eval({:num, n}), do: n\ndef eval({:add, a, b}), do: eval(a) + eval(b)\ndef eval({:mul, a, b}), do: eval(a) * eval(b)\ndef eval({:neg, inner}), do: -eval(inner)\n```\n\nWhy: Each tagged tuple is a distinct shape. Moving the pattern into the head eliminates the case entirely. The function communicates its dispatch table through its clause list, not through a case block buried in the body.\n\n**Example 3: Nested map flattener -- replace is_map conditional with heads**\n\nInput:\n```elixir\ndef flatten_map(map, prefix \\\\ \"\") do\n  Enum.reduce(map, %{}, fn {key, value}, acc ->\n    full_key = if prefix == \"\", do: to_string(key), else: \"#{prefix}.#{to_string(key)}\"\n    if is_map(value) do\n      Map.merge(acc, flatten_map(value, full_key))\n    else\n      Map.put(acc, full_key, value)\n    end\n  end)\nend\n```\n\nOutput:\n```elixir\ndef flatten_map(map), do: flatten_map(map, \"\")\n\ndef flatten_map(map, prefix) when is_map(map) do\n  Enum.reduce(map, %{}, fn {key, value}, acc ->\n    full_key = join_key(prefix, key)\n    Map.merge(acc, flatten_map(value, full_key))\n  end)\nend\n\ndef flatten_map(value, _prefix) when not is_map(value), do: value\n\ndefp join_key(\"\", key), do: to_string(key)\ndefp join_key(prefix, key), do: \"#{prefix}.#{to_string(key)}\"\n```\n\nWait -- the reduce still needs to distinguish map vs non-map values. Better approach using a private helper with structural dispatch:\n\n```elixir\ndef flatten_map(map), do: do_flatten(map, \"\", %{})\n\ndefp do_flatten(map, prefix, acc) when is_map(map) do\n  Enum.reduce(map, acc, fn {key, value}, inner_acc ->\n    do_flatten(value, join_key(prefix, key), inner_acc)\n  end)\nend\n\ndefp do_flatten(value, prefix, acc), do: Map.put(acc, prefix, value)\n\ndefp join_key(\"\", key), do: to_string(key)\ndefp join_key(prefix, key), do: \"#{prefix}.#{to_string(key)}\"\n```\n\nWhy: The `is_map` check inside the reduce body becomes two `do_flatten` heads -- one for maps (recurse deeper) and one for leaf values (store). The `join_key` helper also uses structural dispatch on the empty-string prefix.\n\n## Deciding: Body Recursion vs Tail Recursion\n\nNot all recursion should be tail-recursive. This variant's decision framework:\n\n| Data shape | Correct form | Why |\n|---|---|---|\n| Linear list \u2192 build list | Tail-recursive + accumulator + reverse | O(1) stack, preserves order |\n| Linear list \u2192 single value | Tail-recursive + accumulator | O(1) stack |\n| Tree / branching \u2192 combine subtrees | Body recursion | Need both subtree results; forcing CPS adds complexity without benefit on typical depths |\n| Tree \u2192 collect leaves into list | Body recursion with `++` or tail-recursive with accumulator | Depends on tree size; for shallow trees `++` is fine |\n| Tagged union / AST \u2192 evaluate | Body recursion | Natural structural induction; tail position impossible when combining branches |\n\n## Gotchas\n- **Clause ordering matters.** `def f(%{left: _, right: _})` must come before `def f(map) when is_map(map)` or the more specific head is unreachable\n- **Don't force tail recursion on trees.** `sum(left) + sum(right)` requires body recursion -- the `+` must wait for both calls. Using CPS (continuation-passing style) to make it tail-recursive is overengineering in 99% of Elixir codebases\n- **`when` guards have a restricted function set.** You can use `is_map/1`, `is_integer/1`, `is_binary/1`, comparison operators, and boolean connectors. No `String.length/1`, no `Map.has_key?/2`, no custom functions\n- **Catch-all heads swallow errors silently.** If you add `def f(_), do: ...` as a fallback, bad input won't crash -- it will produce wrong results. Prefer explicit heads for known shapes and let `FunctionClauseError` catch truly unexpected input\n- **Pin operator for literal matching.** To match a specific value stored in a variable, use `^var` in the head: `def handle(^expected_token, rest)`. Without the pin, Elixir rebinds instead of matching\n\n## Out of Scope\nThis skill does NOT:\n- Convert `Enum.map/reduce/filter` to explicit recursion (use `enum-vs-recursion-choice` for that decision)\n- Optimize tail-call performance on linear lists (use `recursive-functions--tail-recursive` for accumulator patterns)\n- Handle `Stream` or lazy evaluation patterns\n- Refactor `GenServer` handle_call/cast dispatch (different pattern, different skill)",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "recursive-functions"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.8722
+      },
+      "frontmatter": {
+        "description": "Refactors non-idiomatic Elixir (Ruby/Java-style if/case chains, defensive nil checks, manual loops) into idiomatic Elixir using function heads, guards, pipes, with, and pattern-matched destructures. Use when asked to improve Elixir code style or to refactor imperative patterns. NOT for writing new code from scratch.",
+        "name": "refactor-philosophy--in-place-idiomatic"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_refactor_philosophy",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.8722
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: refactor-philosophy--in-place-idiomatic\ndescription: Refactors non-idiomatic Elixir (Ruby/Java-style if/case chains, defensive nil checks, manual loops) into idiomatic Elixir using function heads, guards, pipes, with, and pattern-matched destructures. Use when asked to improve Elixir code style or to refactor imperative patterns. NOT for writing new code from scratch.\n---\n\n# In-Place Idiomatic Rewrite\n\n## Quick Start\nKeep the module structure and API. Rewrite the bodies.\n\n## When to use\n- Refactoring imperative Elixir into idiomatic Elixir\n- Fixing Ruby/Java-style code written by LLMs\n- Reviewing PRs for idiomatic style\n\n## Workflow\n1. Identify if/case/cond chains \u2192 rewrite as function heads with guards\n2. Identify intermediate temp vars \u2192 rewrite as pipes\n3. Identify nested conditionals \u2192 rewrite as `with <- ... do ... else ...`\n4. Identify `is_nil` / `x && x.field` \u2192 rewrite as function head pattern match\n5. Identify Map.get chains \u2192 rewrite as map destructure in head\n\n## Common mistakes\n- Leaving one `case` where a function head would work\n- Keeping `is_nil` as a \"defensive\" fallback\n- Using `Enum.reduce` where `for` comprehension is cleaner\n",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "refactor-philosophy"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    },
+    {
+      "behavioral_signature": [],
+      "consistency_score": null,
+      "deterministic_scores": {
+        "l1": 0.9737
+      },
+      "frontmatter": {
+        "chaining {": "ok, _}/{:error, _} pipelines. NOT for single-step operations or",
+        "description": ">-",
+        "name": "with-expressions--clause-boundary-normalization"
+      },
+      "generation": 0,
+      "generations_survived": 0,
+      "id": "gen_winner_elixir_pattern_match_refactor_with_expressions",
+      "is_pareto_optimal": 0,
+      "maturity": "tested",
+      "meta_strategy": "seed_pipeline_winner",
+      "mutation_rationale": "",
+      "mutations": [],
+      "parent_ids": [],
+      "pareto_objectives": {
+        "quality": 0.9737
+      },
+      "run_id": "elixir-pattern-match-refactor-seed-v1",
+      "skill_md_content": "---\nname: with-expressions--clause-boundary-normalization\ndescription: >-\n  Refactors nested case/if into with by normalizing errors at each clause boundary\n  via per-step helper functions. The with body has ZERO else clauses \u2014 each helper\n  maps its own errors to tagged tuples that fall through naturally. Use when\n  collapsing nested case chains, eliminating complex-else anti-patterns, or\n  chaining {:ok, _}/{:error, _} pipelines. NOT for single-step operations or\n  control flow that doesn't follow railway-oriented error shapes.\n---\n\n# With Expressions \u2014 Clause Boundary Normalization\n\n## Quick Start\nEvery `with` clause calls a helper that returns `{:ok, value}` on success or `{:error, tagged_reason}` on failure. Errors are normalized **at the boundary**, not in a shared `else` block. The `with` expression itself has no `else` clause \u2014 non-matching results fall through as the return value automatically.\n\n## When to use\n- Nested `case` chains where each level handles `{:ok, _}` / `{:error, _}`\n- Existing `with` expressions that have a complex `else` block with 3+ clauses\n- Multi-step operations where each step can fail with a different error shape\n- `if is_nil(x)` ladders guarding sequential dependent operations\n\n## Workflow\n\n### Step 1: Identify the Happy Path\nRead the nested code and list each sequential operation that must succeed before the next runs. Number them in order. Each becomes one `with` clause.\n\n### Step 2: Extract Per-Step Helpers\nFor each step, write a `defp` helper that:\n1. Calls the underlying function\n2. On success, returns `{:ok, value}`\n3. On failure, wraps the error with a step-specific tag: `{:error, {:step_name, reason}}`\n\nThe helper is the **only place** that knows about the step's internal error shapes. The `with` clause just pattern-matches on `{:ok, value}`.\n\n### Step 3: Assemble the With\nChain the helpers with `<-`. No `else` clause. Non-ok results fall through as the `with` expression's return value.\n\n```elixir\ndef process(input) do\n  with {:ok, validated} <- do_validate(input),\n       {:ok, enriched} <- do_enrich(validated),\n       {:ok, result}   <- do_persist(enriched) do\n    {:ok, result}\n  end\nend\n\ndefp do_validate(input) do\n  case Validator.run(input) do\n    :ok -> {:ok, input}\n    {:error, reasons} -> {:error, {:validation, reasons}}\n  end\nend\n\ndefp do_enrich(data) do\n  case Enricher.fetch(data.id) do\n    {:ok, extra} -> {:ok, Map.merge(data, extra)}\n    :not_found -> {:error, {:enrichment, :missing_data}}\n  end\nend\n\ndefp do_persist(data) do\n  case Repo.insert(data) do\n    {:ok, record} -> {:ok, record}\n    {:error, changeset} -> {:error, {:persistence, changeset}}\n  end\nend\n```\n\n### Step 4: Validate the Refactor\nConfirm:\n- Every error path returns `{:error, {step_tag, reason}}` \u2014 callers can match on the tag\n- No `else` clause exists on the `with`\n- Each helper is a pure boundary translator \u2014 it calls one function and normalizes\n- The `with` body's `do` block contains only the final success expression\n\n## Examples\n\n**Example 1: Nested case authentication pipeline**\n\nInput: \"Refactor this nested case auth flow to use with\"\n\n```elixir\n# BEFORE \u2014 nested case\ndef authenticate(email, password) do\n  case Repo.get_by(User, email: email) do\n    nil -> {:error, :invalid_credentials}\n    user ->\n      case Bcrypt.check_pass(user, password) do\n        {:ok, user} ->\n          case Session.create(user) do\n            {:ok, session} ->\n              case Token.issue(session) do\n                {:ok, token} -> {:ok, %{user: user, token: token}}\n                {:error, r} -> {:error, r}\n              end\n            {:error, r} -> {:error, r}\n          end\n        {:error, _} -> {:error, :invalid_credentials}\n      end\n  end\nend\n```\n\n```elixir\n# AFTER \u2014 with + boundary helpers, no else\ndef authenticate(email, password) do\n  with {:ok, user}    <- fetch_user(email),\n       {:ok, user}    <- verify_password(user, password),\n       {:ok, session} <- create_session(user),\n       {:ok, token}   <- issue_token(session) do\n    {:ok, %{user: user, token: token}}\n  end\nend\n\ndefp fetch_user(email) do\n  case Repo.get_by(User, email: email) do\n    nil  -> {:error, :invalid_credentials}\n    user -> {:ok, user}\n  end\nend\n\ndefp verify_password(user, password) do\n  case Bcrypt.check_pass(user, password) do\n    {:ok, user}  -> {:ok, user}\n    {:error, _}  -> {:error, :invalid_credentials}\n  end\nend\n\ndefp create_session(user) do\n  Session.create(user)\nend\n\ndefp issue_token(session) do\n  Token.issue(session)\nend\n```\n\nKey: `fetch_user` and `verify_password` both normalize to `:invalid_credentials` \u2014 the caller cannot distinguish which failed. Session and Token errors pass through untagged because they already return `{:error, reason}`.\n\n**Example 2: Complex else anti-pattern fix**\n\nInput: \"This with has too many else clauses, clean it up\"\n\n```elixir\n# BEFORE \u2014 complex else anti-pattern\ndef checkout(cart_id, payment) do\n  with {:ok, cart}    <- Carts.fetch(cart_id),\n       {:ok, items}   <- Inventory.check(cart.items),\n       {:ok, charge}  <- Billing.charge(payment, items.total),\n       {:ok, order}   <- Orders.create(cart, charge) do\n    {:ok, order}\n  else\n    {:error, :not_found}      -> {:error, \"Cart not found\"}\n    {:error, :out_of_stock}   -> {:error, \"Item out of stock\"}\n    {:error, :card_declined}  -> {:error, \"Payment declined\"}\n    {:error, :duplicate_order} -> {:error, \"Order already placed\"}\n    {:error, other}           -> {:error, \"Unexpected: #{inspect(other)}\"}\n  end\nend\n```\n\n```elixir\n# AFTER \u2014 boundary normalization, no else\ndef checkout(cart_id, payment) do\n  with {:ok, cart}   <- fetch_cart(cart_id),\n       {:ok, items}  <- check_inventory(cart),\n       {:ok, charge} <- charge_payment(payment, items),\n       {:ok, order}  <- create_order(cart, charge) do\n    {:ok, order}\n  end\nend\n\ndefp fetch_cart(cart_id) do\n  case Carts.fetch(cart_id) do\n    {:ok, cart}          -> {:ok, cart}\n    {:error, :not_found} -> {:error, \"Cart not found\"}\n  end\nend\n\ndefp check_inventory(cart) do\n  case Inventory.check(cart.items) do\n    {:ok, items}             -> {:ok, items}\n    {:error, :out_of_stock}  -> {:error, \"Item out of stock\"}\n  end\nend\n\ndefp charge_payment(payment, items) do\n  case Billing.charge(payment, items.total) do\n    {:ok, charge}            -> {:ok, charge}\n    {:error, :card_declined} -> {:error, \"Payment declined\"}\n  end\nend\n\ndefp create_order(cart, charge) do\n  case Orders.create(cart, charge) do\n    {:ok, order}               -> {:ok, order}\n    {:error, :duplicate_order} -> {:error, \"Order already placed\"}\n  end\nend\n```\n\nKey: each helper translates domain errors into user-facing messages. The catch-all `{:error, other}` clause is gone \u2014 if a step produces an unexpected error shape, it falls through as-is, which is correct (let it crash philosophy).\n\n**Example 3: Defensive nil chain to with**\n\nInput: \"Refactor these nil checks into something idiomatic\"\n\n```elixir\n# BEFORE \u2014 defensive nil ladder\ndef send_notification(user) do\n  if user do\n    if user.email do\n      if user.preferences && user.preferences.notifications_enabled do\n        case Mailer.send(user.email, build_template(user)) do\n          {:ok, _} -> :ok\n          {:error, r} -> {:error, {:delivery, r}}\n        end\n      else\n        {:error, :notifications_disabled}\n      end\n    else\n      {:error, :no_email}\n    end\n  else\n    {:error, :no_user}\n  end\nend\n```\n\n```elixir\n# AFTER \u2014 with + boundary helpers\ndef send_notification(user) do\n  with {:ok, user}  <- require_user(user),\n       {:ok, email} <- extract_email(user),\n       :ok          <- check_notifications_enabled(user),\n       {:ok, _}     <- deliver(email, user) do\n    :ok\n  end\nend\n\ndefp require_user(nil), do: {:error, :no_user}\ndefp require_user(user), do: {:ok, user}\n\ndefp extract_email(%{email: nil}), do: {:error, :no_email}\ndefp extract_email(%{email: \"\"}), do: {:error, :no_email}\ndefp extract_email(%{email: email}), do: {:ok, email}\n\ndefp check_notifications_enabled(%{preferences: %{notifications_enabled: true}}), do: :ok\ndefp check_notifications_enabled(_), do: {:error, :notifications_disabled}\n\ndefp deliver(email, user) do\n  case Mailer.send(email, build_template(user)) do\n    {:ok, ref}      -> {:ok, ref}\n    {:error, reason} -> {:error, {:delivery, reason}}\n  end\nend\n```\n\nKey: `require_user` and `extract_email` use function-head pattern matching (no `case` or `if` needed). `check_notifications_enabled` returns `:ok` (not `{:ok, _}`) \u2014 the `with` clause uses `<- check_notifications_enabled(user)` which matches `:ok` directly.\n\n## When NOT to Use With\n\n- **Single operation**: `with {:ok, x} <- foo() do x end` is just `foo()` with extra syntax. Don't wrap a single call.\n- **Already flat**: If the code is already a simple `case` with two branches, `with` adds no clarity.\n- **Non-ok/error shapes**: `with` works best with `{:ok, _}`/`{:error, _}` conventions. If the functions return bare values or custom tuples, normalize them in helpers first or consider `case`.\n\n## Common Mistakes\n\n- **Complex else is the #1 anti-pattern.** If your `else` block has more than one clause, you are doing it wrong. Extract helpers instead.\n- **Redundant last clause.** `with {:ok, x} <- step1(), {:ok, y} <- step2(x) do {:ok, y} end` \u2014 the last `<-` is redundant. Just put `step2(x)` in the `do` block: `with {:ok, x} <- step1() do step2(x) end`.\n- **Swallowing errors in else.** Never write `else _ -> {:error, :unknown}`. Let non-matching values fall through \u2014 the caller gets the actual error tuple.\n- **Using with for a single step.** `with {:ok, user} <- Repo.get(User, id) do ... end` is just `case Repo.get(User, id) do {:ok, user} -> ... end` with extra indentation.\n- **Helpers that do too much.** Each helper should call exactly one external function and normalize its result. If a helper calls two functions, split it into two helpers and two `with` clauses.",
+      "supporting_files": {},
+      "trait_attribution": {},
+      "trait_diagnostics": {},
+      "traits": [
+        "with-expressions"
+      ],
+      "trigger_precision": 0.0,
+      "trigger_recall": 0.0,
+      "variant_id": null
+    }
+  ],
+  "taxonomy_nodes": [
+    {
+      "created_at": "2026-04-12T04:04:59.633491+00:00",
+      "description": "",
+      "id": "tax_711b848ecdf1",
+      "label": "Code Quality",
+      "level": "domain",
+      "parent_id": null,
+      "slug": "code-quality"
+    },
+    {
+      "created_at": "2026-04-12T05:58:12.969405+00:00",
+      "description": "",
+      "id": "tax_018cd9dcce05",
+      "label": "Refactoring",
+      "level": "focus",
+      "parent_id": "tax_711b848ecdf1",
+      "slug": "refactoring"
+    },
+    {
+      "created_at": "2026-04-12T05:58:12.971363+00:00",
+      "description": "",
+      "id": "tax_78b0f6285395",
+      "label": "Elixir",
+      "level": "language",
+      "parent_id": "tax_018cd9dcce05",
+      "slug": "elixir"
+    }
+  ],
+  "variant_evolutions": [
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.353285+00:00",
+      "created_at": "2026-04-12T05:58:21.298962+00:00",
+      "dimension": "binary-pattern-matching-basic",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_binary_pattern_matching_basic_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.429688+00:00",
+      "created_at": "2026-04-12T05:58:21.299661+00:00",
+      "dimension": "cond-and-if-reduction",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_cond_and_if_reduction",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_cond_and_if_reduction_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.512476+00:00",
+      "created_at": "2026-04-12T05:58:21.300349+00:00",
+      "dimension": "defensive-nil-checks-elimination",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_defensive_nil_checks_elimination_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.197723+00:00",
+      "created_at": "2026-04-12T05:58:21.297556+00:00",
+      "dimension": "enum-vs-recursion-choice",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_enum_vs_recursion_choice_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:25.795248+00:00",
+      "created_at": "2026-04-12T05:58:21.293759+00:00",
+      "dimension": "function-head-pattern-matching",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_function_head_pattern_matching",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_function_head_pattern_matching_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:25.880945+00:00",
+      "created_at": "2026-04-12T05:58:21.294591+00:00",
+      "dimension": "guard-clauses",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_guard_clauses",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_guard_clauses_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.277233+00:00",
+      "created_at": "2026-04-12T05:58:21.298265+00:00",
+      "dimension": "map-and-struct-destructuring",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_map_and_struct_destructuring",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_map_and_struct_destructuring_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:25.961694+00:00",
+      "created_at": "2026-04-12T05:58:21.295389+00:00",
+      "dimension": "pipe-operator-flows",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_pipe_operator_flows",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_pipe_operator_flows_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.117616+00:00",
+      "created_at": "2026-04-12T05:58:21.296864+00:00",
+      "dimension": "recursive-functions",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_recursive_functions",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_recursive_functions_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:25.708985+00:00",
+      "created_at": "2026-04-12T05:58:21.292956+00:00",
+      "dimension": "refactor-philosophy",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_refactor_philosophy",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "foundation",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_refactor_philosophy_winner"
+    },
+    {
+      "challenge_id": null,
+      "completed_at": "2026-04-12T07:17:26.039178+00:00",
+      "created_at": "2026-04-12T05:58:21.296148+00:00",
+      "dimension": "with-expressions",
+      "family_id": "fam_bdecc59e3e4f",
+      "foundation_genome_id": null,
+      "id": "vevo_elixir_pattern_match_refactor_with_expressions",
+      "num_generations": 1,
+      "parent_run_id": "elixir-pattern-match-refactor-seed-v1",
+      "population_size": 2,
+      "status": "complete",
+      "tier": "capability",
+      "winner_variant_id": "var_elixir_pattern_match_refactor_with_expressions_winner"
+    }
+  ],
+  "variants": [
+    {
+      "created_at": "2026-04-12T07:17:26.349987+00:00",
+      "dimension": "binary-pattern-matching-basic",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9721,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_binary_pattern_matching_basic",
+      "id": "var_elixir_pattern_match_refactor_binary_pattern_matching_basic_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.426061+00:00",
+      "dimension": "cond-and-if-reduction",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_cond_and_if_reduction",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9711,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_cond_and_if_reduction",
+      "id": "var_elixir_pattern_match_refactor_cond_and_if_reduction_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.509119+00:00",
+      "dimension": "defensive-nil-checks-elimination",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9743,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_defensive_nil_checks_elimination",
+      "id": "var_elixir_pattern_match_refactor_defensive_nil_checks_elimination_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.192852+00:00",
+      "dimension": "enum-vs-recursion-choice",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9152,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_enum_vs_recursion_choice",
+      "id": "var_elixir_pattern_match_refactor_enum_vs_recursion_choice_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:25.789466+00:00",
+      "dimension": "function-head-pattern-matching",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_function_head_pattern_matching",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.8841,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_function_head_pattern_matching",
+      "id": "var_elixir_pattern_match_refactor_function_head_pattern_matching_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:25.873606+00:00",
+      "dimension": "guard-clauses",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_guard_clauses",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9475,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_guard_clauses",
+      "id": "var_elixir_pattern_match_refactor_guard_clauses_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.273505+00:00",
+      "dimension": "map-and-struct-destructuring",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_map_and_struct_destructuring",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9213,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_map_and_struct_destructuring",
+      "id": "var_elixir_pattern_match_refactor_map_and_struct_destructuring_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:25.957633+00:00",
+      "dimension": "pipe-operator-flows",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_pipe_operator_flows",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9775,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_pipe_operator_flows",
+      "id": "var_elixir_pattern_match_refactor_pipe_operator_flows_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.114159+00:00",
+      "dimension": "recursive-functions",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_recursive_functions",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9822,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_recursive_functions",
+      "id": "var_elixir_pattern_match_refactor_recursive_functions_winner",
+      "is_active": true,
+      "tier": "capability"
+    },
+    {
+      "created_at": "2026-04-12T07:17:25.704638+00:00",
+      "dimension": "refactor-philosophy",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_refactor_philosophy",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.8722,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_refactor_philosophy",
+      "id": "var_elixir_pattern_match_refactor_refactor_philosophy_winner",
+      "is_active": true,
+      "tier": "foundation"
+    },
+    {
+      "created_at": "2026-04-12T07:17:26.035645+00:00",
+      "dimension": "with-expressions",
+      "evolution_id": "vevo_elixir_pattern_match_refactor_with_expressions",
+      "family_id": "fam_bdecc59e3e4f",
+      "fitness_score": 0.9737,
+      "genome_id": "gen_winner_elixir_pattern_match_refactor_with_expressions",
+      "id": "var_elixir_pattern_match_refactor_with_expressions_winner",
+      "is_active": true,
+      "tier": "capability"
+    }
+  ]
+}
