@@ -350,6 +350,37 @@ Indexes:
 
 ---
 
+### `benchmark_results`
+
+Raw model baseline performance on SKLD-bench challenges — no skill guidance, just the model solving the challenge cold. One row per (challenge, model) pair. Used to measure skill lift and calibrate challenge difficulty.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | UUID |
+| `family_slug` | TEXT | NOT NULL | e.g. `"elixir-phoenix-liveview"` |
+| `challenge_id` | TEXT | NOT NULL | Challenge file ID e.g. `"elixir-phoenix-liveview-medium-05"` |
+| `challenge_path` | TEXT | NOT NULL | Relative path to challenge JSON |
+| `model` | TEXT | NOT NULL | e.g. `"claude-sonnet-4-6"`, `"claude-opus-4-6"` |
+| `tier` | TEXT | NOT NULL | `"easy"` \| `"medium"` \| `"hard"` \| `"legendary"` |
+| `dimension` | TEXT | NOT NULL | Primary capability dimension from challenge scoring |
+| `score` | REAL | NOT NULL | L1 score from `score.py` (0.0–1.0) |
+| `passed` | INTEGER | NOT NULL | 0 or 1 |
+| `objectives` | TEXT | NOT NULL | JSON dict of per-objective results from scorer |
+| `output_files` | TEXT | NOT NULL | JSON dict `{path: content}` — what the model produced |
+| `total_tokens` | INTEGER | NOT NULL | Total token count for the dispatch |
+| `duration_ms` | INTEGER | NOT NULL | Wall-clock time for the dispatch |
+| `error` | TEXT | NULL | NULL if successful, error message if dispatch failed |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+
+Unique constraint: `(challenge_id, model)` — one result per challenge per model. Re-running overwrites.
+
+Indexes:
+- `idx_benchmark_challenge_model` UNIQUE on `(challenge_id, model)` — primary lookup + upsert
+- `idx_benchmark_family` on `(family_slug, model)` — per-family reports
+- `idx_benchmark_tier` on `(tier, model)` — tier-level aggregation
+
+---
+
 ## Foreign key relationships
 
 ```
