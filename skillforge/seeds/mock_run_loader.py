@@ -346,6 +346,14 @@ async def _load_one(path: Path) -> None:
     content_hash = _content_hash(document)
     marker = _hash_marker(content_hash)
 
+    # Always invalidate the cached report on disk at this point, BEFORE the
+    # hash-skip check below. The cache lives on Railway's persistent /data
+    # volume and can diverge from the DB across deploys — even when the seed
+    # JSON itself hasn't changed (e.g. if an older boot generated a report
+    # with stale filter logic and the current boot has new code). Costs one
+    # report regeneration on the next API hit, which is lazy and cheap.
+    _invalidate_report_cache(run_id)
+
     # Legacy cleanup: if this run_id was renamed from an older id (e.g. the
     # phoenix-liveview mock → seed rebrand), delete the legacy row + all its
     # FK children so the Registry shows only the current id.
@@ -464,15 +472,6 @@ async def _load_one(path: Path) -> None:
     # 8. Patch best_skill_id now that the genome row exists.
     if best_skill_id is not None:
         await _patch_best_skill_id(run_id, best_skill_id)
-
-    # 9. Invalidate the cached post-run report on disk. The FastAPI route
-    # ``/api/runs/{id}/report`` reads from ``data/reports/{run_id}.json``
-    # first and only lazy-generates if the file is missing. On Railway the
-    # ``data/`` dir lives on a persistent volume, so a cached report from a
-    # prior boot (with stale learning_log content, machine-entry leaks, or
-    # out-of-date summary counts) can survive across deploys and mask fixes.
-    # Deleting the cache here forces regeneration on the next API hit.
-    _invalidate_report_cache(run_id)
 
     logger.info(
         "seed_run_loader: loaded %s → run_id=%s (%d genomes, %d variants, %d vevos, %d challenges)",
