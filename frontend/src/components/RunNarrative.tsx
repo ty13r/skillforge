@@ -10,6 +10,15 @@ interface RunNarrativeProps {
 }
 
 const INTEGRATION_REPORT_PREFIX = "[integration_report] ";
+const COMPETITION_SCORES_PREFIX = "[competition_scores] ";
+
+// Machine-readable learning_log entries that drive dedicated UI panels and
+// must NOT appear as raw text in the audit timeline or key discoveries list.
+const MACHINE_PREFIXES = [INTEGRATION_REPORT_PREFIX, COMPETITION_SCORES_PREFIX];
+
+function isMachineEntry(entry: string): boolean {
+  return MACHINE_PREFIXES.some((prefix) => entry.startsWith(prefix));
+}
 
 /**
  * Renders the post-run narrative for an atomic-mode run.
@@ -28,12 +37,13 @@ export default function RunNarrative({
 }: RunNarrativeProps) {
   const [showReport, setShowReport] = useState(true);
 
-  const regularEntries = learningLog.filter(
-    (e) => !e.startsWith(INTEGRATION_REPORT_PREFIX),
-  );
+  const regularEntries = learningLog.filter((e) => !isMachineEntry(e));
   const integrationReportEntry = learningLog.find((e) =>
     e.startsWith(INTEGRATION_REPORT_PREFIX),
   );
+  // Defensive: filter machine entries out of key_discoveries in case the
+  // backend surfaced them by mistake (older report builds did).
+  const keyDiscoveries = summary.key_discoveries.filter((d) => !isMachineEntry(d));
   const integrationReportMd = integrationReportEntry?.slice(
     INTEGRATION_REPORT_PREFIX.length,
   );
@@ -87,13 +97,13 @@ export default function RunNarrative({
       </div>
 
       {/* Key discoveries */}
-      {summary.key_discoveries.length > 0 && (
+      {keyDiscoveries.length > 0 && (
         <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             Key Discoveries
           </p>
           <ul className="mt-3 space-y-2">
-            {summary.key_discoveries.map((discovery, idx) => (
+            {keyDiscoveries.map((discovery, idx) => (
               <li
                 key={idx}
                 className="rounded-lg bg-surface-container-low p-3 font-mono text-xs text-on-surface"

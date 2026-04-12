@@ -35,12 +35,41 @@ export default function CompetitionBracket({
 }: CompetitionBracketProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
+  // Guard against a malformed/partial payload — an older shape (pre-schema-
+  // alignment) or a hand-constructed entry may be missing `matches`. Render
+  // a graceful placeholder instead of crashing the whole page.
+  const matches = Array.isArray(scores?.matches) ? scores.matches : [];
+
   const sortedMatches = useMemo<CompetitionMatch[]>(() => {
-    return [...scores.matches].sort((a, b) => {
+    return [...matches].sort((a, b) => {
       if (a.tier !== b.tier) return a.tier === "foundation" ? -1 : 1;
       return b.winning_fitness - a.winning_fitness;
     });
-  }, [scores.matches]);
+  }, [matches]);
+
+  // Empty / malformed payload: render the disclaimer only, with a notice.
+  if (sortedMatches.length === 0) {
+    return (
+      <div className="rounded-xl border border-outline-variant bg-surface-container-low p-6">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+          Competition
+        </p>
+        <p className="mt-3 text-sm text-on-surface-dim">
+          This run has no competition bracket data available. The seed run
+          either pre-dates the{" "}
+          <code className="rounded bg-surface-container-high px-1">
+            [competition_scores]
+          </code>{" "}
+          learning-log format, or its payload was malformed during export.
+        </p>
+      </div>
+    );
+  }
+
+  const challengesPerVariant = scores?.challenges_per_variant ?? 0;
+  const generation = scores?.generation ?? 1;
+  const totalGenerations = scores?.total_generations ?? 1;
+  const baselineRan = scores?.baseline_ran ?? false;
 
   return (
     <div className="space-y-6">
@@ -55,7 +84,7 @@ export default function CompetitionBracket({
             competition: the pre-existing seed variant vs. one freshly-spawned
             alternative. Both variants were scored on{" "}
             <strong className="text-on-surface">
-              {scores.challenges_per_variant} sampled challenges
+              {challengesPerVariant} sampled challenges
             </strong>{" "}
             drawn from the dimension's 108-challenge training pool (27 held-out
             for future test-time evaluation). The variant with the higher{" "}
@@ -80,9 +109,9 @@ export default function CompetitionBracket({
             <strong className="text-on-surface">Limitations for this run</strong>:{" "}
             this is generation{" "}
             <span className="font-mono">
-              {scores.generation}/{scores.total_generations}
+              {generation}/{totalGenerations}
             </span>{" "}
-            (single-round). {scores.baseline_ran ? "A baseline run on the full challenge pool was completed before this competition." : "No baseline pass over the full 108-challenge pool was run before sampling."} Higher reviewer layers (L2 trigger accuracy, L3 trace, L4 comparative, L5 trait attribution) were not exercised. Real production runs would layer these on top for richer signal.
+            (single-round). {baselineRan ? "A baseline run on the full challenge pool was completed before this competition." : "No baseline pass over the full 108-challenge pool was run before sampling."} Higher reviewer layers (L2 trigger accuracy, L3 trace, L4 comparative, L5 trait attribution) were not exercised. Real production runs would layer these on top for richer signal.
           </p>
         </div>
       </div>
