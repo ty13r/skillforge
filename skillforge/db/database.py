@@ -302,7 +302,35 @@ _INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_variant_evolutions_parent_run ON variant_evolutions (parent_run_id)",
     "CREATE INDEX IF NOT EXISTS idx_runs_family ON evolution_runs (family_id)",
     "CREATE INDEX IF NOT EXISTS idx_genomes_variant ON skill_genomes (variant_id)",
+    # SKLD-bench indexes
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_benchmark_challenge_model ON benchmark_results (challenge_id, model)",
+    "CREATE INDEX IF NOT EXISTS idx_benchmark_family ON benchmark_results (family_slug, model)",
+    "CREATE INDEX IF NOT EXISTS idx_benchmark_tier ON benchmark_results (tier, model)",
 ]
+
+# ---------------------------------------------------------------------------
+# SKLD-bench — raw model baseline performance, no skill guidance
+# ---------------------------------------------------------------------------
+
+_CREATE_BENCHMARK_RESULTS = """
+CREATE TABLE IF NOT EXISTS benchmark_results (
+    id              TEXT PRIMARY KEY,
+    family_slug     TEXT NOT NULL,
+    challenge_id    TEXT NOT NULL,
+    challenge_path  TEXT NOT NULL,
+    model           TEXT NOT NULL,
+    tier            TEXT NOT NULL,
+    dimension       TEXT NOT NULL,
+    score           REAL NOT NULL,
+    passed          INTEGER NOT NULL,
+    objectives      TEXT NOT NULL,
+    output_files    TEXT NOT NULL,
+    total_tokens    INTEGER NOT NULL,
+    duration_ms     INTEGER NOT NULL,
+    error           TEXT,
+    created_at      TEXT NOT NULL
+)
+"""
 
 _TABLE_DDLS = [
     _CREATE_EVOLUTION_RUNS,
@@ -321,9 +349,13 @@ _TABLE_DDLS = [
     _CREATE_SKILL_FAMILIES,
     _CREATE_VARIANT_EVOLUTIONS,
     _CREATE_VARIANTS,
+    # SKLD-bench baseline
+    _CREATE_BENCHMARK_RESULTS,
 ]
 
 _DROP_ORDER = [
+    # SKLD-bench
+    "benchmark_results",
     # v2.0 — drop leaves first
     "variants",
     "variant_evolutions",
