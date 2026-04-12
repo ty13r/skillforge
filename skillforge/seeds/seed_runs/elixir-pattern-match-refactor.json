@@ -346,86 +346,14 @@
       },
       "challenges": [
         {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-18",
-          "prompt": "Given:\n\n```\ndef tax_bracket(income) do\n  cond do\n    income < 10_000 -> 0.0\n    income < 40_000 -> 0.12\n    income < 85_000 -> 0.22\n    income < 160_000 -> 0.24\n    true -> 0.32\n  end\nend\n```\n\nThis function is correctly expressed as a `cond` \u2014 the ordered, open-ended range checks can't become multi-clause function heads without awkward guard repetition. Keep it as a `cond` but replace the `true ->` fallback with a guard-style clause that makes the terminal case explicit: `income >= 160_000 -> 0.32`. Output a complete `defmodule MyApp.Tax do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
           "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-26",
-          "prompt": "Given:\n\n```\ndef handle_webhook(payload) do\n  cond do\n    is_nil(payload) -> {:error, :empty}\n    not is_map(payload) -> {:error, :bad_format}\n    not Map.has_key?(payload, \"event\") -> {:error, :missing_event}\n    true ->\n      MyApp.Webhook.dispatch(payload)\n  end\nend\n```\n\nThis is at a system boundary \u2014 the payload comes from an untrusted source, so defensive checks ARE warranted. Refactor to multi-clause function heads but KEEP the validation logic (don't drop the missing-event check). Use `def handle_webhook(nil)`, `def handle_webhook(payload) when is_map(payload)` with a guard on map_size + key presence where possible, plus body check for the `\"event\"` key. Output a complete `defmodule MyApp.WebhookHandler do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-36",
-          "prompt": "Given:\n\n```\ndef dispatch(event) do\n  case event.type do\n    :user ->\n      case event.action do\n        :created -> handle_user_created(event)\n        :updated -> handle_user_updated(event)\n        :deleted -> handle_user_deleted(event)\n      end\n    :order ->\n      case event.action do\n        :created -> handle_order_created(event)\n        :shipped -> handle_order_shipped(event)\n      end\n  end\nend\n```\n\nRewrite as a single-level set of function heads each pattern-matching on `%{type: ..., action: ...}`. Output a complete `defmodule MyApp.EventDispatcher do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-32",
-          "prompt": "Given:\n\n```\ndef process(event) do\n  case event.type do\n    :login ->\n      Logger.debug(\"Processing login for #{event.user_id}\")\n      MyApp.Auth.handle_login(event)\n    :logout ->\n      Logger.debug(\"Processing logout for #{event.user_id}\")\n      MyApp.Auth.handle_logout(event)\n    :signup ->\n      Logger.debug(\"Processing signup\")\n      MyApp.Auth.handle_signup(event)\n  end\nend\n```\n\nRefactor to multi-clause function heads. Preserve the `Logger.debug/1` calls \u2014 they must still be emitted. Destructure the relevant fields in each head. Hint: you'll need to pattern-match `user_id` in the login/logout heads but not in signup. Output a complete `defmodule MyApp.EventProcessor do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-13",
-          "prompt": "The following has invalid Elixir (`&&` and `||` are not allowed in guards \u2014 they'll raise at compile or runtime in guard position):\n\n```\ndef active?(user) when user.active && user.role != \"banned\", do: true\ndef active?(_), do: false\n\ndef contactable?(user) when user.email != nil || user.phone != nil, do: true\ndef contactable?(_), do: false\n```\n\nFix by: (1) destructuring user in the head, (2) using `and`/`or` in guards, (3) asserting types properly (`is_binary`, not `!= nil`). Output a complete `defmodule MyApp.UserChecks do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-27",
-          "prompt": "Refactor ALL functions in test_fixtures/bad_guards.ex. Every function must use guards that would actually compile. Specifically: `validate_age/1` uses guard `when is_integer(age) and age >= 0 and age <= 150`. `validate_email/1` keeps `String.contains?` in the body because it's not allowed in guards. `call_service/1` uses `when is_binary(req)` (not `not is_nil`). `process/1` uses an assertive type guard. `format_user/1` uses `when is_binary(name) and byte_size(name) > 0`. Output a complete `defmodule MyApp.Validator do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-11",
-          "prompt": "Refactor all three functions in test_fixtures/intermediate_vars.ex (`normalize/1`, `slugify/1`, `summary/1`) so every function body is a single `|>` pipeline. No intermediate variables. Output a complete `defmodule MyApp.TextProcessor do ... end`.",
+          "id": "elixir-pattern-match-refactor-hard-01",
+          "prompt": "Refactor `MyApp.UserService.fetch_profile/1` from test_fixtures/ruby_style_user_service.ex using a `with` expression that has an `else` clause. The original has three failure shapes: `{:error, :not_found}` when `Repo.get` returns nil, `{:error, :inactive}` when `user.active` is false, `{:error, :profile_missing}` when the profile is nil. The `with` must preserve all three. Use match expressions in the with clauses (`%User{active: true} = user <- Repo.get(...) || {:error, :not_found}`) so each mismatch lands on a distinct `else` clause that returns the correct error. Output a complete `defmodule MyApp.UserService do ... end` with just fetch_profile + helpers.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -442,42 +370,6 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-29",
-          "prompt": "Given:\n\n```\ndef deliver(params) do\n  if valid?(params) do\n    case lookup_user(params.id) do\n      {:ok, user} ->\n        if can_mail?(user) do\n          MyApp.Mailer.send(user, params.body)\n        else\n          {:error, :opted_out}\n        end\n      :not_found -> {:error, :not_found}\n    end\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nRewrite as a `with` expression. Helper functions: `valid?/1`, `lookup_user/1`, `can_mail?/1`. Output a complete `defmodule MyApp.Delivery do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-01",
-          "prompt": "Refactor `MyApp.UserService.fetch_profile/1` from test_fixtures/ruby_style_user_service.ex using a `with` expression that has an `else` clause. The original has three failure shapes: `{:error, :not_found}` when `Repo.get` returns nil, `{:error, :inactive}` when `user.active` is false, `{:error, :profile_missing}` when the profile is nil. The `with` must preserve all three. Use match expressions in the with clauses (`%User{active: true} = user <- Repo.get(...) || {:error, :not_found}`) so each mismatch lands on a distinct `else` clause that returns the correct error. Output a complete `defmodule MyApp.UserService do ... end` with just fetch_profile + helpers.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-10",
-          "prompt": "Refactor `MyApp.Collector.numbered/1` and its helpers in test_fixtures/list_append_loop.ex. The original uses `acc ++ [{n, head}]` which is O(n) per step, giving O(n\u00b2) total. Rewrite the helper to prepend `[{n, head} | acc]` and reverse the final accumulator. Apply the same fix to `positive_only/1` and `chars_to_upper/1`. Output a complete `defmodule MyApp.Collector do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
           "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
@@ -490,14 +382,74 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "medium",
+          "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-24",
-          "prompt": "Refactor `MyApp.Accumulators.max_value/1` from test_fixtures/enum_reduce_awkward.ex. The current implementation uses explicit recursion + a case with an `if head > other` check. Rewrite as a single call to `Enum.max/1` with a guard on empty lists returning `nil`. Output a complete `defmodule MyApp.Accumulators do ... end` with just max_value.",
+          "id": "elixir-pattern-match-refactor-hard-23",
+          "prompt": "Given:\n\n```\ndefmodule MyApp.Profile do\n  def title(u), do: if is_nil(u), do: \"\", else: u.title || \"\"\n  def bio(u), do: if is_nil(u), do: \"\", else: u.bio || \"\"\n  def avatar(u), do: if is_nil(u), do: \"/default.png\", else: u.avatar || \"/default.png\"\n  def url(u), do: if is_nil(u), do: \"/\", else: u.url || \"/\"\n  def display_name(u), do: if is_nil(u), do: \"Guest\", else: u.display_name || \"Guest\"\nend\n```\n\nRefactor so each function is two heads: one for `nil`, one for `%{<field>: v} when is_binary(v) and v != \"\"`, and a catch-all that returns the default. Do NOT use `||`. Output a complete `defmodule MyApp.Profile do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-26",
+          "prompt": "Given:\n\n```\ndef handle_webhook(payload) do\n  cond do\n    is_nil(payload) -> {:error, :empty}\n    not is_map(payload) -> {:error, :bad_format}\n    not Map.has_key?(payload, \"event\") -> {:error, :missing_event}\n    true ->\n      MyApp.Webhook.dispatch(payload)\n  end\nend\n```\n\nThis is at a system boundary \u2014 the payload comes from an untrusted source, so defensive checks ARE warranted. Refactor to multi-clause function heads but KEEP the validation logic (don't drop the missing-event check). Use `def handle_webhook(nil)`, `def handle_webhook(payload) when is_map(payload)` with a guard on map_size + key presence where possible, plus body check for the `\"event\"` key. Output a complete `defmodule MyApp.WebhookHandler do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-27",
+          "prompt": "Refactor ALL functions in test_fixtures/bad_guards.ex. Every function must use guards that would actually compile. Specifically: `validate_age/1` uses guard `when is_integer(age) and age >= 0 and age <= 150`. `validate_email/1` keeps `String.contains?` in the body because it's not allowed in guards. `call_service/1` uses `when is_binary(req)` (not `not is_nil`). `process/1` uses an assertive type guard. `format_user/1` uses `when is_binary(name) and byte_size(name) > 0`. Output a complete `defmodule MyApp.Validator do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-31",
+          "prompt": "Given:\n\n```\ndef handle(cmd_bin) do\n  if String.starts_with?(cmd_bin, \"AUTH\") do\n    payload = String.slice(cmd_bin, 5, 1024)\n    auth(payload)\n  else\n    if String.starts_with?(cmd_bin, \"LIST \") do\n      payload = String.slice(cmd_bin, 5, 1024)\n      list(payload)\n    else\n      if String.starts_with?(cmd_bin, \"QUIT\") do\n        quit()\n      else\n        {:error, :unknown}\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads using binary pattern matching in each head. Include `def handle(<<\"AUTH \", payload::binary>>)`, `def handle(<<\"LIST \", payload::binary>>)`, `def handle(\"QUIT\")`, and a catch-all. Output a complete `defmodule MyApp.CommandRouter do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-32",
+          "prompt": "Given:\n\n```\ndef process(event) do\n  case event.type do\n    :login ->\n      Logger.debug(\"Processing login for #{event.user_id}\")\n      MyApp.Auth.handle_login(event)\n    :logout ->\n      Logger.debug(\"Processing logout for #{event.user_id}\")\n      MyApp.Auth.handle_logout(event)\n    :signup ->\n      Logger.debug(\"Processing signup\")\n      MyApp.Auth.handle_signup(event)\n  end\nend\n```\n\nRefactor to multi-clause function heads. Preserve the `Logger.debug/1` calls \u2014 they must still be emitted. Destructure the relevant fields in each head. Hint: you'll need to pattern-match `user_id` in the login/logout heads but not in signup. Output a complete `defmodule MyApp.EventProcessor do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-hard-33",
+          "prompt": "Refactor `MyApp.RoleRouter` from test_fixtures/cond_role_router.ex. `route/1` becomes pattern-matched heads (no cond). `permission/2` has a dynamic `resource.owner_id == user.id` check that needs cross-arg pinning in heads. Apply both transformations. Output a complete `defmodule MyApp.RoleRouter do ... end`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -510,18 +462,6 @@
           "gold_standard_hints": "",
           "id": "elixir-pattern-match-refactor-hard-35",
           "prompt": "Given:\n\n```\ndef running_max(list) do\n  running_max(list, nil, [])\nend\n\ndefp running_max([], _max, acc), do: Enum.reverse(acc)\ndefp running_max([h | t], nil, acc), do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc) when h > max, do: running_max(t, h, [h | acc])\ndefp running_max([h | t], max, acc), do: running_max(t, max, [max | acc])\n```\n\nThe current implementation works but uses a 3-arg helper with three distinct heads. Rewrite so `running_max/1` is a single call to `Enum.scan/2` \u2014 `list |> Enum.scan(&max/2)` \u2014 which is MUCH cleaner. Output a complete `defmodule MyApp.RunningStats do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-medium-20",
-          "prompt": "Refactor `MyApp.OrderFormatter.summary/1` from test_fixtures/map_access_noise.ex. The function uses `order[:id]`, `order[:items]`, `order[:total]`, and then inner `item[:name]`, `item[:quantity]`. Replace with head destructuring: `def summary(%{id: id, items: items, total: total})` and inside `Enum.map/2` use `fn %{name: name, quantity: qty} -> ... end`. Also add a catch-all clause returning `\"Invalid order\"`. You may also refactor `plot_point/1` in the same module. Output a complete `defmodule MyApp.OrderFormatter do ... end` containing summary + plot_point only.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -544,20 +484,92 @@
             "weight": 1.0
           },
           "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-10",
+          "prompt": "Refactor `MyApp.Collector.numbered/1` and its helpers in test_fixtures/list_append_loop.ex. The original uses `acc ++ [{n, head}]` which is O(n) per step, giving O(n\u00b2) total. Rewrite the helper to prepend `[{n, head} | acc]` and reverse the final accumulator. Apply the same fix to `positive_only/1` and `chars_to_upper/1`. Output a complete `defmodule MyApp.Collector do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-11",
+          "prompt": "Refactor all three functions in test_fixtures/intermediate_vars.ex (`normalize/1`, `slugify/1`, `summary/1`) so every function body is a single `|>` pipeline. No intermediate variables. Output a complete `defmodule MyApp.TextProcessor do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-13",
+          "prompt": "The following has invalid Elixir (`&&` and `||` are not allowed in guards \u2014 they'll raise at compile or runtime in guard position):\n\n```\ndef active?(user) when user.active && user.role != \"banned\", do: true\ndef active?(_), do: false\n\ndef contactable?(user) when user.email != nil || user.phone != nil, do: true\ndef contactable?(_), do: false\n```\n\nFix by: (1) destructuring user in the head, (2) using `and`/`or` in guards, (3) asserting types properly (`is_binary`, not `!= nil`). Output a complete `defmodule MyApp.UserChecks do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
           "id": "elixir-pattern-match-refactor-medium-15",
           "prompt": "Refactor `MyApp.PacketParser.parse/1` from test_fixtures/binary_header_parser.ex. The fixture uses `:binary.part/3` and `:binary.decode_unsigned/1` to extract a 2-byte version + 4-byte length + payload. Replace with a single function head using binary size modifiers: `def parse(<<version::binary-size(2), length::unsigned-integer-size(32), payload::binary-size(length), _rest::binary>>)`. Add a catch-all clause returning `{:error, :too_short}`. Output a complete `defmodule MyApp.PacketParser do ... end`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-31",
-          "prompt": "Given:\n\n```\ndef handle(cmd_bin) do\n  if String.starts_with?(cmd_bin, \"AUTH\") do\n    payload = String.slice(cmd_bin, 5, 1024)\n    auth(payload)\n  else\n    if String.starts_with?(cmd_bin, \"LIST \") do\n      payload = String.slice(cmd_bin, 5, 1024)\n      list(payload)\n    else\n      if String.starts_with?(cmd_bin, \"QUIT\") do\n        quit()\n      else\n        {:error, :unknown}\n      end\n    end\n  end\nend\n```\n\nRewrite as multi-clause function heads using binary pattern matching in each head. Include `def handle(<<\"AUTH \", payload::binary>>)`, `def handle(<<\"LIST \", payload::binary>>)`, `def handle(\"QUIT\")`, and a catch-all. Output a complete `defmodule MyApp.CommandRouter do ... end`.",
+          "id": "elixir-pattern-match-refactor-medium-18",
+          "prompt": "Given:\n\n```\ndef tax_bracket(income) do\n  cond do\n    income < 10_000 -> 0.0\n    income < 40_000 -> 0.12\n    income < 85_000 -> 0.22\n    income < 160_000 -> 0.24\n    true -> 0.32\n  end\nend\n```\n\nThis function is correctly expressed as a `cond` \u2014 the ordered, open-ended range checks can't become multi-clause function heads without awkward guard repetition. Keep it as a `cond` but replace the `true ->` fallback with a guard-style clause that makes the terminal case explicit: `income >= 160_000 -> 0.32`. Output a complete `defmodule MyApp.Tax do ... end`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-20",
+          "prompt": "Refactor `MyApp.OrderFormatter.summary/1` from test_fixtures/map_access_noise.ex. The function uses `order[:id]`, `order[:items]`, `order[:total]`, and then inner `item[:name]`, `item[:quantity]`. Replace with head destructuring: `def summary(%{id: id, items: items, total: total})` and inside `Enum.map/2` use `fn %{name: name, quantity: qty} -> ... end`. Also add a catch-all clause returning `\"Invalid order\"`. You may also refactor `plot_point/1` in the same module. Output a complete `defmodule MyApp.OrderFormatter do ... end` containing summary + plot_point only.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-24",
+          "prompt": "Refactor `MyApp.Accumulators.max_value/1` from test_fixtures/enum_reduce_awkward.ex. The current implementation uses explicit recursion + a case with an `if head > other` check. Rewrite as a single call to `Enum.max/1` with a guard on empty lists returning `nil`. Output a complete `defmodule MyApp.Accumulators do ... end` with just max_value.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-pattern-match-refactor-medium-29",
+          "prompt": "Given:\n\n```\ndef deliver(params) do\n  if valid?(params) do\n    case lookup_user(params.id) do\n      {:ok, user} ->\n        if can_mail?(user) do\n          MyApp.Mailer.send(user, params.body)\n        else\n          {:error, :opted_out}\n        end\n      :not_found -> {:error, :not_found}\n    end\n  else\n    {:error, :invalid}\n  end\nend\n```\n\nRewrite as a `with` expression. Helper functions: `valid?/1`, `lookup_user/1`, `can_mail?/1`. Output a complete `defmodule MyApp.Delivery do ... end`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -574,14 +586,14 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-33",
-          "prompt": "Refactor `MyApp.RoleRouter` from test_fixtures/cond_role_router.ex. `route/1` becomes pattern-matched heads (no cond). `permission/2` has a dynamic `resource.owner_id == user.id` check that needs cross-arg pinning in heads. Apply both transformations. Output a complete `defmodule MyApp.RoleRouter do ... end`.",
+          "id": "elixir-pattern-match-refactor-medium-36",
+          "prompt": "Given:\n\n```\ndef dispatch(event) do\n  case event.type do\n    :user ->\n      case event.action do\n        :created -> handle_user_created(event)\n        :updated -> handle_user_updated(event)\n        :deleted -> handle_user_deleted(event)\n      end\n    :order ->\n      case event.action do\n        :created -> handle_order_created(event)\n        :shipped -> handle_order_shipped(event)\n      end\n  end\nend\n```\n\nRewrite as a single-level set of function heads each pattern-matching on `%{type: ..., action: ...}`. Output a complete `defmodule MyApp.EventDispatcher do ... end`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -594,18 +606,6 @@
           "gold_standard_hints": "",
           "id": "elixir-pattern-match-refactor-medium-45",
           "prompt": "Given:\n\n```\ndef display(name) do\n  if name in [nil, \"\"] do\n    \"Anonymous\"\n  else\n    String.upcase(name)\n  end\nend\n```\n\nRewrite with two function heads \u2014 one matching `nil`, one matching `\"\"`, one pattern-matching a non-empty binary with a `when is_binary(name)` guard. Do not use `in [nil, \"\"]`. Output a complete `defmodule MyApp.Display do ... end`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-pattern-match-refactor-hard-23",
-          "prompt": "Given:\n\n```\ndefmodule MyApp.Profile do\n  def title(u), do: if is_nil(u), do: \"\", else: u.title || \"\"\n  def bio(u), do: if is_nil(u), do: \"\", else: u.bio || \"\"\n  def avatar(u), do: if is_nil(u), do: \"/default.png\", else: u.avatar || \"/default.png\"\n  def url(u), do: if is_nil(u), do: \"/\", else: u.url || \"/\"\n  def display_name(u), do: if is_nil(u), do: \"Guest\", else: u.display_name || \"Guest\"\nend\n```\n\nRefactor so each function is two heads: one for `nil`, one for `%{<field>: v} when is_binary(v) and v != \"\"`, and a catch-all that returns the default. Do NOT use `||`. Output a complete `defmodule MyApp.Profile do ... end`.",
           "setup_files": {},
           "verification_method": "run_tests"
         }
@@ -684,9 +684,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Pattern Match Refactor \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "specialization": "Elixir Pattern Match Refactor \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_vcbfb46e76738]",
       "status": "complete",
-      "total_cost_usd": 0.0
+      "total_cost_usd": 26.5
     }
   ],
   "generated_at": "2026-04-12T07:18:08.872124+00:00",

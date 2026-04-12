@@ -374,14 +374,14 @@
       },
       "challenges": [
         {
-          "difficulty": "medium",
+          "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-05",
-          "prompt": "`MyApp.Accounts` in `test_fixtures/bloated_context.ex` contains four query functions inline. Refactor by creating a new `MyApp.Accounts.UserQueries` module that exposes composable query builders: `base/0`, `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder takes and returns an `Ecto.Queryable`. Use `from(u in User, as: :user)` as the base so builders can be composed across joins. Then rewrite `MyApp.Accounts` to delegate to the new module via pipe chains. Write UserQueries to `lib/my_app/accounts/user_queries.ex` and the refactored context to `lib/my_app/accounts.ex`.",
+          "id": "elixir-ecto-query-writer-hard-06",
+          "prompt": "Write `MyApp.Accounts.users_with_latest_comment/0` that returns each user with their single most-recent comment via a lateral join + correlated subquery. Use: `from u in User, as: :user, inner_lateral_join: c in subquery(from(c in Comment, where: c.user_id == parent_as(:user).id, order_by: [desc: c.inserted_at], limit: 1)), select: %{user_id: u.id, name: u.name, latest_comment_body: c.body}`. Write to `lib/my_app/accounts.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -394,6 +394,246 @@
           "gold_standard_hints": "",
           "id": "elixir-ecto-query-writer-hard-08",
           "prompt": "Starting from `test_fixtures/bloated_context.ex`, extract every query into `MyApp.Accounts.UserQueries`. Define: `base/0` returning `from(u in User, as: :user)`, plus `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder must accept the query as its first argument (pipe-friendly). The refactored `MyApp.Accounts` module should use `alias MyApp.Accounts.UserQueries, as: Q` and compose the builders via pipe for each of the four original public functions. Preserve ordering semantics. Write to `lib/my_app/accounts/user_queries.ex` and `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-10",
+          "prompt": "Write `MyApp.Blog.top_2_posts_per_category/0` that returns the top 2 posts per category by `view_count`. Use an inner subquery that selects `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])` as `rn`, then the outer query filters `rn <= 2`. Use `subquery/1` properly. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-11",
+          "prompt": "Write `MyApp.Blog.search/1` that accepts optional `:category_name` and `:author_name` filters. If `:category_name` is present, `inner_join: c in assoc(p, :category)` and filter `c.name`. If `:author_name` is present, `inner_join: u in assoc(p, :author)` and filter `u.name`. If neither, no join. Start with a base query, conditionally add joins, and use dynamic filters. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-16",
+          "prompt": "Write `MyApp.Accounts.users_with_recent_post_counts/0` that returns every user (INCLUDING those with no recent posts) with the count of their posts from the last 7 days. The left_join's filter (last 7 days) MUST be inside the `on:` clause, not in the `where:`, or users with zero recent posts will disappear. Use `coalesce(count(p.id), 0)` and group by user fields. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-17",
+          "prompt": "Write `MyApp.Blog.cursor_page_with_counts/1` that returns a cursor-paginated feed of posts along with each post's comment count, using keyset cursor on `(inserted_at desc, id desc)`. The query must: (a) left_join comments, (b) group by post, (c) compute `comment_count`, (d) apply the keyset comparison, (e) limit. Cursor is `{ts, id}` or `nil`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-18",
+          "prompt": "Given `fragment(\"COALESCE(SUM(?), 0)\", o.total)` in a query, rewrite it using Ecto's typed composition: `coalesce(sum(o.total), 0)`. Build a complete function `MyApp.Shop.totals_per_customer/0` that groups orders by user_id, selects `{u.id, u.name, coalesce(sum(o.total), 0)}` via left_join. Write to `lib/my_app/shop.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-21",
+          "prompt": "Write `MyApp.Accounts.upsert_and_return/1` that takes user attrs, upserts via `Repo.insert/2` with a changeset, uses `on_conflict: {:replace, [:name, :updated_at]}`, `conflict_target: :email`, and `returning: true`. The function should return the final (inserted-or-updated) User struct. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-24",
+          "prompt": "Write `MyApp.Blog.post_counts_by_category_and_month/0` that groups posts by `category_id` AND the month of `inserted_at`, returning `{category_id, month, count}`. Use `fragment(\"date_trunc('month', ?)\", p.inserted_at)` for the month bucket, group by both `p.category_id` and the fragment. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-26",
+          "prompt": "Given this query in `MyApp.Profile.active_records/0`: `@active_states [\"open\", \"active\", \"running\"]; from(r in Record, where: r.state in ^@active_states)`. The @-pin causes Postgres to treat the list as a parameter, which prevents index selectivity on a state column. Rewrite to: a) use a module function that splices the list via `unquote_splicing` or b) just inline the list literal without `^`. Document the tradeoff in a code comment. Write to `lib/my_app/profile.ex`. (Pretend a `Record` schema exists.)",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-hard-32",
+          "prompt": "Write `MyApp.Accounts.users_with_recent_comments_first/0` that returns users with `:comments` preloaded AND each user's comments ordered by `inserted_at desc`. Use query-tuple preload syntax: `preload: [comments: ^ordered_comments_query]` where `ordered_comments_query` is `from(c in Comment, order_by: [desc: c.inserted_at])`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-05",
+          "prompt": "`MyApp.Accounts` in `test_fixtures/bloated_context.ex` contains four query functions inline. Refactor by creating a new `MyApp.Accounts.UserQueries` module that exposes composable query builders: `base/0`, `active/1`, `by_role/2`, `in_team/2`, `verified/1`, `by_name/1`. Each builder takes and returns an `Ecto.Queryable`. Use `from(u in User, as: :user)` as the base so builders can be composed across joins. Then rewrite `MyApp.Accounts` to delegate to the new module via pipe chains. Write UserQueries to `lib/my_app/accounts/user_queries.ex` and the refactored context to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-07",
+          "prompt": "`MyApp.Blog.FeedCursor.feed/1` in `test_fixtures/cursor_non_deterministic.ex` paginates by `published_at` alone, which is not unique \u2014 pages can drop or duplicate rows at ties. Add `id` as a secondary sort + cursor field. The cursor should be a `{ts, last_id}` tuple, and the where clause should use the row-wise comparison pattern `(published_at < ^ts) or (published_at == ^ts and id < ^last_id)`. Write to `lib/my_app/blog/feed_cursor.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-08",
+          "prompt": "`MyApp.Accounts.Search.search/1` in `test_fixtures/chained_if_search.ex` uses `if/where` chaining for 4 optional filters. Rewrite it using `Enum.reduce(params, dynamic(true), fn ... end)` with one `dynamic/2` fragment per filter, then apply the accumulated dynamic to a single `where: ^dyn` clause. Handle string keys `\"name\"`, `\"email\"`, `\"min_age\"`, `\"active\"`. Write to `lib/my_app/accounts/search.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-10",
+          "prompt": "`MyApp.Blog.Rankings.posts_ranked_per_category/0` in `test_fixtures/fragment_window_fn.ex` uses a raw `fragment(\"row_number() OVER (PARTITION BY ? ORDER BY ? DESC)\", ...)` to compute per-category ranks. Rewrite it using Ecto's typed form: `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])`. No fragments. Write to `lib/my_app/blog/rankings.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-11",
+          "prompt": "Write `MyApp.Blog.posts_with_category_loaded/0` that joins posts with their category in a single round trip. You MUST thread the join binding into the preload: `join: c in assoc(p, :category), preload: [category: c]`. Merely writing `preload: :category` without the binding would cause Ecto to issue a second query for categories. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-12",
+          "prompt": "Write `MyApp.Blog.top_n_commenters/1` that takes an integer `n` and returns the top-N users by comment count. Return a list of maps `%{id, name, comment_count}`. Use a left join on comments (so users with 0 comments are considered), group by user id+name, order by `count desc`, and limit to `^n`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-16",
+          "prompt": "Write `MyApp.Accounts.registered_between/2` that takes two `DateTime` values and returns users whose `inserted_at` is between them, inclusive. Use `where: u.inserted_at >= ^start_ts and u.inserted_at <= ^end_ts`. Order by `inserted_at asc`. Write to `lib/my_app/accounts.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-17",
+          "prompt": "Write `MyApp.Blog.posts_authored_in_team/1` that takes a `team_id` and returns posts authored by users in that team, along with the category name. Chain three tables: Post -> User -> (filter by team_id) -> join Category. Use named bindings `:post`, `:author`, `:category`, and reference them in select: `{p.title, u.name, c.name}`. Pin `team_id`. Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-20",
+          "prompt": "Write `MyApp.Blog.bulk_upsert_tags/1` that takes a list of tag name strings and bulk-inserts them as `Tag` records, skipping duplicates on the `slug` unique index. Use `Repo.insert_all/3` with `on_conflict: :nothing`, `conflict_target: :slug`. Generate slugs by downcasing and replacing spaces with dashes. Include `inserted_at`/`updated_at` timestamps in each row (`DateTime.utc_now()`). Write to `lib/my_app/blog.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-21",
+          "prompt": "Write `MyApp.Blog.posts_by_metadata/1` that takes a metadata key string and returns posts where a PostgreSQL JSONB `metadata` column contains that key. Use `fragment(\"? \\\\? ?\", p.metadata, ^key)` \u2014 the `\\?` is how you escape `?` in an Ecto fragment to avoid it being treated as a placeholder. Pin the key. Write to `lib/my_app/blog.ex`. (Assume a `metadata` jsonb field exists on Post for the purpose of this challenge.)",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-query-writer-medium-22",
+          "prompt": "Write `MyApp.Accounts.users_joined_to_top_commenters/0` that joins users with a subquery returning `top_commenters` (user_id + total_count). The subquery counts comments grouped by user_id and filters `having count(c.id) >= 10`. The outer query uses `join: tc in subquery(top_commenters_query)` and selects `{u.id, u.name, tc.total_count}`. Write to `lib/my_app/accounts.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -418,246 +658,6 @@
           "gold_standard_hints": "",
           "id": "elixir-ecto-query-writer-medium-30",
           "prompt": "Write `MyApp.Accounts.search_by_name/1` that takes a user-provided string and does a case-insensitive partial match on `name`. Use the safe pattern: build `\"%\" <> query <> \"%\"` outside the query, then pass via `ilike(u.name, ^pattern)`. Do NOT interpolate the raw query string into the SQL. Pin the pattern. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-17",
-          "prompt": "Write `MyApp.Blog.posts_authored_in_team/1` that takes a `team_id` and returns posts authored by users in that team, along with the category name. Chain three tables: Post -> User -> (filter by team_id) -> join Category. Use named bindings `:post`, `:author`, `:category`, and reference them in select: `{p.title, u.name, c.name}`. Pin `team_id`. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-16",
-          "prompt": "Write `MyApp.Accounts.users_with_recent_post_counts/0` that returns every user (INCLUDING those with no recent posts) with the count of their posts from the last 7 days. The left_join's filter (last 7 days) MUST be inside the `on:` clause, not in the `where:`, or users with zero recent posts will disappear. Use `coalesce(count(p.id), 0)` and group by user fields. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-11",
-          "prompt": "Write `MyApp.Blog.posts_with_category_loaded/0` that joins posts with their category in a single round trip. You MUST thread the join binding into the preload: `join: c in assoc(p, :category), preload: [category: c]`. Merely writing `preload: :category` without the binding would cause Ecto to issue a second query for categories. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-32",
-          "prompt": "Write `MyApp.Accounts.users_with_recent_comments_first/0` that returns users with `:comments` preloaded AND each user's comments ordered by `inserted_at desc`. Use query-tuple preload syntax: `preload: [comments: ^ordered_comments_query]` where `ordered_comments_query` is `from(c in Comment, order_by: [desc: c.inserted_at])`. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-12",
-          "prompt": "Write `MyApp.Blog.top_n_commenters/1` that takes an integer `n` and returns the top-N users by comment count. Return a list of maps `%{id, name, comment_count}`. Use a left join on comments (so users with 0 comments are considered), group by user id+name, order by `count desc`, and limit to `^n`. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-24",
-          "prompt": "Write `MyApp.Blog.post_counts_by_category_and_month/0` that groups posts by `category_id` AND the month of `inserted_at`, returning `{category_id, month, count}`. Use `fragment(\"date_trunc('month', ?)\", p.inserted_at)` for the month bucket, group by both `p.category_id` and the fragment. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-22",
-          "prompt": "Write `MyApp.Accounts.users_joined_to_top_commenters/0` that joins users with a subquery returning `top_commenters` (user_id + total_count). The subquery counts comments grouped by user_id and filters `having count(c.id) >= 10`. The outer query uses `join: tc in subquery(top_commenters_query)` and selects `{u.id, u.name, tc.total_count}`. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-06",
-          "prompt": "Write `MyApp.Accounts.users_with_latest_comment/0` that returns each user with their single most-recent comment via a lateral join + correlated subquery. Use: `from u in User, as: :user, inner_lateral_join: c in subquery(from(c in Comment, where: c.user_id == parent_as(:user).id, order_by: [desc: c.inserted_at], limit: 1)), select: %{user_id: u.id, name: u.name, latest_comment_body: c.body}`. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-08",
-          "prompt": "`MyApp.Accounts.Search.search/1` in `test_fixtures/chained_if_search.ex` uses `if/where` chaining for 4 optional filters. Rewrite it using `Enum.reduce(params, dynamic(true), fn ... end)` with one `dynamic/2` fragment per filter, then apply the accumulated dynamic to a single `where: ^dyn` clause. Handle string keys `\"name\"`, `\"email\"`, `\"min_age\"`, `\"active\"`. Write to `lib/my_app/accounts/search.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-11",
-          "prompt": "Write `MyApp.Blog.search/1` that accepts optional `:category_name` and `:author_name` filters. If `:category_name` is present, `inner_join: c in assoc(p, :category)` and filter `c.name`. If `:author_name` is present, `inner_join: u in assoc(p, :author)` and filter `u.name`. If neither, no join. Start with a base query, conditionally add joins, and use dynamic filters. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-16",
-          "prompt": "Write `MyApp.Accounts.registered_between/2` that takes two `DateTime` values and returns users whose `inserted_at` is between them, inclusive. Use `where: u.inserted_at >= ^start_ts and u.inserted_at <= ^end_ts`. Order by `inserted_at asc`. Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-26",
-          "prompt": "Given this query in `MyApp.Profile.active_records/0`: `@active_states [\"open\", \"active\", \"running\"]; from(r in Record, where: r.state in ^@active_states)`. The @-pin causes Postgres to treat the list as a parameter, which prevents index selectivity on a state column. Rewrite to: a) use a module function that splices the list via `unquote_splicing` or b) just inline the list literal without `^`. Document the tradeoff in a code comment. Write to `lib/my_app/profile.ex`. (Pretend a `Record` schema exists.)",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-07",
-          "prompt": "`MyApp.Blog.FeedCursor.feed/1` in `test_fixtures/cursor_non_deterministic.ex` paginates by `published_at` alone, which is not unique \u2014 pages can drop or duplicate rows at ties. Add `id` as a secondary sort + cursor field. The cursor should be a `{ts, last_id}` tuple, and the where clause should use the row-wise comparison pattern `(published_at < ^ts) or (published_at == ^ts and id < ^last_id)`. Write to `lib/my_app/blog/feed_cursor.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-17",
-          "prompt": "Write `MyApp.Blog.cursor_page_with_counts/1` that returns a cursor-paginated feed of posts along with each post's comment count, using keyset cursor on `(inserted_at desc, id desc)`. The query must: (a) left_join comments, (b) group by post, (c) compute `comment_count`, (d) apply the keyset comparison, (e) limit. Cursor is `{ts, id}` or `nil`. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-21",
-          "prompt": "Write `MyApp.Blog.posts_by_metadata/1` that takes a metadata key string and returns posts where a PostgreSQL JSONB `metadata` column contains that key. Use `fragment(\"? \\\\? ?\", p.metadata, ^key)` \u2014 the `\\?` is how you escape `?` in an Ecto fragment to avoid it being treated as a placeholder. Pin the key. Write to `lib/my_app/blog.ex`. (Assume a `metadata` jsonb field exists on Post for the purpose of this challenge.)",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-18",
-          "prompt": "Given `fragment(\"COALESCE(SUM(?), 0)\", o.total)` in a query, rewrite it using Ecto's typed composition: `coalesce(sum(o.total), 0)`. Build a complete function `MyApp.Shop.totals_per_customer/0` that groups orders by user_id, selects `{u.id, u.name, coalesce(sum(o.total), 0)}` via left_join. Write to `lib/my_app/shop.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-10",
-          "prompt": "`MyApp.Blog.Rankings.posts_ranked_per_category/0` in `test_fixtures/fragment_window_fn.ex` uses a raw `fragment(\"row_number() OVER (PARTITION BY ? ORDER BY ? DESC)\", ...)` to compute per-category ranks. Rewrite it using Ecto's typed form: `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.inserted_at])`. No fragments. Write to `lib/my_app/blog/rankings.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-10",
-          "prompt": "Write `MyApp.Blog.top_2_posts_per_category/0` that returns the top 2 posts per category by `view_count`. Use an inner subquery that selects `row_number() |> over(partition_by: p.category_id, order_by: [desc: p.view_count])` as `rn`, then the outer query filters `rn <= 2`. Use `subquery/1` properly. Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-medium-20",
-          "prompt": "Write `MyApp.Blog.bulk_upsert_tags/1` that takes a list of tag name strings and bulk-inserts them as `Tag` records, skipping duplicates on the `slug` unique index. Use `Repo.insert_all/3` with `on_conflict: :nothing`, `conflict_target: :slug`. Generate slugs by downcasing and replacing spaces with dashes. Include `inserted_at`/`updated_at` timestamps in each row (`DateTime.utc_now()`). Write to `lib/my_app/blog.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-query-writer-hard-21",
-          "prompt": "Write `MyApp.Accounts.upsert_and_return/1` that takes user attrs, upserts via `Repo.insert/2` with a changeset, uses `on_conflict: {:replace, [:name, :updated_at]}`, `conflict_target: :email`, and `returning: true`. The function should return the final (inserted-or-updated) User struct. Write to `lib/my_app/accounts.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         }
@@ -738,9 +738,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Ecto Query Writer \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "specialization": "Elixir Ecto Query Writer \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_va83f56e96189]",
       "status": "complete",
-      "total_cost_usd": 0.0
+      "total_cost_usd": 28.5
     }
   ],
   "generated_at": "2026-04-12T07:08:53.875144+00:00",

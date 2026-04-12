@@ -348,62 +348,14 @@
       },
       "challenges": [
         {
-          "difficulty": "medium",
+          "difficulty": "easy",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-20",
-          "prompt": "Build MyApp.Accounts.Person with first_name, last_name, and a virtual field :full_name. In the changeset, use put_change to set full_name = first_name <> \" \" <> last_name. The :full_name field must have `virtual: true` and must never appear in the cast list. Write to lib/my_app/accounts/person.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-21",
-          "prompt": "MyApp.Audit is a bounded context that records events referencing entities from other contexts. An Audit.Event should reference arbitrary entities by (entity_type :string, entity_id :integer) \u2014 NOT belongs_to (because Audit cannot import Accounts or Billing). But DO create a compound index on (entity_type, entity_id) in the migration for efficient lookup. Write schema to lib/my_app/audit/event.ex and migration to priv/repo/migrations/20260414000000_create_audit_events.exs.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-28",
-          "prompt": "MyApp.Analytics.Event should have a :metadata field that stores arbitrary JSON (typed :map in Elixir, :jsonb in Postgres). Write both the schema and the migration. Migration must declare `add :metadata, :map`. Schema declares `field :metadata, :map`. Write schema to lib/my_app/analytics/event.ex and migration to priv/repo/migrations/20260412700000_create_events.exs.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-14",
-          "prompt": "A user writes: \"Just use :float for the quantity field \u2014 it's simpler and we don't need decimal precision for stock counts.\" The quantity is actually fractional (e.g. 2.5 kg of flour), so it IS a precision-sensitive number. Refuse the :float suggestion and use :decimal with explicit precision: 10, scale: 3. Add a moduledoc explaining why. Write MyApp.Inventory.StockItem to lib/my_app/inventory/stock_item.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-14",
-          "prompt": "Build MyApp.Blog.Post with many_to_many :tags through posts_tags AND many_to_many :contributors (User module) through posts_contributors. Each has its own join table. Write the schema to lib/my_app/blog/post.ex and the migration for both join tables to priv/repo/migrations/20260412400000_create_post_joins.exs.",
+          "id": "elixir-ecto-schema-changeset-easy-35",
+          "prompt": "Write a module function `MyApp.Tenant.Products.get_product/2` that takes a product id and a tenant_schema string, and calls `Repo.one` with the `prefix:` option set to the tenant_schema. Use `from p in Product, where: p.id == ^id`. Write to lib/my_app/tenant/products.ex.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -420,74 +372,14 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-19",
-          "prompt": "Create MyApp.Shared.Address as an embedded_schema with fields street, city, postal_code, country (all required in its own validate_changeset/2). Then create MyApp.CRM.Customer and MyApp.Inventory.Vendor, each embedding the same Shared.Address as their primary_address via embeds_one. Write Address to lib/my_app/shared/address.ex, Customer to lib/my_app/crm/customer.ex, Vendor to lib/my_app/inventory/vendor.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
           "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-15",
-          "prompt": "Build MyApp.Orders.Order with embeds_many :line_items, LineItem. Each LineItem has required fields :product_name, :unit_price (decimal), :quantity (integer). Both order and line item have their own changeset functions. Order's changeset validates that there is at least one line item. Write both modules to lib/my_app/orders/order.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-18",
-          "prompt": "Rewrite test_fixtures/stringly_typed_status.ex to use Ecto.Enum for both :status and :priority. Keep the same allowed values. Also add a validate_required for :status (default Task gets :pending implicitly via default but require explicit presence). Write to lib/my_app/tasks/task.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-12",
-          "prompt": "The Booking schema in test_fixtures/booking_validate_dates.ex needs a custom validation: end_date must be on or after start_date. Write a private `validate_end_after_start/1` function that uses get_field to read both dates, calls Date.compare, and adds an error with add_error(:end_date, \"must be after start date\") if end_date is before start_date. Handle nil values gracefully (no crash). Call it from changeset/2. Write to lib/my_app/bookings/booking.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-11",
-          "prompt": "Build a password-change flow for MyApp.Accounts.User: virtual fields :current_password and :new_password and :new_password_confirmation. The changeset should: (1) require all three, (2) validate_length new_password >= 12, (3) validate_confirmation(:new_password), (4) a custom validator that rejects new_password == current_password with a friendly error. Handle nils without crashing. Write to lib/my_app/accounts/user.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-08",
-          "prompt": "The file test_fixtures/broken_unique_constraint.ex has unique_constraint(:email) and unique_constraint(:username) in the changeset but the migration creates no unique_index for either \u2014 the constraints do nothing. Fix: write a new migration that adds unique_index(:signups, [:email]) and unique_index(:signups, [:username]). Also add unsafe_validate_unique calls in the changeset for both fields. Schema to lib/my_app/accounts/signup.ex, new migration to priv/repo/migrations/20260412100000_add_unique_indexes_to_signups.exs.",
+          "id": "elixir-ecto-schema-changeset-hard-08",
+          "prompt": "Complete soft-delete support for MyApp.Accounts.Member (starting from test_fixtures/soft_delete_missing_scope.ex): (1) schema must have deleted_at field, unique_constraint with explicit `name: :members_email_active_index`, (2) helper `active_query/0` using is_nil, (3) `soft_delete_changeset/1` that sets deleted_at to DateTime.utc_now |> DateTime.truncate(:second), (4) migration creating the partial unique index with that explicit name. Schema to lib/my_app/accounts/member.ex, migration to priv/repo/migrations/20260413600000_add_partial_unique_members.exs.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -504,14 +396,50 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "medium",
+          "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-07",
-          "prompt": "The file test_fixtures/user_no_cast_assoc_preload.ex calls cast_assoc(:posts) on a user that may not have posts preloaded \u2014 this raises at runtime. Fix the code so that cast_assoc always sees a preloaded posts list. Provide a helper function `update_user_with_posts/2` that preloads posts first via Ecto.Repo.preload/2 before building the changeset. Write to lib/my_app/blog/user_with_posts.ex.",
+          "id": "elixir-ecto-schema-changeset-hard-11",
+          "prompt": "Build a password-change flow for MyApp.Accounts.User: virtual fields :current_password and :new_password and :new_password_confirmation. The changeset should: (1) require all three, (2) validate_length new_password >= 12, (3) validate_confirmation(:new_password), (4) a custom validator that rejects new_password == current_password with a friendly error. Handle nils without crashing. Write to lib/my_app/accounts/user.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-hard-13",
+          "prompt": "A developer says: \"I ported this from Rails. Preserve the polymorphic image pattern with imageable_type + imageable_id so our existing queries work.\" Refuse. Explain in a moduledoc at the top of the file why this pattern is unsafe in Ecto/Postgres (loss of referential integrity, no FK constraints, silent orphaning \u2014 cite the Ecto docs). Then produce the correct join-table alternative with separate many_to_many associations. Write the Image schema + migration to lib/my_app/media/image.ex and priv/repo/migrations/20260413800000_create_images_join_tables.exs.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-hard-14",
+          "prompt": "A user writes: \"Just use :float for the quantity field \u2014 it's simpler and we don't need decimal precision for stock counts.\" The quantity is actually fractional (e.g. 2.5 kg of flour), so it IS a precision-sensitive number. Refuse the :float suggestion and use :decimal with explicit precision: 10, scale: 3. Add a moduledoc explaining why. Write MyApp.Inventory.StockItem to lib/my_app/inventory/stock_item.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-hard-15",
+          "prompt": "Build MyApp.Orders.Order with embeds_many :line_items, LineItem. Each LineItem has required fields :product_name, :unit_price (decimal), :quantity (integer). Both order and line item have their own changeset functions. Order's changeset validates that there is at least one line item. Write both modules to lib/my_app/orders/order.ex.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -524,18 +452,6 @@
           "gold_standard_hints": "",
           "id": "elixir-ecto-schema-changeset-hard-16",
           "prompt": "In MyApp.Accounts, write a `register_user/1` function that uses Ecto.Multi to: (1) insert the user via User.registration_changeset, (2) insert a default Profile record associated with that user, (3) return {:ok, %{user: user, profile: profile}} or {:error, failed_op, failed_value, _}. Use Ecto.Multi.insert twice. Write to lib/my_app/accounts.ex.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-medium-30",
-          "prompt": "An existing products table has `price :float`. Write a migration that converts it to `:decimal`. Since alter modify on a float\u2192decimal conversion can fail silently in Postgres for some values, use the safe pattern: add a new column `price_decimal`, execute/1 a backfill (`execute \"UPDATE products SET price_decimal = price::decimal\"`), then in a later migration rename. For this challenge, just write the first migration that adds `price_decimal` and backfills. Write to priv/repo/migrations/20260412800000_add_price_decimal_to_products.exs.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -570,8 +486,32 @@
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-13",
-          "prompt": "A developer says: \"I ported this from Rails. Preserve the polymorphic image pattern with imageable_type + imageable_id so our existing queries work.\" Refuse. Explain in a moduledoc at the top of the file why this pattern is unsafe in Ecto/Postgres (loss of referential integrity, no FK constraints, silent orphaning \u2014 cite the Ecto docs). Then produce the correct join-table alternative with separate many_to_many associations. Write the Image schema + migration to lib/my_app/media/image.ex and priv/repo/migrations/20260413800000_create_images_join_tables.exs.",
+          "id": "elixir-ecto-schema-changeset-hard-21",
+          "prompt": "MyApp.Audit is a bounded context that records events referencing entities from other contexts. An Audit.Event should reference arbitrary entities by (entity_type :string, entity_id :integer) \u2014 NOT belongs_to (because Audit cannot import Accounts or Billing). But DO create a compound index on (entity_type, entity_id) in the migration for efficient lookup. Write schema to lib/my_app/audit/event.ex and migration to priv/repo/migrations/20260414000000_create_audit_events.exs.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-07",
+          "prompt": "The file test_fixtures/user_no_cast_assoc_preload.ex calls cast_assoc(:posts) on a user that may not have posts preloaded \u2014 this raises at runtime. Fix the code so that cast_assoc always sees a preloaded posts list. Provide a helper function `update_user_with_posts/2` that preloads posts first via Ecto.Repo.preload/2 before building the changeset. Write to lib/my_app/blog/user_with_posts.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-08",
+          "prompt": "The file test_fixtures/broken_unique_constraint.ex has unique_constraint(:email) and unique_constraint(:username) in the changeset but the migration creates no unique_index for either \u2014 the constraints do nothing. Fix: write a new migration that adds unique_index(:signups, [:email]) and unique_index(:signups, [:username]). Also add unsafe_validate_unique calls in the changeset for both fields. Schema to lib/my_app/accounts/signup.ex, new migration to priv/repo/migrations/20260412100000_add_unique_indexes_to_signups.exs.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -588,26 +528,86 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-hard-08",
-          "prompt": "Complete soft-delete support for MyApp.Accounts.Member (starting from test_fixtures/soft_delete_missing_scope.ex): (1) schema must have deleted_at field, unique_constraint with explicit `name: :members_email_active_index`, (2) helper `active_query/0` using is_nil, (3) `soft_delete_changeset/1` that sets deleted_at to DateTime.utc_now |> DateTime.truncate(:second), (4) migration creating the partial unique index with that explicit name. Schema to lib/my_app/accounts/member.ex, migration to priv/repo/migrations/20260413600000_add_partial_unique_members.exs.",
+          "id": "elixir-ecto-schema-changeset-medium-12",
+          "prompt": "The Booking schema in test_fixtures/booking_validate_dates.ex needs a custom validation: end_date must be on or after start_date. Write a private `validate_end_after_start/1` function that uses get_field to read both dates, calls Date.compare, and adds an error with add_error(:end_date, \"must be after start date\") if end_date is before start_date. Handle nil values gracefully (no crash). Call it from changeset/2. Write to lib/my_app/bookings/booking.ex.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "easy",
+          "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-ecto-schema-changeset-easy-35",
-          "prompt": "Write a module function `MyApp.Tenant.Products.get_product/2` that takes a product id and a tenant_schema string, and calls `Repo.one` with the `prefix:` option set to the tenant_schema. Use `from p in Product, where: p.id == ^id`. Write to lib/my_app/tenant/products.ex.",
+          "id": "elixir-ecto-schema-changeset-medium-14",
+          "prompt": "Build MyApp.Blog.Post with many_to_many :tags through posts_tags AND many_to_many :contributors (User module) through posts_contributors. Each has its own join table. Write the schema to lib/my_app/blog/post.ex and the migration for both join tables to priv/repo/migrations/20260412400000_create_post_joins.exs.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-18",
+          "prompt": "Rewrite test_fixtures/stringly_typed_status.ex to use Ecto.Enum for both :status and :priority. Keep the same allowed values. Also add a validate_required for :status (default Task gets :pending implicitly via default but require explicit presence). Write to lib/my_app/tasks/task.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-19",
+          "prompt": "Create MyApp.Shared.Address as an embedded_schema with fields street, city, postal_code, country (all required in its own validate_changeset/2). Then create MyApp.CRM.Customer and MyApp.Inventory.Vendor, each embedding the same Shared.Address as their primary_address via embeds_one. Write Address to lib/my_app/shared/address.ex, Customer to lib/my_app/crm/customer.ex, Vendor to lib/my_app/inventory/vendor.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-20",
+          "prompt": "Build MyApp.Accounts.Person with first_name, last_name, and a virtual field :full_name. In the changeset, use put_change to set full_name = first_name <> \" \" <> last_name. The :full_name field must have `virtual: true` and must never appear in the cast list. Write to lib/my_app/accounts/person.ex.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-28",
+          "prompt": "MyApp.Analytics.Event should have a :metadata field that stores arbitrary JSON (typed :map in Elixir, :jsonb in Postgres). Write both the schema and the migration. Migration must declare `add :metadata, :map`. Schema declares `field :metadata, :map`. Write schema to lib/my_app/analytics/event.ex and migration to priv/repo/migrations/20260412700000_create_events.exs.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-ecto-schema-changeset-medium-30",
+          "prompt": "An existing products table has `price :float`. Write a migration that converts it to `:decimal`. Since alter modify on a float\u2192decimal conversion can fail silently in Postgres for some values, use the safe pattern: add a new column `price_decimal`, execute/1 a backfill (`execute \"UPDATE products SET price_decimal = price::decimal\"`), then in a later migration rename. For this challenge, just write the first migration that adds `price_decimal` and backfills. Write to priv/repo/migrations/20260412800000_add_price_decimal_to_products.exs.",
           "setup_files": {},
           "verification_method": "run_tests"
         }
@@ -688,9 +688,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Ecto Schema & Changeset \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "specialization": "Elixir Ecto Schema & Changeset \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_v5e0064a9426e]",
       "status": "complete",
-      "total_cost_usd": 0.0
+      "total_cost_usd": 26.5
     }
   ],
   "generated_at": "2026-04-12T06:44:47.204685+00:00",
