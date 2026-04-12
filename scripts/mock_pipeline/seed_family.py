@@ -100,10 +100,10 @@ async def seed_family(family_slug: str) -> dict:
     focus = await _ensure_node("focus", tax["focus"], _title(tax["focus"]), domain.id)
     language = await _ensure_node("language", tax["language"], _title(tax["language"]), focus.id)
 
-    specialization = (
-        f"{family_json['name']} - Phoenix 1.7+ LiveView modules with verified routes, "
-        "streams, and modern lifecycle idioms"
-    )
+    # Short family-level specialization. Longer, human-readable specialization
+    # strings live on EvolutionRun rows (built by create_run.py from family.json
+    # and README.md).
+    specialization = family_json.get("description") or family_json["name"]
     family = await _ensure_family(
         slug=family_slug,
         label=family_json["name"],
