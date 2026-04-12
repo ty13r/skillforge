@@ -336,6 +336,95 @@ family, vevos, variants, genomes (seeds + winners + composite), challenges,
 the EvolutionRun row, and the full learning_log with integration report +
 competition scores entries.
 
+### Phase 7.5 — Final-package installation test (MANDATORY)
+
+**This step is non-negotiable**. The phoenix-liveview seed run shipped with
+3 real bugs in the enrichment scripts that only surfaced when someone
+actually downloaded the zip and tried to run it on macOS (bash 3.2
+incompatibility, subshell variable loss, malformed migrate output). The
+install test is the only way to catch these before users find them.
+
+```bash
+# 1. Boot localhost uvicorn with the freshly-loaded seed JSON
+pkill -f 'uvicorn skillforge' || true
+rm -f /Users/mjdecour/apps/skillforge/skillforge.db*
+uv run uvicorn skillforge.main:app --port 8000 &
+sleep 2
+
+# 2. Download the zip the same way a real user would
+rm -rf /tmp/skld-install-test && mkdir -p /tmp/skld-install-test
+curl -s -o /tmp/skld-install-test/skill.zip \
+  "http://localhost:8000/api/runs/<family-slug>-seed-v1/export?format=skill_dir"
+file /tmp/skld-install-test/skill.zip  # must report: Zip archive data
+
+# 3. Extract and make scripts executable
+cd /tmp/skld-install-test && unzip -q skill.zip
+find . -name '*.sh' -exec chmod +x {} \;
+find . -name '*.py' -exec chmod +x {} \;
+
+# 4. Create a realistic fake project with the skill installed
+SKILL_DIR="/tmp/skld-install-test/<composite-skill-name>"
+rm -rf /tmp/skld-fake-project
+mkdir -p /tmp/skld-fake-project/lib /tmp/skld-fake-project/.claude/skills
+# Write a fake mix.exs / package.json / etc. appropriate to the family's language
+echo 'defmodule FakePhx.MixProject do ... end' > /tmp/skld-fake-project/mix.exs
+cp -r "$SKILL_DIR" /tmp/skld-fake-project/.claude/skills/
+# Drop the family's test_fixtures into the project's lib/ so scanners have real
+# anti-pattern inputs to find
+cp "$SKILL_DIR"/test_fixtures/*.ex /tmp/skld-fake-project/lib/ 2>/dev/null || true
+
+# 5. Run every script from the installed location against the fake project
+cd /tmp/skld-fake-project
+./.claude/skills/<composite-skill-name>/scripts/validate.sh .
+python3 ./.claude/skills/<composite-skill-name>/scripts/main_helper.py scan lib/
+python3 ./.claude/skills/<composite-skill-name>/scripts/main_helper.py migrate lib/<legacy-file>.ex
+python3 ./.claude/skills/<composite-skill-name>/scripts/main_helper.py new-live test_feature --dir lib/
+```
+
+**Pass criteria** — all of these must hold:
+
+1. Zip extracts cleanly
+2. validate.sh runs on macOS system bash (3.2) without `declare: -A`
+   errors — it MUST exit 0 if the fake project has zero anti-patterns, or
+   exit 1 with a non-empty summary of hits if it does
+3. main_helper.py scan produces gcc-style diagnostics for at least one
+   known-bad fixture file
+4. main_helper.py migrate rewrites at least one legacy file and produces
+   SYNTACTICALLY VALID output (no `<%= <.link> %>` wrappers, no lost
+   tags, no misplaced `%>`)
+5. main_helper.py new-live creates a new file and the file compiles-in-
+   principle (at least passes validate.sh on itself with zero hits)
+6. Every `${CLAUDE_SKILL_DIR}/scripts/*` path referenced in SKILL.md
+   resolves to a real file that's executable
+7. Gold Standard Checklist items (§CLAUDE.md "Gen 0 Seed Quality
+   Standard") all pass
+
+**Dispatch a subagent test (recommended but optional)**:
+
+```python
+Agent(
+    description="Install test: write LiveView using skill",
+    subagent_type="general-purpose",
+    model="opus",
+    prompt=f"""
+Use the skill at /tmp/skld-fake-project/.claude/skills/<composite-skill-name>/
+to write a small feature in /tmp/skld-fake-project/lib/<target>.ex following
+the skill's conventions. Then run the skill's own scan tool against your
+output and report any hits. Report which skill sections were most useful
+and which gaps you encountered.
+""",
+)
+```
+
+**On any failure**: STOP the run, do NOT merge to main, fix the bugs in
+the composite's supporting_files (or in the enrichment scripts), re-run
+`enrich_package.py`, re-run `export_run_to_seed.py`, re-test. The bugs
+must be fixed in the **source** (the file on disk that gets enriched
+into the composite), not just patched in the resulting zip — otherwise
+the next seed run will ship the same bugs.
+
+---
+
 ### Phase 8 — Localhost verification
 
 Nuke the DB and reboot to verify the loader picks up the new seed:

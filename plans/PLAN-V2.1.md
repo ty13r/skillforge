@@ -296,6 +296,52 @@ rebrand, not from the original v2.0 design.
     `"Phoenix 1.7+ LiveView — component-forward architecture with verified routes, HEEx, streams, forms, async mount, pubsub, on_mount authz. Use when writing or reviewing Phoenix 1.7+ LiveView code. NOT for Phoenix 1.6 or older."`
     (223 chars, frontmatter-valid, validator-valid).
 
+### 3.5 Install-test learnings (post-rebrand)
+
+After the rich run detail + rebrand shipped, Matt asked "should we try
+installing the skill?" and the install test revealed **three real bugs
+that passed every other quality gate**:
+
+24.5. **Bash 3.2 compatibility**: `declare -A` (associative arrays) is
+     bash 4+ only. macOS ships bash 3.2. The generated `validate.sh`
+     line 49 was `declare -A HITS_BY` — broke on Apple Silicon out of
+     the box. Fix: use dynamic variable names via `tr -c '[:alnum:]' '_'`
+     munging + `eval` assignment + `${!var:-0}` indirect expansion
+     (all bash 3.2-compatible).
+
+24.6. **Subshell variable loss**: `detector | report "key" "fix"` looks
+     fine but in bash 3.2 pipelines create subshells, so the hit count
+     assignments inside `report` never propagate back to the parent
+     shell. Fix: use process substitution `report "key" "fix" < <(detector)`
+     which keeps `report` running in the parent. This is a latent bug
+     that would also have bitten on bash 4+ without `shopt -s lastpipe`.
+
+24.7. **Regex-based code rewriters are context-blind**: the `migrate`
+     subcommand rewrote `live_link|live_patch|live_redirect` call sites
+     but didn't know about the surrounding `<%= %>` EEx wrappers — so
+     it produced `<%= <.link>...</.link>, class: "btn" %>` which is
+     invalid HEEx. It also put `:for` on the outer `<ul>` when the
+     pattern was `<ul><%= for %><li>...</li><% end %></ul>` — which
+     would duplicate the entire list instead of the items. Fix: (a) a
+     post-processing cleanup pass that strips `<%= %>` wrappers around
+     `.link` components and absorbs trailing `class:`/`id:` kwargs as
+     component attributes, (b) rewrite the for/if block regex to match
+     the INNER tag (`<li>`) rather than the outer wrapper.
+
+24.8. **`new-live` UX wart**: passing `dashboard_live` produced
+     `MyAppWeb.DashboardLiveLive` (double-Live) because the scaffolder
+     appended `_live` to whatever the user passed. Fix: strip a
+     trailing `_live` from the input before converting to camel case.
+
+24.9. **Bigger lesson**: every quality gate we had (zip export
+     validator, Gold Standard Checklist, Package Explorer indicators,
+     line counts, presence checks) was **schema-level**. None of them
+     actually *ran the code*. The only way to catch these bugs is to
+     install the package and execute every script against a realistic
+     fake project. Hence the new §P1.5 **Final-package installation
+     test** phase, which is now non-negotiable for every seed run and
+     every v2.1 engine run.
+
 ### 3.4 Data model + persistence learnings
 
 25. **Narrative persistence via learning_log prefixes.** Instead of
@@ -336,7 +382,7 @@ rebrand, not from the original v2.0 design.
     the vevo. `backfill_vevo_challenge_ids.py` exists as a safety net
     for any runs that shipped with NULL.
 
-### 3.5 Design principles (codified from the above)
+### 3.6 Design principles (codified from the above)
 
 These are the rules every v2.1 artifact must satisfy:
 
@@ -881,7 +927,133 @@ seed pipeline proved works, and lets us ship v2.1 without a Spawner
 rewrite. Iterate to native production later if the enrichment round-
 trip is too slow or expensive.
 
-### P1.5 — Scripter agent (stretch, OPTIONAL)
+### P1.5 — Final-package installation test (MANDATORY)
+
+**Why this phase exists**: the phoenix-liveview seed run shipped with three
+real bugs that only surfaced when Matt asked "should we try installing the
+skill?" after everything else said green:
+
+1. `scripts/validate.sh` used `declare -A` — works on Linux (Railway), broken
+   on macOS bash 3.2 at line 49
+2. `scripts/validate.sh` piped detectors into `report` via `|` — the bash
+   3.2 subshell swallowed hit counts so the summary showed clean even when
+   hits existed
+3. `scripts/main_helper.py migrate` produced malformed Elixir: `<%= <.link>
+   %>` wrappers, lost `class:` attrs, `:for` landed on the outer `<ul>`
+   instead of the inner `<li>`, `live_redirect user.name` unmatched
+
+The Gold Standard Checklist passed. The zip export validator passed. The
+Package Explorer showed 14 supporting files and all green indicators. Yet
+the zip, when actually installed and run, was broken.
+
+**The lesson**: static schema checks + file-existence checks + line counts
+are necessary but not sufficient. Every composite must be **installed and
+run** as part of the pipeline before it's marked `status=complete` and
+published to the Registry.
+
+**Implementation**:
+
+Files:
+- `skillforge/engine/install_test.py` (new) — `async def
+  run_install_test(genome, family_config) -> InstallTestResult` that:
+  1. Exports the composite genome's supporting_files to a temp sandbox
+     directory structured as a deployable skill package
+  2. Creates a realistic fake project dir with a mix.exs (or equivalent
+     for non-Elixir families) and the skill dropped into `.claude/skills/`
+  3. Copies the family's curated test_fixtures into the fake project's
+     source directory as known-bad input for the scanner
+  4. Invokes every `scripts/*.sh` and `scripts/*.py` from the installed
+     path via asyncio subprocess with macOS bash 3.2 compatibility
+     verification (runs `bash --version` first, uses the system bash
+     explicitly if possible)
+  5. Runs the scanner/validator against the known-bad fixtures and
+     asserts: (a) at least one hit is reported, (b) summary shows real
+     hit counts, (c) exit code is 1 (FAIL)
+  6. Runs the migrator against a known-bad legacy file and asserts:
+     (a) output is non-empty, (b) a syntax check passes (parse with a
+     family-specific parser when available, heuristic regex check
+     otherwise)
+  7. Runs any scaffolder (`new-live`, `new-worker`, etc.) and asserts
+     the generated file passes the scanner with zero hits
+  8. Runs validator scripts against the generated files and asserts
+     PASS (exit 0)
+  9. Returns detailed diagnostics for any failure
+
+- `skillforge/engine/variant_evolution.py` — after `assemble_variants()`
+  and before `save_genome(composite)`, call `run_install_test()`. On
+  any failure, set `run.status="install_test_failed"` and store the
+  diagnostics in `run.failure_reason`. Do NOT mark the run complete.
+  The frontend treats `install_test_failed` as a distinct error state
+  and surfaces the specific script failures in the run detail page.
+
+- `tests/engine/test_install_test.py` — unit tests covering:
+  - Golden-path run (all scripts pass)
+  - Bash 3.2 incompatibility detection (inject a `declare -A` into a
+    test script, expect failure)
+  - Malformed migrate output detection (inject an unclosed `<%= %>`
+    wrapper, expect failure)
+
+**Pipeline flow**:
+
+```
+... → variant_evolutions complete → assemble_variants() → composite
+     → champion_eval() → composite gains "Known limitations" section
+     → run_install_test(composite) ← NEW STEP
+          ↓ success
+     → save_genome(composite) + run.status = complete
+          ↓ failure
+     → run.status = install_test_failed
+     → run.failure_reason = <diagnostics>
+     → frontend shows install_test_failed state with specific errors
+     → operator fixes enrichment prompts or supporting_files manually
+     → re-run install test
+```
+
+**Fake project generation**:
+
+Per-family fake projects need to be realistic enough that scanners and
+linters actually exercise the real code paths. For the 7 Elixir families:
+
+| Family | Fake project shape |
+|---|---|
+| elixir-phoenix-liveview | `mix.exs` with `phoenix_live_view` dep + `lib/my_app_web/live/` with test_fixtures copied in |
+| elixir-ecto-schema-changeset | `mix.exs` with `ecto` + `lib/my_app/` with schema test_fixtures |
+| elixir-ecto-sandbox-test | `mix.exs` + `test/` dir with sandbox config test_fixtures |
+| elixir-ecto-query-writer | `mix.exs` + `lib/my_app/` with query test_fixtures |
+| elixir-oban-worker | `mix.exs` + `lib/my_app/workers/` with worker test_fixtures |
+| elixir-pattern-match-refactor | `mix.exs` + `lib/` with match test_fixtures |
+| elixir-security-linter | `mix.exs` + `lib/` + `deps/` with security test_fixtures |
+
+The fake project generators live in `skillforge/engine/fake_projects/<family>.py`
+and each returns a path to a temp dir with the correct shape.
+
+**Subagent install test (optional but recommended)**:
+
+After the deterministic scripts pass, dispatch a separate subagent with
+access to the installed skill and ask it to write a small feature in the
+fake project. The subagent's output is then run through the skill's own
+scanner. If the scanner reports zero hits, the "dogfood" test passes —
+meaning the skill is self-consistent (a Claude Code agent using the
+skill produces code that the skill's own tools consider clean).
+
+This is optional because it costs a subagent dispatch (~$0.50-1.00 per
+run) and adds ~3-5 min wall-clock. It's strongly recommended for the
+first real v2.1 engine run of each family; afterwards it can be toggled
+via `SKILLFORGE_INSTALL_TEST_DOGFOOD=1`.
+
+**Success criteria gate**:
+
+No run is allowed to ship to prod without the install test passing.
+This is enforced at:
+1. `run_v21_evolution()` — returns early with `install_test_failed`
+   status if any check fails
+2. `export_skill_zip()` — refuses to export a genome whose parent run
+   is in `install_test_failed` state (secondary safety net)
+3. `mock_run_loader.load_mock_runs()` — skips any seed JSON whose
+   run.status isn't `complete` (tertiary safety net for legacy seed
+   runs)
+
+### P1.6 — Scripter agent (stretch, OPTIONAL)
 
 A dedicated agent for writing `scripts/main_helper.*`. Given the
 enrichment path covers this gap, Scripter is a stretch goal and can be
@@ -1158,8 +1330,12 @@ A v2.1 run is "done" when ALL of the following hold:
    after Phase 0 migration (backward compatibility).
 10. No disclaimers on the run detail page. Every field reads as factual
     content without hedge language.
+11. The §P1.5 install test passes end-to-end: the composite's scripts run
+    on macOS bash 3.2, the migrate produces syntactically valid output,
+    the scaffolder produces a scanner-clean file, and a dogfood subagent
+    test writes a small feature using the skill and scans clean.
 
-When all 10 criteria are met, v2.1 is shipped. At that point the bridge
+When all 11 criteria are met, v2.1 is shipped. At that point the bridge
 seed-pipeline scaffolding (§2 + `scripts/mock_pipeline/*`) can be
 scheduled for decommissioning (§10).
 
