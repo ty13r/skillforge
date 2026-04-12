@@ -321,9 +321,12 @@ def _build_summary(
     """
     # Pick the three most-recent lessons as "key discoveries" until we have
     # a novelty score. Good enough for the research paper baseline. Skip
-    # the prefix-tagged integration_report entries when surfacing discoveries.
+    # the prefix-tagged entries (integration_report, competition_scores) —
+    # those are machine-readable payloads consumed by dedicated UI panels,
+    # not human-readable discoveries.
+    _MACHINE_PREFIXES = ("[integration_report]", "[competition_scores]")
     surfaceable = [
-        e for e in learning_log_entries if not e.startswith("[integration_report]")
+        e for e in learning_log_entries if not e.startswith(_MACHINE_PREFIXES)
     ]
     key_discoveries = surfaceable[-3:][::-1]
 
