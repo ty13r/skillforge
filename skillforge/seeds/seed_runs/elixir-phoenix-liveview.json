@@ -9,7 +9,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-01",
       "prompt": "The fixture test_fixtures/db_in_mount_dashboard.ex has DB queries running twice (once per HTTP mount, once per WS mount) plus an unguarded PubSub subscribe with an insufficiently scoped topic. Produce lib/my_app_web/live/dashboard_live.ex (module MyAppWeb.DashboardLive): (1) move ALL queries (invoices, metrics, unread_count) out of mount into handle_params, (2) gate PubSub.subscribe with if connected?(socket), (3) scope the topic to the user via \"dashboard:user:#{current_user.id}\", (4) keep the {:new_notification, _} handle_info clause, (5) mount only assigns current_user + empty defaults. All four changes are required.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -22,7 +22,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-09",
       "prompt": "The fixture test_fixtures/pre_1_7_user_list.ex has both 1.6 template idioms AND queries in mount. Produce lib/my_app_web/live/user_list_live.ex (module MyAppWeb.UserListLive): (1) convert ALL route helpers to ~p, (2) convert live_patch/live_link/live_redirect to <.link>, (3) convert ~L to ~H with :for/:if, (4) move Accounts.list_users out of mount into handle_params, (5) replace push_redirect with push_navigate, (6) convert the full :for loop to use :for attribute.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -35,7 +35,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-10",
       "prompt": "Write two files: (1) lib/my_app/checkout/form.ex (module MyApp.Checkout.Form) as an Ecto.Schema with `use Ecto.Schema`, `import Ecto.Changeset`, an embedded_schema declaring fields :cardholder, :card_last4, :zipcode, and a changeset/2 that casts + validates them. (2) lib/my_app_web/live/checkout_live.ex (module MyAppWeb.CheckoutLive) that uses MyApp.Checkout.Form (NOT the DB schema MyApp.Checkout.Order directly) for the <.form>. mount builds @form via to_form(Form.changeset(%Form{}, %{})). Decoupling the UI form from the DB schema is the key pattern.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -48,7 +48,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-12",
       "prompt": "Write lib/my_app_web/live/tenant_orders_live.ex (module MyAppWeb.TenantOrdersLive) that subscribes to \"orders:org:#{org_id}\" (NOT \"orders\") gated by connected?/1. The handle_event(\"create\") call broadcasts on the same scoped topic. Additionally, handle_info({:new_order, order}, socket) must pattern-match against order.org_id == socket.assigns.current_org.id as a defensive check, so that even if a broadcast leaks, the UI ignores it. mount assigns :current_org from session. stream(:orders, []).",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -61,7 +61,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-13",
       "prompt": "Write lib/my_app_web/live/settings_live.ex (module MyAppWeb.SettingsLive). The handle_event(\"validate\") must use a single clause with a tiny discriminating head `handle_event(\"validate\", %{\"settings\" => params}, socket)` \u2014 no field destructuring in the head, no binding of assigns in the head. Field-level logic lives in the body via `Enum.reduce` over params or similar. Also write a second clause `handle_event(\"save\", %{\"settings\" => params}, socket)` for submission. The fixture test_fixtures/function_head_soup.ex shows the anti-pattern.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -74,7 +74,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-15",
       "prompt": "Write lib/my_app_web/live/projects_live.ex (module MyAppWeb.ProjectsLive) that fixes FOUR anti-patterns simultaneously: (1) DB query in mount \u2192 move to handle_params, (2) unguarded PubSub subscribe \u2192 add connected?/1, (3) large collection via assign \u2192 convert to stream, (4) unscoped PubSub topic \u2192 scope to \"projects:org:#{org_id}\". mount takes %{\"org_id\" => org_id} from session. All four fixes are required.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -87,7 +87,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-16",
       "prompt": "Write lib/my_app_web/components/table.ex (module MyAppWeb.Components.Table). Declare table/1 with attr :rows (list, required), attr :row_id (any, default nil), attr :row_click (any, default nil), and slot :col (required, takes attr :label). Additionally, slot :action (takes attr :label). Render <table> with <thead> showing @col.label and <tbody> iterating @rows, each row rendering each :col slot and a trailing :action column. The <tr> must include phx-click binding if @row_click is set.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -100,7 +100,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-27",
       "prompt": "Write lib/my_app_web/live/invoices_table_live.ex (module MyAppWeb.InvoicesTableLive). Combine filter (?status=), sort (?sort=col&dir=asc), and cursor pagination (?cursor=) via URL params read in handle_params. stream(:invoices, rows, reset: true). Each column header is a <.link patch={~p\"/invoices?status=#{@status}&sort=#{col}&dir=#{next_dir}\"}>. Pagination links use <.link patch=> as well. mount only sets up empty stream.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -113,7 +113,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-32",
       "prompt": "Write lib/my_app_web/live/inbox_live.ex (module MyAppWeb.InboxLive). Security requirements: (1) on_mount :ensure_authenticated, (2) scope all queries through %MyApp.Scope{user: current_user, org_id: org_id}, (3) PubSub topic is \"inbox:org:#{org_id}:user:#{user_id}\", (4) handle_info({:new_message, msg}, socket) double-checks msg.org_id == socket.assigns.scope.org_id before stream_inserting (defense in depth). Multi-layer isolation.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -126,7 +126,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-33",
       "prompt": "Write lib/my_app_web/components/filter_panel_component.ex (module MyAppWeb.FilterPanelComponent) as a Phoenix.LiveComponent. Critical: it must NOT keep a local :filter copy that drifts from the parent. update/2 always writes the incoming assigns, replacing any previous state. The component's own events are scoped to @myself (phx-target={@myself}), and on change it sends the new value to the parent via send(self(), {:filter_change, new_filter}) \u2014 the parent is the source of truth, which will re-invoke update/2 with the new assigns.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -139,7 +139,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-36",
       "prompt": "The fixture test_fixtures/navigation_mix_up.ex has multiple deprecated navigation idioms. Produce lib/my_app_web/live/orders_live.ex that fixes all three families: (1) push_redirect \u2192 push_navigate, (2) live_patch/live_redirect/live_link \u2192 <.link patch/navigate=>, (3) ~L \u2192 ~H with :for/:if. Additionally, the handle_params/3 block must properly branch on the filter param (with a default _params clause). Must not leave any deprecated call.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -152,7 +152,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-hard-38",
       "prompt": "Write lib/my_app_web/live/clearable_list_live.ex (module MyAppWeb.ClearableListLive). It must: (1) initialize stream(:items, initial) in mount, (2) handle_event(\"clear\", _, socket) calls stream(socket, :items, [], reset: true) \u2014 the reset: true flag is required to clear all DOM children, (3) handle_event(\"add\", %{\"name\" => name}, socket) stream_inserts a new item. Render <div id=\"items\" phx-update=\"stream\"> with :for iteration. The reset: true on clear is the key point.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -165,7 +165,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-01",
       "prompt": "The fixture test_fixtures/pre_1_7_user_list.ex is a Phoenix 1.6 LiveView. Produce lib/my_app_web/live/user_list_live.ex that migrates it to Phoenix 1.7+: every route becomes ~p, every <%= live_patch/live_redirect/live_link %> becomes <.link patch/navigate=>, every <%= for %>/<%= if %> becomes :for/:if, ~L becomes ~H, push_redirect becomes push_navigate, and the LiveView loads its users in handle_params/3 (not mount/3). Preserve module name MyAppWeb.UserListLive.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -178,7 +178,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-02",
       "prompt": "The fixture test_fixtures/assigns_messages_inbox.ex loads ~12000 messages into assigns. Rewrite it as lib/my_app_web/live/inbox_live.ex (module MyAppWeb.InboxLive) using stream/3. The LiveView must: (1) stream(:messages, [], reset: false) in mount, (2) reset/populate the stream in handle_params via stream(..., reset: true), (3) render a container with id=\"messages\" and phx-update=\"stream\", iterating with {dom_id, msg}, (4) handle stream_delete for \"delete\" events, (5) handle stream_insert at: 0 on {:new_message, m}, (6) track a separate :message_count assign because you cannot Enum.count @streams.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -191,7 +191,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-08",
       "prompt": "Write lib/my_app_web/components/modal.ex (module MyAppWeb.Components.Modal). Define modal/1 with attrs :id (string, required), :show (boolean, default false), :on_cancel (any, default nil). Declare slot :title, slot :actions, and slot :inner_block (required). Render <dialog :if={@show} id={@id}><h2>{render_slot(@title)}</h2><div class=\"body\">{render_slot(@inner_block)}</div><footer>{render_slot(@actions)}</footer></dialog>.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -204,7 +204,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-10",
       "prompt": "The fixture test_fixtures/db_in_mount_dashboard.ex queries the DB in mount/3 and subscribes to PubSub without a connected?/1 guard. Produce lib/my_app_web/live/dashboard_live.ex (module MyAppWeb.DashboardLive). mount/3 must only set up the current_user + initial empty assigns. Subscribing must be gated by if connected?(socket). The queries (invoices, metrics, unread_count) must run in handle_params/3. Keep the handle_info/2 clause.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -217,7 +217,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-11",
       "prompt": "Write lib/my_app_web/live/signup_live.ex (module MyAppWeb.SignupLive). mount assigns @form = to_form(MyApp.Accounts.change_user(%MyApp.Accounts.User{})). Render a form that displays per-field error messages only if used_input?(@form[:field]) is true. Use <.input field={@form[:email]} /> etc. handle_event(\"validate\", params, socket) re-runs the changeset with action :validate and calls to_form. Must use used_input?.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -230,7 +230,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-12",
       "prompt": "The fixture test_fixtures/external_poll_price.ex has every connected user polling an external API once per second. Replace this pattern. Produce two files: (1) lib/my_app/price_ticker.ex (module MyApp.PriceTicker) \u2014 a GenServer that polls HTTPClient.fetch_price every 1000ms and broadcasts via Phoenix.PubSub.broadcast(MyApp.PubSub, \"prices:BTC\", {:price, price}); (2) lib/my_app_web/live/price_ticker_live.ex (module MyAppWeb.PriceTickerLive) \u2014 subscribes to \"prices:BTC\" via connected?/1 and handles {:price, price} in handle_info. No :timer.send_interval in the LiveView.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -243,7 +243,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-14",
       "prompt": "The fixture test_fixtures/navigation_mix_up.ex has a mix of push_redirect, push_patch (ok), live_patch, live_redirect, and live_link. Produce lib/my_app_web/live/orders_live.ex (module MyAppWeb.OrdersLive) using only 1.7 idioms: <.link patch={~p...}> for filter nav, <.link navigate={~p...}> for archived and new, push_navigate for new-order handler, push_patch for filter handler. Convert ~L to ~H and the <%= for %> to :for.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -256,7 +256,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-15",
       "prompt": "Write lib/my_app_web/components/filter_bar.ex (module MyAppWeb.FilterBar) as a Phoenix.LiveComponent (not a function component). It owns its own :filter assign, has a handle_event(\"change_filter\", %{\"value\" => value}, socket) that updates its own state AND uses send/2 to notify the parent with {__MODULE__, {:filter_changed, value}}. It must call use MyAppWeb, :live_component. Render <form phx-change=\"change_filter\" phx-target={@myself}>.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -269,7 +269,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-21",
       "prompt": "Write lib/my_app_web/live/users_table_live.ex (module MyAppWeb.UsersTableLive) that paginates a user table by cursor. mount/3 stream(:users, []). handle_params/3 reads %{\"cursor\" => cursor} (default nil), loads MyApp.Accounts.list_users(cursor: cursor), and streams with reset: true. \"next\" button calls push_patch(to: ~p\"/users?cursor=#{next_cursor}\"). Must stay in the same LiveView \u2014 do not use push_navigate.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -282,7 +282,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-24",
       "prompt": "Write lib/my_app/posts.ex (module MyApp.Posts) with a list_posts/1 that takes a %MyApp.Scope{user: user} struct and returns `from(p in Post, where: p.user_id == ^user.id) |> Repo.all()`. Also define MyApp.Scope as a struct with :user. The function must pin the user id with ^ in the query. No raw Post |> Repo.all() anywhere. Additionally, write lib/my_app_web/live/posts_live_scope.ex (module MyAppWeb.PostsLiveScope) that builds %Scope{user: current_user} and calls Posts.list_posts(scope) in handle_params.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -295,7 +295,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-32",
       "prompt": "Write lib/my_app_web/live/search_form_live.ex (module MyAppWeb.SearchFormLive) that has a search form with phx-change=\"search\" and a text input with phx-debounce=\"300\". Also handle the case where the user hasn't submitted anything yet \u2014 only show results when used_input?(@form[:q]) is true. mount/3 builds @form via to_form(%{\"q\" => \"\"}).",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     },
@@ -308,7 +308,7 @@
       "gold_standard_hints": "",
       "id": "elixir-phoenix-liveview-medium-38",
       "prompt": "Write lib/my_app_web/live/notifications_list_live.ex (module MyAppWeb.NotificationsListLive). It must fix TWO anti-patterns: (1) DB query in mount \u2014 move to handle_params; (2) unscoped PubSub topic \u2014 use \"notifications:user:#{user_id}\" instead of \"notifications\". mount/3 takes %{\"user_id\" => user_id}, subscribes via connected? guard. Everything else is normal.",
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "setup_files": {},
       "verification_method": "run_tests"
     }
@@ -327,7 +327,7 @@
         },
         "generation": 1,
         "generations_survived": 0,
-        "id": "gen_composite_elixir_phoenix_liveview_mock_v1",
+        "id": "gen_composite_elixir_phoenix_liveview_seed_v1",
         "is_pareto_optimal": true,
         "maturity": "tested",
         "meta_strategy": "engineer_composite",
@@ -683,12 +683,12 @@
       "failure_reason": null,
       "family_id": "fam_8dfbc491c886",
       "generations": [],
-      "id": "elixir-phoenix-liveview-mock-v1",
+      "id": "elixir-phoenix-liveview-seed-v1",
       "learning_log": [
         "seed_pipeline: run created for elixir-phoenix-liveview at 2026-04-11T17:58:11.771092+00:00",
         "seed_pipeline: finalized at 2026-04-11T18:28:01.041336+00:00 with 12 winning variants, avg fitness=0.941",
         "seed_pipeline: finalized at 2026-04-11T19:52:41.500745+00:00 with 12 winning variants, avg fitness=0.941",
-        "[integration_report] ## Engineer Integration Report\n\n### Synthesis: assembling 12 variants into a composite\n\nThis composite was assembled from **12 winning variants** \u2014 1 foundation (architectural-stance) plus 11 capabilities. The Spawner produced 1 alternative per dimension, competed against the pre-existing seed on 2 sampled medium/hard challenges per variant, and the higher mean L1 score was declared the winner per dimension.\n\n**Winner split**: 8 spawned alternatives won (function-components-and-slots, live-components-stateful, form-handling, mount-and-lifecycle, event-handlers-and-handle-info, pubsub-and-realtime, auth-and-authz, anti-patterns-catalog) and 3 pre-existing seeds won (heex-and-verified-routes, streams-and-collections, navigation-patterns). The foundation winner was the **spawned** `architectural-stance--component-forward` variant, narrowly beating the `strict-liveview` seed by 0.70 vs 0.55 \u2014 the only dimension where the fitness gap was wider than noise.\n\n**Aggregate fitness**: 0.9407 averaged across all 12 winners. Five capability dimensions scored a perfect 1.000 on both variants, indicating the L1 deterministic checker wasn't discriminating on those dimensions \u2014 a real fitness signal would need L2-L5 reviewers that this mock run intentionally skipped.\n\n---\n\n### Conflicts detected and resolved (3)\n\n**1. `mount/3` purity \u2014 Foundation vs. Mount + Lifecycle (Async Load)**\n\nThe winning foundation (Component-Forward) states: *\"The parent LiveView is a thin coordinator. `mount/3` and `handle_params/3` assign only URL and session state.\"* But the winning Mount + Lifecycle variant (Async Load) says: *\"In `mount/3`, return `{:ok, assign_async(socket, :users, fn -> ... end)}`.\"*\n\nThese are subtly inconsistent. A strict reading of the foundation forbids any feature-specific assigns in `mount/3`, which would reject `assign_async`.\n\n**Resolution**: In favor of the Async Load variant, with a clarifying qualification added to the foundation's language. `assign_async/3` runs the DB fetch in a Task off the LiveView process, so it doesn't block first paint. The foundation's intent was to prevent blocking mount queries, not to prohibit all mount-time assigns. The composite's Architectural Skeleton section was reworded to explicitly allow `assign_async/3` while still prohibiting synchronous DB queries in mount.\n\n**2. Event handling path \u2014 Event-to-Action Funnel vs. PubSub realtime messages**\n\nThe winning Event Handlers variant (Event-to-Action Funnel) demands that *\"every `handle_event/3` is three lines: parse params into an `%Action{}` struct, call `handle_action(action, socket)`, return its result.\"* It explicitly extends this discipline to `handle_info/2`: messages convert to `%Action{}` first.\n\nThe winning PubSub variant (Context-Owned Broadcast) says: *\"Handle events in the parent: `def handle_info({:message_created, msg}, socket), do: {:noreply, stream_insert(socket, :messages, msg)}`\"* \u2014 which writes state change logic directly inline in `handle_info`, bypassing the funnel.\n\n**Resolution**: In favor of the Funnel with the PubSub pattern adapted to fit. The composite's PubSub section was restated so the parent's `handle_info/2` clause is a tiny dispatcher that builds an `%Action{type: :stream_insert_from_broadcast, payload: msg}` and delegates to `handle_action/2`. The two patterns compose: broadcasts still flow through the single mutation surface, giving the testability benefit the Funnel was designed for without losing the context-owned broadcast discipline.\n\n**3. Spawner vs seed imbalance \u2014 evolution picked the simpler variant 3 of 11 times**\n\nThe Spawner produced more aggressive alternatives for heex-and-verified-routes (patch-vs-navigate-discipline), streams-and-collections (reset-on-filter), and navigation-patterns (url-is-state), each encoding a stronger opinion than the corresponding seed. The L1 scorer preferred the simpler seed variants on these dimensions because both variants hit the required `must_contain` substrings and the simpler variants had fewer opportunities to trip a `must_not_contain` check.\n\n**Resolution**: Kept the three seed winners and backfilled the stronger variants' opinions into the composite's Common Mistakes lists and into the Anti-Patterns Catalog. The composite still benefits from the `reset: true` on filter, the explicit patch vs. navigate discipline, and the URL-is-state stance \u2014 but as teaching points rather than rigid rules. The seed winners remained authoritative for the prescriptive Workflow sections.\n\n---\n\n### Decisions made during assembly\n\n- **Atomic composition strategy**: foundation's architectural skeleton was threaded through every capability section rather than bolted on at the top. For example, the Forms section explicitly locates `to_form/2` inside the owning LiveComponent (honoring the foundation's component-forward stance), and the PubSub section routes broadcasts into `send_update/2` for LiveComponents that own the affected data.\n\n- **Anti-patterns catalog was extended from the 7 detectors in the winning variant to 14** by backfilling detectors for rules introduced by other capabilities: LiveComponent `:id` requirement (from Live Components Stateful), props-outside-`update/2` (same), function-component DB calls (from Function Components), context-owned broadcast (from PubSub), on-mount re-fetch (from Auth), and Eex `for` loops (from HEEx). The Detector-Rule variant's philosophy \u2014 \"every rule ships with a grep command\" \u2014 was preserved and extended.\n\n- **No Examples section** was added during initial assembly. The Skill Authoring Constraints require 2-3 I/O examples per section, but none of the winning variants provided runnable Elixir snippets \u2014 all were prose rules + mistake lists. This was called out as a quality gap in post-assembly review and addressed in a follow-up pass (see `fix(phoenix-liveview-composite): add examples, fix contradiction + detectors`, PR #20).\n\n- **Composite body weighed in at ~165 lines of prose + lists** on first assembly, well under the 500-line Skill Authoring ceiling. The follow-up examples pass grew it to ~299 lines, still within budget.\n\n---\n\n### Open questions for future iterations\n\n- **Score.py discrimination**: the L1 scorer didn't differentiate variants on 5 of 11 dimensions (both hit 1.000). Real fitness signal needs L2-L5 reviewers \u2014 L2 trigger accuracy, L3 trace-based behavioral analysis, L4 comparative pairwise ranking, L5 trait attribution. The mock run intentionally skipped these layers; the production pipeline should not.\n\n- **Spawner diversity heuristic**: all 11 capability spawns were generated in parallel with minimal cross-dimension awareness. Some of the diversity angles overlapped (e.g., the mount-and-lifecycle `handle-params-first` option would have conflicted with the async-load winner differently than the other options). A future Spawner could read the other spawns in-flight and diversify explicitly.\n\n- **Foundation-capability coupling**: the component-forward foundation demands `:id` on every LiveComponent and routes all DB work through contexts. Capabilities that assume a different stance (e.g., a LiveView-heavy foundation) would need different capability variants. The current single-foundation-per-family approach locks the capabilities to that stance \u2014 worth revisiting for meta-family composition.\n\n- **Reconstruction authenticity**: the Engineer's integration report was never persisted during the original Step 1 run \u2014 it was only in the subagent's reply and lost to conversation compaction. This report is a post-facto reconstruction written by reading the 12 final winning variants directly. The conflicts are real and the resolutions in the composite match what a fresh reading would produce, but the exact phrasing and ordering differ from whatever the original Engineer wrote.\n\n---\n\n*This integration report was reconstructed post-facto from the 12 winning variants on 2026-04-11. The original Engineer's in-session integration report was lost during a context window compaction. The Step 1b workstream added a `scripts/mock_pipeline/persist_integration_report.py` helper so future mock runs will persist the Engineer's output at the time of assembly.*\n",
+        "[integration_report] ## Engineer Integration Report\n\n### Synthesis: assembling 12 variants into a composite\n\nThis composite was assembled from **12 winning variants** \u2014 1 foundation (architectural-stance) plus 11 capabilities. The Spawner produced 1 alternative per dimension, competed against the pre-existing seed on 2 sampled medium/hard challenges per variant, and the higher mean L1 score was declared the winner per dimension.\n\n**Winner split**: 8 spawned alternatives won (function-components-and-slots, live-components-stateful, form-handling, mount-and-lifecycle, event-handlers-and-handle-info, pubsub-and-realtime, auth-and-authz, anti-patterns-catalog) and 3 pre-existing seeds won (heex-and-verified-routes, streams-and-collections, navigation-patterns). The foundation winner was the **spawned** `architectural-stance--component-forward` variant, narrowly beating the `strict-liveview` seed by 0.70 vs 0.55 \u2014 the only dimension where the fitness gap was wider than noise.\n\n**Aggregate fitness**: 0.9407 averaged across all 12 winners. Five capability dimensions scored a perfect 1.000 on both variants, indicating the L1 deterministic checker wasn't discriminating on those dimensions \u2014 a real fitness signal would need L2-L5 reviewers that this seed run intentionally skipped.\n\n---\n\n### Conflicts detected and resolved (3)\n\n**1. `mount/3` purity \u2014 Foundation vs. Mount + Lifecycle (Async Load)**\n\nThe winning foundation (Component-Forward) states: *\"The parent LiveView is a thin coordinator. `mount/3` and `handle_params/3` assign only URL and session state.\"* But the winning Mount + Lifecycle variant (Async Load) says: *\"In `mount/3`, return `{:ok, assign_async(socket, :users, fn -> ... end)}`.\"*\n\nThese are subtly inconsistent. A strict reading of the foundation forbids any feature-specific assigns in `mount/3`, which would reject `assign_async`.\n\n**Resolution**: In favor of the Async Load variant, with a clarifying qualification added to the foundation's language. `assign_async/3` runs the DB fetch in a Task off the LiveView process, so it doesn't block first paint. The foundation's intent was to prevent blocking mount queries, not to prohibit all mount-time assigns. The composite's Architectural Skeleton section was reworded to explicitly allow `assign_async/3` while still prohibiting synchronous DB queries in mount.\n\n**2. Event handling path \u2014 Event-to-Action Funnel vs. PubSub realtime messages**\n\nThe winning Event Handlers variant (Event-to-Action Funnel) demands that *\"every `handle_event/3` is three lines: parse params into an `%Action{}` struct, call `handle_action(action, socket)`, return its result.\"* It explicitly extends this discipline to `handle_info/2`: messages convert to `%Action{}` first.\n\nThe winning PubSub variant (Context-Owned Broadcast) says: *\"Handle events in the parent: `def handle_info({:message_created, msg}, socket), do: {:noreply, stream_insert(socket, :messages, msg)}`\"* \u2014 which writes state change logic directly inline in `handle_info`, bypassing the funnel.\n\n**Resolution**: In favor of the Funnel with the PubSub pattern adapted to fit. The composite's PubSub section was restated so the parent's `handle_info/2` clause is a tiny dispatcher that builds an `%Action{type: :stream_insert_from_broadcast, payload: msg}` and delegates to `handle_action/2`. The two patterns compose: broadcasts still flow through the single mutation surface, giving the testability benefit the Funnel was designed for without losing the context-owned broadcast discipline.\n\n**3. Spawner vs seed imbalance \u2014 evolution picked the simpler variant 3 of 11 times**\n\nThe Spawner produced more aggressive alternatives for heex-and-verified-routes (patch-vs-navigate-discipline), streams-and-collections (reset-on-filter), and navigation-patterns (url-is-state), each encoding a stronger opinion than the corresponding seed. The L1 scorer preferred the simpler seed variants on these dimensions because both variants hit the required `must_contain` substrings and the simpler variants had fewer opportunities to trip a `must_not_contain` check.\n\n**Resolution**: Kept the three seed winners and backfilled the stronger variants' opinions into the composite's Common Mistakes lists and into the Anti-Patterns Catalog. The composite still benefits from the `reset: true` on filter, the explicit patch vs. navigate discipline, and the URL-is-state stance \u2014 but as teaching points rather than rigid rules. The seed winners remained authoritative for the prescriptive Workflow sections.\n\n---\n\n### Decisions made during assembly\n\n- **Atomic composition strategy**: foundation's architectural skeleton was threaded through every capability section rather than bolted on at the top. For example, the Forms section explicitly locates `to_form/2` inside the owning LiveComponent (honoring the foundation's component-forward stance), and the PubSub section routes broadcasts into `send_update/2` for LiveComponents that own the affected data.\n\n- **Anti-patterns catalog was extended from the 7 detectors in the winning variant to 14** by backfilling detectors for rules introduced by other capabilities: LiveComponent `:id` requirement (from Live Components Stateful), props-outside-`update/2` (same), function-component DB calls (from Function Components), context-owned broadcast (from PubSub), on-mount re-fetch (from Auth), and Eex `for` loops (from HEEx). The Detector-Rule variant's philosophy \u2014 \"every rule ships with a grep command\" \u2014 was preserved and extended.\n\n- **No Examples section** was added during initial assembly. The Skill Authoring Constraints require 2-3 I/O examples per section, but none of the winning variants provided runnable Elixir snippets \u2014 all were prose rules + mistake lists. This was called out as a quality gap in post-assembly review and addressed in a follow-up pass (see `fix(phoenix-liveview-composite): add examples, fix contradiction + detectors`, PR #20).\n\n- **Composite body weighed in at ~165 lines of prose + lists** on first assembly, well under the 500-line Skill Authoring ceiling. The follow-up examples pass grew it to ~299 lines, still within budget.\n\n---\n\n### Open questions for future iterations\n\n- **Score.py discrimination**: the L1 scorer didn't differentiate variants on 5 of 11 dimensions (both hit 1.000). Real fitness signal needs L2-L5 reviewers \u2014 L2 trigger accuracy, L3 trace-based behavioral analysis, L4 comparative pairwise ranking, L5 trait attribution. The seed run intentionally skipped these layers; the production pipeline should not.\n\n- **Spawner diversity heuristic**: all 11 capability spawns were generated in parallel with minimal cross-dimension awareness. Some of the diversity angles overlapped (e.g., the mount-and-lifecycle `handle-params-first` option would have conflicted with the async-load winner differently than the other options). A future Spawner could read the other spawns in-flight and diversify explicitly.\n\n- **Foundation-capability coupling**: the component-forward foundation demands `:id` on every LiveComponent and routes all DB work through contexts. Capabilities that assume a different stance (e.g., a LiveView-heavy foundation) would need different capability variants. The current single-foundation-per-family approach locks the capabilities to that stance \u2014 worth revisiting for meta-family composition.\n\n- **Reconstruction authenticity**: the Engineer's integration report was never persisted during the original Step 1 run \u2014 it was only in the subagent's reply and lost to conversation compaction. This report is a post-facto reconstruction written by reading the 12 final winning variants directly. The conflicts are real and the resolutions in the composite match what a fresh reading would produce, but the exact phrasing and ordering differ from whatever the original Engineer wrote.\n\n---\n\n*This integration report was reconstructed post-facto from the 12 winning variants on 2026-04-11. The original Engineer's in-session integration report was lost during a context window compaction. The Step 1b workstream added a `scripts/mock_pipeline/persist_integration_report.py` helper so future seed runs will persist the Engineer's output at the time of assembly.*\n",
         "[competition_scores] {\"matches\":[{\"dimension\":\"architectural-stance\",\"tier\":\"foundation\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-21\",\"elixir-phoenix-liveview-hard-27\"],\"variant_1_label\":\"strict-liveview (seed)\",\"variant_2_label\":\"component-forward (spawned)\",\"variant_1_scores\":[0.6248,0.4797],\"variant_2_scores\":[0.9274,0.4797],\"variant_1_mean\":0.5523,\"variant_2_mean\":0.7036,\"winner_slot\":2,\"winning_fitness\":0.7036},{\"dimension\":\"heex-and-verified-routes\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-01\",\"elixir-phoenix-liveview-hard-09\"],\"variant_1_label\":\"idiomatic (seed)\",\"variant_2_label\":\"patch-vs-navigate-discipline (spawned)\",\"variant_1_scores\":[1.0,1.0],\"variant_2_scores\":[1.0,0.9059],\"variant_1_mean\":1.0,\"variant_2_mean\":0.9529,\"winner_slot\":1,\"winning_fitness\":1.0},{\"dimension\":\"function-components-and-slots\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-08\",\"elixir-phoenix-liveview-hard-16\"],\"variant_1_label\":\"well-typed (seed)\",\"variant_2_label\":\"pure-stateless-layer (spawned)\",\"variant_1_scores\":[1.0,1.0],\"variant_2_scores\":[1.0,1.0],\"variant_1_mean\":1.0,\"variant_2_mean\":1.0,\"winner_slot\":2,\"winning_fitness\":1.0},{\"dimension\":\"live-components-stateful\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-15\",\"elixir-phoenix-liveview-hard-33\"],\"variant_1_label\":\"isolated (seed)\",\"variant_2_label\":\"update-discipline (spawned)\",\"variant_1_scores\":[0.9594,0.9594],\"variant_2_scores\":[0.9594,0.9594],\"variant_1_mean\":0.9594,\"variant_2_mean\":0.9594,\"winner_slot\":2,\"winning_fitness\":0.9594},{\"dimension\":\"form-handling\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-11\",\"elixir-phoenix-liveview-hard-10\"],\"variant_1_label\":\"to-form-canonical (seed)\",\"variant_2_label\":\"nested-assoc-forms (spawned)\",\"variant_1_scores\":[0.851,1.0],\"variant_2_scores\":[0.851,1.0],\"variant_1_mean\":0.9255,\"variant_2_mean\":0.9255,\"winner_slot\":2,\"winning_fitness\":0.9255},{\"dimension\":\"streams-and-collections\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-02\",\"elixir-phoenix-liveview-hard-38\"],\"variant_1_label\":\"stream-first (seed)\",\"variant_2_label\":\"reset-on-filter (spawned)\",\"variant_1_scores\":[0.8533,1.0],\"variant_2_scores\":[0.8533,0.6358],\"variant_1_mean\":0.9266,\"variant_2_mean\":0.7446,\"winner_slot\":1,\"winning_fitness\":0.9266},{\"dimension\":\"mount-and-lifecycle\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-10\",\"elixir-phoenix-liveview-hard-01\"],\"variant_1_label\":\"no-db-in-mount (seed)\",\"variant_2_label\":\"async-load (spawned)\",\"variant_1_scores\":[0.8786,1.0],\"variant_2_scores\":[1.0,1.0],\"variant_1_mean\":0.9393,\"variant_2_mean\":1.0,\"winner_slot\":2,\"winning_fitness\":1.0},{\"dimension\":\"event-handlers-and-handle-info\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-32\",\"elixir-phoenix-liveview-hard-13\"],\"variant_1_label\":\"clear-separation (seed)\",\"variant_2_label\":\"event-to-action-funnel (spawned)\",\"variant_1_scores\":[1.0,1.0],\"variant_2_scores\":[1.0,1.0],\"variant_1_mean\":1.0,\"variant_2_mean\":1.0,\"winner_slot\":2,\"winning_fitness\":1.0},{\"dimension\":\"pubsub-and-realtime\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-12\",\"elixir-phoenix-liveview-hard-12\"],\"variant_1_label\":\"connected-guard (seed)\",\"variant_2_label\":\"context-owns-broadcast (spawned)\",\"variant_1_scores\":[0.8932,0.9189],\"variant_2_scores\":[0.8932,0.9189],\"variant_1_mean\":0.9061,\"variant_2_mean\":0.9061,\"winner_slot\":2,\"winning_fitness\":0.9061},{\"dimension\":\"navigation-patterns\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-14\",\"elixir-phoenix-liveview-hard-36\"],\"variant_1_label\":\"push-navigate-and-link (seed)\",\"variant_2_label\":\"url-is-state (spawned)\",\"variant_1_scores\":[1.0,1.0],\"variant_2_scores\":[0.8914,0.8914],\"variant_1_mean\":1.0,\"variant_2_mean\":0.8914,\"winner_slot\":1,\"winning_fitness\":1.0},{\"dimension\":\"auth-and-authz\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-24\",\"elixir-phoenix-liveview-hard-32\"],\"variant_1_label\":\"on-mount-hook (seed)\",\"variant_2_label\":\"resource-scope-mount (spawned)\",\"variant_1_scores\":[0.9422,0.9664],\"variant_2_scores\":[0.9422,0.9664],\"variant_1_mean\":0.9543,\"variant_2_mean\":0.9543,\"winner_slot\":2,\"winning_fitness\":0.9543},{\"dimension\":\"anti-patterns-catalog\",\"tier\":\"capability\",\"challenge_ids\":[\"elixir-phoenix-liveview-medium-38\",\"elixir-phoenix-liveview-hard-15\"],\"variant_1_label\":\"iron-laws (seed)\",\"variant_2_label\":\"detector-rules (spawned)\",\"variant_1_scores\":[0.9714,0.8265],\"variant_2_scores\":[1.0,0.8265],\"variant_1_mean\":0.899,\"variant_2_mean\":0.9133,\"winner_slot\":2,\"winning_fitness\":0.9133}],\"generation\":1,\"total_generations\":1,\"challenges_per_variant\":2,\"baseline_ran\":false,\"scorer\":\"L1 deterministic (skillforge.engine.score)\"}"
       ],
       "max_budget_usd": 10.0,
@@ -707,7 +707,7 @@
           },
           "generation": 1,
           "generations_survived": 0,
-          "id": "gen_composite_elixir_phoenix_liveview_mock_v1",
+          "id": "gen_composite_elixir_phoenix_liveview_seed_v1",
           "is_pareto_optimal": true,
           "maturity": "tested",
           "meta_strategy": "engineer_composite",
@@ -775,11 +775,11 @@
     }
   ],
   "generated_at": "2026-04-11T19:52:41.500548+00:00",
-  "mock_run_id": "elixir-phoenix-liveview-mock-v1",
+  "seed_run_id": "elixir-phoenix-liveview-seed-v1",
   "schema_version": 1,
   "skill_families": [
     {
-      "best_assembly_id": "gen_composite_elixir_phoenix_liveview_mock_v1",
+      "best_assembly_id": "gen_composite_elixir_phoenix_liveview_seed_v1",
       "created_at": "2026-04-11T17:58:07.066244+00:00",
       "decomposition_strategy": "atomic",
       "domain_id": "tax_a7730d98db1e",
@@ -805,7 +805,7 @@
       },
       "generation": 1,
       "generations_survived": 0,
-      "id": "gen_composite_elixir_phoenix_liveview_mock_v1",
+      "id": "gen_composite_elixir_phoenix_liveview_seed_v1",
       "is_pareto_optimal": 1,
       "maturity": "tested",
       "meta_strategy": "engineer_composite",
@@ -828,7 +828,7 @@
       "pareto_objectives": {
         "quality": 0.9407
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: elixir-phoenix-liveview-composite\ndescription: Phoenix 1.7+ LiveView \u2014 component-forward architecture with verified routes, HEEx, streams, forms, async mount, pubsub, on_mount authz. Use when writing or reviewing Phoenix 1.7+ LiveView code. NOT for Phoenix 1.6 or older.\n---\n\n# Phoenix 1.7+ LiveView \u2014 Composite Skill\n\n## Quick Start\nThe parent `Phoenix.LiveView` is a thin coordinator. Anything stateful lives in a `Phoenix.LiveComponent`. The parent owns URL state, session, and PubSub subscriptions; children own their own slice of state and talk upward via `send/2` or sideways via `send_update/2`. All rendering uses HEEx with the `~p` verified-route sigil, and all collections over ~100 items flow through `stream/3`.\n\n## When to use\n- Writing a new Phoenix 1.7+ LiveView with more than one interactive region\n- Refactoring a bloated LiveView whose `handle_event` clauses exceed ~10 cases\n- Reviewing PRs where a single LiveView mutates many unrelated assigns\n- Converting a Phoenix 1.6 LiveView to 1.7+ idioms (verified routes, `<.link>`, streams, `assign_async`)\n- Introducing real-time updates, nested forms, or per-resource authorization to an existing LiveView module\n\n## Architectural Skeleton (Foundation)\nEvery LiveView begins as a thin parent. The parent's `mount/3` assigns only URL, session, and non-blocking state. `assign_async/3` calls are allowed (they run in a Task). Synchronous DB queries that block first paint belong in `handle_params/3`, not `mount/3`. For each distinct interactive region (a form, a list, a filter panel, a modal) create a `Phoenix.LiveComponent` under `lib/my_app_web/live/components/`. Give every LiveComponent a stable required `:id` assign and render it as `<.live_component module={...} id=\"...\" ... />`. User events are handled inside the component's own `handle_event/3` and mutate only that component's socket. Child-to-parent signaling uses `send(self(), {:child_msg, payload})`, handled by the parent's `handle_info/2`; parent-to-child updates use `send_update/2` targeting a stable `id`. All database work is routed through context modules, called from the component that owns the data \u2014 never from the parent. Forms are always built with `to_form/2` inside the component that owns them, never lifted to the parent. The parent never reaches into a child's socket with `assign/3`.\n\n## HEEx + Verified Routes\nUse the `~p` sigil for every route. `~p\"/users/#{id}\"` replaces `Routes.user_path(@socket, :show, id)`. Use HEEx directives `:if={...}` and `:for={x <- @xs}` instead of the legacy `<%= if %>` and `<%= for %>` Eex blocks. Prefer `<.link navigate={~p\"/users\"}>` over the removed `live_link` / `live_redirect` helpers, and `<.link patch={~p\"/users?sort=name\"}>` for same-LiveView URL updates. Template bodies always use the `~H` sigil.\n\n### Example\n\n    def render(assigns) do\n      ~H\"\"\"\n      <.link navigate={~p\"/users/new\"}>New user</.link>\n      <ul>\n        <li :for={user <- @users} :if={user.active?}>\n          <.link patch={~p\"/users?sort=#{user.id}\"}>\n            <%= user.name %>\n          </.link>\n        </li>\n      </ul>\n      \"\"\"\n    end\n\nCommon mistakes:\n1. Mixing old `Routes.*_path` helpers with new `~p` sigils in the same module.\n2. Leaving `<%= for item <- @items do %>` blocks that should be `:for={item <- @items}` directives.\n3. Using `<a href={~p\"/x\"}>` where `<.link navigate={~p\"/x\"}>` is required for client-side routing.\n\n## Function Components + Slots\nFunction components are rendering primitives, not logic holders. Declare every input with `attr :name, :type, required: true` \u2014 no untyped assigns. Declare every child region with `slot :inner_block` or a named `slot :actions`. The body is HEEx + `render_slot/1` + `~H` interpolation only. No `case`, no branching on business rules, no Ecto calls, no `Repo.get/2`. If a rendering decision is needed \u2014 a badge color for a status, a class for an alert variant \u2014 compute it in the parent LiveView via `assign/3` and pass the resolved value in as an attr. Co-locate these components under `MyAppWeb.CoreComponents` or a feature-scoped `*Components` module. Unit-test them with `Phoenix.LiveViewTest.render_component/2` passing literal attrs.\n\n### Example\n\n    attr :label, :string, required: true\n    attr :badge_class, :string, required: true\n    slot :actions\n\n    def status_card(assigns) do\n      ~H\"\"\"\n      <div class=\"card\">\n        <span class={@badge_class}><%= @label %></span>\n        <div class=\"actions\">\n          <%= render_slot(@actions) %>\n        </div>\n      </div>\n      \"\"\"\n    end\n\nCommon mistakes:\n1. Calling `Repo.get/2` or context functions inside a function component.\n2. Using `case @status do ... end` for class selection \u2014 precompute in the parent.\n3. Accepting a raw `%Ecto.Changeset{}` and branching on `changeset.valid?`.\n4. Adding `@socket` or `assign/3` calls \u2014 function components have no socket.\n5. Omitting `attr` declarations \"just for this one prop\".\n\n## LiveComponents (Stateful)\nTreat `update/2` as the single choke point where parent-supplied props become socket assigns. It is the ONLY function that calls `assign(socket, :prop, assigns.prop)` for external data. Any dependent local state (filtered lists, derived labels) is also computed inside `update/2`, in the same pass. `handle_event/3` mutates only component-owned UI state like `:open?` or `:selected_id`; it must never re-read props from `assigns`. When the parent needs to push a mid-lifecycle change, it calls `send_update(MyComponent, id: \"x\", prop: new_value)`. For child-to-parent signaling, use `send(self(), {:child_event, @myself, payload})` and route it through the parent's `handle_info/2`. The parent's `<.live_component />` call MUST include `:id`.\n\n### Example\n\n    defmodule MyAppWeb.FilterPanel do\n      use MyAppWeb, :live_component\n\n      def update(%{users: users, query: q} = assigns, socket) do\n        {:ok,\n         socket\n         |> assign(assigns)\n         |> assign(:visible, Enum.filter(users, &String.contains?(&1.name, q)))}\n      end\n\n      def handle_event(\"toggle\", _, socket) do\n        {:noreply, assign(socket, :open?, not socket.assigns.open?)}\n      end\n    end\n\nCommon mistakes:\n1. Calling `assign(socket, :prop, assigns.prop)` inside `handle_event/3`. Props belong in `update/2` only.\n2. Forgetting `:id` on `<.live_component />`. Stateful components REQUIRE a stable id.\n3. Deriving filtered or sorted data in the template instead of in `update/2`.\n4. Using `send_update/3` with partial assigns and expecting old props to persist.\n5. Trying to mutate parent state by reaching \"up\" through assigns.\n\n## Forms + Nested Associations\nNested forms use `cast_assoc` plus `<.inputs_for>`. In the schema, declare `has_many :children, Child, on_replace: :delete`. In the changeset, call `cast_assoc(:children, with: &Child.changeset/2, sort_param: :children_sort, drop_param: :children_drop)`. In the LiveComponent that owns the parent form, assign the form once with `to_form(Parents.change_parent(parent))`. Render children with `<.inputs_for :let={cf} field={@form[:children]}>`. Add a child with a button posting `parent[children_sort][]=new`; remove a child with `parent[children_drop][]=<index>` plus a hidden input inside the row. On the `\"validate\"` event, rebuild via `to_form(changeset, action: :validate)`. On `\"save\"`, call the context's `update_parent/2`; on `{:error, changeset}`, re-assign `to_form(changeset)`.\n\n### Example\n\n    def update(%{parent: parent} = assigns, socket) do\n      form = Parents.change_parent(parent) |> to_form()\n      {:ok, socket |> assign(assigns) |> assign(:form, form)}\n    end\n\n    def handle_event(\"validate\", %{\"parent\" => params}, socket) do\n      changeset =\n        socket.assigns.parent\n        |> Parents.change_parent(params)\n        |> Map.put(:action, :validate)\n\n      {:noreply, assign(socket, :form, to_form(changeset))}\n    end\n\nCommon mistakes:\n1. Forgetting `on_replace: :delete` on the `has_many` \u2014 removed rows reappear after save.\n2. Using `<.inputs_for>` without a matching hidden `sort_param` input \u2014 row order scrambles.\n3. Rebuilding child rows manually in `handle_event` instead of letting `cast_assoc` + `:drop_param` do it.\n4. Putting the nested form in the parent LiveView instead of the owning LiveComponent.\n5. Calling `to_form/2` on the child changeset directly.\n\n## Streams + Collections\nUse `Phoenix.LiveView.stream/3` for any collection over ~100 items or any list that grows in response to realtime updates. `stream(socket, :messages, initial_list)` replaces `assign(socket, :messages, list)`. In the template, iterate with `<div :for={{id, msg} <- @streams.messages} id={id}>...</div>` \u2014 the `id` destructuring and element id are both required. Append with `stream_insert(socket, :messages, new_msg)`, remove with `stream_delete(socket, :messages, msg)`, replace with `stream_insert(socket, :messages, updated_msg)` using the same id. Streams never land in regular `@assigns`; they live under `@streams`.\n\n### Example\n\n    def mount(_params, _session, socket) do\n      {:ok, stream(socket, :messages, Chat.list_messages())}\n    end\n\n    def handle_info({:new_message, msg}, socket) do\n      {:noreply, stream_insert(socket, :messages, msg, at: 0)}\n    end\n\n    def render(assigns) do\n      ~H\"\"\"\n      <div id=\"messages\" phx-update=\"stream\">\n        <div :for={{dom_id, msg} <- @streams.messages} id={dom_id}>\n          <%= msg.body %>\n        </div>\n      </div>\n      \"\"\"\n    end\n\nCommon mistakes:\n1. Holding a large list in `@messages` and re-rendering on every insert.\n2. Forgetting the `id={id}` attribute on the iterated DOM node.\n3. Calling `Enum.count/1` on `@streams.messages` \u2014 streams are opaque; track length in a separate assign.\n\n## Mount + Lifecycle (Async Load)\nUse `assign_async/3` (Phoenix 1.7+) for initial data loads that touch the database. In `mount/3`, return `{:ok, assign_async(socket, :users, fn -> {:ok, %{users: Accounts.list_users()}} end)}`. The template branches on `@users.loading`, `@users.ok?`, and `@users.result` \u2014 render a skeleton while loading, render the list when `ok?`, and render an error state via `@users.failed` when the async fun returns `{:error, reason}`. In `handle_params/3`, re-run `assign_async` whenever URL params change. For multiple independent loads, call `assign_async` once per key so each resolves on its own timeline. Do not close over the whole `socket` inside the async function \u2014 capture only the primitive ids and params you need.\n\n### Example\n\n    defmodule MyAppWeb.UsersLive do\n      use MyAppWeb, :live_view\n\n      def mount(_params, _session, socket) do\n        {:ok,\n         socket\n         |> assign_async(:users, fn -> {:ok, %{users: MyApp.Accounts.list_users()}} end)\n         |> assign_async(:stats, fn -> {:ok, %{stats: MyApp.Accounts.summary()}} end)}\n      end\n\n      def render(assigns) do\n        ~H\"\"\"\n        <div :if={@users.loading}>Loading...</div>\n        <.user_list :if={@users.ok?} users={@users.result} />\n        <div :if={@users.failed}>Failed to load users</div>\n        \"\"\"\n      end\n    end\n\nCommon mistakes:\n1. Synchronously calling `Repo.all/1` directly in mount, outside the async fun \u2014 blocks first paint.\n2. Forgetting to handle `@users.loading` in the template.\n3. Using `assign_async` for cheap in-memory assigns where the ceremony outweighs the benefit.\n4. Closing over the full `socket` inside the async fun \u2014 the closure leaks the entire assigns map.\n\n## Event Handlers + handle_info\nEvery `handle_event/3` clause is three lines: parse the incoming params into an `%Action{type: _, payload: _}` struct, call `handle_action(action, socket)`, and return its result directly. All state-change logic lives in `handle_action/2`, a private pure function that pattern-matches on `action.type` and returns `{:noreply, socket}`. `handle_info/2` clauses that mutate state do the same dance: convert the message into an `%Action{}` first, then delegate. Keep `handle_action/2` under ~10 clauses per component \u2014 beyond that, split the component. The payoff: `handle_action/2` is unit-testable with plain ExUnit against a built socket, with no `LiveViewTest` harness required.\n\n### Example\n\n    def handle_event(\"save\", %{\"user\" => params}, socket) do\n      handle_action(%Action{type: :save, payload: %{attrs: params}}, socket)\n    end\n\n    def handle_info({:user_updated, user}, socket) do\n      handle_action(%Action{type: :refresh, payload: %{user: user}}, socket)\n    end\n\n    defp handle_action(%Action{type: :save, payload: %{attrs: attrs}}, socket) do\n      case MyApp.Accounts.create_user(attrs) do\n        {:ok, user} -> {:noreply, stream_insert(socket, :users, user)}\n        {:error, cs} -> {:noreply, assign(socket, :form, to_form(cs))}\n      end\n    end\n\nCommon mistakes:\n1. Putting `Repo.insert` or `Ecto.Changeset` logic inline in `handle_event`.\n2. Letting `%Action{}` carry raw `params` maps \u2014 coerce to typed fields up front.\n3. Skipping the funnel for \"simple\" events \u2014 inconsistency destroys the testability guarantee.\n4. Forgetting to route `handle_info` state changes through `handle_action/2`.\n\n## PubSub + Realtime\nThe Ecto context is the single source of broadcast events. Schema writes and `Phoenix.PubSub.broadcast` live side-by-side in one function, so every caller \u2014 LiveView, Oban job, controller \u2014 fans out identically. In `MyApp.Chat`, define a private `broadcast/2` helper that receives `{:ok, result}` tuples and fans out named events. Pipe every write through it: `create_message/1`, `update_message/2`, `delete_message/1`. In the parent LiveView's `mount/3`, subscribe only when `connected?(socket)` is true: `if connected?(socket), do: Phoenix.PubSub.subscribe(MyApp.PubSub, \"room:#{room_id}\")`. Handle incoming events in the parent and route them into children via `send_update/2` when a LiveComponent owns that slice. Never broadcast before `Repo.insert` has succeeded \u2014 always pipe the `{:ok, _}` tuple through the helper, and always include an `{:error, _}` clause to short-circuit the broadcast.\n\n### Example\n\n    defmodule MyApp.Chat do\n      def create_message(attrs) do\n        %Message{}\n        |> Message.changeset(attrs)\n        |> Repo.insert()\n        |> broadcast(:message_created)\n      end\n\n      defp broadcast({:ok, %Message{room_id: id} = msg}, event) do\n        Phoenix.PubSub.broadcast(MyApp.PubSub, \"room:#{id}\", {event, msg})\n        {:ok, msg}\n      end\n\n      defp broadcast({:error, _} = err, _event), do: err\n    end\n\nCommon mistakes:\n1. Calling `Phoenix.PubSub.broadcast` directly from `handle_event/3` \u2014 bypasses the single source.\n2. Broadcasting before `Repo.insert` returns `{:ok, _}`.\n3. Making `broadcast/2` public instead of `defp` \u2014 invites ad-hoc callers.\n4. Subscribing without the `connected?(socket)` guard \u2014 subscribes twice and leaks processes.\n\n## Navigation Patterns\nCross-LiveView navigation uses `push_navigate(socket, to: ~p\"/...\")` \u2014 mounts a fresh LiveView process. Same-LiveView URL updates (a sort change, a filter applied, a tab swap) use `push_patch(socket, to: ~p\"/...\")` and are handled in `handle_params/3`. Templates always use `<.link navigate={~p\"/users/#{user}\"}>...</.link>` for forward navigation and `<.link patch={~p\"/users?sort=name\"}>` for in-place patches. The legacy `live_link`, `live_patch`, and `live_redirect` helpers were removed in 1.7 and must never appear in new code.\n\n### Example\n\n    def handle_event(\"sort\", %{\"by\" => field}, socket) do\n      {:noreply, push_patch(socket, to: ~p\"/users?sort=#{field}\")}\n    end\n\n    def handle_event(\"view\", %{\"id\" => id}, socket) do\n      {:noreply, push_navigate(socket, to: ~p\"/users/#{id}\")}\n    end\n\n    def handle_params(%{\"sort\" => field}, _uri, socket) do\n      {:noreply, assign(socket, :sort_by, field)}\n    end\n\nCommon mistakes:\n1. Using `push_redirect` (deprecated) instead of `push_navigate`.\n2. Patching when the target is a different LiveView \u2014 only `push_navigate` remounts.\n3. Hardcoding URL strings instead of using `~p`.\n\n## Auth + Authz\nA single `on_mount` hook authenticates the user AND authorizes access to the specific resource identified by `params[\"id\"]`. If either check fails, the hook returns `{:halt, socket |> put_flash(...) |> redirect(...)}` before the LiveView ever mounts. Define the hook in `MyAppWeb.UserAuth` \u2014 it authenticates AND fetches the resource scoped to the user via the context, e.g. `Posts.fetch_for_user/2` which returns `{:ok, post}` only when the user owns the post (or is an admin). Wire the hook per-route in the router: `live_session :post_scoped, on_mount: [{MyAppWeb.UserAuth, :scope_post}]`. Inside `mount/3`, trust `socket.assigns.post` \u2014 no re-fetch, no re-check. Pass it to LiveComponents as a prop. `handle_event/3` clauses operate on `socket.assigns.post` directly; no `if current_user.id == post.user_id` checks. Mutations still take `user` as a defense-in-depth arg at the context layer: `Posts.update_post(post, attrs, user)`.\n\n### Example\n\n    defmodule MyAppWeb.UserAuth do\n      import Phoenix.LiveView\n      import Phoenix.Component\n\n      def on_mount(:scope_post, %{\"id\" => id}, _session, socket) do\n        user = socket.assigns.current_user\n\n        case MyApp.Posts.fetch_for_user(id, user) do\n          {:ok, post} -> {:cont, assign(socket, :post, post)}\n          {:error, _} -> {:halt, socket |> put_flash(:error, \"Not found\") |> redirect(to: ~p\"/\")}\n        end\n      end\n    end\n\nCommon mistakes:\n1. Re-fetching the post in `mount/3` after the hook already assigned it.\n2. Putting the scoped hook on a `live_session` that mixes scoped and unscoped routes.\n3. Forgetting the `params[\"id\"]` missing case in the hook.\n4. Returning `{:cont, socket}` on authz failure instead of `{:halt, ...}`.\n5. Letting LiveComponents re-fetch the resource by id from their own assigns.\n\n## Anti-Patterns Catalog\nEvery anti-pattern below ships with a mechanical detector \u2014 grep, AST probe, or Credo check \u2014 so reviewers can find violations in any codebase by running the detector top-to-bottom.\n\n1. **DB queries in mount/3** \u2014 `mount` runs twice (HTTP + WebSocket), duplicating every query. Detector: `rg -n 'def mount' -A 20 -g 'lib/**/*_live.ex' | rg -B1 'Repo\\.(all|one|get|preload)'`. Fix: wrap in `assign_async` or guard with `if connected?(socket), do: load(), else: assign(socket, :items, [])`.\n2. **PubSub.subscribe without connected?** \u2014 subscribes twice on first load and leaks processes on reconnect. Detector: `rg -nP 'Phoenix\\.PubSub\\.subscribe' lib/ | rg -v 'connected\\?'`. Credo: custom `Credo.Check.Warning.UnguardedPubSubSubscribe`.\n3. **Routes.*_path / Routes.*_url leftovers** \u2014 pre-1.7 helpers; verified routes are mandatory. Detector: `rg -n 'Routes\\.\\w+_(path|url)' lib/ test/`. Rewrite as `~p\"/users/#{id}\"`.\n4. **Bare %Changeset{} passed to <.form>** \u2014 skips `to_form/2`, breaks nested association handling. Detector: `rg -nP '<\\.form [^>]*for=\\{@(?!.*to_form)' lib/`.\n5. **Enum over assigns for lists >100 items** \u2014 should be `stream/3`. Heuristic: context function name starts with `list_` and the HEEx uses `:for={item <- @items}` where `@items` is assigned via `assign`, not `stream`.\n6. **assign_new for values needing fresh compute** \u2014 stale after reconnect because `assign_new` only runs when the key is missing. Detector: `rg -nP 'assign_new.*fn ->' lib/ -A 3 | rg -B1 '(Repo|utc_now)'`.\n7. **Legacy navigation helpers** \u2014 `live_link`, `live_patch`, `live_redirect` removed in 1.7. Detector: `rg -nP '\\b(live_link|live_patch|live_redirect)\\b' lib/`. Rewrite to `<.link navigate={~p\"...\"}>` or `<.link patch={~p\"...\"}>`.\n8. **LiveComponent without :id** \u2014 silently becomes stateless, loses assigns between renders. Detector: `rg -n '<\\.live_component' lib/ | rg -v 'id='`.\n9. **Repo calls inside function components** \u2014 function components are pure rendering; queries belong in the parent LiveView or LiveComponent. Detector: `rg -n 'def \\w+\\(assigns\\)' -g 'lib/**/components*.ex' -A 20 | rg 'Repo\\.'`.\n10. **PubSub.broadcast called from handle_event** \u2014 broadcasts should be context-owned so every caller fans out identically. Detector: `rg -n 'def handle_event' -g 'lib/**/*_live.ex' -A 15 | rg 'PubSub\\.broadcast'`.\n11. **Props assigned outside update/2** \u2014 violates the LiveComponent update-discipline contract. Detector: `rg -nP 'def handle_event.*\\n.*assign\\(socket, :\\w+, assigns\\.' lib/` (multiline).\n12. **Raw params map stuffed into %Action{}** \u2014 defeats the event-to-action funnel's testability. Detector: AST probe for `%Action{payload: params}` where `params` is the raw event params binding.\n13. **Re-fetching a resource after on_mount scoped it** \u2014 wastes a query and opens a TOCTOU gap. Detector: `rg -n 'on_mount.*:scope_' -g 'lib/**/*_live.ex' -A 30 | rg 'Posts\\.get_post\\|Repo\\.get'`.\n14. **Template <%= for %> instead of :for=** \u2014 legacy Eex inside HEEx; bypasses optimization. Detector: `rg -nP '<%=\\s*for\\s+' -g 'lib/**/*.html.heex' -g 'lib/**/*_live.ex'`.\n",
       "supporting_files": {
         "assets/migration_checklist.md": "# Phoenix 1.6 -> 1.7+ LiveView Migration Checklist\n\nUpgrade a Phoenix 1.6 LiveView codebase to 1.7+ idioms: verified routes (`~p`),\nthe unified `<.link>` component, HEEx directives (`:for`/`:if`), `to_form/2`\nforms, `stream/3` collections, `assign_async/3` mounts, typed function\ncomponents, stateful `LiveComponent` discipline, `on_mount` auth hooks, and\nupdated tests.\n\nEach step gives you: (1) a **grep command** to find occurrences, (2) a\n**1.6 -> 1.7 diff**, and (3) a **gotcha** to watch for. Work the steps in\norder \u2014 later steps assume earlier ones have landed.\n\n---\n\n## Before you start\n\n1. **Version check.** In `mix.exs` confirm `{:phoenix, \"~> 1.7.0\"}` and\n   `{:phoenix_live_view, \"~> 0.20.0\"}` (or newer). Run `mix deps.get` and\n   `mix compile` on a clean baseline.\n2. **Back up.** Create a branch (`git checkout -b liveview-1.7-migration`)\n   or tag (`git tag pre-liveview-1.7`). Do NOT run codemods against\n   uncommitted work.\n3. **Feature-flag strategy.** Migrate one LiveView at a time. Use\n   `live_session` blocks in the router to isolate migrated routes from\n   un-migrated ones.\n4. **Run the tests.** `mix test` must pass on the baseline \u2014 otherwise you\n   can't tell what the migration broke vs. what was already broken.\n\n---\n\n## Step 1: Routes \u2014 `Routes.*_path` -> `~p`\n\nVerified routes are checked at compile time.\n\n```bash\nrg -n 'Routes\\.\\w+_(path|url)' lib/ test/\n```\n\n```diff\n- <%= link \"New user\", to: Routes.user_path(@socket, :new) %>\n+ <.link navigate={~p\"/users/new\"}>New user</.link>\n\n- redirect(to: Routes.user_path(socket, :show, user.id))\n+ push_navigate(socket, to: ~p\"/users/#{user.id}\")\n```\n\n**Gotcha:** `~p\"/users/#{user}\"` requires `User` to implement `Phoenix.Param`\n(usually via `@derive Phoenix.Param` or a `@primary_key` field). Raw UUID\nstrings always work.\n\n---\n\n## Step 2: Templates \u2014 `<%= for %>` / `<%= if %>` / `~L` -> HEEx\n\n```bash\nrg -nP '<%=\\s*(for|if)\\s+' lib/ -g '*.heex' -g '*.ex' -g '*.eex'\nrg -nP 'sigil_L|~L\"\"\"' lib/\n```\n\n```diff\n- <%= for user <- @users do %>\n-   <%= if user.active do %>\n-     <li><%= user.name %></li>\n-   <% end %>\n- <% end %>\n+ <li :for={user <- @users} :if={user.active}>\n+   <%= user.name %>\n+ </li>\n\n- ~L\"\"\"\n+ ~H\"\"\"\n```\n\n**Gotcha:** When `:for` and `:if` sit on the same element, `:for` runs first\nand `:if` filters each iteration. If you need \"hide the whole block,\" wrap\nit in a parent element that carries `:if` \u2014 don't rely on `:if` inside a\nloopless block that must disappear entirely.\n\n---\n\n## Step 3: Navigation \u2014 legacy helpers -> `<.link>` / `push_navigate`\n\n`live_link`, `live_patch`, `live_redirect`, `push_redirect` all removed.\n\n```bash\nrg -nP '\\b(live_link|live_patch|live_redirect|push_redirect)\\b' lib/\n```\n\n```diff\n- <%= live_patch \"Sort\", to: \"/users?sort=name\" %>\n+ <.link patch={~p\"/users?sort=name\"}>Sort</.link>\n\n- <%= live_redirect \"Profile\", to: Routes.profile_path(@socket, :show) %>\n+ <.link navigate={~p\"/profile\"}>Profile</.link>\n\n- {:noreply, push_redirect(socket, to: \"/dashboard\")}\n+ {:noreply, push_navigate(socket, to: ~p\"/dashboard\")}\n```\n\n**Gotcha:** `patch` is same-LiveView-module-only \u2014 crossing LiveView\nboundaries with `<.link patch={...}>` crashes. Use `patch` for sort/filter/\ntab URL updates; `navigate` to show a different resource.\n\n---\n\n## Step 4: Forms \u2014 bare changesets -> `to_form/2`\n\n```bash\nrg -nP '<\\.form [^>]*for=\\{@(?!.*to_form)' lib/\nrg -n 'form_for\\s*\\(' lib/ -g '*.heex' -g '*.ex'\n```\n\n```diff\n- {:ok, assign(socket, :changeset, Accounts.change_user(%User{}))}\n+ form = Accounts.change_user(%User{}) |> to_form()\n+ {:ok, assign(socket, :form, form)}\n\n- <%= form_for @changeset, \"#\", [phx_change: \"validate\"], fn f -> %>\n-   <%= label f, :name %>\n-   <%= text_input f, :name %>\n-   <%= error_tag f, :name %>\n- <% end %>\n+ <.form for={@form} phx-change=\"validate\" phx-submit=\"save\">\n+   <.input field={@form[:name]} type=\"text\" label=\"Name\" />\n+ </.form>\n```\n\n**Gotcha:** On `\"validate\"`, rebuild via\n`changeset |> Map.put(:action, :validate) |> to_form()`. Without `:action`,\n`<.input>` won't render errors because the changeset looks fresh. Nested\n`cast_assoc` also needs `on_replace: :delete` on the parent `has_many` or\nremoved rows reappear after save.\n\n---\n\n## Step 5: Collections \u2014 assigns -> `stream/3`\n\nAny list over ~100 items, or any realtime-updated list, should become a\nstream.\n\n```bash\nrg -nP 'phx-update=\"(append|prepend)\"' lib/\n```\n\n```diff\n- {:ok, assign(socket, :messages, Chat.list_messages())}\n+ {:ok, stream(socket, :messages, Chat.list_messages())}\n\n- def handle_info({:new, msg}, socket) do\n-   {:noreply, assign(socket, :messages, [msg | socket.assigns.messages])}\n- end\n+ def handle_info({:new, msg}, socket) do\n+   {:noreply, stream_insert(socket, :messages, msg, at: 0)}\n+ end\n\n- <div id=\"messages\" phx-update=\"append\">\n-   <div :for={msg <- @messages}><%= msg.body %></div>\n- </div>\n+ <div id=\"messages\" phx-update=\"stream\">\n+   <div :for={{dom_id, msg} <- @streams.messages} id={dom_id}>\n+     <%= msg.body %>\n+   </div>\n+ </div>\n```\n\n**Gotcha:** Streams are opaque \u2014 no `Enum.count/1`, no `Enum.filter/1`. If\nthe template shows \"N items\", assign the length as a separate regular\nassign and update it alongside every `stream_insert` / `stream_delete`.\nEvery iterated DOM node MUST carry `id={dom_id}` or the DOM patcher crashes.\n\n---\n\n## Step 6: Mount \u2014 DB queries -> `handle_params/3` or `assign_async/3`\n\n`mount/3` runs twice (HTTP + WebSocket), so DB calls there double every\nquery and block first paint.\n\n```bash\nrg -nP 'def mount\\(' lib/ -A 15 | rg -B 1 'Repo\\.(all|one|get|preload)'\n```\n\n```diff\n- def mount(_params, _session, socket) do\n-   users = Accounts.list_users()\n-   {:ok, assign(socket, :users, users)}\n- end\n+ def mount(_params, _session, socket) do\n+   {:ok, stream(socket, :users, [])}\n+ end\n+\n+ def handle_params(params, _uri, socket) do\n+   users = Accounts.list_users(sort: params[\"sort\"] || \"name\")\n+   {:noreply, stream(socket, :users, users, reset: true)}\n+ end\n```\n\nFor slow queries that shouldn't block first paint, use `assign_async/3`:\n\n```diff\n+ def mount(_params, _session, socket) do\n+   {:ok,\n+    assign_async(socket, :users, fn ->\n+      {:ok, %{users: Accounts.list_users()}}\n+    end)}\n+ end\n```\n\n**Gotcha:** Inside `assign_async` funs, never close over the whole `socket`\n\u2014 the closure leaks the entire assigns map into the Task process. Capture\nonly the primitive ids and params you need (bind `user_id = ...` outside\nthe fun, then reference `user_id` inside).\n\n---\n\n## Step 7: Render helpers -> function components with `attr`\n\n```bash\nrg -nP 'def \\w+\\(assigns\\)\\s*do' lib/ -g '*_view.ex' -g '*_html.ex'\n```\n\n```diff\n- def badge(assigns) do\n-   ~H\"\"\"\n-   <span class={\"badge badge-#{@variant}\"}><%= @label %></span>\n-   \"\"\"\n- end\n+ attr :label, :string, required: true\n+ attr :variant, :string, default: \"default\", values: ~w(default success warning error)\n+ slot :inner_block\n+\n+ def badge(assigns) do\n+   ~H\"\"\"\n+   <span class={\"badge badge-#{@variant}\"}>\n+     <%= @label %>\n+     <%= render_slot(@inner_block) %>\n+   </span>\n+   \"\"\"\n+ end\n```\n\n**Gotcha:** Function components are **pure rendering** \u2014 no `Repo.*` calls,\nno `case` on business rules, no changeset inspection. Precompute conditional\nclasses in the caller and pass them as attrs. Keeping components dumb is\nwhat makes them testable via `render_component/2`.\n\n---\n\n## Step 8: LiveComponents \u2014 require `:id`, move state to `update/2`\n\nStateful `LiveComponent` calls MUST carry `:id` \u2014 without it they silently\ndegrade to stateless and lose assigns between renders.\n\n```bash\nrg -nP '<\\.live_component\\b' lib/ | rg -v 'id='\n```\n\n```diff\n- <%= live_component @socket, MyAppWeb.FilterPanel, users: @users, query: @q %>\n+ <.live_component\n+   module={MyAppWeb.FilterPanel}\n+   id=\"users-filter-panel\"\n+   users={@users}\n+   query={@q}\n+ />\n\n- def handle_event(\"apply\", %{\"q\" => q}, socket) do\n-   users = Accounts.search(socket.assigns.users, q)\n-   {:noreply, assign(socket, :users, users)}\n- end\n+ def update(%{users: users, query: q} = assigns, socket) do\n+   {:ok,\n+    socket\n+    |> assign(assigns)\n+    |> assign(:visible, Enum.filter(users, &String.contains?(&1.name, q)))}\n+ end\n+\n+ def handle_event(\"toggle\", _, socket) do\n+   {:noreply, assign(socket, :open?, not socket.assigns.open?)}\n+ end\n```\n\n**Gotcha:** `handle_event/3` inside a LiveComponent MUST NOT call\n`assign(socket, :some_prop, assigns.some_prop)` \u2014 props only enter through\n`update/2`. Break that rule and `send_update/3` from the parent will\nsilently overwrite your handler's work on the next render.\n\n---\n\n## Step 9: Auth \u2014 pipeline auth -> `on_mount` hooks + `live_session`\n\nController-pipeline auth doesn't run inside the LiveView process, so a\nLiveView can mount even after HTTP rejection. `on_mount` hooks run every\nmount (HTTP + WebSocket) and are the only safe place to enforce LiveView\nauth.\n\n```bash\nrg -nP 'live\\s+\"[^\"]+\",\\s+\\w+Live' lib/ | rg -v 'live_session'\nrg -n 'plug :require_authenticated_user' lib/\n```\n\n```diff\n- pipeline :authenticated do\n-   plug :require_authenticated_user\n- end\n- scope \"/\", MyAppWeb do\n-   pipe_through [:browser, :authenticated]\n-   live \"/posts/:id\", PostLive.Show\n- end\n+ scope \"/\", MyAppWeb do\n+   pipe_through :browser\n+   live_session :post_scoped,\n+     on_mount: [{MyAppWeb.UserAuth, :scope_post}] do\n+     live \"/posts/:id\", PostLive.Show\n+   end\n+ end\n\n+ def on_mount(:scope_post, %{\"id\" => id}, _session, socket) do\n+   user = socket.assigns.current_user\n+   case MyApp.Posts.fetch_for_user(id, user) do\n+     {:ok, post} -> {:cont, assign(socket, :post, post)}\n+     {:error, _} -> {:halt, socket |> put_flash(:error, \"Not found\") |> redirect(to: ~p\"/\")}\n+   end\n+ end\n```\n\n**Gotcha:** `on_mount` hooks pattern-match on `unsigned_params`. If the\nroute has `:id` but your hook pattern is `%{}`, Elixir still matches and\nruns silently for requests missing `:id`. Always pattern-match explicitly\non the keys you need and add a fallback clause that halts.\n\n---\n\n## Step 10: Tests \u2014 `Phoenix.LiveViewTest` updates\n\n```bash\nrg -nP 'live_isolated|Phoenix\\.ConnTest\\.dispatch' test/\n```\n\n```diff\n- {:ok, view, html} = live_isolated(conn, MyAppWeb.UsersLive, session: %{})\n+ {:ok, view, html} = live(conn, ~p\"/users\")\n\n+ view |> element(\"a\", \"Email\") |> render_click()\n+ assert_patched(view, ~p\"/users?sort=email\")\n\n+ html = render_component(&MyAppWeb.Components.badge/1, label: \"ok\", variant: \"success\")\n+ assert html =~ \"badge-success\"\n```\n\n**Gotcha:** `render(view)` won't show post-mount stream inserts \u2014 streams\nrender DOM-only on the client after mount, so server-side HTML won't contain\nthem. Use `render(view)` for first-paint assertions, `has_element?/3` for\npost-event state, and `render_async(view)` when waiting for a broadcast\nto land.\n\n---\n\n## Verification\n\nRun after every step, and absolutely before merging:\n\n1. **Compile clean.** `mix compile --warnings-as-errors`\n2. **Run the package validator.** `bash \"${CLAUDE_SKILL_DIR}/scripts/validate.sh\"`\n3. **Run tests twice** \u2014 once normally, once with `mix test --seed 0` to\n   catch order-dependent flakes.\n4. **Grep for legacy patterns one more time** (copy-paste from old branches\n   sneaks back):\n   ```bash\n   rg -nP '\\b(live_link|live_patch|live_redirect|push_redirect)\\b' lib/\n   rg -n 'Routes\\.\\w+_(path|url)' lib/\n   rg -nP '<%=\\s*(for|if)\\s+' lib/ -g '*.heex' -g '*.ex'\n   ```\n5. **Click through every migrated route in a browser** \u2014 verified routes\n   with dynamic params only surface at runtime.\n\nIf all five pass, ship. If any fail, fix and re-run before merging \u2014\npartial migration is the worst of both worlds because 1.6 and 1.7 patterns\ncompile side-by-side but behave subtly differently under load.\n",
@@ -884,7 +884,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: anti-patterns-catalog--iron-laws\ndescription: Explicit list of Phoenix 1.7+ LiveView anti-patterns to avoid.\n---\n\n# Iron-Law Catalog\n\n## Iron laws\n1. **NO DATABASE QUERIES IN MOUNT** \u2014 mount runs twice\n2. **Always connected?(socket) before PubSub.subscribe**\n3. **Always ~p, never Routes.*_path**\n4. **Always to_form for forms, never bare changesets**\n5. **Always stream/3 for lists >100 items**\n6. **Never use assign_new for values that need fresh computation on reconnect**\n7. **Never use live_link, live_patch, live_redirect \u2014 use <.link> and push_navigate/push_patch**\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -916,7 +916,7 @@
       "pareto_objectives": {
         "quality": 0.9133
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: anti-patterns-catalog--detector-rules\ndescription: Phoenix 1.7+ LiveView anti-patterns with mechanical detectors \u2014 grep patterns, AST probes, and Credo checks so reviewers can find violations automatically in any codebase.\n---\n\n# Detector-Rule Catalog\n\n## Quick Start\nEvery anti-pattern below ships with a detector: a grep, AST probe, or Credo check you can run against a codebase. Run the detectors top-to-bottom; each hit is a review finding.\n\n## Anti-patterns and detectors\n\n1. **DB queries in mount/3** \u2014 mount runs twice; duplicate queries on every page load.\n   - Grep: `rg -n 'def mount' -A 20 lib/**/*_live.ex | rg -B1 'Repo\\.(all|one|get|preload)'`\n   - Fix: wrap in `if connected?(socket), do: load(), else: assign(socket, :items, [])`.\n\n2. **PubSub.subscribe without connected?** \u2014 subscribes twice, leaks processes.\n   - Grep: `rg -nP 'Phoenix\\.PubSub\\.subscribe' lib/ | rg -v 'connected\\?'`\n   - Credo: custom `Credo.Check.Warning.UnguardedPubSubSubscribe`.\n\n3. **Routes.*_path / Routes.*_url leftovers** \u2014 pre-1.7 helpers; verified routes are mandatory.\n   - Grep: `rg -n 'Routes\\.\\w+_(path|url)' lib/ test/`\n   - Rewrite: `Routes.user_path(@socket, :show, id)` -> `~p\"/users/#{id}\"`.\n\n4. **Bare %Changeset{} passed to <.form>** \u2014 skips `to_form/2`.\n   - Grep: `rg -nP '<\\.form [^>]*for=\\{@(?!.*to_form)' lib/`\n\n5. **Enum over assigns for lists > 100 items** \u2014 should be `stream/3`.\n   - Heuristic: context function name starts with `list_` and HEEx uses `:for={item <- @items}`.\n\n6. **assign_new for values needing fresh compute** \u2014 stale after reconnect.\n   - Grep: `rg -nP 'assign_new.*fn ->' lib/ -A 3 | rg -B1 '(Repo|utc_now)'`\n\n7. **Legacy navigation helpers** \u2014 `live_link`, `live_patch`, `live_redirect` removed in 1.7.\n   - Grep: `rg -nP '\\b(live_link|live_patch|live_redirect)\\b' lib/`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -946,7 +946,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: architectural-stance--strict-liveview\ndescription: Enforces a strict LiveView architecture: LiveView modules own state, function components are stateless, context modules handle DB. NO DB queries in mount. Use when writing or refactoring Phoenix 1.7+ LiveView code. NOT for Phoenix 1.6 or older.\n---\n\n# Strict LiveView\n\n## Quick Start\nLiveView owns state. Function components render. Context handles DB. No DB in mount.\n\n## When to use\n- Writing a new LiveView module\n- Refactoring a 1.6 LiveView to 1.7\n- Reviewing PRs for Phoenix architecture\n\n## Workflow\n1. Use `Phoenix.LiveView` for the top-level module\n2. Move all DB queries into a context module, called from `handle_params` or `handle_event`\n3. Guard side-effectful work with `if connected?(socket), do: ...`\n4. Use `to_form/2` for forms, never raw changesets\n\n## Common mistakes\n- `Repo.all` in mount (runs twice: disconnected + connected)\n- PubSub.subscribe without `connected?` guard\n- Using `assign_new` for things that must be freshly computed\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -978,7 +978,7 @@
       "pareto_objectives": {
         "quality": 0.7036
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: architectural-stance--component-forward\ndescription: Component-forward Phoenix 1.7+ LiveView: push stateful UI into LiveComponents, keep the parent LiveView a thin coordinator that routes messages and owns URL state. Use for new LiveView modules, refactors, or PR review. NOT for Phoenix 1.6.\n---\n\n# Component-Forward LiveView\n\n## Quick Start\nParent LiveView is a thin coordinator. Anything stateful lives in a `Phoenix.LiveComponent`. Parent owns URL + session, children own their own slice of state and talk up via `send/2` or `send_update/2`.\n\n## When to use\n- Writing a new Phoenix 1.7+ LiveView with more than one interactive region\n- Refactoring a bloated LiveView whose `handle_event` clauses exceed ~10 cases\n- Reviewing PRs where a single LiveView mutates many unrelated assigns\n\n## Workflow\n1. Start the parent `Phoenix.LiveView` with only URL/session state in `mount/3` and `handle_params/3`. No feature assigns here.\n2. For each distinct interactive region (form, list, filter, modal), create a `Phoenix.LiveComponent` module under `lib/my_app_web/live/components/`.\n3. Give every LiveComponent a required `:id` assign. Render children via `<.live_component module={...} id=\"...\" ... />` \u2014 never inline stateful logic in the parent template.\n4. Handle user events inside the LiveComponent's own `handle_event/3`. Mutate only that component's socket.\n5. When a child must notify siblings or the parent, use `send(self(), {:child_msg, payload})` and handle it in the parent's `handle_info/2`. For targeted child updates, use `send_update/2` with the target component's `id`.\n6. Keep all DB work in context modules. Call contexts from the LiveComponent that owns the data, not from the parent.\n7. Use `to_form/2` inside the component that owns the form; never lift changesets to the parent.\n\n## Common mistakes\n- Hoisting a child's assigns into the parent \"just in case\" \u2014 defeats isolation and forces parent re-renders on every child change\n- Omitting `:id` on a LiveComponent (it silently becomes stateless and loses its own assigns between renders)\n- Calling `send_update/2` without specifying the component module, or targeting by index instead of a stable `id`\n- Mutating child state from the parent via `assign/3` on the parent socket \u2014 parents cannot reach into children; use `send_update/2`\n- Putting `Repo` calls directly in `handle_event/3` of either parent or component instead of routing through a context function\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1008,7 +1008,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: auth-and-authz--on-mount-hook\ndescription: LiveView authentication via on_mount, authorization via per-handle_event checks.\n---\n\n# on_mount Hook + Per-Event Authz\n\n## Workflow\n1. Define `on_mount :current_user` hook\n2. Use `live_session :authenticated, on_mount: [{MyAppWeb.UserAuth, :ensure_authenticated}]` in router\n3. In handle_event, check ownership: `if socket.assigns.current_user.id == post.user_id, do: ..., else: {:noreply, put_flash(socket, :error, \"unauthorized\")}`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1040,7 +1040,7 @@
       "pareto_objectives": {
         "quality": 0.9543
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: auth-and-authz--resource-scope-mount\ndescription: LiveView authentication AND per-resource authorization in a single on_mount hook \u2014 halt+redirect before mount finishes, so handle_event bodies never repeat authorization checks.\n---\n\n# Resource-Scoped on_mount Authz\n\n## Quick Start\nA single `on_mount` hook authenticates the user AND authorizes access to the specific resource identified by `params[\"id\"]`. If either fails, `{:halt, socket |> put_flash(...) |> redirect(...)}` runs before the LiveView ever mounts. `handle_event` bodies contain zero auth logic.\n\n## Workflow\n1. Define a two-purpose hook in `MyAppWeb.UserAuth` that authenticates AND fetches the resource scoped to the user.\n2. Context owns the authz decision \u2014 `Posts.fetch_for_user/2` returns `{:ok, post}` only when the user owns it (or is admin).\n3. Wire the hook per-route in the router via `live_session :post_scoped, on_mount: [{MyAppWeb.UserAuth, :scope_post}]`.\n4. `mount/3` trusts `socket.assigns.post` \u2014 no re-fetch, no re-check. Pass it down to LiveComponents as a prop.\n5. `handle_event/3` clauses operate on `socket.assigns.post` directly. No `if current_user.id == post.user_id` checks.\n6. For mutations, the context still takes `user` as a defense-in-depth arg (`Posts.update_post(post, attrs, user)`).\n\n## Common mistakes\n- Re-fetching the post in `mount/3` after the hook already assigned it.\n- Putting the hook on a `live_session` that mixes scoped and unscoped routes.\n- Forgetting to handle the `params[\"id\"]` missing case.\n- Returning `{:cont, socket}` on authz failure instead of `{:halt, ...}`.\n- Letting LiveComponents re-fetch the resource by id from their own assigns.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1070,7 +1070,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: event-handlers-and-handle-info--clear-separation\ndescription: Separates user events (handle_event) from external messages (handle_info).\n---\n\n# Clear Separation Of Concerns\n\n## Workflow\n1. `handle_event/3` for phx-* bindings (click, submit, change, focus)\n2. `handle_info/2` for PubSub broadcasts and GenServer messages\n3. Never mix \u2014 don't send yourself a phx-event\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1102,7 +1102,7 @@
       "pareto_objectives": {
         "quality": 1.0
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: event-handlers-and-handle-info--event-to-action-funnel\ndescription: Funnel handle_event clauses into tiny dispatchers that call a private handle_action/2 with a typed intent struct. Makes the event-to-state-change path unit-testable without a LiveView harness.\n---\n\n# Event-to-Action Funnel\n\n## Quick Start\nEvery `handle_event/3` clause is three lines: parse params into an `%Action{}` struct, call `handle_action(action, socket)`, return the result. All state-change logic lives in `handle_action/2`, a pure function you can test with plain ExUnit.\n\n## Workflow\n1. Define an `%Action{}` struct at the top of the module: `defstruct [:type, :payload]`.\n2. Write one `handle_event/3` clause per `phx-*` binding. Its only job: coerce params into an `%Action{}`.\n3. Call `handle_action(action, socket)` and return its result directly. No business logic in `handle_event`.\n4. Implement `handle_action/2` as a private function that pattern-matches on `action.type` and returns `{:noreply, socket}`.\n5. `handle_info/2` clauses that mutate state also go through `handle_action/2` \u2014 convert the message into an `%Action{}` first.\n6. Unit-test `handle_action/2` directly with a built socket; no LiveViewTest needed for the core logic.\n7. Keep `handle_action/2` under 10 clauses per component \u2014 beyond that, split.\n\n## Common mistakes\n- Putting `Repo.insert` or `Ecto.Changeset` logic inside `handle_event`.\n- Letting `%Action{}` carry raw `params` maps \u2014 coerce to typed fields.\n- Skipping the funnel for \"simple\" events \u2014 inconsistency destroys testability.\n- Forgetting to route `handle_info` state changes through `handle_action/2`.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1132,7 +1132,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: form-handling--to-form-canonical\ndescription: Canonical Phoenix 1.7+ form cycle: to_form, <.form>, <.input>, phx-change validate.\n---\n\n# to_form Canonical\n\n## Quick Start\n`to_form/2` wraps a changeset. `<.form for={@form}>` renders. `phx-change=\"validate\"` re-runs validation.\n\n## Workflow\n1. `assign(socket, :form, to_form(changeset))`\n2. `<.form for={@form} phx-change=\"validate\" phx-submit=\"save\">`\n3. `handle_event(\"validate\", %{\"thing\" => params}, socket)` re-builds changeset and re-assigns\n4. Use `<.input field={@form[:name]} />` for fields\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1164,7 +1164,7 @@
       "pareto_objectives": {
         "quality": 0.9255
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: form-handling--nested-assoc-forms\ndescription: Nested Phoenix forms via to_form + cast_assoc and <.inputs_for>. Handles has_many associations with add/remove via :sort_param and :drop_param for dynamic child rows.\n---\n\n# Nested Association Forms\n\n## Quick Start\n`cast_assoc(:children)` in the parent changeset unlocks `<.inputs_for field={@form[:children]}>`. Each child renders its own fields; add/remove rows by toggling `:sort_param` and `:drop_param` on the cast_assoc opts \u2014 no manual index juggling.\n\n## Workflow\n1. In the schema, declare `has_many :children, Child, on_replace: :delete`.\n2. In the changeset, call `cast_assoc(:children, with: &Child.changeset/2, sort_param: :children_sort, drop_param: :children_drop)`.\n3. In the LiveComponent that owns the parent form, assign normally: `assign(socket, :form, to_form(Parents.change_parent(parent)))`.\n4. Render the parent form and iterate children with `<.inputs_for :let={cf} field={@form[:children]}>`.\n5. Add a child with a button posting `parent[children_sort][]=new`.\n6. Remove a child with `parent[children_drop][]=<index>` plus a hidden input inside the row.\n7. On `handle_event(\"validate\", ...)`, rebuild the changeset with `to_form(changeset, action: :validate)`.\n8. On `handle_event(\"save\", ...)`, call `Parents.update_parent/2`; on `{:error, changeset}`, re-assign `to_form(changeset)`.\n\n## Common mistakes\n- Forgetting `on_replace: :delete` on the `has_many` \u2014 removed rows reappear.\n- Using `inputs_for` without a matching hidden `sort_param` input \u2014 row order scrambles.\n- Rebuilding children manually in `handle_event` instead of letting `cast_assoc` + `:drop_param` do it.\n- Putting the nested form in the parent LiveView instead of the owning LiveComponent.\n- Calling `to_form/2` on the child changeset directly.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1194,7 +1194,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: function-components-and-slots--well-typed\ndescription: Phoenix 1.7+ function components with attr/slot declarations.\n---\n\n# Well-Typed Function Components\n\n## Quick Start\n`attr :name, :string, required: true` declares component inputs. `slot :inner_block` declares children.\n\n## Workflow\n1. Define `attr` for every input\n2. Define `slot` for named slots and `inner_block`\n3. Render via `<%= render_slot(@inner_block) %>`\n\n## Common mistakes\n- Missing attr declarations (no type safety)\n- Stateful logic in function components (should be LiveComponent)\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1226,7 +1226,7 @@
       "pareto_objectives": {
         "quality": 1.0
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: function-components-and-slots--pure-stateless-layer\ndescription: Pure function components \u2014 no assigns, no case, no Ecto. Every attr/slot declared; all logic lives in parent LiveView. Rendering-only layer.\n---\n\n# Pure Stateless Rendering Layer\n\n## Quick Start\nFunction components are rendering primitives, not logic holders. `attr :user, User, required: true` in; HEEx out. If you need `case`, a query, or branching business rules, pull it up into the parent LiveView or a context module and pass the result down as a pre-computed attr.\n\n## Workflow\n1. Declare every input with `attr :name, :type, required: true` \u2014 no untyped assigns allowed.\n2. Declare every child region with `slot :inner_block` or named `slot :actions`.\n3. Keep the body to HEEx + `render_slot/1` + `~H` interpolation. No `case`, no business branching.\n4. If a decision is needed (e.g. badge color for a status), compute it in the parent LiveView's `assign/3` and pass the resolved value as an attr.\n5. Co-locate these components under `MyAppWeb.CoreComponents` or a feature-scoped `*Components` module.\n6. Test them with `Phoenix.LiveViewTest.render_component/2` passing literal attrs.\n\n## Common mistakes\n- Calling `Repo.get/2` or context functions inside a function component.\n- Using `case @status do ... end` for class selection \u2014 precompute in the parent.\n- Accepting a raw `%Ecto.Changeset{}` and branching on `changeset.valid?`.\n- Adding `@socket` or `assign/3` calls \u2014 function components have no socket.\n- Omitting `attr` declarations \"just for this one prop\".\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1256,7 +1256,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: heex-and-verified-routes--idiomatic\ndescription: Phoenix 1.7+ HEEx idioms. Uses ~p sigil, :if, :for, <.link>. NOT for 1.6.\n---\n\n# Idiomatic HEEx + Verified Routes\n\n## Quick Start\n`~p\"/users/#{id}\"` replaces `Routes.user_path(@socket, :show, id)`. `:for={x <- @xs}` replaces `<%= for x <- @xs do %>`.\n\n## Workflow\n1. Use `~p` for every route\n2. Use `:if=` and `:for=` directives in HEEx\n3. Use `<.link navigate={~p\"/users\"}>` instead of `live_link`\n4. Use `~H\"\"\"` sigil for templates\n\n## Common mistakes\n- Mixing old helpers (`Routes.*`) with new (`~p`)\n- Using `<%= for %>` instead of `:for`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1288,7 +1288,7 @@
       "pareto_objectives": {
         "quality": 1.0
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: heex-and-verified-routes--idiomatic\ndescription: Phoenix 1.7+ HEEx idioms. Uses ~p sigil, :if, :for, <.link>. NOT for 1.6.\n---\n\n# Idiomatic HEEx + Verified Routes\n\n## Quick Start\n`~p\"/users/#{id}\"` replaces `Routes.user_path(@socket, :show, id)`. `:for={x <- @xs}` replaces `<%= for x <- @xs do %>`.\n\n## Workflow\n1. Use `~p` for every route\n2. Use `:if=` and `:for=` directives in HEEx\n3. Use `<.link navigate={~p\"/users\"}>` instead of `live_link`\n4. Use `~H\"\"\"` sigil for templates\n\n## Common mistakes\n- Mixing old helpers (`Routes.*`) with new (`~p`)\n- Using `<%= for %>` instead of `:for`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1318,7 +1318,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: live-components-stateful--isolated\ndescription: Stateful LiveComponent with own lifecycle and event handling.\n---\n\n# Isolated LiveComponent\n\n## Quick Start\n`use Phoenix.LiveComponent` for stateful children. They get their own `handle_event` and `update/2`.\n\n## Workflow\n1. `use Phoenix.LiveComponent`\n2. Implement `update/2` for prop changes\n3. Implement `handle_event/3` for component-local events\n4. Use `send_update/3` to trigger from parent\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1350,7 +1350,7 @@
       "pareto_objectives": {
         "quality": 0.9594
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: live-components-stateful--update-discipline\ndescription: Phoenix LiveComponent with strict update/2 discipline \u2014 the ONLY place props become assigns. Use when building stateful LiveComponents that receive props from a parent LiveView and need clean prop-vs-state separation.\n---\n\n# Update-Discipline LiveComponent\n\n## Quick Start\nIn a `Phoenix.LiveComponent`, treat `update/2` as the single choke point where external props (`assigns` passed from the parent) are mirrored into socket assigns. Component-local state is derived inside `update/2`, never assigned elsewhere from parent data.\n\n## Workflow\n1. `use Phoenix.LiveComponent` and require `:id` in the parent's `<.live_component />` call.\n2. Implement `update(assigns, socket)` as the ONLY function that calls `assign(socket, :prop, assigns.prop)` for parent-supplied values.\n3. Inside `update/2`, derive any dependent local state and assign it in the same pass.\n4. In `handle_event/3`, only mutate component-owned UI state (`:open?`, `:selected_id`). Never re-read props there.\n5. When the parent needs to push a change mid-lifecycle, use `send_update(MyComponent, id: \"x\", prop: new_value)`.\n6. For child-to-parent signaling, `send(self(), {:child_event, @myself, payload})` and the parent routes via `handle_info/2`.\n\n## Common mistakes\n- Calling `assign(socket, :prop, assigns.prop)` inside `handle_event/3` \u2014 props belong in `update/2` only.\n- Forgetting `:id` on the parent's `<.live_component />` \u2014 stateful components REQUIRE it.\n- Deriving filtered/sorted data in the template instead of `update/2`.\n- Using `send_update/3` with partial assigns and expecting old props to persist.\n- Mutating parent state by reaching \"up\" through assigns.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1380,7 +1380,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: mount-and-lifecycle--no-db-in-mount\ndescription: Enforces the NO DATABASE QUERIES IN MOUNT iron law.\n---\n\n# No DB In Mount\n\n## Quick Start\nmount/3 runs TWICE (disconnected HTTP + connected WebSocket). Putting a Repo call in mount doubles your DB load.\n\n## Workflow\n1. Put DB queries in `handle_params/3` (runs once per URL change)\n2. For unconditional loads, guard with `if connected?(socket), do: ...`\n3. Use `handle_info(:load_data, socket)` + `send(self(), :load_data)` if needed\n\n## Common mistakes\n- `def mount(_params, _session, socket), do: {:ok, assign(socket, :users, Repo.all(User))}`\n- Using `assign_new` to \"dedupe\" instead of using `handle_params`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1412,7 +1412,7 @@
       "pareto_objectives": {
         "quality": 1.0
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: mount-and-lifecycle--async-load\ndescription: LiveView mount lifecycle that uses assign_async for initial data loads. mount/3 starts async tasks and renders a loading state; handle_params/3 triggers reloads. Use when LiveView needs fast first paint without blocking on DB.\n---\n\n# Async Load In Mount\n\n## Quick Start\n`assign_async/3` (Phoenix 1.7+) kicks off a Task during `mount/3`, renders a loading skeleton immediately, then reconciles when the task finishes. First paint is instant; the DB query happens off the LiveView process.\n\n## Workflow\n1. In `mount/3`, return `{:ok, assign_async(socket, :users, fn -> {:ok, %{users: Accounts.list_users()}} end)}`.\n2. In the template, branch on `@users.loading`, `@users.ok?`, and `@users.result` \u2014 render a skeleton while loading, render data when ok?\n3. In `handle_params/3`, re-run `assign_async(socket, :users, fn -> ... end)` when URL params change.\n4. Wrap the function body in a try/rescue or return `{:error, reason}` from the async fun so the template can show an error state via `@users.failed`.\n5. For multiple independent loads, call `assign_async` once per key.\n\n## Common mistakes\n- Synchronously calling `Repo.all/1` directly in mount, outside the async fun.\n- Forgetting to handle `@users.loading` in the template.\n- Using `assign_async` for cheap in-memory assigns.\n- Closing over the whole `socket` inside the async fun.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1442,7 +1442,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: navigation-patterns--push-navigate-and-link\ndescription: Phoenix 1.7+ navigation: push_navigate, push_patch, <.link>.\n---\n\n# push_navigate And <.link>\n\n## Workflow\n1. Cross-LiveView navigation: `push_navigate(socket, to: ~p\"/...\")`\n2. Same-LiveView URL update: `push_patch(socket, to: ~p\"/...\")`\n3. Template links: `<.link navigate={~p\"/users/#{user}\"}>...</.link>`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1474,7 +1474,7 @@
       "pareto_objectives": {
         "quality": 1.0
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: navigation-patterns--push-navigate-and-link\ndescription: Phoenix 1.7+ navigation: push_navigate, push_patch, <.link>.\n---\n\n# push_navigate And <.link>\n\n## Workflow\n1. Cross-LiveView navigation: `push_navigate(socket, to: ~p\"/...\")`\n2. Same-LiveView URL update: `push_patch(socket, to: ~p\"/...\")`\n3. Template links: `<.link navigate={~p\"/users/#{user}\"}>...</.link>`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1504,7 +1504,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: pubsub-and-realtime--connected-guard\ndescription: PubSub subscribe guarded by connected?(socket).\n---\n\n# Connected-Guarded Subscribe\n\n## Quick Start\nSubscribe during disconnected mount wastes subscriptions. Always guard with `connected?`.\n\n## Workflow\n1. `if connected?(socket), do: Phoenix.PubSub.subscribe(MyApp.PubSub, \"user:#{id}\")`\n2. `def handle_info({:new_message, msg}, socket), do: {:noreply, stream_insert(socket, :messages, msg)}`\n3. Broadcast via `Phoenix.PubSub.broadcast(MyApp.PubSub, topic, {:new_message, msg})`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1536,7 +1536,7 @@
       "pareto_objectives": {
         "quality": 0.9061
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: pubsub-and-realtime--context-owns-broadcast\ndescription: Elixir Phoenix pubsub/realtime pattern \u2014 Ecto context owns all Phoenix.PubSub.broadcast calls; LiveView only subscribes. Writes and broadcasts stay co-located so every mutation path fans out identically.\n---\n\n# Context-Owned Broadcast\n\n## Quick Start\nThe Ecto context is the single source of broadcast events. Schema writes and `Phoenix.PubSub.broadcast` live side-by-side in one function so every caller (LiveView, Oban job, controller) fans out identically. LiveView only subscribes and handles.\n\n## Workflow\n1. In `MyApp.Chat` context, define a private `broadcast/2` helper that fans out `{:ok, result}` tuples.\n2. Pipe every write through it: `create_message/1`, `update_message/2`, `delete_message/1`.\n3. In the parent LiveView `mount/3`: `if connected?(socket), do: Phoenix.PubSub.subscribe(MyApp.PubSub, \"room:#{room_id}\")`.\n4. Handle events in the parent: `def handle_info({:message_created, msg}, socket), do: {:noreply, stream_insert(socket, :messages, msg)}`.\n5. Route into LiveComponents via `send_update/2` when a child owns that slice.\n6. Callers in Oban workers or controllers use the same context function \u2014 no duplicated broadcast logic.\n\n## Common mistakes\n- Calling `Phoenix.PubSub.broadcast` directly from `handle_event/3`.\n- Broadcasting before `Repo.insert` succeeds \u2014 always pipe the `{:ok, _}` tuple through the helper.\n- Making `broadcast/2` public \u2014 keep it `defp`.\n- Forgetting the `{:error, _}` clause on the helper.\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1566,7 +1566,7 @@
       "mutations": [],
       "parent_ids": [],
       "pareto_objectives": {},
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: streams-and-collections--stream-first\ndescription: Uses Phoenix.LiveView.stream/3 for large collections.\n---\n\n# Stream-First for Large Collections\n\n## Quick Start\n`stream(socket, :messages, list)` replaces `assign(socket, :messages, list)` for collections >100 items.\n\n## Workflow\n1. `stream(socket, :messages, initial_list)`\n2. Template: `<div :for={{id, msg} <- @streams.messages} id={id}>...</div>`\n3. Add: `stream_insert(socket, :messages, new_msg)`\n4. Remove: `stream_delete(socket, :messages, msg)`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1598,7 +1598,7 @@
       "pareto_objectives": {
         "quality": 0.9266
       },
-      "run_id": "elixir-phoenix-liveview-mock-v1",
+      "run_id": "elixir-phoenix-liveview-seed-v1",
       "skill_md_content": "---\nname: streams-and-collections--stream-first\ndescription: Uses Phoenix.LiveView.stream/3 for large collections.\n---\n\n# Stream-First for Large Collections\n\n## Quick Start\n`stream(socket, :messages, list)` replaces `assign(socket, :messages, list)` for collections >100 items.\n\n## Workflow\n1. `stream(socket, :messages, initial_list)`\n2. Template: `<div :for={{id, msg} <- @streams.messages} id={id}>...</div>`\n3. Add: `stream_insert(socket, :messages, new_msg)`\n4. Remove: `stream_delete(socket, :messages, msg)`\n",
       "supporting_files": {},
       "trait_attribution": {},
@@ -1650,7 +1650,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_anti_patterns_catalog",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1665,7 +1665,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_architectural_stance",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "foundation",
@@ -1680,7 +1680,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_auth_and_authz",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1695,7 +1695,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_event_handlers_and_handle_info",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1710,7 +1710,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_form_handling",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1725,7 +1725,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_function_components_and_slots",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1740,7 +1740,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_heex_and_verified_routes",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1755,7 +1755,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_live_components_stateful",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1770,7 +1770,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_mount_and_lifecycle",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1785,7 +1785,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_navigation_patterns",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1800,7 +1800,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_pubsub_and_realtime",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",
@@ -1815,7 +1815,7 @@
       "foundation_genome_id": null,
       "id": "vevo_elixir_phoenix_liveview_streams_and_collections",
       "num_generations": 1,
-      "parent_run_id": "elixir-phoenix-liveview-mock-v1",
+      "parent_run_id": "elixir-phoenix-liveview-seed-v1",
       "population_size": 2,
       "status": "complete",
       "tier": "capability",

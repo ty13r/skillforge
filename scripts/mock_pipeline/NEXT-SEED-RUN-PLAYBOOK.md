@@ -59,8 +59,9 @@ uv run python scripts/mock_pipeline/seed_family.py \
 ```
 
 This loads the gen-0 seed variants from `seed.json` as `meta_strategy="gen0_seed"`
-SkillGenome rows under `run_id = <slug>-seed-v1` (phoenix-liveview is the only
-exception, frozen at `-mock-v1`).
+SkillGenome rows under `run_id = <slug>-seed-v1`. Every family uses the
+`-seed-v1` suffix uniformly — phoenix-liveview was renamed from its pre-
+rebrand `-mock-v1` id via `mock_run_loader.LEGACY_RUN_RENAMES`.
 
 ### Phase 2 — Create the run + 12 VariantEvolution rows
 

@@ -72,10 +72,9 @@ def _vevo_id(family_slug: str, dimension: str) -> str:
 
 
 def _run_id(family_slug: str) -> str:
-    # Phoenix-liveview shipped as `-mock-v1` before the rebrand and is frozen
-    # at that ID for DB continuity. Every new family uses the `-seed-v1` suffix.
-    if family_slug == "elixir-phoenix-liveview":
-        return f"{family_slug}-mock-v1"
+    # Every seed-pipeline run uses the `-seed-v1` suffix. Phoenix-liveview
+    # was renamed from `-mock-v1` via a loader-level legacy cleanup step
+    # (see skillforge/seeds/mock_run_loader.py::LEGACY_RUN_RENAMES).
     return f"{family_slug}-seed-v1"
 
 

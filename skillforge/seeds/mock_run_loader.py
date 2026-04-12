@@ -47,6 +47,16 @@ logger = logging.getLogger(__name__)
 
 SEED_RUNS_DIR = Path(__file__).parent / "seed_runs"
 
+# Legacy run IDs that should be deleted before loading the seed JSON.
+# Keyed by the NEW run id (what's in the current seed JSON); value is the
+# legacy id shipped in earlier versions. On boot, if the legacy row still
+# exists in the DB (e.g. Railway persistent volume survived the rebrand),
+# it is removed along with every row that FKs to it so the Registry shows
+# the single, rebranded run instead of a stale pair.
+LEGACY_RUN_RENAMES: dict[str, str] = {
+    "elixir-phoenix-liveview-seed-v1": "elixir-phoenix-liveview-mock-v1",
+}
+
 
 def _content_hash(document: dict) -> str:
     """Stable hash over the seed run JSON content."""
@@ -215,6 +225,89 @@ async def _patch_best_skill_id(run_id: str, best_skill_id: str) -> None:
         await conn.commit()
 
 
+async def _delete_legacy_run(legacy_run_id: str) -> bool:
+    """Delete a legacy evolution_runs row + everything that FKs to it.
+
+    Called on boot when a seed JSON's run_id has been rebranded (e.g.
+    ``elixir-phoenix-liveview-mock-v1`` → ``elixir-phoenix-liveview-seed-v1``)
+    and the legacy row is still sitting in the DB from an earlier deploy.
+
+    Returns True if a legacy row was found and deleted, False if no-op.
+    """
+    async with aiosqlite.connect(DB_PATH) as conn:
+        async with conn.execute(
+            "SELECT 1 FROM evolution_runs WHERE id = ?", (legacy_run_id,)
+        ) as cur:
+            row = await cur.fetchone()
+        if row is None:
+            return False
+
+        # Collect the variant IDs we need to null out of variant_evolutions
+        # before deleting — variant_evolutions.winner_variant_id has an FK
+        # constraint that blocks straight-up variant deletion otherwise.
+        async with conn.execute(
+            "SELECT id FROM variants WHERE id IN "
+            "(SELECT variant_id FROM skill_genomes WHERE run_id = ?)",
+            (legacy_run_id,),
+        ) as cur:
+            variant_rows = await cur.fetchall()
+        variant_ids = [r[0] for r in variant_rows]
+
+        # Also collect variants linked via variant_evolutions.parent_run_id.
+        async with conn.execute(
+            "SELECT winner_variant_id FROM variant_evolutions "
+            "WHERE parent_run_id = ? AND winner_variant_id IS NOT NULL",
+            (legacy_run_id,),
+        ) as cur:
+            vevo_winner_rows = await cur.fetchall()
+        variant_ids.extend(r[0] for r in vevo_winner_rows)
+
+        await conn.execute("PRAGMA foreign_keys = OFF")
+        try:
+            # Null out FK links so child deletes don't cascade unpredictably.
+            await conn.execute(
+                "UPDATE variant_evolutions SET winner_variant_id = NULL "
+                "WHERE parent_run_id = ?",
+                (legacy_run_id,),
+            )
+            # Delete in dependency order.
+            await conn.execute(
+                "DELETE FROM competition_results WHERE run_id = ?",
+                (legacy_run_id,),
+            )
+            await conn.execute(
+                "DELETE FROM run_events WHERE run_id = ?",
+                (legacy_run_id,),
+            )
+            if variant_ids:
+                placeholders = ",".join(["?"] * len(variant_ids))
+                await conn.execute(
+                    f"DELETE FROM variants WHERE id IN ({placeholders})",
+                    variant_ids,
+                )
+            await conn.execute(
+                "DELETE FROM variant_evolutions WHERE parent_run_id = ?",
+                (legacy_run_id,),
+            )
+            await conn.execute(
+                "DELETE FROM challenges WHERE run_id = ?",
+                (legacy_run_id,),
+            )
+            await conn.execute(
+                "DELETE FROM skill_genomes WHERE run_id = ?",
+                (legacy_run_id,),
+            )
+            await conn.execute(
+                "DELETE FROM evolution_runs WHERE id = ?",
+                (legacy_run_id,),
+            )
+            await conn.commit()
+        finally:
+            await conn.execute("PRAGMA foreign_keys = ON")
+    logger.info("seed_run_loader: deleted legacy run %s", legacy_run_id)
+    return True
+
+
 async def _load_one(path: Path) -> None:
     try:
         document = json.loads(path.read_text())
@@ -230,6 +323,13 @@ async def _load_one(path: Path) -> None:
     run_id = runs[0]["id"]
     content_hash = _content_hash(document)
     marker = _hash_marker(content_hash)
+
+    # Legacy cleanup: if this run_id was renamed from an older id (e.g. the
+    # phoenix-liveview mock → seed rebrand), delete the legacy row + all its
+    # FK children so the Registry shows only the current id.
+    legacy_id = LEGACY_RUN_RENAMES.get(run_id)
+    if legacy_id:
+        await _delete_legacy_run(legacy_id)
 
     existing = await get_run(run_id)
     if existing is not None and marker in existing.specialization:
@@ -305,7 +405,14 @@ async def _load_one(path: Path) -> None:
     if run.best_skill is not None:
         best_skill_id = run.best_skill.id
 
-    # 5. Variant evolutions — variants.evolution_id FKs here, so vevos first.
+    # 5. Challenges — saved BEFORE vevos because variant_evolutions.challenge_id
+    # FKs into challenges(id). Earlier seed runs shipped with NULL challenge_ids
+    # so this ordering didn't matter; the phoenix-liveview rebrand tripped the
+    # FK constraint because backfill_vevo_challenge_ids.py populated the field.
+    for ch_dict in document.get("challenges", []):
+        await _save_challenge_raw(ch_dict, run_id)
+
+    # 6. Variant evolutions — variants.evolution_id FKs here, so vevos first.
     # Save vevos with winner_variant_id=NULL so the variant's FK to vevo
     # resolves; we'll re-save vevos after variants to set winner_variant_id.
     # Translate family_id through family_id_map.
@@ -322,19 +429,15 @@ async def _load_one(path: Path) -> None:
         vevo_stub.winner_variant_id = None
         await save_variant_evolution(vevo_stub)
 
-    # 6. Variants — FK to skill_genomes + variant_evolutions + skill_families.
+    # 7. Variants — FK to skill_genomes + variant_evolutions + skill_families.
     for var_dict in document.get("variants", []):
         variant = Variant.from_dict(_translate_family(var_dict))
         await save_variant(variant)
 
-    # 6b. Re-save vevos with their winner_variant_id now that variants exist.
+    # 7b. Re-save vevos with their winner_variant_id now that variants exist.
     for vevo_dict in translated_vevos:
         vevo = VariantEvolution.from_dict(vevo_dict)
         await save_variant_evolution(vevo)
-
-    # 7. Challenges.
-    for ch_dict in document.get("challenges", []):
-        await _save_challenge_raw(ch_dict, run_id)
 
     # 8. Patch best_skill_id now that the genome row exists.
     if best_skill_id is not None:
