@@ -24,7 +24,7 @@ from pathlib import Path
 
 import aiosqlite
 
-from skillforge.config import DB_PATH
+from skillforge.config import DATA_DIR, DB_PATH
 from skillforge.db.queries import (
     get_family,
     get_family_by_slug,
@@ -308,6 +308,28 @@ async def _delete_legacy_run(legacy_run_id: str) -> bool:
     return True
 
 
+def _invalidate_report_cache(run_id: str) -> None:
+    """Delete any cached report files for ``run_id`` so the next API hit
+    triggers a fresh ``generate_run_report`` call against the newly-loaded
+    DB state. No-op if the files are already absent. Fail-soft on any OS
+    error (report regeneration is lazy, so a bad delete just means the
+    stale cache stays a little longer).
+    """
+    reports_dir = DATA_DIR / "reports"
+    for suffix in (".json", ".md"):
+        path = reports_dir / f"{run_id}{suffix}"
+        try:
+            if path.exists():
+                path.unlink()
+                logger.info(
+                    "seed_run_loader: invalidated cached report %s", path.name
+                )
+        except OSError as e:  # pragma: no cover - defensive
+            logger.warning(
+                "seed_run_loader: failed to invalidate %s: %s", path.name, e
+            )
+
+
 async def _load_one(path: Path) -> None:
     try:
         document = json.loads(path.read_text())
@@ -442,6 +464,15 @@ async def _load_one(path: Path) -> None:
     # 8. Patch best_skill_id now that the genome row exists.
     if best_skill_id is not None:
         await _patch_best_skill_id(run_id, best_skill_id)
+
+    # 9. Invalidate the cached post-run report on disk. The FastAPI route
+    # ``/api/runs/{id}/report`` reads from ``data/reports/{run_id}.json``
+    # first and only lazy-generates if the file is missing. On Railway the
+    # ``data/`` dir lives on a persistent volume, so a cached report from a
+    # prior boot (with stale learning_log content, machine-entry leaks, or
+    # out-of-date summary counts) can survive across deploys and mask fixes.
+    # Deleting the cache here forces regeneration on the next API hit.
+    _invalidate_report_cache(run_id)
 
     logger.info(
         "seed_run_loader: loaded %s → run_id=%s (%d genomes, %d variants, %d vevos, %d challenges)",
