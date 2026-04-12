@@ -9,7 +9,8 @@ An evolutionary breeding platform for Claude Agent Skills. Decomposes skills int
 - **v1.x** (shipped): Monolithic skill evolution — works end-to-end, deployed on Railway
 - **v2.0** (shipped): Atomic variant evolution — 5 phases landed across PRs #2-#6; feature-complete
 - **v2.1 content** (shipped): SKLD-bench controlled evaluation environments — 7 Elixir lighthouse families authored with **867 challenges** (PRs #9-#17). Families: `elixir-phoenix-liveview`, `elixir-ecto-sandbox-test`, `elixir-security-linter`, `elixir-ecto-query-writer`, `elixir-ecto-schema-changeset`, `elixir-oban-worker`, `elixir-pattern-match-refactor`. Workstream plan: `taxonomy/elixir/SEEDING-PLAN.md`. File shapes: `taxonomy/elixir/SCHEMAS.md`.
-- **v2.1 plumbing** (pending): Wire the 7 families into the evolution engine. `plans/PLAN-V2.1.md` needs writing. Next: write PLAN-V2.1.md, then execute Phase 0 (DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → sandbox env verification → live integration test).
+- **v2.1 seed runs** (in progress, 2/7 shipped): `elixir-phoenix-liveview-seed-v1` (fitness 0.9407) and `elixir-ecto-sandbox-test-seed-v1` (fitness 0.8939). Remaining 5: elixir-security-linter, elixir-oban-worker, elixir-ecto-schema-changeset, elixir-ecto-query-writer, elixir-pattern-match-refactor. Playbook: `scripts/mock_pipeline/NEXT-SEED-RUN-PLAYBOOK.md`.
+- **v2.1 plumbing** (pending): Wire the 7 families into the evolution engine. `plans/PLAN-V2.1.md` written (~950 lines). Next: ship the remaining 5 seed runs, then execute Phase 0 (DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → install test → live integration test).
 
 ## Tech
 - Python 3.12+, FastAPI, Claude Agent SDK, SQLite (aiosqlite), WebSockets

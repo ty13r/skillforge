@@ -4,6 +4,26 @@ Items carried over from PLAN-V1.2. These are not blockers for v2.0 but remain va
 
 ---
 
+## Mobile-friendly navigation menu
+
+**Problem:** On mobile viewports (iPhone-sized), the top nav bar overflows off the right edge of the screen. Captured via screenshot 2026-04-11: Dashboard/Registry/Taxonomy/Bible/theme-toggles/"+ New Evolution" items are all laid out in a single horizontal row that exceeds the viewport width, so "Dashboard" gets clipped to "rd" on the left and "+ New Evolution" becomes "+ Nev Evoluti" on the right. There is no hamburger or responsive breakpoint.
+
+**Scope:**
+- Add a responsive breakpoint (e.g. `md:`) to the top nav in `frontend/src/components/` (likely the root layout or a `Nav.tsx` / header component)
+- Below the breakpoint: collapse the full nav into a hamburger menu that opens a full-height drawer or a dropdown panel
+- Preserve all current items: Dashboard, Registry, Taxonomy, Bible, theme toggles (light/system/dark), "+ New Evolution"
+- Keep the theme toggles accessible without opening the menu if space permits, OR bury them in the drawer
+- Ensure the "+ New Evolution" CTA remains prominent (either as a standalone button or as the top item in the drawer)
+- Match the existing SKLD aesthetic (dark theme, monospace accents, indigo/violet brand palette)
+
+**Verification:**
+- Test at iPhone SE (375px), standard iPhone (390px), and tablet (768px) widths in Chrome DevTools
+- Existing desktop layout (≥ 1024px) must be unchanged
+
+**Priority:** Medium — not a regression in functionality, but actively embarrassing for anyone Matt shares skld.run links with on mobile (e.g. when dropping phoenix-liveview link in the Elixir Discord).
+
+---
+
 ## Rebrand: SkillForge → SKLD
 
 Rename all references to "SkillForge" throughout the repo to "SKLD" (Skill Kinetics through Layered Darwinism).
