@@ -732,9 +732,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Ecto Sandbox Test \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_v506cbb397f5b]",
+      "specialization": "Elixir Ecto Sandbox Test \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_vf977f6b51e85]",
       "status": "complete",
-      "total_cost_usd": 29.5
+      "total_cost_usd": 9.99
     }
   ],
   "generated_at": "2026-04-12T01:41:02.592073+00:00",

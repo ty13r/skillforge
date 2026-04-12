@@ -740,7 +740,7 @@
       "population_size": 2,
       "specialization": "Elixir Ecto Query Writer \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_va83f56e96189]",
       "status": "complete",
-      "total_cost_usd": 28.5
+      "total_cost_usd": 8.15
     }
   ],
   "generated_at": "2026-04-12T07:08:53.875144+00:00",

@@ -686,7 +686,7 @@
       "population_size": 2,
       "specialization": "Elixir Pattern Match Refactor \u00b7 seed pipeline run over 11 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_vcbfb46e76738]",
       "status": "complete",
-      "total_cost_usd": 26.5
+      "total_cost_usd": 4.5
     }
   ],
   "generated_at": "2026-04-12T07:18:08.872124+00:00",

@@ -374,14 +374,110 @@
       },
       "challenges": [
         {
-          "difficulty": "medium",
+          "difficulty": "hard",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-21",
-          "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 takes `%{\"idempotency_key\" => key, \"url\" => url, \"body\" => body}`. The worker must: (1) check `MyApp.Webhooks.find_delivery(key)` \u2014 if a record exists with status `:sent`, return `:ok` immediately without re-sending; (2) if no record or status is `:pending`, POST to the url with `MyApp.HTTP.post(url, body)`; (3) on success, call `MyApp.Webhooks.mark_sent(key)` and return `:ok`; (4) on `{:error, reason}`, return `{:error, reason}` so Oban retries. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
+          "id": "elixir-oban-worker-hard-05",
+          "prompt": "The worker in `test_fixtures/struct_args_worker.ex` passes `%User{}` and `%DateTime{}` directly into args. Rewrite using a 'dehydrate/rehydrate' helper module `MyApp.Workers.NotificationArgs`: (1) a `dehydrate/2` function that takes a user and deliver_at and returns a string-keyed map, (2) a `rehydrate/1` function that takes the map and returns `{user, deliver_at}` by loading the user via `Accounts.get_user!/1` and parsing the DateTime. The worker's enqueue helper calls `dehydrate/2`, and perform/1 calls `rehydrate/1`. Both functions live in `lib/my_app/workers/notification_args.ex`. The worker lives in `lib/my_app/workers/notification_worker.ex`. Write both files.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-06",
+          "prompt": "Write `MyApp.Workers.UserActivityWorker` (queue `:activity`). Requirement: when a user triggers multiple activity updates within 5 minutes, only ONE job should run, and it should run 5 minutes after the LATEST update (not the first). Use `unique: [period: 300, keys: [:user_id], states: [:available, :scheduled], replace: [scheduled: [:scheduled_at]]]` so that a colliding insert REPLACES the existing job's `scheduled_at` with the new one. perform/1 takes `%{\"user_id\" => id}` and calls `MyApp.Activity.aggregate(id)`. Add a comment explaining how `replace:` works with the state filter. Write to `lib/my_app/workers/user_activity_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-07",
+          "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 destructures `%Oban.Job{attempt: attempt, max_attempts: max_attempts, args: %{\"webhook_id\" => id}}`. Logic: (1) call `Webhooks.deliver(id)`, (2) on success return `:ok`, (3) on `{:error, :rate_limited, retry_after}` return `{:snooze, retry_after}`, (4) on `{:error, reason}` \u2014 if `attempt == max_attempts`, log a `Logger.error/1` tagged as 'final attempt' and return `{:cancel, {:giving_up, reason}}`; otherwise return `{:error, reason}`. This gives Oban one last chance to log the permanent failure distinctly. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-11",
+          "prompt": "Write `MyApp.Workers.DataFetchWorker` (queue `:ingest`, max_attempts 5). perform/1 takes `%{\"source_id\" => id, \"cursor\" => cursor}`. It calls `MyApp.Ingest.fetch_page(id, cursor)` which returns either `{:ok, :done}` (all pages fetched), `{:ok, {:more, next_cursor}}` (another page available), or `{:error, reason}`. Logic: (1) on `{:ok, :done}` return `:ok` (no reschedule), (2) on `{:ok, {:more, next_cursor}}` enqueue a new job with `schedule_in: 60` and args `%{\"source_id\" => id, \"cursor\" => next_cursor}`, then return `:ok`, (3) on `{:error, reason}` return `{:error, reason}` so Oban retries the SAME cursor. Do NOT reschedule inside an error branch. Write to `lib/my_app/workers/data_fetch_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-12",
+          "prompt": "Write a test `MyApp.Workers.PaymentRetryTest` that verifies `MyApp.Workers.PaymentWorker` correctly returns `{:error, reason}` on the first attempt and `{:cancel, :giving_up}` on the final attempt (attempt 5 of max_attempts 5). Use `perform_job/3` and pass explicit `attempt:` option. The test should: (1) first assert that with `[attempt: 1]` and a simulated transient error, the result is `{:error, _}`; (2) then assert that with `[attempt: 5]` and the same simulated error, the result is `{:cancel, :giving_up}`. Use `use Oban.Testing, repo: MyApp.Repo`. Write to `test/my_app/workers/payment_retry_test.exs`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-13",
+          "prompt": "A common LLM mistake: treating `Oban.Plugins.Cron` as if it supports dynamic/database-driven crontabs. It doesn't \u2014 the free plugin loads the crontab STATICALLY at boot time. `Oban.Pro.DynamicCron` is the only dynamic option. Write a `MyApp.CronSchedule` module that exposes a `@crontab` module attribute with three entries. Document explicitly in the `@moduledoc` that `Oban.Plugins.Cron` loads at boot time only, runtime updates require a supervisor restart or Oban Pro's DynamicCron. Also include a function `MyApp.CronSchedule.plugin_config/0` that returns `{Oban.Plugins.Cron, [crontab: @crontab]}` for use in the runtime config. The `@crontab` should contain three distinct entries. Write to `lib/my_app/cron_schedule.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-14",
+          "prompt": "Write `MyApp.Workers.DocumentProcessor` (queue `:documents`, max_attempts 5). perform/1 accepts a nested args map: `%{\"doc_id\" => id, \"metadata\" => %{\"title\" => title, \"tags\" => tags, \"updated_at\" => updated_at_iso}}`. Extract each field with string keys. Parse `updated_at_iso` with `DateTime.from_iso8601/1` and handle both success and error cases (return `{:cancel, :invalid_date}` on parse failure). Tags is a list of strings; validate all members are strings with `Enum.all?/2` and return `{:cancel, :invalid_tags}` if not. Then call `MyApp.Documents.process(id, title, tags, updated_at)`. Write to `lib/my_app/workers/document_processor.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-16",
+          "prompt": "Write `MyApp.Workers.ThrottledAPIWorker` (queue `:external_api`, max_attempts 30). The API has a sliding-window rate limit: 100 requests per minute per account. perform/1 takes `%{\"account_id\" => id}`. Before calling the API, it checks `MyApp.RateLimiter.request_token(id)` which returns either `:ok` or `{:throttled, wait_seconds}`. On `:throttled`, return `{:snooze, wait_seconds}` \u2014 this puts the job back in the scheduled state for exactly wait_seconds, which is better than raising (wastes an attempt) and better than sleeping (blocks the worker slot). On `:ok`, call `MyApp.API.fetch(id)` and return `:ok` or `{:error, reason}`. Write to `lib/my_app/workers/throttled_api_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "hard",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-hard-19",
+          "prompt": "Write `MyApp.Workers.DataPipelineWorker` that on successful perform/1, enqueues a fan-out of downstream jobs using a single transactional insert_all. perform/1 takes `%{\"batch_id\" => id}`, calls `MyApp.Pipeline.split(id)` which returns a list of `child_ids`, then enqueues one `MyApp.Workers.ChildWorker.new(%{\"child_id\" => cid, \"batch_id\" => id})` per child_id. Use `Multi.insert_all/5` (or equivalent \u2014 wrapping a list of job changesets in a Repo.transaction) so the fan-out is atomic with a status update to the batch record (`MyApp.Pipeline.mark_split(id)`). Return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/data_pipeline_worker.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -404,116 +500,8 @@
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-15",
-          "prompt": "Write `MyApp.Workers.EmailWithMetricsWorker` (queue `:mailers`, max_attempts 5). perform/1 destructures `%Oban.Job{attempt: attempt, args: %{\"email_id\" => id}}` and branches on whether `attempt == 1`. On attempt 1, call `MyApp.Metrics.record_first_attempt(id)` before sending. On retries (attempt >= 2), call `MyApp.Metrics.record_retry(id, attempt)`. Then call `MyApp.Mailer.send(id)` \u2014 return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/email_with_metrics_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-14",
-          "prompt": "Write `MyApp.Workers.DocumentProcessor` (queue `:documents`, max_attempts 5). perform/1 accepts a nested args map: `%{\"doc_id\" => id, \"metadata\" => %{\"title\" => title, \"tags\" => tags, \"updated_at\" => updated_at_iso}}`. Extract each field with string keys. Parse `updated_at_iso` with `DateTime.from_iso8601/1` and handle both success and error cases (return `{:cancel, :invalid_date}` on parse failure). Tags is a list of strings; validate all members are strings with `Enum.all?/2` and return `{:cancel, :invalid_tags}` if not. Then call `MyApp.Documents.process(id, title, tags, updated_at)`. Write to `lib/my_app/workers/document_processor.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-16",
-          "prompt": "Write `MyApp.Workers.AuditLogWorker` (queue `:audit`). Its enqueue helper `enqueue/2` takes an `actor_id` and a `%NaiveDateTime{}` timestamp. Because NaiveDateTime has no stable JSON representation, the helper must call `NaiveDateTime.to_iso8601/1` before inserting. Args use string keys `\"actor_id\"` and `\"at\"`. perform/1 destructures string keys, parses `at` with `NaiveDateTime.from_iso8601!/1`, and calls `MyApp.Audit.record(actor_id, at)`. Write to `lib/my_app/workers/audit_log_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-05",
-          "prompt": "The worker in `test_fixtures/struct_args_worker.ex` passes `%User{}` and `%DateTime{}` directly into args. Rewrite using a 'dehydrate/rehydrate' helper module `MyApp.Workers.NotificationArgs`: (1) a `dehydrate/2` function that takes a user and deliver_at and returns a string-keyed map, (2) a `rehydrate/1` function that takes the map and returns `{user, deliver_at}` by loading the user via `Accounts.get_user!/1` and parsing the DateTime. The worker's enqueue helper calls `dehydrate/2`, and perform/1 calls `rehydrate/1`. Both functions live in `lib/my_app/workers/notification_args.ex`. The worker lives in `lib/my_app/workers/notification_worker.ex`. Write both files.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-31",
-          "prompt": "The worker in `test_fixtures/sleep_retry_worker.ex` hand-rolls a retry loop with `Process.sleep` and `max_attempts: 1`. This blocks the worker slot, ignores backoff, and defeats Oban's retry semantics. Rewrite it: set `max_attempts: 5`, remove the `do_sync/2` recursion, and let perform/1 call `ExternalAPI.sync/1` once \u2014 on `{:error, :timeout}` or any other `{:error, reason}`, return `{:error, reason}`. Override `backoff/1` to return `attempt * 30` (linear 30s/60s/90s/...). Write to `lib/my_app/workers/sync_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-07",
-          "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 destructures `%Oban.Job{attempt: attempt, max_attempts: max_attempts, args: %{\"webhook_id\" => id}}`. Logic: (1) call `Webhooks.deliver(id)`, (2) on success return `:ok`, (3) on `{:error, :rate_limited, retry_after}` return `{:snooze, retry_after}`, (4) on `{:error, reason}` \u2014 if `attempt == max_attempts`, log a `Logger.error/1` tagged as 'final attempt' and return `{:cancel, {:giving_up, reason}}`; otherwise return `{:error, reason}`. This gives Oban one last chance to log the permanent failure distinctly. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-14",
-          "prompt": "The worker in `test_fixtures/broken_unique_states_worker.ex` has a unique config that excludes `:available` from `:states`, which per the Oban docs and multiple Elixir Forum threads can crash the queue. Rewrite the unique block to use the FULL safe state list: `[:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]`. Keep the rest of the module (queue, perform/1) intact. Add a short `@moduledoc` referencing that partial state lists are unsafe. Write to `lib/my_app/workers/conversation_update_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-06",
-          "prompt": "Write `MyApp.Workers.UserActivityWorker` (queue `:activity`). Requirement: when a user triggers multiple activity updates within 5 minutes, only ONE job should run, and it should run 5 minutes after the LATEST update (not the first). Use `unique: [period: 300, keys: [:user_id], states: [:available, :scheduled], replace: [scheduled: [:scheduled_at]]]` so that a colliding insert REPLACES the existing job's `scheduled_at` with the new one. perform/1 takes `%{\"user_id\" => id}` and calls `MyApp.Activity.aggregate(id)`. Add a comment explaining how `replace:` works with the state filter. Write to `lib/my_app/workers/user_activity_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-25",
-          "prompt": "The config in `test_fixtures/cron_config_example.exs` has a cron entry `\"*/30 * * * * *\"` (6 fields \u2014 seconds precision), which Oban does NOT support (minimum resolution is one minute). Rewrite the file: (1) remove the seconds entry, (2) replace with a self-rescheduling pattern note in a comment \u2014 explain that sub-minute intervals should be implemented with a worker that reschedules itself. Also fix the timezone issue: change `timezone: \"America/New_York\"` to UTC and document that non-UTC timezones require the `tz` dependency. Keep the other cron entries. Write to `config/runtime.exs`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-13",
-          "prompt": "A common LLM mistake: treating `Oban.Plugins.Cron` as if it supports dynamic/database-driven crontabs. It doesn't \u2014 the free plugin loads the crontab STATICALLY at boot time. `Oban.Pro.DynamicCron` is the only dynamic option. Write a `MyApp.CronSchedule` module that exposes a `@crontab` module attribute with three entries. Document explicitly in the `@moduledoc` that `Oban.Plugins.Cron` loads at boot time only, runtime updates require a supervisor restart or Oban Pro's DynamicCron. Also include a function `MyApp.CronSchedule.plugin_config/0` that returns `{Oban.Plugins.Cron, [crontab: @crontab]}` for use in the runtime config. The `@crontab` should contain three distinct entries. Write to `lib/my_app/cron_schedule.ex`.",
+          "id": "elixir-oban-worker-medium-02",
+          "prompt": "The context in `test_fixtures/two_call_enqueue_context.ex` makes two separate calls: `Repo.insert(user)` followed by `Oban.insert(WelcomeEmailWorker.new(...))`. A crash between the two leaves a user with no welcome email. Rewrite `MyApp.Accounts.register_user/1` so both operations run inside a single `Ecto.Multi` transaction: insert the user, then call `Oban.insert(:welcome_email, fn %{user: user} -> WelcomeEmailWorker.new(%{\"user_id\" => user.id}) end)`. Return `{:ok, user}` or `{:error, changeset}`. Use `Repo.transaction/1` (not `Oban.transaction/1`). Write to `lib/my_app/accounts.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -530,14 +518,62 @@
           "verification_method": "run_tests"
         },
         {
-          "difficulty": "hard",
+          "difficulty": "medium",
           "evaluation_criteria": {
             "primary_capability": "",
             "weight": 1.0
           },
           "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-16",
-          "prompt": "Write `MyApp.Workers.ThrottledAPIWorker` (queue `:external_api`, max_attempts 30). The API has a sliding-window rate limit: 100 requests per minute per account. perform/1 takes `%{\"account_id\" => id}`. Before calling the API, it checks `MyApp.RateLimiter.request_token(id)` which returns either `:ok` or `{:throttled, wait_seconds}`. On `:throttled`, return `{:snooze, wait_seconds}` \u2014 this puts the job back in the scheduled state for exactly wait_seconds, which is better than raising (wastes an attempt) and better than sleeping (blocks the worker slot). On `:ok`, call `MyApp.API.fetch(id)` and return `:ok` or `{:error, reason}`. Write to `lib/my_app/workers/throttled_api_worker.ex`.",
+          "id": "elixir-oban-worker-medium-14",
+          "prompt": "The worker in `test_fixtures/broken_unique_states_worker.ex` has a unique config that excludes `:available` from `:states`, which per the Oban docs and multiple Elixir Forum threads can crash the queue. Rewrite the unique block to use the FULL safe state list: `[:available, :scheduled, :executing, :retryable, :completed, :cancelled, :discarded]`. Keep the rest of the module (queue, perform/1) intact. Add a short `@moduledoc` referencing that partial state lists are unsafe. Write to `lib/my_app/workers/conversation_update_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-15",
+          "prompt": "Write `MyApp.Workers.EmailWithMetricsWorker` (queue `:mailers`, max_attempts 5). perform/1 destructures `%Oban.Job{attempt: attempt, args: %{\"email_id\" => id}}` and branches on whether `attempt == 1`. On attempt 1, call `MyApp.Metrics.record_first_attempt(id)` before sending. On retries (attempt >= 2), call `MyApp.Metrics.record_retry(id, attempt)`. Then call `MyApp.Mailer.send(id)` \u2014 return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/email_with_metrics_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-16",
+          "prompt": "Write `MyApp.Workers.AuditLogWorker` (queue `:audit`). Its enqueue helper `enqueue/2` takes an `actor_id` and a `%NaiveDateTime{}` timestamp. Because NaiveDateTime has no stable JSON representation, the helper must call `NaiveDateTime.to_iso8601/1` before inserting. Args use string keys `\"actor_id\"` and `\"at\"`. perform/1 destructures string keys, parses `at` with `NaiveDateTime.from_iso8601!/1`, and calls `MyApp.Audit.record(actor_id, at)`. Write to `lib/my_app/workers/audit_log_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-19",
+          "prompt": "Write `MyApp.Workers.HeartbeatWorker` (queue `:monitoring`, max_attempts 3) that sends a heartbeat every 10 minutes by self-rescheduling. Per Sorentwo's 'Reliable Scheduling' recipe, the reschedule must happen at the start of perform/1 (before the business logic), otherwise retries will cause exponential growth of scheduled jobs. Use a pattern-match clause on `%Oban.Job{attempt: 1}` to reschedule only on the first attempt. perform/1 takes `%{\"host\" => host}` and calls `MyApp.Monitor.ping(host)`. Write to `lib/my_app/workers/heartbeat_worker.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-21",
+          "prompt": "Write `MyApp.Workers.WebhookDeliveryWorker` (queue `:webhooks`, max_attempts 10). perform/1 takes `%{\"idempotency_key\" => key, \"url\" => url, \"body\" => body}`. The worker must: (1) check `MyApp.Webhooks.find_delivery(key)` \u2014 if a record exists with status `:sent`, return `:ok` immediately without re-sending; (2) if no record or status is `:pending`, POST to the url with `MyApp.HTTP.post(url, body)`; (3) on success, call `MyApp.Webhooks.mark_sent(key)` and return `:ok`; (4) on `{:error, reason}`, return `{:error, reason}` so Oban retries. Write to `lib/my_app/workers/webhook_delivery_worker.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -550,6 +586,54 @@
           "gold_standard_hints": "",
           "id": "elixir-oban-worker-medium-22",
           "prompt": "Write `MyApp.Jobs.enqueue_with_priority/2` that takes a `worker` module and a `priority` integer (0..9). It should call `worker.new(%{}, queue: :priority_lane, priority: priority)` and pipe to `Oban.insert/1`. Include `@type priority :: 0..9` as a typespec on the function. Write to `lib/my_app/jobs.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-24",
+          "prompt": "Write `MyApp.ObanTelemetry` with a `handle_event/4` function that pattern-matches on `[:oban, :job, :exception]` and extracts `metadata.worker` (a binary/string). For `\"MyApp.Workers.PaymentWorker\"` errors, call `MyApp.Alerting.page_oncall(metadata)` in addition to logging. For all other workers, just log via `Logger.error/1`. Also include an `attach/0` function that calls `:telemetry.attach/4` with a static handler id `\"oban-error-handler\"`. Write to `lib/my_app/oban_telemetry.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-25",
+          "prompt": "The config in `test_fixtures/cron_config_example.exs` has a cron entry `\"*/30 * * * * *\"` (6 fields \u2014 seconds precision), which Oban does NOT support (minimum resolution is one minute). Rewrite the file: (1) remove the seconds entry, (2) replace with a self-rescheduling pattern note in a comment \u2014 explain that sub-minute intervals should be implemented with a worker that reschedules itself. Also fix the timezone issue: change `timezone: \"America/New_York\"` to UTC and document that non-UTC timezones require the `tz` dependency. Keep the other cron entries. Write to `config/runtime.exs`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-30",
+          "prompt": "Write `MyApp.ObanMetrics` with an `attach/0` function that uses `:telemetry.attach_many/4` (not `attach/4` in a loop) to register one handler for three events: `[:oban, :job, :start]`, `[:oban, :job, :stop]`, `[:oban, :job, :exception]`. Define `handle_event/4` with three separate function clauses, one per event. Start clause increments a start counter, stop clause records duration, exception clause increments an error counter. Use `MyApp.Metrics.increment/1` and `MyApp.Metrics.timing/2`. Write to `lib/my_app/oban_metrics.ex`.",
+          "setup_files": {},
+          "verification_method": "run_tests"
+        },
+        {
+          "difficulty": "medium",
+          "evaluation_criteria": {
+            "primary_capability": "",
+            "weight": 1.0
+          },
+          "gold_standard_hints": "",
+          "id": "elixir-oban-worker-medium-31",
+          "prompt": "The worker in `test_fixtures/sleep_retry_worker.ex` hand-rolls a retry loop with `Process.sleep` and `max_attempts: 1`. This blocks the worker slot, ignores backoff, and defeats Oban's retry semantics. Rewrite it: set `max_attempts: 5`, remove the `do_sync/2` recursion, and let perform/1 call `ExternalAPI.sync/1` once \u2014 on `{:error, :timeout}` or any other `{:error, reason}`, return `{:error, reason}`. Override `backoff/1` to return `attempt * 30` (linear 30s/60s/90s/...). Write to `lib/my_app/workers/sync_worker.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         },
@@ -574,90 +658,6 @@
           "gold_standard_hints": "",
           "id": "elixir-oban-worker-medium-34",
           "prompt": "Write a test `MyApp.Workers.ExportFlowTest` that verifies `MyApp.Exports.create_and_run(1)` enqueues AND executes an `ExportWorker`. Use `Oban.Testing` with `:manual` mode. The test must: (1) trigger `create_and_run/1`, (2) use `Oban.drain_queue/2` to execute all pending jobs in the `:exports` queue, (3) assert the result of drain_queue reports `%{success: 1}` in its counters, (4) also assert the expected side effect (e.g., `MyApp.Exports.get!(1).status == :done`). Write to `test/my_app/workers/export_flow_test.exs`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-12",
-          "prompt": "Write a test `MyApp.Workers.PaymentRetryTest` that verifies `MyApp.Workers.PaymentWorker` correctly returns `{:error, reason}` on the first attempt and `{:cancel, :giving_up}` on the final attempt (attempt 5 of max_attempts 5). Use `perform_job/3` and pass explicit `attempt:` option. The test should: (1) first assert that with `[attempt: 1]` and a simulated transient error, the result is `{:error, _}`; (2) then assert that with `[attempt: 5]` and the same simulated error, the result is `{:cancel, :giving_up}`. Use `use Oban.Testing, repo: MyApp.Repo`. Write to `test/my_app/workers/payment_retry_test.exs`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-24",
-          "prompt": "Write `MyApp.ObanTelemetry` with a `handle_event/4` function that pattern-matches on `[:oban, :job, :exception]` and extracts `metadata.worker` (a binary/string). For `\"MyApp.Workers.PaymentWorker\"` errors, call `MyApp.Alerting.page_oncall(metadata)` in addition to logging. For all other workers, just log via `Logger.error/1`. Also include an `attach/0` function that calls `:telemetry.attach/4` with a static handler id `\"oban-error-handler\"`. Write to `lib/my_app/oban_telemetry.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-30",
-          "prompt": "Write `MyApp.ObanMetrics` with an `attach/0` function that uses `:telemetry.attach_many/4` (not `attach/4` in a loop) to register one handler for three events: `[:oban, :job, :start]`, `[:oban, :job, :stop]`, `[:oban, :job, :exception]`. Define `handle_event/4` with three separate function clauses, one per event. Start clause increments a start counter, stop clause records duration, exception clause increments an error counter. Use `MyApp.Metrics.increment/1` and `MyApp.Metrics.timing/2`. Write to `lib/my_app/oban_metrics.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-02",
-          "prompt": "The context in `test_fixtures/two_call_enqueue_context.ex` makes two separate calls: `Repo.insert(user)` followed by `Oban.insert(WelcomeEmailWorker.new(...))`. A crash between the two leaves a user with no welcome email. Rewrite `MyApp.Accounts.register_user/1` so both operations run inside a single `Ecto.Multi` transaction: insert the user, then call `Oban.insert(:welcome_email, fn %{user: user} -> WelcomeEmailWorker.new(%{\"user_id\" => user.id}) end)`. Return `{:ok, user}` or `{:error, changeset}`. Use `Repo.transaction/1` (not `Oban.transaction/1`). Write to `lib/my_app/accounts.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-19",
-          "prompt": "Write `MyApp.Workers.DataPipelineWorker` that on successful perform/1, enqueues a fan-out of downstream jobs using a single transactional insert_all. perform/1 takes `%{\"batch_id\" => id}`, calls `MyApp.Pipeline.split(id)` which returns a list of `child_ids`, then enqueues one `MyApp.Workers.ChildWorker.new(%{\"child_id\" => cid, \"batch_id\" => id})` per child_id. Use `Multi.insert_all/5` (or equivalent \u2014 wrapping a list of job changesets in a Repo.transaction) so the fan-out is atomic with a status update to the batch record (`MyApp.Pipeline.mark_split(id)`). Return `:ok` on success or `{:error, reason}` on failure. Write to `lib/my_app/workers/data_pipeline_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "medium",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-medium-19",
-          "prompt": "Write `MyApp.Workers.HeartbeatWorker` (queue `:monitoring`, max_attempts 3) that sends a heartbeat every 10 minutes by self-rescheduling. Per Sorentwo's 'Reliable Scheduling' recipe, the reschedule must happen at the start of perform/1 (before the business logic), otherwise retries will cause exponential growth of scheduled jobs. Use a pattern-match clause on `%Oban.Job{attempt: 1}` to reschedule only on the first attempt. perform/1 takes `%{\"host\" => host}` and calls `MyApp.Monitor.ping(host)`. Write to `lib/my_app/workers/heartbeat_worker.ex`.",
-          "setup_files": {},
-          "verification_method": "run_tests"
-        },
-        {
-          "difficulty": "hard",
-          "evaluation_criteria": {
-            "primary_capability": "",
-            "weight": 1.0
-          },
-          "gold_standard_hints": "",
-          "id": "elixir-oban-worker-hard-11",
-          "prompt": "Write `MyApp.Workers.DataFetchWorker` (queue `:ingest`, max_attempts 5). perform/1 takes `%{\"source_id\" => id, \"cursor\" => cursor}`. It calls `MyApp.Ingest.fetch_page(id, cursor)` which returns either `{:ok, :done}` (all pages fetched), `{:ok, {:more, next_cursor}}` (another page available), or `{:error, reason}`. Logic: (1) on `{:ok, :done}` return `:ok` (no reschedule), (2) on `{:ok, {:more, next_cursor}}` enqueue a new job with `schedule_in: 60` and args `%{\"source_id\" => id, \"cursor\" => next_cursor}`, then return `:ok`, (3) on `{:error, reason}` return `{:error, reason}` so Oban retries the SAME cursor. Do NOT reschedule inside an error branch. Write to `lib/my_app/workers/data_fetch_worker.ex`.",
           "setup_files": {},
           "verification_method": "run_tests"
         }
@@ -738,9 +738,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Oban Worker \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration",
+      "specialization": "Elixir Oban Worker \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_v3612fb45ded1]",
       "status": "complete",
-      "total_cost_usd": 35.0
+      "total_cost_usd": 10.9
     }
   ],
   "generated_at": "2026-04-12T05:31:26.068207+00:00",

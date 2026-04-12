@@ -769,9 +769,9 @@
         }
       ],
       "population_size": 2,
-      "specialization": "Elixir Phoenix LiveView \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_vc3219003124e]",
+      "specialization": "Elixir Phoenix LiveView \u00b7 seed pipeline run over 12 dimensions \u00b7 Opus 4.6 subagent orchestration [seed_vc24815d297b7]",
       "status": "complete",
-      "total_cost_usd": 28.5
+      "total_cost_usd": 10.9
     }
   ],
   "generated_at": "2026-04-11T19:52:41.500548+00:00",
@@ -1642,7 +1642,7 @@
   ],
   "variant_evolutions": [
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-38",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:08.267134+00:00",
       "created_at": "2026-04-11T17:58:11.791883+00:00",
       "dimension": "anti-patterns-catalog",
@@ -1657,7 +1657,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_anti_patterns_catalog_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-21",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:05:51.781682+00:00",
       "created_at": "2026-04-11T17:58:11.783635+00:00",
       "dimension": "architectural-stance",
@@ -1672,7 +1672,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_architectural_stance_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-24",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:08.188087+00:00",
       "created_at": "2026-04-11T17:58:11.791186+00:00",
       "dimension": "auth-and-authz",
@@ -1687,7 +1687,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_auth_and_authz_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-32",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.951729+00:00",
       "created_at": "2026-04-11T17:58:11.789027+00:00",
       "dimension": "event-handlers-and-handle-info",
@@ -1702,7 +1702,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_event_handlers_and_handle_info_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-11",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.703341+00:00",
       "created_at": "2026-04-11T17:58:11.786835+00:00",
       "dimension": "form-handling",
@@ -1717,7 +1717,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_form_handling_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-08",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.531268+00:00",
       "created_at": "2026-04-11T17:58:11.785473+00:00",
       "dimension": "function-components-and-slots",
@@ -1732,7 +1732,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_function_components_and_slots_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-01",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.440491+00:00",
       "created_at": "2026-04-11T17:58:11.784767+00:00",
       "dimension": "heex-and-verified-routes",
@@ -1747,7 +1747,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_heex_and_verified_routes_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-15",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.621027+00:00",
       "created_at": "2026-04-11T17:58:11.786155+00:00",
       "dimension": "live-components-stateful",
@@ -1762,7 +1762,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_live_components_stateful_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-10",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.869666+00:00",
       "created_at": "2026-04-11T17:58:11.788213+00:00",
       "dimension": "mount-and-lifecycle",
@@ -1777,7 +1777,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_mount_and_lifecycle_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-14",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:08.111470+00:00",
       "created_at": "2026-04-11T17:58:11.790424+00:00",
       "dimension": "navigation-patterns",
@@ -1792,7 +1792,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_navigation_patterns_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-12",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:08.031843+00:00",
       "created_at": "2026-04-11T17:58:11.789716+00:00",
       "dimension": "pubsub-and-realtime",
@@ -1807,7 +1807,7 @@
       "winner_variant_id": "var_elixir_phoenix_liveview_pubsub_and_realtime_winner"
     },
     {
-      "challenge_id": "elixir-phoenix-liveview-medium-02",
+      "challenge_id": null,
       "completed_at": "2026-04-11T18:22:07.786059+00:00",
       "created_at": "2026-04-11T17:58:11.787519+00:00",
       "dimension": "streams-and-collections",
