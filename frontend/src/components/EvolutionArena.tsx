@@ -266,6 +266,24 @@ export default function EvolutionArena() {
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
             {/* Main column */}
             <div className="space-y-6">
+              {/* Phase status — shows what the engine is doing during long waits */}
+              {(() => {
+                const activeDim = sockState.atomicDimensions.find(
+                  (d) => d.dimension === activeDimension,
+                );
+                if (!activeDim?.phaseDetail) return null;
+                // Don't show once competitors are running
+                if (variantGroups.length > 0) return null;
+                return (
+                  <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-4">
+                    <div className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-primary" />
+                    <p className="text-sm text-on-surface">
+                      {activeDim.phaseDetail}
+                    </p>
+                  </div>
+                );
+              })()}
+
               {/* Current challenge — single card, not a list */}
               {challenges.length > 0 && (() => {
                 const ch = challenges[challenges.length - 1];
@@ -306,13 +324,17 @@ export default function EvolutionArena() {
                 </div>
                 <div className="mt-4 space-y-2">
                   {variantGroups.length === 0 ? (
-                    <p className="text-sm text-on-surface-dim">
-                      Waiting for competitors to spawn...
-                    </p>
+                    <div className="flex items-center gap-3 py-4">
+                      <div className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-primary" />
+                      <p className="text-sm text-on-surface-dim">
+                        Generating skill variants — each variant is a complete SKILL.md package with scripts,
+                        references, and examples. This typically takes 1-2 minutes per dimension.
+                      </p>
+                    </div>
                   ) : (
                     [...variantGroups].reverse().map((g) => {
-                      const variantLabels = ["Baseline (Raw Sonnet)", "Seed (V1)", "Spawn (V2)"];
                       const isBaseline = g.competitorId === 0;
+                      const labels = ["Baseline (Raw Sonnet)", "Seed (V1)", "Spawn (V2)"];
                       return (
                         <SkillVariantCard
                           key={g.skillId}
@@ -321,7 +343,7 @@ export default function EvolutionArena() {
                           isControl={isBaseline}
                           competitors={g.competitors}
                           challenges={challenges}
-                          label={variantLabels[g.competitorId] ?? `Variant ${g.competitorId}`}
+                          label={labels[g.competitorId] ?? `Variant ${g.competitorId}`}
                           controlLabel="SKLD-bench"
                         />
                       );

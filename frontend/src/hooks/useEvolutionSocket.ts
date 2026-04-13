@@ -14,6 +14,8 @@ export interface AtomicDimensionState {
   tier: string;
   status: "pending" | "running" | "complete" | "failed";
   fitness?: number;
+  phase?: string;
+  phaseDetail?: string;
 }
 
 export interface EvolutionSocketState {
@@ -266,6 +268,17 @@ export function applyEvent(
     case "run_cancelled":
       next.isFailed = true;
       next.failureReason = "cancelled by user";
+      break;
+
+    // Dimension phase progress (designing challenge, spawning variants, etc.)
+    case "dimension_phase":
+      if (ev.dimension) {
+        next.atomicDimensions = next.atomicDimensions.map((d) =>
+          d.dimension === ev.dimension
+            ? { ...d, phase: ev.phase, phaseDetail: ev.detail }
+            : d,
+        );
+      }
       break;
 
     // Atomic evolution events

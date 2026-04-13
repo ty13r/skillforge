@@ -217,7 +217,8 @@ export type EvolutionEventName =
   | "assembly_started"
   | "assembly_complete"
   | "integration_test_started"
-  | "integration_test_complete";
+  | "integration_test_complete"
+  | "dimension_phase";
 
 export interface EvolutionEvent {
   event: EvolutionEventName;
@@ -263,6 +264,9 @@ export interface EvolutionEvent {
   dimension_count?: number;
   dimensions?: { name: string; tier: string; description: string; evaluation_focus: string }[];
   reuse_recommendations?: { source_family_slug: string; dimension: string; variant_slug: string; fitness: number | null; reason: string }[];
+  // dimension_phase fields
+  phase?: string;
+  detail?: string;
   // competitor output + scores
   output_files?: Record<string, string>;
   competitor_scores?: {

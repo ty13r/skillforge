@@ -100,6 +100,7 @@ async def _run_dimension_mini_evolution(
     run: EvolutionRun,
     vevo: VariantEvolution,
     foundation_winner: SkillGenome | None,
+    env_id: str | None = None,
 ) -> tuple[Variant, SkillGenome]:
     """Run one mini-evolution and return the winning variant + its genome.
 
@@ -125,6 +126,13 @@ async def _run_dimension_mini_evolution(
 
     # 1. Design the focused challenge for this dimension and persist it
     # so the FK on variant_evolutions.challenge_id resolves.
+    await emit(
+        run.id,
+        "dimension_phase",
+        dimension=vevo.dimension,
+        phase="designing_challenge",
+        detail="Designing a focused challenge for this dimension...",
+    )
     challenge = await design_variant_challenge(
         specialization=run.specialization,
         dimension=dimension_spec,
@@ -149,6 +157,13 @@ async def _run_dimension_mini_evolution(
     for gen_num in range(num_gens):
         # Spawn gen 0 from scratch; breed gen 1+ from the previous generation
         if gen_num == 0:
+            await emit(
+                run.id,
+                "dimension_phase",
+                dimension=vevo.dimension,
+                phase="spawning_variants",
+                detail=f"Spawning {vevo.population_size} skill variants (this takes 1-2 minutes)...",
+            )
             current_skills = await spawn_variant_gen0(
                 specialization=run.specialization,
                 dimension=dimension_spec,
@@ -181,7 +196,21 @@ async def _run_dimension_mini_evolution(
             genome.generation = gen_num
             await save_genome(genome, run.id)
 
-        # Compete all skills against the focused challenge
+        # Add a baseline competitor (raw model, no skill) for comparison.
+        # The baseline genome has no skill_md_content, so the agent runs
+        # the challenge without any skill guidance — pure model capability.
+        baseline_genome = SkillGenome(
+            id=f"baseline_{uuid.uuid4().hex[:8]}",
+            generation=gen_num,
+            skill_md_content="",
+            supporting_files={},
+            traits=["baseline", "no-skill"],
+            meta_strategy="Raw model baseline — no skill guidance",
+            mutations=["baseline"],
+        )
+
+        # Compete: baseline first (idx 0), then skill variants (idx 1+)
+        all_competitors = [baseline_genome] + list(current_skills)
         competitor_tasks = [
             _gated_competitor(
                 semaphore=semaphore,
@@ -190,11 +219,16 @@ async def _run_dimension_mini_evolution(
                 competitor_idx=idx,
                 skill=skill,
                 challenge=challenge,
-                env_id=None,
+                env_id=env_id,
             )
-            for idx, skill in enumerate(current_skills)
+            for idx, skill in enumerate(all_competitors)
         ]
         results = list(await asyncio.gather(*competitor_tasks))
+
+        # Separate baseline result from skill results for scoring/selection.
+        # The baseline is idx 0; skill variants are idx 1+.
+        baseline_result = results[0]
+        skill_results = results[1:]
 
         # --- Composite scoring (Phase 6) ---
         # Resolve family slug for the scorer
@@ -212,7 +246,8 @@ async def _run_dimension_mini_evolution(
                 "evaluation_criteria": challenge.evaluation_criteria if hasattr(challenge, "evaluation_criteria") else {},
             }
 
-            # Score each competitor's output with the composite scorer
+            # Score ALL competitors (including baseline) with the composite scorer
+            all_genomes = [baseline_genome] + list(current_skills)
             for result in results:
                 if not result.output_files:
                     continue
@@ -224,14 +259,12 @@ async def _run_dimension_mini_evolution(
                         output_files=result.output_files,
                         run_behavioral=True,
                     )
-                    # Merge composite objectives into the result's genome
+                    # Merge composite objectives into the matching genome
                     objectives = scores_to_pareto_objectives(scores)
-                    # Find the matching genome and set pareto_objectives
-                    for skill in current_skills:
-                        if skill.id == result.skill_id:
-                            skill.pareto_objectives = objectives
-                            # Also store the full breakdown in deterministic_scores
-                            skill.deterministic_scores = {
+                    for genome in all_genomes:
+                        if genome.id == result.skill_id:
+                            genome.pareto_objectives = objectives
+                            genome.deterministic_scores = {
                                 "composite": scores.get("composite", 0.0),
                                 "l0": scores.get("l0", {}).get("score", 0.0) if isinstance(scores.get("l0"), dict) else 0.0,
                                 "compiles": scores.get("compile", {}).get("compiles", False) if isinstance(scores.get("compile"), dict) else False,
@@ -261,9 +294,10 @@ async def _run_dimension_mini_evolution(
                 vevo.dimension,
             )
 
-        # Judge — scores get written onto each SkillGenome in place
+        # Judge — only skill variants, not the baseline (baseline is for
+        # comparison only and should not participate in winner selection)
         generation = Generation(
-            number=gen_num, skills=current_skills, results=results
+            number=gen_num, skills=current_skills, results=skill_results
         )
         generation = await run_judging_pipeline(
             generation, [challenge], run_id=run.id
@@ -484,71 +518,105 @@ async def run_variant_evolution(run: EvolutionRun) -> EvolutionRun:
     foundation_winner: SkillGenome | None = None
     capability_winners: list[SkillGenome] = []
 
+    # --- Managed Agents environment (shared across all dimensions) ---
+    from skillforge.config import COMPETITOR_BACKEND
+
+    env_id: str | None = None
+    managed_client = None
+    if COMPETITOR_BACKEND == "managed":
+        from skillforge.agents import managed_agents
+
+        try:
+            logger.info("run=%s creating managed environment...", run.id[:8])
+            managed_client = managed_agents.make_client()
+            env_id = await managed_agents.create_environment(
+                managed_client, run_id=run.id
+            )
+            logger.info("run=%s managed environment ready: %s", run.id[:8], env_id)
+            await emit(run.id, "managed_environment_ready", environment_id=env_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("run=%s managed environment creation failed: %s", run.id[:8], exc)
+            run.status = "failed"
+            run.failure_reason = f"managed environment creation failed: {exc}"
+            await save_run(run)
+            return run
+
     logger.info(
         "run=%s atomic mode: %d variant_evolutions queued",
         run.id[:8],
         len(pending),
     )
 
-    for vevo in pending:
-        # Apply default population size if the row was created without one
-        if vevo.population_size <= 0:
-            vevo.population_size = DEFAULT_VARIANT_POP
-        if vevo.num_generations <= 0:
-            vevo.num_generations = DEFAULT_VARIANT_GENS
+    try:
+        for vevo in pending:
+            # Apply default population size if the row was created without one
+            if vevo.population_size <= 0:
+                vevo.population_size = DEFAULT_VARIANT_POP
+            if vevo.num_generations <= 0:
+                vevo.num_generations = DEFAULT_VARIANT_GENS
 
-        vevo.status = "running"
-        await save_variant_evolution(vevo)
-        await emit(
-            run.id,
-            "variant_evolution_started",
-            variant_evolution_id=vevo.id,
-            dimension=vevo.dimension,
-            tier=vevo.tier,
-            population_size=vevo.population_size,
-        )
-
-        try:
-            _variant, winner_genome = await _run_dimension_mini_evolution(
-                run=run,
-                vevo=vevo,
-                foundation_winner=foundation_winner,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception(
-                "run=%s dimension %s mini-evolution failed: %s",
-                run.id[:8],
-                vevo.dimension,
-                exc,
-            )
-            vevo.status = "failed"
+            vevo.status = "running"
             await save_variant_evolution(vevo)
+            await emit(
+                run.id,
+                "variant_evolution_started",
+                variant_evolution_id=vevo.id,
+                dimension=vevo.dimension,
+                tier=vevo.tier,
+                population_size=vevo.population_size,
+            )
+
+            try:
+                _variant, winner_genome = await _run_dimension_mini_evolution(
+                    run=run,
+                    vevo=vevo,
+                    foundation_winner=foundation_winner,
+                    env_id=env_id,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.exception(
+                    "run=%s dimension %s mini-evolution failed: %s",
+                    run.id[:8],
+                    vevo.dimension,
+                    exc,
+                )
+                vevo.status = "failed"
+                await save_variant_evolution(vevo)
+                await emit(
+                    run.id,
+                    "variant_evolution_complete",
+                    variant_evolution_id=vevo.id,
+                    dimension=vevo.dimension,
+                    tier=vevo.tier,
+                    status="failed",
+                    error=str(exc),
+                )
+                raise
+
             await emit(
                 run.id,
                 "variant_evolution_complete",
                 variant_evolution_id=vevo.id,
                 dimension=vevo.dimension,
                 tier=vevo.tier,
-                status="failed",
-                error=str(exc),
+                winner_variant_id=vevo.winner_variant_id,
+                status="complete",
             )
-            raise
 
-        await emit(
-            run.id,
-            "variant_evolution_complete",
-            variant_evolution_id=vevo.id,
-            dimension=vevo.dimension,
-            tier=vevo.tier,
-            winner_variant_id=vevo.winner_variant_id,
-            status="complete",
-        )
+            if vevo.tier == "foundation":
+                foundation_winner = winner_genome
+            else:
+                capability_winners.append(winner_genome)
 
-        if vevo.tier == "foundation":
-            foundation_winner = winner_genome
-        else:
-            capability_winners.append(winner_genome)
-
-    composite = await _real_assembly(run, foundation_winner, capability_winners)
-    run.best_skill = composite
+        composite = await _real_assembly(run, foundation_winner, capability_winners)
+        run.best_skill = composite
+    finally:
+        # Tear down managed environment
+        if env_id is not None and managed_client is not None:
+            try:
+                from skillforge.agents import managed_agents as _ma
+                await _ma.archive_environment(managed_client, env_id)
+                logger.info("run=%s managed environment archived: %s", run.id[:8], env_id)
+            except Exception:  # noqa: BLE001
+                logger.warning("run=%s managed environment cleanup failed", run.id[:8])
     return run
