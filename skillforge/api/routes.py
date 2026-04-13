@@ -358,6 +358,33 @@ async def get_run_detail(run_id: str) -> RunDetail:
     run = await get_run(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail=f"run {run_id} not found")
+
+    # Compute baseline_fitness from benchmark_results if this run has a family
+    baseline_fitness = None
+    family_id = getattr(run, "family_id", None)
+    if family_id:
+        from skillforge.db.queries import _connect
+
+        async with _connect() as conn:
+            # Look up the family slug
+            cursor = await conn.execute(
+                "SELECT slug FROM skill_families WHERE id = ?", (family_id,)
+            )
+            fam_row = await cursor.fetchone()
+            if fam_row:
+                family_slug = fam_row[0]
+                # Average composite score of raw Sonnet on this family's challenges
+                cursor = await conn.execute(
+                    "SELECT AVG(json_extract(scores, '$.composite')) "
+                    "FROM benchmark_results "
+                    "WHERE family_slug = ? AND model = 'claude-sonnet-4-6' "
+                    "AND scores != '{}'",
+                    (family_slug,),
+                )
+                avg_row = await cursor.fetchone()
+                if avg_row and avg_row[0] is not None:
+                    baseline_fitness = round(avg_row[0], 4)
+
     return RunDetail(
         id=run.id,
         mode=run.mode,
@@ -372,9 +399,10 @@ async def get_run_detail(run_id: str) -> RunDetail:
             else None
         ),
         best_skill_id=run.best_skill.id if run.best_skill else None,
-        family_id=getattr(run, "family_id", None),
+        family_id=family_id,
         evolution_mode=getattr(run, "evolution_mode", "molecular"),
         learning_log=list(run.learning_log),
+        baseline_fitness=baseline_fitness,
     )
 
 

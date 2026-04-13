@@ -47,6 +47,8 @@ export interface RunDetail {
   evolution_mode?: "molecular" | "atomic";
   // v2.0 Step 1b — audit trail + reconstructed integration report
   learning_log?: string[];
+  // v2.1.3 — honest composite baseline from SKLD-bench
+  baseline_fitness?: number | null;
 }
 
 export interface LineageNode {
@@ -367,4 +369,86 @@ export interface FamilyDetail {
   family: SkillFamily;
   variant_count: number;
   active_variants: Variant[];
+}
+
+// --- SKLD-bench types -------------------------------------------------------
+
+export interface BenchFamilySummary {
+  slug: string;
+  label: string;
+  challenges: number;
+  challenges_scored: number;
+  raw_composite: number | null;
+  skill_composite: number | null;
+  lift: number | null;
+  compile_pct: number | null;
+  raw_l0: number | null;
+  skill_challenges: number;
+}
+
+export interface BenchScoringProgression {
+  l0: number;
+  compile: number;
+  behavioral: number;
+  composite: number;
+}
+
+export interface BenchSummary {
+  families: BenchFamilySummary[];
+  overall: {
+    challenges: number;
+    challenges_scored: number;
+    raw_composite: number | null;
+  };
+  scoring_progression: BenchScoringProgression | null;
+}
+
+export interface BenchTierBreakdown {
+  tier: string;
+  count: number;
+  avg_composite: number;
+  compile_pct: number;
+  avg_behavioral: number;
+  avg_l0: number;
+}
+
+export interface BenchDimension {
+  dimension: string;
+  count: number;
+  avg_composite: number;
+  compile_pct: number;
+}
+
+export interface BenchChallengeEntry {
+  l0: number;
+  composite: number | null;
+  compiles: boolean;
+  behavioral: number;
+  ast: number;
+  tokens: number;
+  duration_ms: number;
+  error: string | null;
+}
+
+export interface BenchChallenge {
+  challenge_id: string;
+  tier: string;
+  dimension: string;
+  raw?: BenchChallengeEntry;
+  skill?: BenchChallengeEntry;
+}
+
+export interface BenchHistogram {
+  buckets: string[];
+  counts: number[];
+}
+
+export interface BenchFamilyDetail {
+  family_slug: string;
+  label: string;
+  total_challenges: number;
+  tiers: BenchTierBreakdown[];
+  dimensions: BenchDimension[];
+  histogram: BenchHistogram;
+  challenges: BenchChallenge[];
 }

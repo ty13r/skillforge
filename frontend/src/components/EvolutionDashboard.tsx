@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import EvolutionCard from "./EvolutionCard";
+import PipelineSteps from "./PipelineSteps";
 import PrimaryButton from "./PrimaryButton";
 import StatCard from "./StatCard";
 import type { RunSummary } from "../types";
@@ -106,31 +107,31 @@ export default function EvolutionDashboard() {
           <div className="hidden lg:block lg:w-[320px] lg:shrink-0">
             <div className="rounded-xl border border-outline-variant bg-surface-container-lowest/80 p-5 backdrop-blur">
               <p className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
-                The Platform
+                SKLD-bench
               </p>
               <div className="mt-4 space-y-4">
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-on-surface">
-                    Curated Gen 0 Skills
+                    Bench Challenges
                   </span>
                   <span className="font-display text-2xl tracking-tight text-primary">
-                    {seeds?.length ?? "—"}
+                    867
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-on-surface">
-                    Bible Patterns
+                    Skill Families
                   </span>
                   <span className="font-display text-2xl tracking-tight text-primary">
-                    37
+                    7
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-on-surface">
-                    Judging Layers
+                    Scoring Layers
                   </span>
                   <span className="font-display text-2xl tracking-tight text-primary">
-                    5
+                    6
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between border-t border-outline-variant pt-4">
@@ -141,17 +142,19 @@ export default function EvolutionDashboard() {
                 </div>
               </div>
               <Link
-                to="/registry"
+                to="/bench"
                 className="mt-5 block rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:border-primary/40 hover:text-primary"
               >
-                Browse Registry →
+                View Benchmark →
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Recent evolutions — or curated seeds if the user has none yet */}
+      {/* Pipeline Steps — animated scroll-triggered overview */}
+      <PipelineSteps />
+
       {/* Recent Evolutions — completed user runs only */}
       {completed.length > 0 && (
         <section className="mt-10">
