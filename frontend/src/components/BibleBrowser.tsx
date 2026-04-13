@@ -11,12 +11,14 @@ interface BibleEntry {
 }
 
 interface BibleResponse {
+  books: BibleEntry[];
   patterns: BibleEntry[];
   findings: BibleEntry[];
   anti_patterns: BibleEntry[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+  books: "Books",
   patterns: "Patterns",
   findings: "Findings",
   anti_patterns: "Anti-Patterns",
@@ -35,8 +37,8 @@ export default function BibleBrowser() {
       })
       .then((d) => {
         setData(d);
-        // Auto-select the first pattern on load
-        const first = d.patterns[0] ?? d.findings[0];
+        // Auto-select the first book on load (Genesis)
+        const first = d.books[0] ?? d.patterns[0] ?? d.findings[0];
         if (first) setSelectedSlug(first.slug);
       })
       .catch((err) => setError(String(err)));
@@ -44,7 +46,12 @@ export default function BibleBrowser() {
 
   const allEntries = useMemo(() => {
     if (!data) return [];
-    return [...data.patterns, ...data.findings, ...data.anti_patterns];
+    return [
+      ...(data.books ?? []),
+      ...data.patterns,
+      ...data.findings,
+      ...data.anti_patterns,
+    ];
   }, [data]);
 
   const selected = useMemo(
@@ -54,6 +61,7 @@ export default function BibleBrowser() {
 
   const groups: { key: keyof BibleResponse; entries: BibleEntry[] }[] = data
     ? [
+        { key: "books", entries: data.books ?? [] },
         { key: "patterns", entries: data.patterns },
         { key: "findings", entries: data.findings },
         { key: "anti_patterns", entries: data.anti_patterns },
@@ -68,11 +76,12 @@ export default function BibleBrowser() {
             Protocol: Knowledge
           </p>
           <h1 className="mt-2 font-display text-5xl leading-[1.05] tracking-tight">
-            The <span className="text-secondary">Claude Skills Bible</span>
+            The <span className="text-secondary">SKLD Bible</span>
           </h1>
           <p className="mt-3 max-w-2xl text-on-surface-dim">
-            Empirically-validated patterns harvested from every evolution run.
-            The Breeder publishes new findings here after each generation.
+            Empirical knowledge about building skills for AI coding agents.
+            Every finding is backed by measured data from 867 controlled
+            experiments, not theory or intuition.
           </p>
         </div>
       </div>
@@ -87,7 +96,7 @@ export default function BibleBrowser() {
         {/* Sidebar */}
         <aside className="rounded-xl bg-surface-container-low p-4">
           {data == null ? (
-            <p className="text-sm text-on-surface-dim">Loading…</p>
+            <p className="text-sm text-on-surface-dim">Loading...</p>
           ) : (
             <nav className="space-y-6">
               {groups.map(({ key, entries }) =>
@@ -103,9 +112,11 @@ export default function BibleBrowser() {
                             onClick={() => setSelectedSlug(e.slug)}
                             className={`w-full rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
                               selectedSlug === e.slug
-                                ? "bg-secondary/15 text-secondary"
+                                ? key === "books"
+                                  ? "bg-tertiary/15 text-tertiary"
+                                  : "bg-secondary/15 text-secondary"
                                 : "text-on-surface hover:bg-surface-container-high"
-                            }`}
+                            } ${key === "books" ? "font-medium" : ""}`}
                           >
                             {e.title}
                           </button>
@@ -124,13 +135,14 @@ export default function BibleBrowser() {
           {selected ? (
             <>
               <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                {CATEGORY_LABELS[selected.category as keyof BibleResponse] ??
-                  selected.category}
+                {CATEGORY_LABELS[selected.category] ?? selected.category}
                 {" · "}
                 {selected.filename}
               </p>
               <article className="bible-prose mt-4 max-w-none text-on-surface">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {selected.body}
+                </ReactMarkdown>
               </article>
             </>
           ) : (

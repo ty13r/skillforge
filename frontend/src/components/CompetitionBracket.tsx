@@ -11,6 +11,8 @@ import type {
 interface CompetitionBracketProps {
   scores: CompetitionScoresPayload;
   genomes: RunReportGenome[];
+  /** Per-challenge raw Sonnet baseline composite scores from SKLD-bench */
+  rawBaselineMap?: Record<string, number>;
 }
 
 /**
@@ -32,6 +34,7 @@ interface CompetitionBracketProps {
 export default function CompetitionBracket({
   scores,
   genomes,
+  rawBaselineMap = {},
 }: CompetitionBracketProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
@@ -145,6 +148,19 @@ export default function CompetitionBracket({
 
         const rationale = buildRationale(match, winnerMean, loserMean);
 
+        // Look up raw baseline scores for this match's challenges
+        const rawScores = match.challenge_ids.map(
+          (id) => rawBaselineMap[id] ?? null,
+        );
+        const validRawScores = rawScores.filter(
+          (s): s is number => s !== null,
+        );
+        const rawMean =
+          validRawScores.length > 0
+            ? validRawScores.reduce((a, b) => a + b, 0) / validRawScores.length
+            : null;
+        const hasRaw = validRawScores.length > 0;
+
         return (
           <div
             key={match.dimension}
@@ -183,20 +199,38 @@ export default function CompetitionBracket({
               ))}
             </div>
 
-            {/* Two-sided match */}
-            <div className="mt-4 grid grid-cols-1 items-stretch gap-3 md:grid-cols-[1fr_auto_1fr]">
+            {/* Three-column match: Raw vs Seed vs Spawn */}
+            <div
+              className={`mt-4 grid grid-cols-1 items-stretch gap-3 ${
+                hasRaw
+                  ? "md:grid-cols-[1fr_1fr_1fr]"
+                  : "md:grid-cols-[1fr_auto_1fr]"
+              }`}
+            >
+              {hasRaw && (
+                <SideCard
+                  label="Raw Sonnet"
+                  name="No skill guidance"
+                  perChallenge={rawScores.map((s) => s ?? 0)}
+                  mean={rawMean ?? 0}
+                  isWinner={false}
+                  variant="baseline"
+                />
+              )}
               <SideCard
-                label="Variant 1 · Seed"
+                label={hasRaw ? "Seed (V1)" : "Variant 1 · Seed"}
                 name={match.variant_1_label}
                 perChallenge={match.variant_1_scores}
                 mean={match.variant_1_mean}
                 isWinner={match.winner_slot === 1}
               />
-              <div className="flex items-center justify-center font-mono text-xl text-on-surface-dim">
-                vs
-              </div>
+              {!hasRaw && (
+                <div className="flex items-center justify-center font-mono text-xl text-on-surface-dim">
+                  vs
+                </div>
+              )}
               <SideCard
-                label="Variant 2 · Spawn"
+                label={hasRaw ? "Spawn (V2)" : "Variant 2 · Spawn"}
                 name={match.variant_2_label}
                 perChallenge={match.variant_2_scores}
                 mean={match.variant_2_mean}
@@ -260,6 +294,7 @@ interface SideCardProps {
   perChallenge: number[];
   mean: number;
   isWinner: boolean;
+  variant?: "default" | "baseline";
 }
 
 function SideCard({
@@ -268,15 +303,17 @@ function SideCard({
   perChallenge,
   mean,
   isWinner,
+  variant = "default",
 }: SideCardProps) {
+  const borderClass =
+    variant === "baseline"
+      ? "border-on-surface-dim/30 bg-surface-container-low/50"
+      : isWinner
+        ? "border-tertiary/60 bg-tertiary/10"
+        : "border-outline-variant bg-surface-container-low";
+
   return (
-    <div
-      className={`rounded-lg border p-3 ${
-        isWinner
-          ? "border-tertiary/60 bg-tertiary/10"
-          : "border-outline-variant bg-surface-container-low"
-      }`}
-    >
+    <div className={`rounded-lg border p-3 ${borderClass}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
           {label}
@@ -300,7 +337,11 @@ function SideCard({
             <div className="relative h-2 flex-1 overflow-hidden rounded bg-surface-container-high">
               <div
                 className={`h-full ${
-                  isWinner ? "bg-tertiary/60" : "bg-primary/40"
+                  variant === "baseline"
+                    ? "bg-on-surface-dim/30"
+                    : isWinner
+                      ? "bg-tertiary/60"
+                      : "bg-primary/40"
                 }`}
                 style={{ width: `${Math.max(0, Math.min(1, score)) * 100}%` }}
               />

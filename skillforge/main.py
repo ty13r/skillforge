@@ -53,6 +53,7 @@ else:
         datefmt="%H:%M:%S",
     )
 
+from skillforge.api.bench import router as bench_router
 from skillforge.api.bible import router as bible_router
 from skillforge.api.candidates import router as candidates_router
 from skillforge.api.debug import router as debug_router
@@ -112,6 +113,7 @@ app = FastAPI(
 app.include_router(api_router)
 app.include_router(ws_router)
 app.include_router(debug_router)
+app.include_router(bench_router)
 app.include_router(bible_router)
 app.include_router(spec_assistant_router)
 app.include_router(seeds_router)

@@ -8,6 +8,8 @@ import EvolutionDashboard from "./components/EvolutionDashboard";
 import SeedDetailView from "./components/SeedDetailView";
 import SkillDiffViewer from "./components/SkillDiffViewer";
 import SkillExportPreview from "./components/SkillExportPreview";
+import SkldBench from "./components/SkldBench";
+import SkldBenchFamily from "./components/SkldBenchFamily";
 import SpecializationInput from "./components/SpecializationInput";
 import TaxonomyBrowser from "./components/TaxonomyBrowser";
 
@@ -23,6 +25,8 @@ const router = createBrowserRouter([
       { path: "runs/:runId/diff", element: <SkillDiffViewer /> },
       { path: "runs/:runId/skills/:skillId", element: <SeedDetailView /> },
       { path: "registry", element: <AgentRegistry /> },
+      { path: "bench", element: <SkldBench /> },
+      { path: "bench/:familySlug", element: <SkldBenchFamily /> },
       { path: "taxonomy", element: <TaxonomyBrowser /> },
       { path: "bible", element: <BibleBrowser /> },
     ],

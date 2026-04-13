@@ -14,6 +14,7 @@ import PipelineOverview from "./PipelineOverview";
 import PrimaryButton from "./PrimaryButton";
 import RunNarrative from "./RunNarrative";
 import type {
+  BenchChallenge,
   CompetitionScoresPayload,
   LineageEdge,
   LineageNode,
@@ -76,6 +77,7 @@ export default function AtomicRunDetail({
   } | null>(null);
   const [skillMd, setSkillMd] = useState<string | null>(null);
   const [skillMdError, setSkillMdError] = useState<string | null>(null);
+  const [benchChallenges, setBenchChallenges] = useState<BenchChallenge[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>("composite");
 
   // Fetch the report (includes skill_genomes array for atomic runs)
@@ -129,6 +131,32 @@ export default function AtomicRunDetail({
       .then(setSkillMd)
       .catch((err) => setSkillMdError(String(err)));
   }, [runId]);
+
+  // Fetch raw baseline scores from the bench API for competition display
+  useEffect(() => {
+    const slug = report?.taxonomy?.family_slug;
+    if (!slug) return;
+    fetch(`/api/bench/${slug}`)
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data) => {
+        if (data?.challenges) setBenchChallenges(data.challenges);
+      })
+      .catch(() => {});
+  }, [report?.taxonomy?.family_slug]);
+
+  // Build a lookup map: challenge_id → raw composite score
+  const rawBaselineMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of benchChallenges) {
+      if (c.raw?.composite != null) {
+        map[c.challenge_id] = c.raw.composite;
+      }
+    }
+    return map;
+  }, [benchChallenges]);
 
   // Hard-coded per the seed run's fitness_summary. The pre-existing seed
   // variant beat the Spawner alternative on these 3 dimensions out of 12.
@@ -232,6 +260,36 @@ export default function AtomicRunDetail({
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
               Best Fitness
             </p>
+            {runDetail.baseline_fitness != null && (
+              <div className="mt-2 space-y-0.5 text-right">
+                <p className="font-mono text-xs text-on-surface-dim">
+                  Baseline:{" "}
+                  <span className="text-on-surface">
+                    {runDetail.baseline_fitness.toFixed(3)}
+                  </span>
+                </p>
+                {runDetail.best_fitness != null && runDetail.baseline_fitness > 0 && (
+                  <p className="font-mono text-xs text-on-surface-dim">
+                    Lift:{" "}
+                    <span
+                      className={
+                        runDetail.best_fitness > runDetail.baseline_fitness
+                          ? "text-tertiary"
+                          : "text-error"
+                      }
+                    >
+                      {runDetail.best_fitness > runDetail.baseline_fitness ? "+" : ""}
+                      {(
+                        ((runDetail.best_fitness - runDetail.baseline_fitness) /
+                          runDetail.baseline_fitness) *
+                        100
+                      ).toFixed(0)}
+                      %
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
             <p className="mt-1 font-mono text-sm text-on-surface">
               ${totalCost.toFixed(2)}
             </p>
@@ -313,7 +371,7 @@ export default function AtomicRunDetail({
         )}
 
         {activeTab === "competition" && competitionScores && (
-          <CompetitionBracket scores={competitionScores} genomes={genomes} />
+          <CompetitionBracket scores={competitionScores} genomes={genomes} rawBaselineMap={rawBaselineMap} />
         )}
         {activeTab === "competition" && !competitionScores && (
           <p className="text-xs text-on-surface-dim">

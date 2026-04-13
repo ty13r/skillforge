@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import type { SkillFamily, TaxonomyNode } from "../types";
+import type { SkillFamily, TaxonomyNode, Variant } from "../types";
 
 /**
  * Taxonomy tree view + per-family drill-down.
@@ -72,6 +72,8 @@ export default function TaxonomyBrowser() {
   const [families, setFamilies] = useState<SkillFamily[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterSelection>(INITIAL_FILTER);
+  const [expandedFamily, setExpandedFamily] = useState<string | null>(null);
+  const [familyVariants, setFamilyVariants] = useState<Record<string, Variant[]>>({});
 
   useEffect(() => {
     Promise.all([
@@ -306,35 +308,137 @@ export default function TaxonomyBrowser() {
               </p>
             ) : (
               <ul className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                {filteredFamilies.map((fam) => (
-                  <li key={fam.id}>
-                    <Link
-                      to={`/registry?family=${fam.slug}`}
-                      className="block rounded-xl border border-outline-variant bg-surface-container-lowest p-4 transition-all hover:border-primary/40 hover:shadow-elevated"
-                    >
-                      <div className="flex items-start justify-between">
-                        <span
-                          className={`rounded-full px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider ${
-                            fam.decomposition_strategy === "atomic"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-surface-container-high text-on-surface-dim"
-                          }`}
+                {filteredFamilies.map((fam) => {
+                  const isExpanded = expandedFamily === fam.id;
+                  const variants = familyVariants[fam.id];
+                  const activeVariants = variants?.filter((v) => v.is_active) ?? [];
+                  const avgFitness =
+                    activeVariants.length > 0
+                      ? activeVariants.reduce((s, v) => s + v.fitness_score, 0) /
+                        activeVariants.length
+                      : null;
+
+                  return (
+                    <li key={fam.id}>
+                      <div
+                        className={`rounded-xl border bg-surface-container-lowest p-4 transition-all ${
+                          isExpanded
+                            ? "border-primary/40 shadow-elevated"
+                            : "border-outline-variant hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <span
+                            className={`rounded-full px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider ${
+                              fam.decomposition_strategy === "atomic"
+                                ? "bg-primary/10 text-primary"
+                                : "bg-surface-container-high text-on-surface-dim"
+                            }`}
+                          >
+                            {fam.decomposition_strategy}
+                          </span>
+                          <span className="font-mono text-[0.625rem] text-on-surface-dim">
+                            {fam.slug}
+                          </span>
+                        </div>
+                        <h3 className="mt-2 font-display text-lg tracking-tight">
+                          <Link
+                            to={`/registry?family=${fam.slug}`}
+                            className="hover:text-primary"
+                          >
+                            {fam.label}
+                          </Link>
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-on-surface-dim">
+                          {fam.specialization}
+                        </p>
+
+                        {/* Expand/collapse toggle */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isExpanded) {
+                              setExpandedFamily(null);
+                            } else {
+                              setExpandedFamily(fam.id);
+                              if (!familyVariants[fam.id]) {
+                                fetch(`/api/families/${fam.id}/variants`)
+                                  .then((r) =>
+                                    r.ok
+                                      ? (r.json() as Promise<Variant[]>)
+                                      : Promise.reject(r.statusText),
+                                  )
+                                  .then((v) =>
+                                    setFamilyVariants((prev) => ({
+                                      ...prev,
+                                      [fam.id]: v,
+                                    })),
+                                  )
+                                  .catch(() => {});
+                              }
+                            }
+                          }}
+                          className="mt-3 font-mono text-[0.625rem] uppercase tracking-wider text-primary hover:underline"
                         >
-                          {fam.decomposition_strategy}
-                        </span>
-                        <span className="font-mono text-[0.625rem] text-on-surface-dim">
-                          {fam.slug}
-                        </span>
+                          {isExpanded ? "Hide dimensions" : "Show dimensions"}
+                        </button>
+
+                        {/* Expanded dimension bars */}
+                        {isExpanded && (
+                          <div className="mt-3 border-t border-outline-variant pt-3">
+                            {!variants ? (
+                              <p className="text-[0.625rem] text-on-surface-dim">
+                                Loading...
+                              </p>
+                            ) : activeVariants.length === 0 ? (
+                              <p className="text-[0.625rem] text-on-surface-dim">
+                                No active variants
+                              </p>
+                            ) : (
+                              <>
+                                <div className="mb-2 flex items-center justify-between">
+                                  <span className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+                                    {activeVariants.length} dimensions
+                                  </span>
+                                  {avgFitness != null && (
+                                    <span className="font-mono text-[0.5625rem] text-on-surface-dim">
+                                      Avg: {avgFitness.toFixed(3)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="space-y-1.5">
+                                  {activeVariants
+                                    .sort((a, b) => b.fitness_score - a.fitness_score)
+                                    .map((v) => (
+                                      <div
+                                        key={v.id}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <span className="w-36 shrink-0 truncate font-mono text-[0.5625rem] text-on-surface-dim">
+                                          {v.dimension}
+                                        </span>
+                                        <div className="relative h-3 flex-1 overflow-hidden rounded bg-surface-container-high">
+                                          <div
+                                            className="h-full bg-primary/50"
+                                            style={{
+                                              width: `${Math.max(0, Math.min(1, v.fitness_score)) * 100}%`,
+                                            }}
+                                          />
+                                        </div>
+                                        <span className="w-10 text-right font-mono text-[0.5625rem] text-on-surface">
+                                          {v.fitness_score.toFixed(3)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <h3 className="mt-2 font-display text-lg tracking-tight">
-                        {fam.label}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-on-surface-dim">
-                        {fam.specialization}
-                      </p>
-                    </Link>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>

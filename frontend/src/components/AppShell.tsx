@@ -52,6 +52,9 @@ export default function AppShell() {
             <NavLink to="/registry" className={navLinkClass}>
               Registry
             </NavLink>
+            <NavLink to="/bench" className={navLinkClass}>
+              Bench
+            </NavLink>
             <NavLink to="/taxonomy" className={navLinkClass}>
               Taxonomy
             </NavLink>
@@ -127,6 +130,9 @@ export default function AppShell() {
               </NavLink>
               <NavLink to="/registry" className={mobileNavLinkClass}>
                 Registry
+              </NavLink>
+              <NavLink to="/bench" className={mobileNavLinkClass}>
+                Bench
               </NavLink>
               <NavLink to="/taxonomy" className={mobileNavLinkClass}>
                 Taxonomy

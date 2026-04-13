@@ -69,6 +69,8 @@ class RunDetail(BaseModel):
     # v2.0 Step 1b — exposes the audit trail + reconstructed integration report
     # so the atomic run-detail page can render a narrative timeline.
     learning_log: list[str] = Field(default_factory=list)
+    # v2.1.3 — Sonnet raw baseline composite from SKLD-bench
+    baseline_fitness: float | None = None
 
 
 class LineageNode(BaseModel):
