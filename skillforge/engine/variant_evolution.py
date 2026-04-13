@@ -111,7 +111,10 @@ async def _run_dimension_mini_evolution(
     from skillforge.agents.challenge_designer import design_variant_challenge
     from skillforge.agents.judge.pipeline import run_judging_pipeline
     from skillforge.agents.spawner import spawn_variant_gen0
+    from skillforge.db.queries import get_family
     from skillforge.engine.evolution import _gated_competitor
+    from skillforge.engine.scorer import score_competitor, scores_to_pareto_objectives
+    from skillforge.engine.transcript_logger import log_competitor_dispatch
 
     dimension_spec = {
         "name": vevo.dimension,
@@ -192,6 +195,71 @@ async def _run_dimension_mini_evolution(
             for idx, skill in enumerate(current_skills)
         ]
         results = list(await asyncio.gather(*competitor_tasks))
+
+        # --- Composite scoring (Phase 6) ---
+        # Resolve family slug for the scorer
+        family_slug = None
+        family = await get_family(vevo.family_id) if vevo.family_id else None
+        if family:
+            family_slug = family.slug
+
+        if family_slug:
+            # Build challenge data dict for the scorer (challenge is in-memory, not on disk)
+            challenge_data = {
+                "id": challenge.id,
+                "prompt": challenge.prompt,
+                "difficulty": challenge.difficulty,
+                "evaluation_criteria": challenge.evaluation_criteria if hasattr(challenge, "evaluation_criteria") else {},
+            }
+
+            # Score each competitor's output with the composite scorer
+            for result in results:
+                if not result.output_files:
+                    continue
+                try:
+                    scores = await score_competitor(
+                        family_slug=family_slug,
+                        challenge_id=challenge.id,
+                        challenge_data=challenge_data,
+                        output_files=result.output_files,
+                        run_behavioral=True,
+                    )
+                    # Merge composite objectives into the result's genome
+                    objectives = scores_to_pareto_objectives(scores)
+                    # Find the matching genome and set pareto_objectives
+                    for skill in current_skills:
+                        if skill.id == result.skill_id:
+                            skill.pareto_objectives = objectives
+                            # Also store the full breakdown in deterministic_scores
+                            skill.deterministic_scores = {
+                                "composite": scores.get("composite", 0.0),
+                                "l0": scores.get("l0", {}).get("score", 0.0) if isinstance(scores.get("l0"), dict) else 0.0,
+                                "compiles": scores.get("compile", {}).get("compiles", False) if isinstance(scores.get("compile"), dict) else False,
+                            }
+                            break
+
+                    # Log the dispatch transcript
+                    from skillforge.config import model_for
+                    await log_competitor_dispatch(
+                        run_id=run.id,
+                        family_slug=family_slug,
+                        challenge_id=challenge.id,
+                        skill_id=result.skill_id,
+                        model=model_for("competitor"),
+                        result=result,
+                        scores=scores,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(
+                        "run=%s composite scoring failed for skill %s: %s",
+                        run.id[:8], result.skill_id, exc,
+                    )
+        else:
+            logger.warning(
+                "run=%s dimension %s: family_slug not resolved, skipping composite scoring",
+                run.id[:8],
+                vevo.dimension,
+            )
 
         # Judge — scores get written onto each SkillGenome in place
         generation = Generation(

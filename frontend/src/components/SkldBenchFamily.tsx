@@ -197,23 +197,31 @@ export default function SkldBenchFamily() {
         {/* Histogram */}
         <div className="rounded-xl border border-outline-variant bg-surface-container-low p-6">
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-            Score Distribution (Composite)
+            Score Distribution
           </p>
-          <div className="mt-4 flex items-end gap-1" style={{ height: 160 }}>
+          <p className="mt-1 text-[0.6875rem] text-on-surface-dim">
+            How many challenges scored in each composite range — most challenges cluster around 0.5–0.8
+          </p>
+          <div className="mt-3 space-y-1.5">
             {data.histogram.counts.map((count, i) => {
               const maxCount = Math.max(...data.histogram.counts, 1);
-              const heightPct = (count / maxCount) * 100;
+              const widthPct = (count / maxCount) * 100;
+              const bucket = data.histogram.buckets[i] ?? `${(i / 10).toFixed(1)}`;
               return (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                  <span className="font-mono text-[0.5rem] text-on-surface-dim">
-                    {count > 0 ? count : ""}
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-12 shrink-0 text-right font-mono text-[0.625rem] text-on-surface-dim">
+                    {bucket.split("-")[0]}
                   </span>
-                  <div
-                    className="w-full rounded-t bg-tertiary/50"
-                    style={{ height: `${heightPct}%`, minHeight: count > 0 ? 4 : 0 }}
-                  />
-                  <span className="font-mono text-[0.5rem] text-on-surface-dim">
-                    {data.histogram.buckets[i]?.split("-")[0]}
+                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-surface-container-high">
+                    {count > 0 && (
+                      <div
+                        className="h-full rounded bg-tertiary/50"
+                        style={{ width: `${widthPct}%`, minWidth: 4 }}
+                      />
+                    )}
+                  </div>
+                  <span className="w-8 shrink-0 font-mono text-[0.625rem] text-on-surface">
+                    {count}
                   </span>
                 </div>
               );

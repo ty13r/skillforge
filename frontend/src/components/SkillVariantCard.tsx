@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import CodeViewer from "./CodeViewer";
 import SkillContentModal from "./SkillContentModal";
 import StatusGlow from "./StatusGlow";
 import type { CompetitorState, CompetitorView } from "../types";
@@ -17,6 +18,10 @@ interface SkillVariantCardProps {
   isControl: boolean;
   competitors: CompetitorView[];
   challenges: ChallengeInfo[];
+  /** Override the default "Variant A/B" label */
+  label?: string;
+  /** Override the "Control" badge text */
+  controlLabel?: string;
 }
 
 const ACTIVE_STATES: ReadonlySet<CompetitorState> = new Set([
@@ -40,10 +45,19 @@ export default function SkillVariantCard({
   isControl,
   competitors,
   challenges,
+  label,
+  controlLabel,
 }: SkillVariantCardProps) {
   const letter = String.fromCharCode(65 + variantIndex);
   const [showModal, setShowModal] = useState(false);
+  const [showCode, setShowCode] = useState(true); // expanded by default
   const firstCompetitor = competitors[0] ?? undefined;
+
+  // Auto-collapse when competitors reset (next dimension starts)
+  const hasOutput = !!(firstCompetitor?.outputFiles && Object.keys(firstCompetitor.outputFiles).length > 0);
+  useEffect(() => {
+    if (!hasOutput) setShowCode(true); // re-expand for next competitor
+  }, [hasOutput]);
 
   const { doneCount, total, anyActive } = useMemo(() => {
     let done = 0;
@@ -77,11 +91,11 @@ export default function SkillVariantCard({
           />
         </div>
         <p className="text-base font-medium text-on-surface">
-          Variant {letter}
+          {label ?? `Variant ${letter}`}
         </p>
         {isControl && (
           <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
-            Control
+            {controlLabel ?? "Control"}
           </span>
         )}
         <button
@@ -110,6 +124,45 @@ export default function SkillVariantCard({
               : `${doneCount}/${total}`}
         </span>
       </div>
+
+      {/* Score breakdown — shown after judging */}
+      {allDone && firstCompetitor?.scores && (
+        <div className="mt-3 rounded-lg bg-surface-container-high p-3">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+              Composite
+            </span>
+            <span className="font-display text-lg tracking-tight text-tertiary">
+              {firstCompetitor.scores.composite.toFixed(3)}
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-1">
+            {[
+              { label: "Behavioral", value: firstCompetitor.scores.behavioral, weight: 40 },
+              { label: "Compile", value: firstCompetitor.scores.compile ? 1 : 0, weight: 15 },
+              { label: "AST", value: firstCompetitor.scores.ast, weight: 15 },
+              { label: "L0 Match", value: firstCompetitor.scores.l0, weight: 10 },
+              { label: "Template", value: firstCompetitor.scores.template, weight: 10 },
+              { label: "Brevity", value: firstCompetitor.scores.brevity, weight: 10 },
+            ].map((s) => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <div className="h-1.5 w-12 overflow-hidden rounded-full bg-surface-container-lowest">
+                  <div
+                    className="h-full rounded-full bg-tertiary/60"
+                    style={{ width: `${Math.min(1, s.value) * 100}%` }}
+                  />
+                </div>
+                <span className="font-mono text-[0.5rem] text-on-surface-dim">
+                  {s.label}
+                </span>
+                <span className="ml-auto font-mono text-[0.5rem] text-on-surface">
+                  {typeof s.value === "number" ? s.value.toFixed(2) : s.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Trait chips */}
       {firstCompetitor?.traits && firstCompetitor.traits.length > 0 && (
@@ -185,6 +238,37 @@ export default function SkillVariantCard({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Output code — expanded by default, collapsible */}
+      {allDone && hasOutput && (
+        <div className="mt-3 border-t border-outline-variant pt-3">
+          <button
+            type="button"
+            onClick={() => setShowCode((v) => !v)}
+            className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
+          >
+            {showCode ? "▾ Hide Output" : "▸ View Output"}{" "}
+            <span className="text-on-surface-dim/60">
+              ({Object.keys(firstCompetitor!.outputFiles!).length} file{Object.keys(firstCompetitor!.outputFiles!).length > 1 ? "s" : ""})
+            </span>
+          </button>
+          {showCode && (
+            <div className="mt-2 space-y-3">
+              {Object.entries(firstCompetitor!.outputFiles!).map(([path, content]) => (
+                <div key={path} className="overflow-hidden rounded-lg bg-surface-container-high">
+                  <div className="flex items-center justify-between border-b border-outline-variant/30 px-3 py-1.5">
+                    <span className="font-mono text-[0.5625rem] text-tertiary">{path}</span>
+                    <span className="font-mono text-[0.5rem] text-on-surface-dim">
+                      {content.split("\n").length} lines
+                    </span>
+                  </div>
+                  <CodeViewer code={content} filePath={path} className="max-h-80 !rounded-none !p-3 text-[0.625rem]" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -2,8 +2,8 @@
 
 ## Entry #5: The v1.1 Landing
 
-**Date**: April 9, 2026 (late evening → early morning)
-**Session Duration**: ~5 hours
+**Date**: April 9, 2026 (late evening → early morning)  
+**Session Duration**: ~5 hours  
 **Participants**: Matt + Claude Code (Opus 4.6, 1M context) + 3 background subagents
 
 ---

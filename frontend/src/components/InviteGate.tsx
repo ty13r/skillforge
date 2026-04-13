@@ -284,7 +284,7 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
 
       <p className="mt-6 text-center text-xs text-on-surface-dim">
         Want to see the platform in action first?{" "}
-        <a href="/" className="text-primary underline">
+        <a href="/runs/demo-live" className="text-primary underline">
           Watch the live demo
         </a>{" "}
         — no code required.

@@ -2,8 +2,8 @@
 
 ## Entry #14: Seven Seed Runs and the Scoring Crisis
 
-**Date**: April 12, 2026
-**Session Duration**: ~14 hours (single marathon session)
+**Date**: April 12, 2026  
+**Session Duration**: ~14 hours (single marathon session)  
 **Participants**: Matt + Claude Opus 4.6 (1M context)
 
 ---

@@ -367,6 +367,7 @@ Raw model baseline performance on SKLD-bench challenges — no skill guidance, j
 | `passed` | INTEGER | NOT NULL | 0 or 1 |
 | `objectives` | TEXT | NOT NULL | JSON dict of per-objective results from scorer |
 | `output_files` | TEXT | NOT NULL | JSON dict `{path: content}` — what the model produced |
+| `scores` | TEXT | NULL | JSON dict with multi-level composite breakdown: `{l0, compile, ast, behavioral, template, brevity, composite, weights}`. Added in v2.1.3 Phase 0. NULL for rows scored before the overhaul |
 | `total_tokens` | INTEGER | NOT NULL | Total token count for the dispatch |
 | `duration_ms` | INTEGER | NOT NULL | Wall-clock time for the dispatch |
 | `error` | TEXT | NULL | NULL if successful, error message if dispatch failed |

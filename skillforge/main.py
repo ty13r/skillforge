@@ -53,11 +53,13 @@ else:
         datefmt="%H:%M:%S",
     )
 
+from skillforge.config import ROOT_DIR
 from skillforge.api.bench import router as bench_router
 from skillforge.api.bible import router as bible_router
 from skillforge.api.candidates import router as candidates_router
 from skillforge.api.debug import router as debug_router
 from skillforge.api.invites import router as invites_router
+from skillforge.api.journal import router as journal_router
 from skillforge.api.routes import router as api_router
 from skillforge.api.seeds import router as seeds_router
 from skillforge.api.spec_assistant import router as spec_assistant_router
@@ -119,6 +121,7 @@ app.include_router(spec_assistant_router)
 app.include_router(seeds_router)
 app.include_router(uploads_router)
 app.include_router(invites_router)
+app.include_router(journal_router)
 app.include_router(candidates_router)
 app.include_router(taxonomy_router)
 
@@ -294,28 +297,125 @@ def _mount_frontend_spa() -> None:
             raw_html = re.sub(pattern, repl, raw_html, count=1)
         return raw_html
 
+    # Static meta for known SPA routes so bots/AI can understand the page
+    _ROUTE_META: dict[str, dict[str, str]] = {
+        "bench": {
+            "title": "SKLD-bench — 867 Elixir Challenges",
+            "description": "Controlled evaluation benchmark for measuring whether Claude Agent Skills improve code generation. 7 families, 6 scoring layers, composite fitness.",
+        },
+        "registry": {
+            "title": "Skill Registry — SKLD",
+            "description": "Browse evolved Claude Agent Skills. 7 Elixir lighthouse families with composite fitness scores, competition results, and per-dimension breakdowns.",
+        },
+        "taxonomy": {
+            "title": "Skill Taxonomy — SKLD",
+            "description": "Domain, Focus, Language hierarchy for AI coding skills. 49 taxonomy nodes, 22 skill families with expandable capability dimensions.",
+        },
+        "bible": {
+            "title": "The SKLD Bible — Empirical Skill Engineering Knowledge",
+            "description": "Book of Genesis (universal principles) and Book of Elixir (Elixir-specific findings) from evolving 7 skill families across 867 challenges.",
+        },
+        "journal": {
+            "title": "Project Journal — SKLD",
+            "description": "The story of building SKLD: sessions, decisions, pivots, and lessons learned. Building in public with full provenance.",
+        },
+    }
+
+    # Paths for journal entries and bench family sub-pages
+    _JOURNAL_PATH_RE = re.compile(r"^journal\b")
+    _BENCH_FAMILY_PATH_RE = re.compile(r"^bench/([a-z0-9][a-z0-9\-]*)$")
+
+    def _static_route_meta(full_path: str) -> dict[str, str] | None:
+        """Return meta tags for known SPA routes."""
+        # Exact match first
+        base = full_path.rstrip("/").split("?")[0]
+        if base in _ROUTE_META:
+            meta = _ROUTE_META[base]
+            return {
+                "title": html.escape(meta["title"], quote=True),
+                "description": html.escape(meta["description"], quote=True),
+                "url": html.escape(f"{_SITE_URL}/{base}", quote=True),
+            }
+        # Bench family sub-pages
+        bench_m = _BENCH_FAMILY_PATH_RE.match(base)
+        if bench_m:
+            slug = bench_m.group(1)
+            label = slug.replace("elixir-", "").replace("-", " ").title()
+            return {
+                "title": html.escape(f"{label} — SKLD-bench", quote=True),
+                "description": html.escape(
+                    f"Per-challenge benchmark data for {label}: tier breakdown, dimension stats, score distribution, and sortable challenge table.",
+                    quote=True,
+                ),
+                "url": html.escape(f"{_SITE_URL}/bench/{slug}", quote=True),
+            }
+        # Journal path
+        if _JOURNAL_PATH_RE.match(base):
+            return _ROUTE_META["journal"] | {
+                "url": html.escape(f"{_SITE_URL}/{base}", quote=True),
+                "title": html.escape("Project Journal — SKLD", quote=True),
+                "description": html.escape(
+                    "The story of building SKLD: sessions, decisions, pivots, and lessons learned.",
+                    quote=True,
+                ),
+            }
+        return None
+
+    def _inject_noscript_content(raw_html: str, full_path: str) -> str:
+        """Add a <noscript> block with file-based content so AI/crawlers can read the page."""
+        base = full_path.rstrip("/").split("?")[0]
+        content_lines: list[str] = []
+
+        try:
+            if base == "bible" or base.startswith("bible"):
+                bible_dir = ROOT_DIR / "bible"
+                for book_path in sorted(bible_dir.glob("book-of-*.md")):
+                    body = book_path.read_text(encoding="utf-8")
+                    content_lines.append(f"<article><pre>{html.escape(body[:3000])}</pre></article>")
+            elif base == "journal" or base.startswith("journal"):
+                journal_dir = ROOT_DIR / "journal"
+                if journal_dir.exists():
+                    for p in sorted(journal_dir.glob("*.md"), reverse=True)[:5]:
+                        body = p.read_text(encoding="utf-8")
+                        content_lines.append(f"<article><pre>{html.escape(body[:3000])}</pre></article>")
+            elif base == "bench":
+                content_lines.append("<h1>SKLD-bench: 867 Elixir Challenges</h1>")
+                content_lines.append("<p>Controlled evaluation benchmark across 7 Elixir skill families with 6-layer composite scoring (L0 string match 10%, compilation 15%, AST quality 15%, behavioral tests 40%, template quality 10%, brevity 10%). Families: phoenix-liveview, ecto-query-writer, ecto-sandbox-test, ecto-schema-changeset, oban-worker, pattern-match-refactor, security-linter.</p>")
+        except Exception:
+            pass
+
+        if not content_lines:
+            return raw_html
+
+        noscript_block = "<noscript>\n" + "\n".join(content_lines) + "\n</noscript>"
+        return raw_html.replace("</body>", f"{noscript_block}\n</body>")
+
     @app.get("/{full_path:path}", response_model=None)
     async def spa_catchall(full_path: str) -> FileResponse | HTMLResponse:
         if full_path.startswith(("api/", "ws", "assets/")):
             raise HTTPException(status_code=404, detail="Not Found")
 
-        # Per-run meta tag injection for /runs/:runId paths so Discord,
-        # Slack, iMessage, Twitter, etc. show a rich preview card with the
-        # run's specific skill name + specialization + fitness instead of
-        # the generic site-wide fallback.
+        raw = None
+        meta = None
+
+        # Per-run meta tag injection
         match = _RUN_PATH_RE.match(full_path)
         if match:
             run_id = match.group(1)
             meta = await _run_meta_tags(run_id)
-            if meta is not None:
-                try:
-                    raw = (_FRONTEND_DIST / "index.html").read_text(
-                        encoding="utf-8"
-                    )
-                    patched = _inject_meta(raw, meta)
-                    return HTMLResponse(content=patched)
-                except Exception:  # noqa: BLE001 - degrade to static tags
-                    pass
+
+        # Static route meta for known SPA routes
+        if meta is None:
+            meta = _static_route_meta(full_path)
+
+        if meta is not None:
+            try:
+                raw = (_FRONTEND_DIST / "index.html").read_text(encoding="utf-8")
+                patched = _inject_meta(raw, meta)
+                patched = _inject_noscript_content(patched, full_path)
+                return HTMLResponse(content=patched)
+            except Exception:  # noqa: BLE001 - degrade to static tags
+                pass
 
         return FileResponse(str(_FRONTEND_DIST / "index.html"))
 

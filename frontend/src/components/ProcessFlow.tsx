@@ -37,10 +37,10 @@ export default function ProcessFlow({
       {/* Generation header */}
       <div className="mb-3 px-3 py-2">
         <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-          Process Flow
+          Evolution Pipeline
         </p>
         <p className="mt-1 text-sm text-on-surface">
-          Generation{" "}
+          Round{" "}
           <span className="font-display text-base text-primary">
             {currentGeneration + 1}
           </span>

@@ -1,0 +1,32 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1412"/>
+      <stop offset="100%" style="stop-color:#0f0d0b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="30%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#c4956a;stop-opacity:0.12"/>
+      <stop offset="100%" style="stop-color:#1a1412;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Border accent -->
+  <rect x="40" y="40" width="1120" height="550" rx="16" fill="none" stroke="#c4956a" stroke-width="1" stroke-opacity="0.3"/>
+  <!-- SKLD.run logo -->
+  <text x="80" y="120" font-family="Georgia, serif" font-size="48" fill="#e8e0d8" letter-spacing="-1">SKLD</text>
+  <text x="218" y="120" font-family="Georgia, serif" font-size="48" fill="#c4956a" letter-spacing="-1">.run</text>
+  <!-- Tagline -->
+  <text x="80" y="200" font-family="Georgia, serif" font-size="64" fill="#e8e0d8" letter-spacing="-2">Evolve Agent Skills</text>
+  <text x="80" y="270" font-family="Georgia, serif" font-size="64" fill="#e8e0d8" letter-spacing="-2">Through <tspan fill="#c4956a">Natural Selection</tspan></text>
+  <!-- Stats -->
+  <text x="80" y="380" font-family="monospace" font-size="18" fill="#a09888" letter-spacing="2">867 CHALLENGES  ·  7 FAMILIES  ·  6 SCORING LAYERS</text>
+  <!-- Description -->
+  <text x="80" y="430" font-family="system-ui, sans-serif" font-size="22" fill="#8a8078">Skill Kinetics through Layered Darwinism</text>
+  <text x="80" y="462" font-family="system-ui, sans-serif" font-size="22" fill="#8a8078">Empirical AI skill engineering with measured data</text>
+  <!-- Bottom accent line -->
+  <line x1="80" y1="520" x2="400" y2="520" stroke="#c4956a" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- URL -->
+  <text x="80" y="560" font-family="monospace" font-size="16" fill="#6a6058" letter-spacing="1">skld.run</text>
+</svg>

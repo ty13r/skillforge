@@ -64,7 +64,10 @@ export default function AppShell() {
           </nav>
 
           {/* Desktop right cluster — hidden below md */}
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-4 md:flex">
+            <NavLink to="/journal" className={navLinkClass}>
+              Journal
+            </NavLink>
             <ThemeToggle />
             <Link to="/new">
               <PrimaryButton type="button">+ New Evolution</PrimaryButton>
@@ -139,6 +142,9 @@ export default function AppShell() {
               </NavLink>
               <NavLink to="/bible" className={mobileNavLinkClass}>
                 Bible
+              </NavLink>
+              <NavLink to="/journal" className={mobileNavLinkClass}>
+                Journal
               </NavLink>
               <div className="my-2 h-px bg-outline-variant" />
               <Link to="/new" className="block">

@@ -1,70 +1,79 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-import BreedingReport from "./BreedingReport";
 import AtomicRunDetail from "./AtomicRunDetail";
-import EvolutionResults from "./EvolutionResults";
-import FitnessChart from "./FitnessChart";
+import AtomicSidebar from "./AtomicSidebar";
+import BreedingReport from "./BreedingReport";
 import LiveFeedLog from "./LiveFeedLog";
-import Sidebar from "./Sidebar";
 import SkillVariantCard from "./SkillVariantCard";
 import StatusGlow from "./StatusGlow";
-import { derivePhases, useEvolutionSocket } from "../hooks/useEvolutionSocket";
-import type { CompetitorView, RunDetail } from "../types";
-
-// Each judging layer with a human-readable sentence describing what it's
-// actually scoring — so users don't see abstract "L1 Deterministic" but
-// "L1 — Running the Skill's scripts against verification tests."
-const JUDGING_LAYERS: { layer: string; label: string; description: string }[] = [
-  {
-    layer: "L1",
-    label: "Deterministic Checks",
-    description:
-      "Running each candidate's scripts against verification tests. Does the code compile, execute, pass assertions?",
-  },
-  {
-    layer: "L2",
-    label: "Trigger Accuracy",
-    description:
-      "Batched LLM call: given 20 realistic user queries, does the frontmatter description correctly route to this Skill? (precision + recall)",
-  },
-  {
-    layer: "L3",
-    label: "Trace Analysis",
-    description:
-      "Reading each competitor's execution trace: did the Skill actually load? Which instructions did Claude follow vs ignore?",
-  },
-  {
-    layer: "L4",
-    label: "Pareto Ranking",
-    description:
-      "Pairwise comparison across all candidates. Builds a Pareto front where multiple winners coexist on different objectives.",
-  },
-  {
-    layer: "L5",
-    label: "Trait Attribution",
-    description:
-      "Maps each instruction in the SKILL.md to a fitness contribution. Surfaces which traits drove the win and which hurt.",
-  },
-];
+import { useEvolutionSocket } from "../hooks/useEvolutionSocket";
+import type { BenchSummary, CompetitorView, DimensionStatus, RunDetail } from "../types";
 
 export default function EvolutionArena() {
   const { runId } = useParams<{ runId: string }>();
   const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
+  const [dimensions, setDimensions] = useState<DimensionStatus[]>([]);
+  const [benchBaseline, setBenchBaseline] = useState<{
+    rawComposite: number | null;
+    families: number;
+    challenges: number;
+  } | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [isStale, setIsStale] = useState(false);
   const startTime = useState(() => Date.now())[0];
 
-  // Fetch run detail once on mount (for population_size, num_generations).
-  // This resolves before the WebSocket connects so we can skip the socket
-  // entirely for already-finished runs (avoids ECONNRESET noise).
+  // Fetch run detail once on mount
   useEffect(() => {
     if (!runId) return;
+    // For the permanent demo, ensure it's running before fetching
+    if (runId === "demo-live") {
+      fetch("/api/debug/demo", { method: "POST" }).catch(() => {});
+    }
     fetch(`/api/runs/${runId}`)
       .then((r) => r.json())
       .then((d: RunDetail) => setRunDetail(d))
       .catch(() => undefined);
   }, [runId]);
+
+  // Fetch dimension status for atomic runs
+  useEffect(() => {
+    if (!runId) return;
+    fetch(`/api/runs/${runId}/dimensions`)
+      .then((r) => {
+        if (!r.ok) return [];
+        return r.json() as Promise<DimensionStatus[]>;
+      })
+      .then(setDimensions)
+      .catch(() => setDimensions([]));
+  }, [runId]);
+
+  // Fetch bench baseline data (once)
+  useEffect(() => {
+    fetch("/api/bench/summary")
+      .then((r) => r.ok ? r.json() as Promise<BenchSummary> : null)
+      .then((data) => {
+        if (data?.overall) {
+          setBenchBaseline({
+            rawComposite: data.overall.raw_composite ?? null,
+            families: data.families.length,
+            challenges: data.overall.challenges,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Poll dimensions while run is active (every 5s)
+  useEffect(() => {
+    if (!runId || runDetail?.status === "complete" || runDetail?.status === "failed") return;
+    const id = setInterval(() => {
+      fetch(`/api/runs/${runId}/dimensions`)
+        .then((r) => r.ok ? r.json() as Promise<DimensionStatus[]> : [])
+        .then(setDimensions)
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(id);
+  }, [runId, runDetail?.status]);
 
   const runAlreadyDone =
     runDetail?.status === "complete" || runDetail?.status === "failed";
@@ -74,9 +83,6 @@ export default function EvolutionArena() {
     runAlreadyDone ? null : (runId ?? null),
   );
 
-  // Treat a persisted "complete" or "failed" status the same as the
-  // corresponding WebSocket flags so the timer stops and the Cancel button
-  // hides when revisiting a finished run.
   const isComplete = sockState.isComplete || runDetail?.status === "complete";
   const isFailed = sockState.isFailed || runDetail?.status === "failed";
 
@@ -85,26 +91,16 @@ export default function EvolutionArena() {
     if (isComplete || isFailed) return;
     const id = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000));
-      // Stale detection: no events for 90+ seconds
-      if (sockState.lastEventAt > 0 && Date.now() - sockState.lastEventAt > 90_000) {
-        setIsStale(true);
-      } else {
-        setIsStale(false);
-      }
     }, 1000);
     return () => clearInterval(id);
-  }, [isComplete, isFailed, startTime, sockState.lastEventAt]);
+  }, [isComplete, isFailed, startTime]);
 
-  // Derive the specialization from run_started event (fallback for fake runs
-  // that aren't in the DB and won't load a runDetail).
   const specialization = useMemo(() => {
     if (runDetail?.specialization) return runDetail.specialization;
     const started = sockState.events.find((e) => e.event === "run_started");
     return (started?.specialization as string | undefined) ?? "";
   }, [runDetail, sockState.events]);
 
-  // Collect all designed challenges with their prompts + difficulty. Keyed
-  // by challenge_id so cards can cross-reference.
   const challenges = useMemo(() => {
     const byId = new Map<
       string,
@@ -127,13 +123,6 @@ export default function EvolutionArena() {
     return Array.from(byId.values());
   }, [sockState.events]);
 
-  // Expected number of (skill, challenge) competitor runs in the active gen
-  const expectedCompetitors = useMemo(() => {
-    const pop = runDetail?.population_size ?? 5;
-    return pop * Math.max(challenges.length, 1);
-  }, [runDetail, challenges.length]);
-
-  // Group competitors by skillId for the variant card layout
   const variantGroups = useMemo(() => {
     const groups = new Map<string, { competitorId: number; competitors: CompetitorView[] }>();
     for (const c of sockState.competitors) {
@@ -152,381 +141,357 @@ export default function EvolutionArena() {
     }));
   }, [sockState.competitors]);
 
-  // Judging layer that's currently active, if any. Now driven by granular
-  // judging_layer_complete events via sockState.currentJudgingLayer (1-5).
-  const isJudging = useMemo(() => {
-    const gen = sockState.generations.at(-1);
-    return gen?.status === "judging";
-  }, [sockState.generations]);
+  // For demo/fake runs, build DimensionStatus[] from socket events
+  const effectiveDimensions = useMemo(() => {
+    if (dimensions.length > 0) return dimensions;
+    // Fallback: build from socket state for demo runs
+    return sockState.atomicDimensions.map((d) => ({
+      id: d.dimension,
+      dimension: d.dimension,
+      tier: d.tier as "foundation" | "capability",
+      status: d.status,
+      winner_variant_id: null,
+      challenge_id: null,
+      population_size: 2,
+      num_generations: 1,
+      created_at: null,
+      completed_at: null,
+      fitness_score: d.fitness ?? null,
+      genome_id: null,
+    }));
+  }, [dimensions, sockState.atomicDimensions]);
 
-  // Compute phase states for the sidebar diagram
-  const phases = useMemo(
-    () => derivePhases(sockState, expectedCompetitors),
-    [sockState, expectedCompetitors],
-  );
+  // Derive which dimension is currently running
+  const activeDimension = useMemo(() => {
+    const running = effectiveDimensions.find((d) => d.status === "running");
+    if (running) return running.dimension;
+    return sockState.activeDimension ?? null;
+  }, [effectiveDimensions, sockState.activeDimension]);
+
+  const completedDims = effectiveDimensions.filter((d) => d.status === "complete").length;
+  const totalDims = effectiveDimensions.length;
+
+  // --- All hooks above this line ---
 
   if (!runId) return null;
 
-  // If complete, render the results screen. Atomic-mode runs get the
-  // richer AtomicRunDetail showcase page (Step 1b); molecular runs stay on
-  // the legacy EvolutionResults layout.
+  // Completed runs → AtomicRunDetail showcase
   if (isComplete) {
-    if (runDetail?.evolution_mode === "atomic") {
-      return <AtomicRunDetail runId={runId} runDetail={runDetail} />;
-    }
-    return <EvolutionResults runId={runId} sockState={sockState} runDetail={runDetail} />;
+    return <AtomicRunDetail runId={runId} runDetail={runDetail!} dimensions={effectiveDimensions} />;
   }
 
-  // Show breeding state when active
   const showBreeding = !!sockState.latestBreedingReport;
-
   const elapsedFmt = `${Math.floor(elapsed / 60)
     .toString()
     .padStart(2, "0")}:${(elapsed % 60).toString().padStart(2, "0")}`;
-  const budgetCap = 10; // Could come from runDetail; not currently exposed
+  const budgetCap = 10;
 
+  // --- Atomic in-progress layout ---
   return (
-    <div className="flex">
-      <Sidebar
-        runId={runId}
-        generation={sockState.currentGeneration}
-        totalGenerations={runDetail?.num_generations}
-        phases={phases}
-      />
+      <div className="flex">
+        <AtomicSidebar
+          runId={runId}
+          dimensions={effectiveDimensions}
+          activeDimension={activeDimension}
+        />
 
-      <div className="flex-1 px-8 py-6">
-        {/* Header — specialization is the headline, Evolution Cycle is the eyebrow */}
-        <div className="flex items-start justify-between gap-6">
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
-              Evolving · Generation {sockState.currentGeneration + 1} of{" "}
-              {runDetail?.num_generations ?? "?"}
-            </p>
-            <h1 className="mt-2 font-display text-3xl leading-tight tracking-tight md:text-4xl">
-              {specialization || "Evolution Cycle"}
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {runId.startsWith("fake-") && (
-                <span className="rounded-full border border-primary/50 bg-primary/10 px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-primary">
-                  DEMO
+        <div className="flex-1 px-8 py-6">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-6">
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
+                {activeDimension
+                  ? `Dimension ${completedDims + 1} of ${totalDims} · ${activeDimension.replace(/-/g, " ")}`
+                  : `Evolving ${totalDims} dimensions`}
+              </p>
+              <h1 className="mt-2 font-display text-3xl leading-tight tracking-tight md:text-4xl">
+                {specialization || "Atomic Evolution"}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[0.625rem] uppercase tracking-wider ${
+                  isFailed ? "bg-error/15 text-error" : "bg-tertiary/15 text-tertiary"
+                }`}>
+                  <StatusGlow variant={isFailed ? "error" : "success"} />
+                  {isFailed ? "FAILED" : "RUNNING"}
                 </span>
-              )}
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary/15 px-3 py-1 font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
-                <StatusGlow variant="success" />
-                {isFailed ? "FAILED" : "RUNNING"}
-              </span>
-              <span className="font-mono text-[0.6875rem] text-on-surface-dim">
-                run {runId.slice(0, 8)}
-              </span>
+                <span className="font-mono text-[0.6875rem] text-on-surface-dim">
+                  {completedDims}/{totalDims} dimensions
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col items-end gap-3">
-            <div className="text-right">
-              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                Elapsed
-              </p>
-              <p className="font-display text-2xl tracking-tight">{elapsedFmt}</p>
-              <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                Budget Used
-              </p>
-              <p className="font-mono text-sm text-tertiary">
-                ${sockState.totalCostUsd.toFixed(2)} / ${budgetCap.toFixed(2)}
-              </p>
-            </div>
-            {!isComplete && !isFailed && (
-              <button
-                onClick={async () => {
-                  if (
-                    !window.confirm(
-                      "Cancel this run? Any work completed so far will be saved, but no further generations will run.",
-                    )
-                  )
-                    return;
-                  try {
-                    const res = await fetch(`/api/runs/${runId}/cancel`, {
-                      method: "POST",
-                    });
-                    if (!res.ok) {
-                      const text = await res.text();
-                      alert(`Cancel failed: ${text}`);
+            <div className="flex flex-col items-end gap-3">
+              <div className="text-right">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  Elapsed
+                </p>
+                <p className="font-display text-2xl tracking-tight">{elapsedFmt}</p>
+                <p className="mt-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  Budget Used
+                </p>
+                <p className="font-mono text-sm text-tertiary">
+                  ${sockState.totalCostUsd.toFixed(2)} / ${budgetCap.toFixed(2)}
+                </p>
+              </div>
+              {!isComplete && !isFailed && (
+                <button
+                  onClick={async () => {
+                    if (!window.confirm("Cancel this run? Completed dimensions will be saved.")) return;
+                    try {
+                      const res = await fetch(`/api/runs/${runId}/cancel`, { method: "POST" });
+                      if (!res.ok) alert(`Cancel failed: ${await res.text()}`);
+                    } catch (err) {
+                      alert(`Cancel error: ${String(err)}`);
                     }
-                    // No further action — the WebSocket will receive
-                    // run_cancelled and the UI reacts via sockState.isFailed
-                  } catch (err) {
-                    alert(`Cancel error: ${String(err)}`);
-                  }
-                }}
-                className="rounded-lg border border-error/40 bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error/10"
-              >
-                ✕ Cancel Run
-              </button>
-            )}
+                  }}
+                  className="rounded-lg border border-error/40 bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-error transition-colors hover:bg-error/10"
+                >
+                  Cancel Run
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Connection status banner */}
-        {sockState.status === "closed" && !isComplete && !isFailed && (
-          <div className="mt-4 rounded-xl bg-warning/10 p-3 text-sm text-warning">
-            Connection lost. Reconnecting...
-          </div>
-        )}
-        {isFailed && (
-          <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">
-            Run failed: {sockState.failureReason ?? "(no reason)"}
-          </div>
-        )}
-        {isStale && !isComplete && !isFailed && (
-          <div className="mt-4 rounded-xl bg-warning/10 p-3 text-sm text-warning">
-            No progress events for 90+ seconds — the engine may be stalled. Check backend logs or try cancelling the run.
-          </div>
-        )}
-        {(isFailed || isStale) && (
-          <button
-            onClick={() => {
-              const info = [
-                `Run ID: ${runId}`,
-                `Status: ${isFailed ? "failed" : "stale"}`,
-                `Elapsed: ${elapsedFmt}`,
-                `Generation: ${sockState.currentGeneration}`,
-                `Events received: ${sockState.events.length}`,
-                `Last event: ${sockState.events.at(-1)?.event ?? "none"}`,
-                `WebSocket: ${sockState.status}`,
-                `Budget: $${sockState.totalCostUsd.toFixed(2)}`,
-                `Failure reason: ${sockState.failureReason ?? "n/a"}`,
-                `Timestamp: ${new Date().toISOString()}`,
-                `URL: ${window.location.href}`,
-              ].join("\n");
-              navigator.clipboard.writeText(info).then(
-                () => alert("Debug info copied to clipboard"),
-                () => alert("Failed to copy — check browser permissions"),
-              );
-            }}
-            className="mt-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-on-surface-dim transition-colors hover:bg-surface-container-low"
-          >
-            Copy Debug Info
-          </button>
-        )}
+          {/* Connection/error banners */}
+          {sockState.status === "closed" && !isComplete && !isFailed && (
+            <div className="mt-4 rounded-xl bg-warning/10 p-3 text-sm text-warning">
+              Connection lost. Reconnecting...
+            </div>
+          )}
+          {isFailed && (
+            <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">
+              Run failed: {sockState.failureReason ?? "(no reason)"}
+            </div>
+          )}
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Main column: challenges + arena + breeding + log */}
-          <div className="space-y-6">
-            {/* Challenges Panel — what the skill is being tested against */}
-            {challenges.length > 0 && (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+            {/* Main column */}
+            <div className="space-y-6">
+              {/* Current challenge — single card, not a list */}
+              {challenges.length > 0 && (() => {
+                const ch = challenges[challenges.length - 1];
+                return (
+                  <div className="flex items-start gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest px-5 py-4">
+                    <span
+                      className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider ${
+                        ch.difficulty === "hard"
+                          ? "bg-error/10 text-error"
+                          : ch.difficulty === "medium"
+                            ? "bg-warning/10 text-warning"
+                            : "bg-tertiary/10 text-tertiary"
+                      }`}
+                    >
+                      {ch.difficulty}
+                    </span>
+                    <p className="text-sm leading-relaxed text-on-surface">
+                      {ch.prompt}
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Competition */}
               <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-xl tracking-tight">
-                      Test Gauntlet
+                      Competition
                     </h2>
                     <p className="mt-0.5 text-xs text-on-surface-dim">
-                      Every candidate is scored on all {challenges.length}{" "}
-                      challenges.
+                      Baseline vs seed vs spawn — scored with 6-layer composite.
                     </p>
                   </div>
                   <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    {challenges.length} challenges
+                    {variantGroups.length > 0 ? `${variantGroups.length} competitors` : "waiting"}
                   </span>
                 </div>
-                <div className="mt-4 space-y-3">
-                  {challenges.map((ch) => {
-                    // Is any competitor currently running this challenge?
-                    const activeOnChallenge = sockState.competitors.some(
-                      (c) => c.challengeId === ch.id && c.state !== "done",
-                    );
-                    return (
-                      <div
-                        key={ch.id}
-                        className={`rounded-lg border p-3 transition-all ${
-                          activeOnChallenge
-                            ? "border-primary/40 bg-primary/5"
-                            : "border-outline-variant bg-surface-container-low"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
-                            Challenge {ch.index + 1}
-                          </span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider ${
-                              ch.difficulty === "hard"
-                                ? "bg-error/10 text-error"
-                                : ch.difficulty === "medium"
-                                  ? "bg-warning/10 text-warning"
-                                  : "bg-tertiary/10 text-tertiary"
-                            }`}
-                          >
-                            {ch.difficulty}
-                          </span>
-                          {activeOnChallenge && (
-                            <span className="ml-auto font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
-                              ● live
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-2 text-sm leading-relaxed text-on-surface">
-                          {ch.prompt || "(no prompt available)"}
-                        </p>
-                      </div>
-                    );
-                  })}
+                <div className="mt-4 space-y-2">
+                  {variantGroups.length === 0 ? (
+                    <p className="text-sm text-on-surface-dim">
+                      Waiting for competitors to spawn...
+                    </p>
+                  ) : (
+                    [...variantGroups].reverse().map((g) => {
+                      const variantLabels = ["Baseline (Raw Sonnet)", "Seed (V1)", "Spawn (V2)"];
+                      const isBaseline = g.competitorId === 0;
+                      return (
+                        <SkillVariantCard
+                          key={g.skillId}
+                          variantIndex={g.variantIndex}
+                          skillId={g.skillId}
+                          isControl={isBaseline}
+                          competitors={g.competitors}
+                          challenges={challenges}
+                          label={variantLabels[g.competitorId] ?? `Variant ${g.competitorId}`}
+                          controlLabel="SKLD-bench"
+                        />
+                      );
+                    })
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* Skill Variant Arena */}
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-xl tracking-tight">
-                    Skill Variant Arena
-                  </h2>
-                  <p className="mt-0.5 text-xs text-on-surface-dim">
-                    Each variant is a candidate SKILL.md being tested against
-                    the gauntlet.
+              {showBreeding && (
+                <BreedingReport
+                  report={sockState.latestBreedingReport}
+                  lessons={sockState.latestLessons}
+                />
+              )}
+
+              <LiveFeedLog events={sockState.events} />
+            </div>
+
+            {/* Right column: completed dimensions + judging */}
+            <div className="space-y-6">
+              {/* Completed dimensions summary */}
+              {completedDims > 0 && (
+                <div className="rounded-xl bg-surface-container-low p-5">
+                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                    Completed Dimensions
                   </p>
+                  <div className="mt-3 space-y-1.5">
+                    {effectiveDimensions
+                      .filter((d) => d.status === "complete")
+                      .map((d) => (
+                        <div key={d.id} className="flex items-center justify-between">
+                          <span className="truncate text-xs capitalize text-on-surface-dim">
+                            {d.dimension.replace(/-/g, " ")}
+                          </span>
+                          <span className="ml-2 shrink-0 font-mono text-[0.625rem] text-tertiary">
+                            {d.fitness_score?.toFixed(2) ?? "—"}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="mt-3 border-t border-outline-variant pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+                        Avg Fitness
+                      </span>
+                      <span className="font-mono text-sm text-tertiary">
+                        {(
+                          effectiveDimensions
+                            .filter((d) => d.status === "complete" && d.fitness_score != null)
+                            .reduce((sum, d) => sum + (d.fitness_score ?? 0), 0) /
+                          Math.max(completedDims, 1)
+                        ).toFixed(3)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                  {variantGroups.length > 0
-                    ? `${variantGroups.length} variants \u00d7 ${challenges.length} challenges`
-                    : "0 variants"}
-                </span>
-              </div>
-              <div className="mt-4 space-y-2">
-                {variantGroups.length === 0 ? (
-                  <p className="text-sm text-on-surface-dim">
-                    {phases.find((p) => p.id === "spawn_or_breed")?.status ===
-                    "running"
-                      ? sockState.currentGeneration === 0
-                        ? `Spawning ${runDetail?.population_size ?? 5} skill variants from the golden template...`
-                        : `Breeding ${runDetail?.population_size ?? 5} next-gen skill variants from the Pareto front...`
-                      : "Waiting for variants to start..."}
-                  </p>
-                ) : (
-                  variantGroups.map((g) => (
-                    <SkillVariantCard
-                      key={g.skillId}
-                      variantIndex={g.variantIndex}
-                      skillId={g.skillId}
-                      isControl={g.competitorId === 0}
-                      competitors={g.competitors}
-                      challenges={challenges}
-                    />
-                  ))
+              )}
+
+              {/* Composite Scoring */}
+              <div className="rounded-xl bg-surface-container-low p-5">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  Composite Scoring
+                </p>
+                <p className="mt-1.5 text-[0.6875rem] leading-relaxed text-on-surface-dim">
+                  Each variant is scored through 6 layers, weighted into one composite fitness.
+                </p>
+                <div className="mt-3 space-y-1.5">
+                  {[
+                    { label: "Behavioral Tests", weight: "40%", desc: "ExUnit — does the code work?" },
+                    { label: "Compilation", weight: "15%", desc: "mix compile — does it build?" },
+                    { label: "AST Quality", weight: "15%", desc: "Structure, coverage, pipes" },
+                    { label: "String Match", weight: "10%", desc: "L0 expected patterns" },
+                    { label: "Template", weight: "10%", desc: "Modern HEEx idioms" },
+                    { label: "Brevity", weight: "10%", desc: "Conciseness" },
+                  ].map((layer) => (
+                    <div key={layer.label} className="flex items-center gap-2">
+                      <span className="w-8 shrink-0 text-right font-mono text-[0.5625rem] text-tertiary">
+                        {layer.weight}
+                      </span>
+                      <span className="text-xs text-on-surface">{layer.label}</span>
+                      <span className="ml-auto text-[0.5625rem] text-on-surface-dim">{layer.desc}</span>
+                    </div>
+                  ))}
+                </div>
+                {activeDimension && sockState.generations.at(-1)?.best_fitness != null && (
+                  <div className="mt-3 border-t border-outline-variant pt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+                        Best This Dimension
+                      </span>
+                      <span className="font-mono text-sm text-tertiary">
+                        {sockState.generations.at(-1)!.best_fitness!.toFixed(3)}
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
 
-            {showBreeding && (
-              <BreedingReport
-                report={sockState.latestBreedingReport}
-                lessons={sockState.latestLessons}
-              />
-            )}
-
-            <LiveFeedLog events={sockState.events} />
-          </div>
-
-          {/* Right column: stats + judging pipeline */}
-          <div className="space-y-6">
-            <div className="rounded-xl bg-surface-container-low p-5">
-              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                Generation Stats
-              </p>
-              <FitnessChart generations={sockState.generations} />
-              <div className="mt-2 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    Best Fitness
-                  </p>
-                  <p className="font-display text-2xl tracking-tight">
-                    {sockState.generations.at(-1)?.best_fitness?.toFixed(2) ?? "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    Avg Fitness
-                  </p>
-                  <p className="font-display text-2xl tracking-tight">
-                    {sockState.generations.at(-1)?.avg_fitness?.toFixed(2) ?? "—"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                Judging Pipeline
-              </p>
-              <p className="mt-1 text-xs text-on-surface-dim">
-                5 independent layers score every candidate from hard signals
-                (L1) to trait attribution (L5).
-              </p>
-              <div className="mt-3 space-y-2">
-                {JUDGING_LAYERS.map((l) => {
-                  const genStatus = sockState.generations.at(-1)?.status;
-                  // Extract the numeric layer index (1-5) from the layer string "L1"-"L5"
-                  const layerNum = parseInt(l.layer.slice(1), 10);
-                  const completedLayer = sockState.currentJudgingLayer;
-                  const status =
-                    genStatus === "complete"
-                      ? "complete"
-                      : isJudging && layerNum <= completedLayer
-                        ? "complete"
-                        : isJudging && layerNum === completedLayer + 1
-                          ? "running"
-                          : "pending";
-                  return (
-                    <div
-                      key={l.layer}
-                      className={`rounded-lg border p-2.5 transition-colors ${
-                        status === "running"
-                          ? "border-primary/40 bg-primary/5"
-                          : status === "complete"
-                            ? "border-tertiary/30 bg-tertiary/5"
-                            : "border-outline-variant bg-surface-container-low"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-mono text-[0.625rem] font-bold uppercase tracking-wider ${
-                            status === "running"
-                              ? "text-primary"
-                              : status === "complete"
-                                ? "text-tertiary"
-                                : "text-on-surface-dim"
-                          }`}
-                        >
-                          {l.layer}
-                        </span>
-                        <span className="text-xs font-medium text-on-surface">
-                          {l.label}
-                        </span>
-                        {status === "complete" && (
-                          <span className="ml-auto text-[0.625rem] text-tertiary">
-                            ✓
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-[0.6875rem] leading-relaxed text-on-surface-dim">
-                        {l.description}
-                      </p>
+              {/* Baseline Context */}
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  Baseline — Raw Sonnet
+                </p>
+                <p className="mt-1.5 text-[0.6875rem] leading-relaxed text-on-surface-dim">
+                  What Claude Sonnet scores with no skill on the same challenges.
+                  The goal: evolved skill consistently beats baseline.
+                </p>
+                {benchBaseline ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-dim">Raw Composite</span>
+                      <span className="font-mono text-sm text-on-surface">
+                        {benchBaseline.rawComposite?.toFixed(3) ?? "—"}
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-dim">Challenges</span>
+                      <span className="font-mono text-sm text-on-surface">
+                        {benchBaseline.challenges}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-dim">Families</span>
+                      <span className="font-mono text-sm text-on-surface">
+                        {benchBaseline.families}
+                      </span>
+                    </div>
+                    {runDetail?.baseline_fitness != null && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-on-surface-dim">This Family Baseline</span>
+                        <span className="font-mono text-sm text-on-surface">
+                          {runDetail.baseline_fitness.toFixed(3)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-on-surface-dim">Loading baseline data...</p>
+                )}
+              </div>
+
+              {/* Per-dimension pipeline steps */}
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+                  Per-Dimension Pipeline
+                </p>
+                <div className="mt-3 space-y-1.5">
+                  {[
+                    { step: "1", label: "Design focused challenge", done: challenges.length > 0 },
+                    { step: "2", label: "Spawn seed + alternative", done: variantGroups.length >= 2 },
+                    { step: "3", label: "Compete on challenge", done: sockState.finishedCompetitors >= 2 },
+                    { step: "4", label: "Score (6-layer composite)", done: sockState.currentJudgingLayer >= 5 },
+                    { step: "5", label: "Pick winner", done: sockState.generations.at(-1)?.status === "complete" },
+                  ].map((s) => (
+                    <div key={s.step} className="flex items-center gap-2">
+                      <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[0.5625rem] font-bold ${
+                        s.done ? "bg-tertiary/20 text-tertiary" : "bg-surface-container-high text-on-surface-dim"
+                      }`}>
+                        {s.done ? "✓" : s.step}
+                      </span>
+                      <span className={`text-xs ${s.done ? "text-on-surface-dim" : "text-on-surface"}`}>
+                        {s.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            {runDetail && (
-              <Link
-                to={`/runs/${runId}/export`}
-                className="block rounded-xl bg-surface-container-low p-4 text-center text-sm text-on-surface transition-colors hover:bg-surface-container-high"
-              >
-                View Export →
-              </Link>
-            )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }

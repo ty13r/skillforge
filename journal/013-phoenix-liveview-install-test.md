@@ -2,8 +2,8 @@
 
 ## Entry #13: The Install Test — three quality gates, still broken
 
-**Date**: April 11, 2026
-**Session Duration**: ~12 hours across two long stretches
+**Date**: April 11, 2026  
+**Session Duration**: ~12 hours across two long stretches  
 **Participants**: Matt + Claude Opus 4.6 (1M context)
 
 ---

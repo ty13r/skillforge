@@ -15,7 +15,9 @@ import PrimaryButton from "./PrimaryButton";
 import RunNarrative from "./RunNarrative";
 import type {
   BenchChallenge,
+  BenchFamilyDetail,
   CompetitionScoresPayload,
+  DimensionStatus,
   LineageEdge,
   LineageNode,
   RunDetail,
@@ -26,9 +28,11 @@ import type {
 interface AtomicRunDetailProps {
   runId: string;
   runDetail: RunDetail;
+  dimensions?: DimensionStatus[];
 }
 
 type TabId =
+  | "dimensions"
   | "composite"
   | "competition"
   | "metrics"
@@ -38,6 +42,7 @@ type TabId =
   | "package";
 
 const TABS: { id: TabId; label: string }[] = [
+  { id: "dimensions", label: "Dimensions" },
   { id: "composite", label: "Composite" },
   { id: "competition", label: "Competition" },
   { id: "metrics", label: "Metrics" },
@@ -66,6 +71,7 @@ const TABS: { id: TabId; label: string }[] = [
 export default function AtomicRunDetail({
   runId,
   runDetail,
+  dimensions: dimensionsProp,
 }: AtomicRunDetailProps) {
   const [report, setReport] = useState<RunReport | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
@@ -78,7 +84,21 @@ export default function AtomicRunDetail({
   const [skillMd, setSkillMd] = useState<string | null>(null);
   const [skillMdError, setSkillMdError] = useState<string | null>(null);
   const [benchChallenges, setBenchChallenges] = useState<BenchChallenge[]>([]);
-  const [activeTab, setActiveTab] = useState<TabId>("composite");
+  const [benchDetail, setBenchDetail] = useState<BenchFamilyDetail | null>(null);
+  const [dimensionsFetched, setDimensionsFetched] = useState<DimensionStatus[]>([]);
+  const [activeTab, setActiveTab] = useState<TabId>("dimensions");
+
+  const dims = dimensionsProp && dimensionsProp.length > 0 ? dimensionsProp : dimensionsFetched;
+
+  // Fetch dimensions if not provided via props
+  const hasPropDims = dimensionsProp != null && dimensionsProp.length > 0;
+  useEffect(() => {
+    if (hasPropDims) return;
+    fetch(`/api/runs/${runId}/dimensions`)
+      .then((r) => r.ok ? r.json() as Promise<DimensionStatus[]> : [])
+      .then(setDimensionsFetched)
+      .catch(() => {});
+  }, [runId, hasPropDims]);
 
   // Fetch the report (includes skill_genomes array for atomic runs)
   useEffect(() => {
@@ -139,10 +159,13 @@ export default function AtomicRunDetail({
     fetch(`/api/bench/${slug}`)
       .then((r) => {
         if (!r.ok) return null;
-        return r.json();
+        return r.json() as Promise<BenchFamilyDetail>;
       })
       .then((data) => {
-        if (data?.challenges) setBenchChallenges(data.challenges);
+        if (data) {
+          setBenchDetail(data);
+          if (data.challenges) setBenchChallenges(data.challenges);
+        }
       })
       .catch(() => {});
   }, [report?.taxonomy?.family_slug]);
@@ -362,6 +385,18 @@ export default function AtomicRunDetail({
 
       {/* Active tab content */}
       <div className="mt-8 min-h-[400px]">
+        {activeTab === "dimensions" && dims.length > 0 && (
+          <DimensionsOverview
+            dimensions={dims}
+            benchDetail={benchDetail}
+            baselineFitness={runDetail.baseline_fitness ?? null}
+            bestFitness={runDetail.best_fitness ?? null}
+          />
+        )}
+        {activeTab === "dimensions" && dims.length === 0 && (
+          <p className="text-sm text-on-surface-dim">Loading dimensions…</p>
+        )}
+
         {activeTab === "composite" && (
           <CompositeMarkdownView
             skillMd={skillMd}
@@ -457,6 +492,247 @@ export default function AtomicRunDetail({
           Report endpoint error: {reportError}
         </p>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Dimensions overview tab — per-dimension fitness with baseline comparison
+// ---------------------------------------------------------------------------
+
+function DimensionsOverview({
+  dimensions,
+  benchDetail,
+  baselineFitness,
+  bestFitness,
+}: {
+  dimensions: DimensionStatus[];
+  benchDetail: BenchFamilyDetail | null;
+  baselineFitness: number | null;
+  bestFitness: number | null;
+}) {
+  // Build per-dimension baseline map from bench dimensions data
+  const dimBaselineMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (!benchDetail?.dimensions) return map;
+    for (const d of benchDetail.dimensions) {
+      map[d.dimension] = d.avg_composite;
+    }
+    return map;
+  }, [benchDetail]);
+
+  const foundations = dimensions.filter((d) => d.tier === "foundation");
+  const capabilities = dimensions.filter((d) => d.tier === "capability");
+
+  const avgFitness =
+    dimensions.reduce((sum, d) => sum + (d.fitness_score ?? 0), 0) /
+    Math.max(dimensions.length, 1);
+
+  return (
+    <div className="space-y-6">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+          <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+            Dimensions
+          </p>
+          <p className="mt-1 font-display text-3xl tracking-tight">
+            {dimensions.length}
+          </p>
+          <p className="mt-0.5 text-[0.625rem] text-on-surface-dim">
+            {foundations.length} foundation · {capabilities.length} capability
+          </p>
+        </div>
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+          <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+            Avg Fitness
+          </p>
+          <p className="mt-1 font-display text-3xl tracking-tight text-tertiary">
+            {avgFitness.toFixed(3)}
+          </p>
+        </div>
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+          <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+            Baseline (Raw Sonnet)
+          </p>
+          <p className="mt-1 font-display text-3xl tracking-tight text-on-surface-dim">
+            {baselineFitness?.toFixed(3) ?? "—"}
+          </p>
+        </div>
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+          <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+            Skill Lift
+          </p>
+          {bestFitness != null && baselineFitness != null && baselineFitness > 0 ? (
+            <p
+              className={`mt-1 font-display text-3xl tracking-tight ${
+                bestFitness > baselineFitness ? "text-tertiary" : "text-error"
+              }`}
+            >
+              {bestFitness > baselineFitness ? "+" : ""}
+              {(((bestFitness - baselineFitness) / baselineFitness) * 100).toFixed(0)}
+              %
+            </p>
+          ) : (
+            <p className="mt-1 font-display text-3xl tracking-tight text-on-surface-dim">
+              —
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Per-dimension fitness bars with baseline comparison */}
+      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+        <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+          Per-Dimension Fitness vs Baseline
+        </p>
+        <p className="mt-1 text-xs text-on-surface-dim">
+          Each dimension's evolved fitness compared to raw Sonnet on the same challenges.
+          Copper = skill fitness. Gray = raw Sonnet baseline.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          {/* Foundation dimensions */}
+          {foundations.length > 0 && (
+            <>
+              <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+                Foundation
+              </p>
+              {foundations.map((d) => (
+                <DimensionBar
+                  key={d.id}
+                  dim={d}
+                  baseline={dimBaselineMap[d.dimension]}
+                />
+              ))}
+            </>
+          )}
+
+          {/* Capability dimensions */}
+          {capabilities.length > 0 && (
+            <>
+              <p className="mt-4 font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
+                Capabilities
+              </p>
+              {capabilities.map((d) => (
+                <DimensionBar
+                  key={d.id}
+                  dim={d}
+                  baseline={dimBaselineMap[d.dimension]}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Bench tier breakdown if available */}
+      {benchDetail && benchDetail.tiers.length > 0 && (
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+          <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+            Benchmark Tier Breakdown
+          </p>
+          <p className="mt-1 text-xs text-on-surface-dim">
+            Raw Sonnet performance by challenge difficulty tier on {benchDetail.total_challenges} challenges.
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-outline-variant font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+                  <th className="pb-2 pr-4">Tier</th>
+                  <th className="pb-2 pr-4 text-right">Count</th>
+                  <th className="pb-2 pr-4 text-right">Avg Composite</th>
+                  <th className="pb-2 pr-4 text-right">Compile %</th>
+                  <th className="pb-2 text-right">Behavioral</th>
+                </tr>
+              </thead>
+              <tbody>
+                {benchDetail.tiers.map((t) => (
+                  <tr
+                    key={t.tier}
+                    className="border-b border-outline-variant/30"
+                  >
+                    <td className={`py-2 pr-4 font-mono text-sm capitalize ${
+                      t.tier === "easy" ? "text-green-400"
+                        : t.tier === "medium" ? "text-yellow-400"
+                        : t.tier === "hard" ? "text-orange-400"
+                        : "text-red-400"
+                    }`}>
+                      {t.tier}
+                    </td>
+                    <td className="py-2 pr-4 text-right font-mono text-sm text-on-surface">
+                      {t.count}
+                    </td>
+                    <td className="py-2 pr-4 text-right font-mono text-sm text-on-surface">
+                      {t.avg_composite.toFixed(3)}
+                    </td>
+                    <td className="py-2 pr-4 text-right font-mono text-sm text-on-surface">
+                      {(t.compile_pct * 100).toFixed(0)}%
+                    </td>
+                    <td className="py-2 text-right font-mono text-sm text-on-surface">
+                      {t.avg_behavioral.toFixed(3)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DimensionBar({
+  dim,
+  baseline,
+}: {
+  dim: DimensionStatus;
+  baseline?: number;
+}) {
+  const fitness = dim.fitness_score ?? 0;
+  const maxVal = Math.max(fitness, baseline ?? 0, 0.01);
+  const fitnessPct = (fitness / maxVal) * 100;
+  const baselinePct = baseline != null ? (baseline / maxVal) * 100 : 0;
+  const lift =
+    baseline != null && baseline > 0
+      ? ((fitness - baseline) / baseline) * 100
+      : null;
+
+  return (
+    <div className="flex items-center gap-3">
+      <p className="w-48 shrink-0 truncate text-[0.6875rem] capitalize text-on-surface-dim">
+        {dim.dimension.replace(/-/g, " ")}
+      </p>
+      <div className="relative h-5 flex-1 overflow-hidden rounded bg-surface-container-high">
+        {/* Baseline bar (gray, behind) */}
+        {baseline != null && (
+          <div
+            className="absolute inset-y-0 left-0 rounded bg-on-surface-dim/20"
+            style={{ width: `${baselinePct}%` }}
+          />
+        )}
+        {/* Fitness bar (copper, on top) */}
+        <div
+          className="absolute inset-y-0 left-0 rounded bg-tertiary/60"
+          style={{ width: `${fitnessPct}%` }}
+        />
+      </div>
+      <div className="flex w-28 shrink-0 items-baseline gap-2">
+        <span className="font-mono text-[0.625rem] text-tertiary">
+          {fitness.toFixed(3)}
+        </span>
+        {lift != null && (
+          <span
+            className={`font-mono text-[0.5625rem] ${
+              lift > 0 ? "text-tertiary" : lift < 0 ? "text-error" : "text-on-surface-dim"
+            }`}
+          >
+            {lift > 0 ? "+" : ""}
+            {lift.toFixed(0)}%
+          </span>
+        )}
+      </div>
     </div>
   );
 }

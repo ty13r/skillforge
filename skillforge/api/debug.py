@@ -40,6 +40,37 @@ class FakeRunResponse(BaseModel):
     detail: str
 
 
+DEMO_RUN_ID = "demo-live"
+_demo_task: asyncio.Task | None = None
+
+
+@router.post("/demo")
+async def ensure_demo() -> dict:
+    """Ensure the permanent demo run is active.
+
+    If the demo is already running, returns immediately. Otherwise starts
+    a fresh one. The frontend calls this on mount so the demo is always warm.
+    """
+    global _demo_task
+    if _demo_task is not None and not _demo_task.done():
+        return {"run_id": DEMO_RUN_ID, "status": "already_running"}
+
+    async def _loop_demo() -> None:
+        """Run the demo on repeat with a pause between iterations."""
+        while True:
+            await _drive_fake_run(
+                run_id=DEMO_RUN_ID,
+                population_size=2,
+                num_generations=1,
+                num_challenges=1,
+                speed=0.5,
+            )
+            await asyncio.sleep(5)  # pause between loops
+
+    _demo_task = asyncio.create_task(_loop_demo())
+    return {"run_id": DEMO_RUN_ID, "status": "started"}
+
+
 @router.post("/fake-run", response_model=FakeRunResponse)
 async def fake_run(req: FakeRunRequest) -> FakeRunResponse:
     """Spawn a background task that pushes scripted demo events into the queue."""
@@ -65,101 +96,154 @@ async def fake_run(req: FakeRunRequest) -> FakeRunResponse:
 # ----------------------------------------------------------------------------
 
 SPECIALIZATION = (
-    "Pandas DataFrame cleaning — handling missing values, deduplication, "
-    "type coercion, and schema normalization for messy CSV ingestion"
+    "Elixir Phoenix LiveView — component-forward architecture with verified "
+    "routes, HEEx, streams, forms, and real-time patterns"
 )
 
-# Realistic challenge prompts, one per slot (cycled if num_challenges > 4)
-CHALLENGE_SCRIPT = [
-    {
-        "difficulty": "medium",
-        "prompt": (
-            "Load customers.csv, handle mixed-type 'age' column (strings + nulls), "
-            "drop rows with >50% missing values, and return a cleaned DataFrame."
-        ),
-    },
-    {
-        "difficulty": "hard",
-        "prompt": (
-            "Detect near-duplicate rows in orders.csv where email casing and "
-            "whitespace differ. Return a deduplicated DataFrame preserving the "
-            "most-recent entry per duplicate group."
-        ),
-    },
-    {
-        "difficulty": "medium",
-        "prompt": (
-            "Normalize date columns in transactions.csv — multiple formats "
-            "(ISO, US, EU) appear in the same column. Coerce to pandas datetime64 "
-            "and drop unparseable rows."
-        ),
-    },
-    {
-        "difficulty": "hard",
-        "prompt": (
-            "Join customers.csv and orders.csv on a fuzzy email match. Return a "
-            "merged DataFrame with a 'match_confidence' column."
-        ),
-    },
-]
+# Sample output code for the demo — one per competitor type per dimension.
+# The baseline uses old Phoenix idioms; seed uses modern ones; spawn tries alternatives.
+def _demo_output(dim: str, variant: str) -> dict[str, str]:
+    """Return realistic Elixir code for a demo competitor output."""
+    module = dim.replace("-", "_").title().replace("_", "")
+    filename = f"lib/my_app_web/live/{dim.replace('-', '_')}_live.ex"
 
-# Per-generation breeding reports + lessons. The lessons tie back to real bible
-# patterns so the demo showcases the learning-log → bible feedback loop.
-BREEDING_SCRIPT = [
-    {
-        "report": (
-            "Generation 0 surfaced a clear split: 2 candidates leaned on explicit "
-            "step-by-step instructions, 2 relied on short prose. The step-by-step "
-            "candidates scored 34% higher on correctness. Carrying forward both "
-            "elites, running diagnostic mutation on the weakest prose candidate, "
-            "and spawning 1 wildcard with aggressive trigger expansion."
-        ),
-        "new_lessons": [
-            "Numbered workflow steps outperform prose for deterministic tasks",
-            "Descriptions missing 'Use when...' triggers cost ~40% of routing accuracy",
-            "Including 2+ I/O examples lifts correctness from ~60% to ~85%",
-        ],
-    },
-    {
-        "report": (
-            "Generation 1 revealed that Skills bundling a validate_schema() helper "
-            "script beat those embedding validation logic inline (fewer Claude turns, "
-            "tighter traces). Promoting 2 elites to 'tested' maturity, running "
-            "joint mutation on description + instructions of the mid-tier candidate, "
-            "and injecting a wildcard focused on edge-case handling."
-        ),
-        "new_lessons": [
-            "Deterministic helpers as bundled scripts reduce context cost by ~60%",
-            "Progressive disclosure: put schema examples in references/, not SKILL.md",
-            "Guard against silent dtype coercion — always assert after read_csv",
-        ],
-    },
-    {
-        "report": (
-            "Generation 2 converged. The top 2 candidates share a pipeline "
-            "composition pattern: load → validate → clean → dedupe → coerce → "
-            "return. Classification-before-action traits dominated the Pareto "
-            "front. Promoting the winner to 'hardened' maturity. Publishing 3 "
-            "findings to the Bible."
-        ),
-        "new_lessons": [
-            "Pipeline composition with named stages is the dominant winning trait",
-            "Classification-before-action traits appear in 80% of top performers",
-            "Wildcards rarely survive past gen 2 — diminishing returns on diversity",
-        ],
-    },
-]
+    if variant == "baseline":
+        return {filename: f'''\
+defmodule MyAppWeb.{module}Live do
+  use MyAppWeb, :live_view
 
-# Per-generation fitness curve — realistic climb with a small wobble
-FITNESS_CURVE = [
-    (0.52, 0.47),  # gen 0: (best, avg)
-    (0.71, 0.63),
-    (0.86, 0.79),
-    (0.91, 0.84),
-]
+  def mount(_params, _session, socket) do
+    items = MyApp.Repo.all(MyApp.{module})
+    {{:ok, assign(socket, :items, items)}}
+  end
 
-# Per-generation cost in USD
-COST_CURVE = [0.42, 0.58, 0.67, 0.71]
+  def render(assigns) do
+    ~H"""
+    <div>
+      <%%= for item <- @items do %>
+        <div><%%= item.name %></div>
+      <%% end %>
+    </div>
+    """
+  end
+end
+'''}
+    elif variant == "seed":
+        return {filename: f'''\
+defmodule MyAppWeb.{module}Live do
+  use MyAppWeb, :live_view
+
+  def mount(_params, _session, socket) do
+    {{:ok,
+     socket
+     |> assign_async(:items, fn ->
+       {{:ok, %{{items: MyApp.{module}.list_items()}}}}
+     end)}}
+  end
+
+  def render(assigns) do
+    ~H"""
+    <div :if={{@items.loading}}>Loading...</div>
+    <div :if={{@items.ok?}}>
+      <div :for={{item <- @items.result}} id={{item.id}}>
+        <%%= item.name %>
+      </div>
+    </div>
+    """
+  end
+end
+'''}
+    else:  # spawn
+        return {filename: f'''\
+defmodule MyAppWeb.{module}Live do
+  use MyAppWeb, :live_view
+
+  def mount(_params, _session, socket) do
+    {{:ok, stream(socket, :items, MyApp.{module}.list_items())}}
+  end
+
+  def render(assigns) do
+    ~H"""
+    <div id="items" phx-update="stream">
+      <div :for={{{{id, item}} <- @streams.items}} id={{id}}>
+        <.link navigate={{~p"/items/#{{item}}"}}>
+          <%%= item.name %>
+        </.link>
+      </div>
+    </div>
+    """
+  end
+end
+'''}
+
+
+import random as _random
+
+def _demo_scores(variant: str, base_fitness: float) -> dict:
+    """Generate realistic per-competitor composite score breakdowns."""
+    if variant == "baseline":
+        # Raw Sonnet: good L0, often compiles, weak behavioral
+        return {
+            "composite": round(base_fitness - 0.08 + _random.uniform(-0.03, 0.03), 3),
+            "l0": round(0.85 + _random.uniform(-0.1, 0.1), 3),
+            "compile": _random.random() > 0.3,
+            "ast": round(0.15 + _random.uniform(0, 0.2), 3),
+            "behavioral": round(0.05 + _random.uniform(0, 0.1), 3),
+            "template": round(0.5 + _random.uniform(0, 0.3), 3),
+            "brevity": round(0.8 + _random.uniform(0, 0.2), 3),
+        }
+    elif variant == "seed":
+        # Seed skill: strong across the board
+        return {
+            "composite": round(base_fitness + _random.uniform(-0.02, 0.04), 3),
+            "l0": round(0.9 + _random.uniform(-0.05, 0.05), 3),
+            "compile": _random.random() > 0.1,
+            "ast": round(0.4 + _random.uniform(0, 0.3), 3),
+            "behavioral": round(0.3 + _random.uniform(0, 0.4), 3),
+            "template": round(0.8 + _random.uniform(0, 0.2), 3),
+            "brevity": round(0.85 + _random.uniform(0, 0.15), 3),
+        }
+    else:  # spawn
+        # Spawn: variable, sometimes beats seed
+        return {
+            "composite": round(base_fitness - 0.04 + _random.uniform(-0.05, 0.08), 3),
+            "l0": round(0.8 + _random.uniform(-0.1, 0.15), 3),
+            "compile": _random.random() > 0.2,
+            "ast": round(0.3 + _random.uniform(0, 0.35), 3),
+            "behavioral": round(0.15 + _random.uniform(0, 0.5), 3),
+            "template": round(0.7 + _random.uniform(0, 0.3), 3),
+            "brevity": round(0.75 + _random.uniform(0, 0.25), 3),
+        }
+
+
+# Atomic demo: dimension-by-dimension evolution, not generation-based.
+# Modeled after the real elixir-phoenix-liveview seed run.
+DIMENSION_SCRIPT = [
+    {"dimension": "architectural-stance", "tier": "foundation", "fitness": 0.54,
+     "challenge": {"difficulty": "hard", "prompt": "The fixture has DB queries in mount/3 causing double-execution. Refactor to use assign_async/3 and handle the loading/ok?/failed states."}},
+    {"dimension": "heex-and-verified-routes", "tier": "capability", "fitness": 0.45,
+     "challenge": {"difficulty": "medium", "prompt": "Convert a Phoenix 1.6 template using Routes.*_path helpers and live_link to 1.7+ verified routes with ~p sigil and <.link> components."}},
+    {"dimension": "function-components-and-slots", "tier": "capability", "fitness": 0.45,
+     "challenge": {"difficulty": "medium", "prompt": "Extract a status badge into a function component with attr declarations. Support a named :actions slot. Validate with render_component/2 test."}},
+    {"dimension": "live-components-stateful", "tier": "capability", "fitness": 0.56,
+     "challenge": {"difficulty": "hard", "prompt": "Build a filter panel as a stateful LiveComponent. All prop-to-assign mapping must happen in update/2. Parent communicates via send_update/2."}},
+    {"dimension": "form-handling", "tier": "capability", "fitness": 0.52,
+     "challenge": {"difficulty": "hard", "prompt": "Implement nested forms with cast_assoc, <.inputs_for>, and sort_param/drop_param for adding/removing child rows. Handle validate and save events."}},
+    {"dimension": "mount-and-lifecycle", "tier": "capability", "fitness": 0.55,
+     "challenge": {"difficulty": "medium", "prompt": "Refactor a LiveView that calls Repo.all in mount/3 to use assign_async/3. Handle loading, ok?, and failed states in the template."}},
+    {"dimension": "event-handlers-and-handle-info", "tier": "capability", "fitness": 0.48,
+     "challenge": {"difficulty": "hard", "prompt": "Implement an Action struct funnel: handle_event parses params into %Action{}, delegates to handle_action/2. Route handle_info through the same funnel."}},
+    {"dimension": "streams-and-collections", "tier": "capability", "fitness": 0.48,
+     "challenge": {"difficulty": "medium", "prompt": "Replace an @messages assign holding 500+ items with stream/3. Support stream_insert for new messages from PubSub and stream_delete for removal."}},
+    {"dimension": "pubsub-and-realtime", "tier": "capability", "fitness": 0.56,
+     "challenge": {"difficulty": "hard", "prompt": "Wire PubSub broadcasts through the Ecto context (not handle_event). Subscribe in mount with connected? guard. Handle message_created, message_updated, message_deleted."}},
+    {"dimension": "navigation-patterns", "tier": "capability", "fitness": 0.45,
+     "challenge": {"difficulty": "medium", "prompt": "Implement sort/filter via push_patch with handle_params. Use push_navigate for cross-LiveView transitions. No deprecated helpers."}},
+    {"dimension": "auth-and-authz", "tier": "capability", "fitness": 0.46,
+     "challenge": {"difficulty": "hard", "prompt": "Build an on_mount hook that authenticates the user AND authorizes access to params[\"id\"]. Use live_session scoping. No re-fetching in mount/3."}},
+    {"dimension": "anti-patterns-catalog", "tier": "capability", "fitness": 0.53,
+     "challenge": {"difficulty": "medium", "prompt": "Given a LiveView with 5 anti-patterns (DB in mount, unguarded PubSub, Routes._path, bare changeset in form, large list in assigns), fix all 5 with detectors."}},
+]
 
 
 async def _drive_fake_run(
@@ -170,158 +254,190 @@ async def _drive_fake_run(
     num_challenges: int,
     speed: float,
 ) -> None:
-    """Push a scripted sequence of evolution events into the queue."""
+    """Push a scripted atomic evolution sequence into the event queue.
+
+    Simulates dimension-by-dimension evolution: for each dimension, design a
+    challenge, spawn 2 variants, compete them, judge, and pick a winner.
+    """
 
     async def step(seconds: float) -> None:
-        """Sleep for `seconds / speed` (realistic-ish pacing)."""
         await asyncio.sleep(seconds / speed)
 
-    challenge_ids = [f"ch-{uuid.uuid4().hex[:8]}" for _ in range(num_challenges)]
-    skill_ids_per_gen = [
-        [f"sk-g{g}-{uuid.uuid4().hex[:6]}" for _ in range(population_size)]
-        for g in range(num_generations)
-    ]
-
     total_cost = 0.0
-    running_total = 0.0
 
     # --- run_started ---
     await emit(run_id, "run_started", specialization=SPECIALIZATION)
-    await step(0.8)
+    # Wait for the WebSocket to connect before emitting structural events.
+    # Uses max(2s, step(2s)) so tests run fast but live demos give the
+    # browser enough time to navigate + load JS + open the WebSocket.
+    await asyncio.sleep(max(2.0, 2.0 / speed))
 
-    # --- challenge design ---
-    await emit(run_id, "challenge_design_started")
-    await step(2.5)
-    for i, ch_id in enumerate(challenge_ids):
-        script = CHALLENGE_SCRIPT[i % len(CHALLENGE_SCRIPT)]
+    # --- taxonomy + decomposition ---
+    family_id = f"fam_{uuid.uuid4().hex[:12]}"
+    dim_names = [d["dimension"] for d in DIMENSION_SCRIPT]
+    await emit(
+        run_id,
+        "taxonomy_classified",
+        family_id=family_id,
+        family_slug="elixir-phoenix-liveview",
+        domain_slug="web-frameworks",
+        focus_slug="full-stack",
+        language_slug="elixir",
+        evolution_mode="atomic",
+        created_new_nodes=[],
+    )
+    await step(0.8)
+    await emit(
+        run_id,
+        "decomposition_complete",
+        dimension_count=len(dim_names),
+        dimensions=[
+            {"name": d["dimension"], "tier": d["tier"],
+             "description": f"Focused on {d['dimension'].replace('-', ' ')}",
+             "evaluation_focus": d["challenge"]["difficulty"]}
+            for d in DIMENSION_SCRIPT
+        ],
+        reuse_recommendations=[],
+    )
+    await step(1.0)
+
+    # --- per-dimension mini-evolution ---
+    for dim_idx, dim in enumerate(DIMENSION_SCRIPT):
+        vevo_id = f"vevo_{uuid.uuid4().hex[:12]}"
+
+        await emit(
+            run_id,
+            "variant_evolution_started",
+            variant_evolution_id=vevo_id,
+            dimension=dim["dimension"],
+            tier=dim["tier"],
+            population_size=2,
+        )
+        await step(0.5)
+
+        # Design one challenge
+        ch_id = f"ch-{uuid.uuid4().hex[:8]}"
+        await emit(run_id, "challenge_design_started")
+        await step(1.0)
         await emit(
             run_id,
             "challenge_designed",
             challenge_id=ch_id,
-            difficulty=script["difficulty"],
-            prompt=script["prompt"],
+            difficulty=dim["challenge"]["difficulty"],
+            prompt=dim["challenge"]["prompt"],
         )
         await step(0.4)
 
-    await step(0.6)
-
-    # --- per-generation loop ---
-    for gen_num in range(num_generations):
-        await emit(run_id, "generation_started", generation=gen_num)
+        # Generation 0: 3 competitors — baseline (raw Sonnet), seed (V1), spawn (V2)
+        await emit(run_id, "generation_started", generation=0)
         await step(0.5)
 
-        # Spawn or breed
-        if gen_num == 0:
-            # Sit in spawn for a moment so the user sees the active phase
-            await step(2.5)
-        else:
-            await emit(run_id, "breeding_started", generation=gen_num)
-            await step(2.5)
-            script = BREEDING_SCRIPT[min(gen_num - 1, len(BREEDING_SCRIPT) - 1)]
+        baseline_id = f"sk-baseline-{uuid.uuid4().hex[:6]}"
+        seed_id = f"sk-seed-{uuid.uuid4().hex[:6]}"
+        spawn_id = f"sk-spawn-{uuid.uuid4().hex[:6]}"
+
+        competitors = [
+            (baseline_id, "baseline", "Raw Sonnet — no skill (SKLD-bench baseline)"),
+            (seed_id, "seed", "Pre-existing seed skill (V1)"),
+            (spawn_id, "spawn", "Spawned alternative (V2)"),
+        ]
+
+        for comp_idx, (sk_id, mutation, strategy) in enumerate(competitors):
             await emit(
                 run_id,
-                "breeding_report",
-                generation=gen_num,
-                report=script["report"],
-                new_lessons=script["new_lessons"],
+                "competitor_started",
+                generation=0,
+                competitor=comp_idx,
+                skill_id=sk_id,
+                challenge_id=ch_id,
+                mutations=[mutation],
+                traits=[dim["dimension"]],
+                meta_strategy=strategy,
+                skill_md_content="",
             )
-            await step(1.2)
+            for turn in range(1, 4):
+                await asyncio.sleep(0.2 / speed)
+                await emit(
+                    run_id, "competitor_progress",
+                    generation=0, competitor=comp_idx,
+                    skill_id=sk_id, challenge_id=ch_id,
+                    turn=turn, tool_name=["Read", "Write", "Bash"][turn - 1],
+                )
+            await step(0.8)
+            comp_scores = _demo_scores(mutation, dim["fitness"])
+            await emit(
+                run_id,
+                "competitor_finished",
+                generation=0, competitor=comp_idx,
+                skill_id=sk_id, challenge_id=ch_id,
+                trace_length=8 + comp_idx * 3,
+                output_files=_demo_output(dim["dimension"], mutation),
+                competitor_scores=comp_scores,
+            )
+            comp_cost = 0.12 + 0.04 * comp_idx
+            total_cost += comp_cost
+            await emit(
+                run_id, "cost_update",
+                total_cost_usd=round(total_cost, 4),
+                incremental=True,
+            )
+            await step(0.2)
 
-        # Competitors — one per skill, each running every challenge
-        skills = skill_ids_per_gen[gen_num]
-        for comp_idx, sk_id in enumerate(skills):
-            for ch_id in challenge_ids:
-                await emit(
-                    run_id,
-                    "competitor_started",
-                    generation=gen_num,
-                    competitor=comp_idx,
-                    skill_id=sk_id,
-                    challenge_id=ch_id,
-                    mutations=["elite-carry"] if comp_idx == 0 else [f"mutation-{comp_idx}"],
-                    traits=["edge-case-first", "stdlib-only"] if comp_idx == 0 else [f"trait-{comp_idx}a", f"trait-{comp_idx}b"],
-                    meta_strategy="Original seed strategy" if comp_idx == 0 else f"Mutated strategy variant {comp_idx}",
-                    mutation_rationale="" if comp_idx == 0 else f"Explored alternative approach for variant {comp_idx}",
-                    skill_md_content="",  # fake runs don't have real content
-                )
-                # Emit progress events during the "work" period
-                tool_names = ["Read", "Write", "Bash"]
-                for turn in range(1, 4):
-                    await asyncio.sleep(0.3 * speed)
-                    await emit(run_id, "competitor_progress",
-                        generation=gen_num, competitor=comp_idx,
-                        skill_id=sk_id, challenge_id=ch_id,
-                        turn=turn,
-                        tool_name=tool_names[(turn - 1) % len(tool_names)],
-                    )
-                # ~1.6s remaining "work" (total ~2.5s with 0.9s from progress events)
-                await step(1.6)
-                # Realistic trace length: varies by competitor quality
-                trace_length = 8 + comp_idx * 2 + (gen_num * 1)
-                await emit(
-                    run_id,
-                    "competitor_finished",
-                    generation=gen_num,
-                    competitor=comp_idx,
-                    skill_id=sk_id,
-                    challenge_id=ch_id,
-                    trace_length=trace_length,
-                )
-                # Incremental cost update — budget ticks up in real-time
-                competitor_cost = 0.08 + 0.03 * comp_idx + 0.02 * gen_num
-                running_total += competitor_cost
-                await emit(
-                    run_id,
-                    "cost_update",
-                    total_cost_usd=round(running_total, 4),
-                    incremental=True,
-                )
-                await step(0.3)
-
-        # Judging pipeline — emit per-layer events so the UI shows L1→L5 progress
-        await emit(run_id, "judging_started", generation=gen_num)
-        await step(0.5)
+        # Judge
+        await emit(run_id, "judging_started", generation=0)
+        await step(0.3)
         for layer in range(1, 6):
-            await asyncio.sleep(0.6 / speed)
-            await emit(run_id, "judging_layer_complete", layer=layer, generation=gen_num)
-        await step(0.5)
+            await asyncio.sleep(0.3 / speed)
+            await emit(run_id, "judging_layer_complete", layer=layer, generation=0)
 
-        # Climbing fitness across generations with a small dip sometimes
-        best, avg = FITNESS_CURVE[min(gen_num, len(FITNESS_CURVE) - 1)]
+        # Scores
+        await emit(
+            run_id, "scores_published",
+            generation=0,
+            best_fitness=dim["fitness"],
+            avg_fitness=dim["fitness"] - 0.04,
+            pareto_front=[seed_id],
+        )
+        await step(0.3)
+
+        await emit(run_id, "generation_complete", generation=0)
+        await step(0.2)
+
+        # Mark dimension complete
+        winner_id = f"var_{uuid.uuid4().hex[:12]}"
         await emit(
             run_id,
-            "scores_published",
-            generation=gen_num,
-            best_fitness=best,
-            avg_fitness=avg,
-            pareto_front=[skills[0], skills[1]] if len(skills) >= 2 else skills,
+            "variant_evolution_complete",
+            variant_evolution_id=vevo_id,
+            dimension=dim["dimension"],
+            tier=dim["tier"],
+            status="complete",
+            winner_variant_id=winner_id,
+            best_fitness=dim["fitness"],
         )
         await step(0.6)
 
-        gen_cost = COST_CURVE[min(gen_num, len(COST_CURVE) - 1)]
-        total_cost += gen_cost
-        # Reconciliation point — set absolute total for the generation
-        running_total = total_cost
-        await emit(
-            run_id,
-            "cost_update",
-            generation=gen_num,
-            generation_cost_usd=gen_cost,
-            total_cost_usd=round(running_total, 4),
-        )
-        await step(0.4)
+    # --- Assembly ---
+    await emit(run_id, "assembly_started", capability_count=len(dim_names), mode="atomic")
+    await step(2.0)
+    composite_id = f"gen_composite_{uuid.uuid4().hex[:8]}"
+    await emit(
+        run_id,
+        "assembly_complete",
+        composite_skill_id=composite_id,
+        capability_count=len(dim_names),
+        integration_passed=True,
+        mode="atomic",
+    )
+    await step(0.5)
 
-        await emit(run_id, "generation_complete", generation=gen_num)
-        await step(0.8)
-
-    # --- final state ---
-    final_skill = skill_ids_per_gen[-1][0]
+    # --- Done ---
     await emit(
         run_id,
         "evolution_complete",
-        best_skill_id=final_skill,
+        best_skill_id=composite_id,
         total_cost_usd=round(total_cost, 3),
-        generations_completed=num_generations,
+        generations_completed=1,
     )
 
 

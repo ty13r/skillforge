@@ -20,6 +20,9 @@ from skillforge.main import app
 
 EXPECTED_EVENT_TYPES = {
     "run_started",
+    "taxonomy_classified",
+    "decomposition_complete",
+    "variant_evolution_started",
     "challenge_designed",
     "generation_started",
     "competitor_started",
@@ -27,6 +30,7 @@ EXPECTED_EVENT_TYPES = {
     "judging_started",
     "judging_layer_complete",
     "scores_published",
+    "variant_evolution_complete",
     "evolution_complete",
 }
 
@@ -53,7 +57,7 @@ def _post_fake_run(client: TestClient, run_id: str) -> None:
 
 
 def _collect_events_via_ws(
-    client: TestClient, run_id: str, max_events: int = 200
+    client: TestClient, run_id: str, max_events: int = 600
 ) -> list[dict]:
     """Connect to WS and collect events until terminal or limit.
 
