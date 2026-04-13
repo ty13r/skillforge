@@ -2,8 +2,8 @@
 
 ## Entry #2: Scaffolding, Planning, and the Shape of the Build
 
-**Date**: April 9, 2026
-**Session Duration**: ~2.5 hours
+**Date**: April 9, 2026  
+**Session Duration**: ~2.5 hours  
 **Participants**: Matt + Claude Code (Opus 4.6, 1M context)
 
 ---

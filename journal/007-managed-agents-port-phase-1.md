@@ -2,8 +2,8 @@
 
 ## Entry #7: Managed Agents Port — Phase 1
 
-**Date**: April 9, 2026 (continuing from Entry #6's late-night planning session)
-**Session Duration**: ~5 hours of autonomous work
+**Date**: April 9, 2026 (continuing from Entry #6's late-night planning session)  
+**Session Duration**: ~5 hours of autonomous work  
 **Participants**: Matt (briefed, then stepped away) + Claude Code (Opus 4.6, 1M context)
 
 ---

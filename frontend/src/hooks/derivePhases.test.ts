@@ -21,6 +21,8 @@ function makeState(
     finishedCompetitors: 0,
     lastEventAt: 0,
     currentJudgingLayer: 0,
+    isAtomic: false,
+    atomicDimensions: [],
     ...overrides,
   };
 }
@@ -78,7 +80,7 @@ describe("derivePhases", () => {
     );
     expect(phases[0].status).toBe("complete");
     expect(phases[1].status).toBe("running");
-    expect(phases[1].label).toBe("Spawn Population");
+    expect(phases[1].label).toBe("Spawn Variants");
     expect(phases[1].detail).toContain("generating");
   });
 

@@ -250,6 +250,9 @@ export interface EvolutionEvent {
   turn?: number;
   tool_name?: string;
   // v2.0 atomic evolution payload fields
+  variant_evolution_id?: string;
+  dimension?: string;
+  tier?: string;
   family_id?: string;
   family_slug?: string;
   domain_slug?: string;
@@ -260,6 +263,25 @@ export interface EvolutionEvent {
   dimension_count?: number;
   dimensions?: { name: string; tier: string; description: string; evaluation_focus: string }[];
   reuse_recommendations?: { source_family_slug: string; dimension: string; variant_slug: string; fitness: number | null; reason: string }[];
+  // competitor output + scores
+  output_files?: Record<string, string>;
+  competitor_scores?: {
+    composite: number;
+    l0: number;
+    compile: boolean;
+    ast: number;
+    behavioral: number;
+    template: number;
+    brevity: number;
+  };
+  // variant_evolution_complete fields
+  status?: string;
+  winner_variant_id?: string;
+  // assembly fields
+  capability_count?: number;
+  mode?: string;
+  composite_skill_id?: string;
+  integration_passed?: boolean;
 }
 
 // --- Derived view state ------------------------------------------------------
@@ -287,6 +309,18 @@ export interface CompetitorView {
   // Live progress (from competitor_progress)
   turn?: number;
   lastTool?: string;
+  // Output (from competitor_finished)
+  outputFiles?: Record<string, string>;
+  // Scores (from competitor_finished)
+  scores?: {
+    composite: number;
+    l0: number;
+    compile: boolean;
+    ast: number;
+    behavioral: number;
+    template: number;
+    brevity: number;
+  };
 }
 
 export interface GenerationStats {
@@ -360,6 +394,21 @@ export interface Variant {
   created_at?: string | null;
 }
 
+export interface DimensionStatus {
+  id: string;
+  dimension: string;
+  tier: VariantTier;
+  status: "pending" | "running" | "complete" | "failed";
+  winner_variant_id: string | null;
+  challenge_id: string | null;
+  population_size: number;
+  num_generations: number;
+  created_at: string | null;
+  completed_at: string | null;
+  fitness_score: number | null;
+  genome_id: string | null;
+}
+
 export interface TaxonomyNodeDetail {
   node: TaxonomyNode;
   children: TaxonomyNode[];
@@ -389,7 +438,10 @@ export interface BenchFamilySummary {
 export interface BenchScoringProgression {
   l0: number;
   compile: number;
+  ast: number;
   behavioral: number;
+  template: number;
+  brevity: number;
   composite: number;
 }
 

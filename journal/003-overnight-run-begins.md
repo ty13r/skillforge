@@ -2,8 +2,8 @@
 
 ## Entry #3: The Overnight Run Begins
 
-**Date**: April 9, 2026
-**Session Duration**: (overnight, in progress)
+**Date**: April 9, 2026  
+**Session Duration**: (overnight, in progress)  
 **Participants**: Matt (asleep) + Claude Code (Opus 4.6, 1M context) orchestrating Sonnet subagents
 
 ---

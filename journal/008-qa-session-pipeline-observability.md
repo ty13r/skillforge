@@ -2,8 +2,8 @@
 
 ## Entry #8: QA Session — Pipeline Observability Overhaul
 
-**Date**: April 9, 2026
-**Session Duration**: ~3.5 hours
+**Date**: April 9, 2026  
+**Session Duration**: ~3.5 hours  
 **Participants**: Matt + Claude Code (Opus 4.6)
 
 ---

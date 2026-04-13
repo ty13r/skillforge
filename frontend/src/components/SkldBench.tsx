@@ -100,27 +100,54 @@ export default function SkldBench() {
               {
                 label: "L0 String Match",
                 value: scoring_progression.l0,
+                weight: "10%",
                 color: "bg-primary/60",
               },
               {
-                label: "+ Compilation",
+                label: "Compilation",
                 value: scoring_progression.compile,
+                weight: "15%",
                 color: "bg-tertiary/60",
               },
               {
-                label: "+ Behavioral Tests",
+                label: "AST Quality",
+                value: scoring_progression.ast,
+                weight: "15%",
+                color: "bg-tertiary/40",
+              },
+              {
+                label: "Behavioral Tests",
                 value: scoring_progression.behavioral,
+                weight: "40%",
                 color: "bg-error/60",
               },
               {
-                label: "= Composite",
+                label: "Template",
+                value: scoring_progression.template,
+                weight: "10%",
+                color: "bg-primary/40",
+              },
+              {
+                label: "Brevity",
+                value: scoring_progression.brevity,
+                weight: "10%",
+                color: "bg-primary/30",
+              },
+              {
+                label: "Composite",
                 value: scoring_progression.composite,
+                weight: "",
                 color: "bg-on-surface/40",
               },
             ].map((layer) => (
               <div key={layer.label} className="flex items-center gap-4">
-                <p className="w-40 shrink-0 text-right font-mono text-xs text-on-surface-dim">
+                <p className="w-44 shrink-0 text-right font-mono text-xs text-on-surface-dim">
                   {layer.label}
+                  {layer.weight && (
+                    <span className="ml-2 text-[0.5625rem] text-on-surface-dim/60">
+                      ({layer.weight})
+                    </span>
+                  )}
                 </p>
                 <div className="relative h-6 flex-1 overflow-hidden rounded bg-surface-container-high">
                   <div

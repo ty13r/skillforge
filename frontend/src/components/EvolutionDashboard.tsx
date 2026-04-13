@@ -29,18 +29,13 @@ export default function EvolutionDashboard() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const startFakeRun = async () => {
+  const watchDemo = async () => {
     try {
-      const res = await fetch("/api/debug/fake-run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ population_size: 4, num_generations: 3, num_challenges: 3, speed: 0.5 }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as { run_id: string };
-      navigate(`/runs/${data.run_id}`);
-    } catch (err) {
-      alert(`Failed to start fake run: ${String(err)}`);
+      // Ensure the demo is running, then navigate to it
+      await fetch("/api/debug/demo", { method: "POST" });
+      navigate("/runs/demo-live");
+    } catch {
+      navigate("/runs/demo-live");
     }
   };
 
@@ -95,10 +90,10 @@ export default function EvolutionDashboard() {
                 <PrimaryButton>Start Evolution →</PrimaryButton>
               </Link>
               <button
-                onClick={startFakeRun}
+                onClick={watchDemo}
                 className="rounded-xl border border-primary/40 bg-surface-container-lowest px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/10"
               >
-                ▶ Watch Live Demo
+                Watch Live Demo
               </button>
             </div>
           </div>

@@ -2,8 +2,8 @@
 
 ## Entry #12: SKLD-bench — Authoring, Audit, Augment
 
-**Date**: April 10-11, 2026
-**Session Duration**: ~14 hours (overnight autonomous run + morning recovery)
+**Date**: April 10-11, 2026  
+**Session Duration**: ~14 hours (overnight autonomous run + morning recovery)  
 **Participants**: Matt + Claude Code (Opus 4.6, 1M context)
 
 ---

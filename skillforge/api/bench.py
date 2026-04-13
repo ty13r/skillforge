@@ -60,6 +60,8 @@ async def bench_summary() -> dict:
     all_compile = []
     all_ast = []
     all_behavioral = []
+    all_template = []
+    all_brevity = []
     all_composite = []
 
     for family_slug, model, tier, l0_score, scores_json in rows:
@@ -112,6 +114,9 @@ async def bench_summary() -> dict:
                 all_behavioral.append(
                     beh.get("score", 0.0) if isinstance(beh, dict) else 0.0
                 )
+                tmpl = scores.get("template", {})
+                all_template.append(tmpl.get("score", 0.0) if isinstance(tmpl, dict) else float(tmpl or 0))
+                all_brevity.append(float(scores.get("brevity", 0.0) or 0))
                 all_composite.append(scores["composite"])
 
     # Build family list
@@ -172,7 +177,10 @@ async def bench_summary() -> dict:
         scoring_progression = {
             "l0": round(sum(all_l0) / n, 4),
             "compile": round(sum(all_compile) / n, 4),
+            "ast": round(sum(all_ast) / n, 4),
             "behavioral": round(sum(all_behavioral) / n, 4),
+            "template": round(sum(all_template) / n, 4),
+            "brevity": round(sum(all_brevity) / n, 4),
             "composite": round(sum(all_composite) / n, 4),
         }
 

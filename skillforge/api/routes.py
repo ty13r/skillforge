@@ -406,6 +406,53 @@ async def get_run_detail(run_id: str) -> RunDetail:
     )
 
 
+@router.get("/runs/{run_id}/dimensions")
+async def get_run_dimensions(run_id: str) -> list[dict]:
+    """Return variant_evolutions + winning variant data for an atomic run.
+
+    Each entry represents one dimension's mini-evolution: its tier, status,
+    winning variant fitness, and challenge info.
+    """
+    from skillforge.db.queries import _connect
+
+    async with _connect() as conn:
+        cursor = await conn.execute(
+            """
+            SELECT ve.id, ve.dimension, ve.tier, ve.status,
+                   ve.winner_variant_id, ve.challenge_id,
+                   ve.population_size, ve.num_generations,
+                   ve.created_at, ve.completed_at,
+                   v.fitness_score, v.genome_id
+            FROM variant_evolutions ve
+            LEFT JOIN variants v ON v.id = ve.winner_variant_id
+            WHERE ve.parent_run_id = ?
+            ORDER BY
+                CASE ve.tier WHEN 'foundation' THEN 0 ELSE 1 END,
+                ve.dimension ASC
+            """,
+            (run_id,),
+        )
+        rows = await cursor.fetchall()
+
+    return [
+        {
+            "id": r[0],
+            "dimension": r[1],
+            "tier": r[2],
+            "status": r[3],
+            "winner_variant_id": r[4],
+            "challenge_id": r[5],
+            "population_size": r[6],
+            "num_generations": r[7],
+            "created_at": r[8],
+            "completed_at": r[9],
+            "fitness_score": r[10],
+            "genome_id": r[11],
+        }
+        for r in rows
+    ]
+
+
 @router.get("/runs/{run_id}/events")
 async def get_run_events(run_id: str) -> list[dict]:
     """Return the full event history for a run (for post-mortem debugging)."""

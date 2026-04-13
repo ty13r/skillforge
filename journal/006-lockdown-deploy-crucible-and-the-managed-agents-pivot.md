@@ -2,8 +2,8 @@
 
 ## Entry #6: Lockdown, the Deploy Crucible, and the Managed Agents Pivot
 
-**Date**: April 9, 2026 (afternoon → late evening)
-**Session Duration**: ~6 hours
+**Date**: April 9, 2026 (afternoon → late evening)  
+**Session Duration**: ~6 hours  
 **Participants**: Matt + Claude Code (Opus 4.6, 1M context)
 
 ---

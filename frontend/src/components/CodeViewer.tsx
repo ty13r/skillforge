@@ -49,6 +49,26 @@ Prism.languages.docker = {
 };
 Prism.languages.dockerfile = Prism.languages.docker;
 
+// Elixir
+Prism.languages.elixir = {
+  comment: { pattern: /#.*/, greedy: true },
+  string: [
+    { pattern: /~[A-Z]"""[\s\S]*?"""/, greedy: true },
+    { pattern: /~[a-z]"(?:[^"\\]|\\.)*"/, greedy: true },
+    { pattern: /"""[\s\S]*?"""/, greedy: true },
+    { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
+  ],
+  atom: { pattern: /:[a-zA-Z_]\w*[?!]?/, greedy: true },
+  boolean: /\b(?:true|false|nil)\b/,
+  keyword: /\b(?:def|defp|defmodule|do|end|if|else|unless|case|cond|when|with|fn|raise|rescue|try|catch|after|for|in|and|or|not|use|import|alias|require|quote|unquote)\b/,
+  module: { pattern: /\b[A-Z]\w*(?:\.[A-Z]\w*)*/, greedy: true },
+  function: { pattern: /\b\w+(?=[?!]?\s*[(\s])/, greedy: true },
+  operator: /\|>|<>|<-|->|=>|=~|~>|::|\.\.\.|&&|\|\||[!=<>]=?|[+\-*\/\\^|&]/,
+  number: /\b(?:0x[\da-fA-F_]+|0b[01_]+|0o[0-7_]+|\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?)\b/,
+  punctuation: /[()[\]{},;.@#%]/,
+};
+Prism.languages.ex = Prism.languages.elixir;
+
 // Map file extensions to Prism language identifiers
 const EXT_TO_LANG: Record<string, string> = {
   ".py": "python",
@@ -70,6 +90,9 @@ const EXT_TO_LANG: Record<string, string> = {
   ".tf": "hcl",
   ".hcl": "hcl",
   ".dockerfile": "docker",
+  ".ex": "elixir",
+  ".exs": "elixir",
+  ".heex": "elixir",
   ".rs": "rust",
   ".go": "go",
   ".rb": "ruby",

@@ -21,6 +21,8 @@ function makeState(
     finishedCompetitors: 0,
     lastEventAt: 0,
     currentJudgingLayer: 0,
+    isAtomic: false,
+    atomicDimensions: [],
     ...overrides,
   };
 }

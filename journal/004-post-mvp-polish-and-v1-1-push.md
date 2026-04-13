@@ -2,8 +2,8 @@
 
 ## Entry #4: Post-MVP Polish and the v1.1 Push
 
-**Date**: April 9, 2026 (evening → late evening)
-**Session Duration**: ~4 hours
+**Date**: April 9, 2026 (evening → late evening)  
+**Session Duration**: ~4 hours  
 **Participants**: Matt + Claude Code (Opus 4.6, 1M context)
 
 ---

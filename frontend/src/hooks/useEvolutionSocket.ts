@@ -9,6 +9,13 @@ import type {
 
 export type ConnectionStatus = "connecting" | "open" | "closed" | "error";
 
+export interface AtomicDimensionState {
+  dimension: string;
+  tier: string;
+  status: "pending" | "running" | "complete" | "failed";
+  fitness?: number;
+}
+
 export interface EvolutionSocketState {
   events: EvolutionEvent[];
   status: ConnectionStatus;
@@ -30,6 +37,12 @@ export interface EvolutionSocketState {
   lastEventAt: number;
   /** Which judging layer (1-5) most recently completed; 0 = none yet */
   currentJudgingLayer: number;
+  /** Whether this run is atomic (detected from events) */
+  isAtomic: boolean;
+  /** Per-dimension status for atomic runs (built from events) */
+  atomicDimensions: AtomicDimensionState[];
+  /** Currently active dimension name */
+  activeDimension?: string;
 }
 
 const INITIAL_STATE: EvolutionSocketState = {
@@ -45,6 +58,8 @@ const INITIAL_STATE: EvolutionSocketState = {
   finishedCompetitors: 0,
   lastEventAt: 0,
   currentJudgingLayer: 0,
+  isAtomic: false,
+  atomicDimensions: [],
 };
 
 /**
@@ -173,6 +188,8 @@ export function applyEvent(
         skillId: ev.skill_id ?? "",
         challengeId: ev.challenge_id,
         state: "done",
+        outputFiles: ev.output_files as Record<string, string> | undefined,
+        scores: ev.competitor_scores as CompetitorView["scores"] | undefined,
       });
       next.finishedCompetitors = next.finishedCompetitors + 1;
       break;
@@ -196,6 +213,16 @@ export function applyEvent(
         pareto_front: ev.pareto_front,
         status: "complete",
       });
+      // For atomic runs, update the active dimension's fitness from scores
+      if (next.isAtomic && ev.best_fitness != null) {
+        const target = next.activeDimension
+          ?? next.atomicDimensions.find((d) => d.status === "running")?.dimension;
+        if (target) {
+          next.atomicDimensions = next.atomicDimensions.map((d) =>
+            d.dimension === target ? { ...d, fitness: ev.best_fitness } : d,
+          );
+        }
+      }
       break;
 
     case "cost_update":
@@ -241,6 +268,67 @@ export function applyEvent(
       next.failureReason = "cancelled by user";
       break;
 
+    // Atomic evolution events
+    case "taxonomy_classified":
+      if (ev.evolution_mode === "atomic") {
+        next.isAtomic = true;
+      }
+      break;
+
+    case "decomposition_complete":
+      next.isAtomic = true;
+      if (ev.dimensions && Array.isArray(ev.dimensions)) {
+        next.atomicDimensions = ev.dimensions.map((d) => ({
+          dimension: d.name,
+          tier: d.tier,
+          status: "pending" as const,
+        }));
+      }
+      break;
+
+    case "variant_evolution_started":
+      next.isAtomic = true;
+      next.activeDimension = ev.dimension;
+      // Reset competitors for this new dimension
+      next.competitors = [];
+      next.finishedCompetitors = 0;
+      next.currentJudgingLayer = 0;
+      next.generations = [];
+      // Update existing dimension or add it if we missed the decomposition event
+      if (ev.dimension) {
+        const exists = next.atomicDimensions.some((d) => d.dimension === ev.dimension);
+        if (exists) {
+          next.atomicDimensions = next.atomicDimensions.map((d) =>
+            d.dimension === ev.dimension ? { ...d, status: "running" as const } : d,
+          );
+        } else {
+          next.atomicDimensions = [
+            ...next.atomicDimensions,
+            { dimension: ev.dimension, tier: ev.tier ?? "capability", status: "running" as const },
+          ];
+        }
+      }
+      break;
+
+    case "variant_evolution_complete": {
+      const completeStatus = (ev.status === "complete" ? "complete" : "failed") as "complete" | "failed";
+      const exists = next.atomicDimensions.some((d) => d.dimension === ev.dimension);
+      if (exists) {
+        next.atomicDimensions = next.atomicDimensions.map((d) =>
+          d.dimension === ev.dimension
+            ? { ...d, status: completeStatus, fitness: ev.best_fitness }
+            : d,
+        );
+      } else if (ev.dimension) {
+        next.atomicDimensions = [
+          ...next.atomicDimensions,
+          { dimension: ev.dimension, tier: ev.tier ?? "capability", status: completeStatus, fitness: ev.best_fitness },
+        ];
+      }
+      next.activeDimension = undefined;
+      break;
+    }
+
     default:
       break;
   }
@@ -278,11 +366,11 @@ export function derivePhases(
   // Default labels
   const labels: Record<PhaseState["id"], string> = {
     design_challenges: "Design Challenges",
-    spawn_or_breed: state.currentGeneration === 0 ? "Spawn Population" : "Breed Next Gen",
-    compete: "Run Variants",
-    judge: "Judge L1-L5",
-    score_select: "Score & Select",
-    finalize: "Finalize",
+    spawn_or_breed: state.currentGeneration === 0 ? "Spawn Variants" : "Breed Next Gen",
+    compete: "Compete on Challenge",
+    judge: "Composite Score",
+    score_select: "Pick Winner",
+    finalize: "Assemble Composite",
   };
 
   const phases: PhaseState[] = (

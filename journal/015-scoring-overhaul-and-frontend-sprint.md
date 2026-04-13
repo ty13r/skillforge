@@ -2,8 +2,8 @@
 
 ## Entry #15: The Scoring Overhaul and the Frontend Sprint
 
-**Date**: April 12, 2026
-**Session Duration**: ~8 hours (continuation of Entry #14's marathon)
+**Date**: April 12, 2026  
+**Session Duration**: ~8 hours (continuation of Entry #14's marathon)  
 **Participants**: Matt + Claude Opus 4.6 (1M context)
 
 ---
