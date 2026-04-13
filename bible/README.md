@@ -1,78 +1,52 @@
-# The Claude Skills Bible
+# The SKLD Bible
 
-**An empirically-derived, continuously-updated guide to writing effective Claude Agent Skills.**
-
-Every finding in this document was discovered through evolutionary optimization — not hand-tuning, not guesswork. SkillForge breeds populations of Skills, competes them against real challenges, and measures what works. The patterns that survive across generations and across domains end up here.
-
-## How This Knowledge Is Generated
-
-1. **SkillForge runs an evolution** — 5+ candidate Skills compete across 3+ challenges over 3+ generations
-2. **The Breeder agent analyzes traces** — which instructions were followed, which were ignored, which correlated with higher fitness
-3. **The Learning Log captures findings** — "imperative phrasing was followed 80% more than descriptive phrasing"
-4. **Findings are published here** — each finding includes the specialization, generation, fitness delta, and trace evidence
-5. **Patterns are promoted** — findings that replicate across 3+ independent evolution runs become patterns
-6. **Anti-patterns are documented** — patterns that consistently reduce fitness across runs get flagged
-
-## Directory Structure
-
-```
-bible/
-├── README.md              # This file
-├── findings/              # Individual findings from evolution runs
-│   ├── 001-*.md           # Each finding: what was observed, evidence, fitness impact
-│   ├── 002-*.md
-│   └── ...
-├── patterns/              # Proven patterns (promoted from findings after 3+ confirmations)
-│   ├── structural.md      # What SKILL.md structures work best
-│   ├── descriptions.md    # Description patterns with measured trigger rates
-│   ├── instructions.md    # Instruction styles with adherence scores
-│   ├── scripts.md         # When and how to use scripts effectively
-│   └── progressive-disclosure.md  # Optimal Level 2 vs Level 3 splitting
-├── anti-patterns/         # Patterns that consistently reduce fitness
-│   └── ...
-└── evolution-log.md       # Chronological log of all runs and key outcomes
-```
-
-## Finding Format
-
-Each finding in `findings/` follows this structure:
-
-```markdown
-# Finding {NNN}: {Short title}
-
-**Discovered**: {date}
-**Evolution Run**: {run_id}
-**Specialization**: {what was being evolved}
-**Generation**: {which generation}
-**Fitness Delta**: {+/- change attributed to this pattern}
-**Confirmations**: {count of independent runs confirming this}
-**Status**: finding | pattern | anti-pattern
-
-## Observation
-{What was observed during evolution}
-
-## Evidence
-{Trace data, fitness scores, specific SKILL.md diffs}
-
-## Mechanism
-{Why this works/fails — the Breeder's diagnostic explanation}
-
-## Recommendation
-{Concrete, actionable guidance for Skill authors}
-```
-
-## How to Use This
-
-**If you're writing a Skill**: read `patterns/` first. These are battle-tested. Start from the golden template (`docs/golden-template.md`) and apply relevant patterns.
-
-**If you're running SkillForge**: the Spawner automatically incorporates published patterns into gen 0 populations. The Breeder reads the bible before proposing mutations.
-
-**If you're contributing**: run SkillForge on a new specialization and submit the findings via PR. Findings that replicate across 3+ runs from independent contributors get promoted to patterns.
-
-## Current Status
-
-*This bible is bootstrapping. Initial findings will be populated from SkillForge's first evolution runs. As the platform processes more runs across more domains, the patterns will become increasingly robust and generalizable.*
+*Empirical knowledge about building skills for AI coding agents, organized into books.*
 
 ---
 
-*Generated and maintained by [SkillForge](https://github.com/ty13r/skillforge) — evolving Agent Skills through natural selection.*
+## What This Is
+
+The Bible is SKLD's knowledge base — everything we've learned about how to build, evaluate, and evolve AI agent skills. Every finding is backed by measured data from real experiments, not theory or intuition.
+
+The knowledge is organized into books:
+
+## Books
+
+### [Book of Genesis](book-of-genesis.md)
+Universal principles that apply regardless of programming language or domain. Covers the scoring problem, the self-containment problem, skills as a cost equalizer, data capture, and evolution dynamics. Start here if you're new.
+
+### [Book of Elixir](book-of-elixir.md)
+Elixir-specific findings from evolving 7 skill families across 867 challenges. Covers per-family compile rates, the context dependency spectrum, Phoenix LiveView idiom detection, Ecto schema dependencies, and the full mock run results.
+
+## Reference Material
+
+### [patterns/](patterns/)
+The original skill design patterns from the Skills Research phase. These cover description writing, instruction budgets, script usage, structural conventions, and progressive disclosure. Referenced by Genesis Chapter 6 with full provenance.
+
+### [findings/](findings/)
+Raw findings from early SkillForge evolution runs. These are incomplete (placeholder mechanism sections) and have been largely superseded by the empirical data in Genesis and Elixir. Kept for historical reference.
+
+## How This Knowledge Was Generated
+
+Unlike traditional best-practice guides written from experience, the Bible's findings come from controlled experiments:
+
+1. **867 coding challenges** authored across 7 Elixir domain families
+2. **Raw model baselines** established by dispatching Sonnet against every challenge with no skill guidance
+3. **Skill-guided benchmarks** measured by adding evolved SKILL.md content to the same challenges
+4. **Multi-level scoring** (string matching + compilation + AST analysis + behavioral testing) to evaluate output quality
+5. **Evolutionary competition** where variant skills compete on real challenges and winners are selected by composite fitness
+
+Every chapter cites the specific experiment, journal entry, or data source where the finding was discovered.
+
+## Future Books
+
+As SKLD expands to new languages and domains, each will get its own book:
+- **Book of TypeScript** (planned)
+- **Book of Python** (planned)
+- **Book of Infrastructure** (planned — Terraform, Docker, CI/CD)
+
+The Genesis principles will apply across all of them. Language-specific books will document what's unique to each ecosystem.
+
+---
+
+*Built by [SKLD](https://github.com/ty13r/skillforge) — Skill Kinetics through Layered Darwinism.*

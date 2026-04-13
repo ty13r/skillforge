@@ -371,6 +371,7 @@ Raw model baseline performance on SKLD-bench challenges — no skill guidance, j
 | `duration_ms` | INTEGER | NOT NULL | Wall-clock time for the dispatch |
 | `error` | TEXT | NULL | NULL if successful, error message if dispatch failed |
 | `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+| `scores` | TEXT | NOT NULL | **v2.1.3**. JSON dict with multi-level score breakdown: `{l0, compile, ast, behavioral, template, composite}`. Default `'{}'`. Added via additive migration; existing rows get the default |
 
 Unique constraint: `(challenge_id, model)` — one result per challenge per model. Re-running overwrites.
 
@@ -378,6 +379,38 @@ Indexes:
 - `idx_benchmark_challenge_model` UNIQUE on `(challenge_id, model)` — primary lookup + upsert
 - `idx_benchmark_family` on `(family_slug, model)` — per-family reports
 - `idx_benchmark_tier` on `(tier, model)` — tier-level aggregation
+
+---
+
+### `dispatch_transcripts` (v2.1.3)
+
+Full audit trail for every agent dispatch — competitor outputs, benchmark runs, spawner variants, engineer composites. Every dispatch in the pipeline gets a row here so outputs are never lost to `/tmp` cleanup.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| `id` | TEXT | PK | Stable ID (e.g., `"deep-dive-sonnet-noskill-hard-07"`) or UUID |
+| `run_id` | TEXT | NULL | FK → `evolution_runs.id`. NULL for benchmarks |
+| `benchmark_id` | TEXT | NULL | FK → `benchmark_results.id`. NULL for evolution dispatches |
+| `family_slug` | TEXT | NOT NULL | e.g. `"elixir-phoenix-liveview"` |
+| `challenge_id` | TEXT | NOT NULL | Challenge file ID |
+| `dispatch_type` | TEXT | NOT NULL | `"competitor"` \| `"spawner"` \| `"engineer"` \| `"benchmark"` \| `"deep_dive"` |
+| `model` | TEXT | NOT NULL | e.g. `"claude-sonnet-4-6"` |
+| `skill_variant` | TEXT | NULL | Variant SKILL.md name. NULL for no-skill dispatches |
+| `prompt` | TEXT | NOT NULL | Full prompt sent to the model |
+| `raw_response` | TEXT | NOT NULL | Complete model response text |
+| `extracted_files` | TEXT | NOT NULL | JSON dict `{path: content}` — code files extracted from response |
+| `scores` | TEXT | NOT NULL | JSON dict with multi-level score breakdown. Default `'{}'` |
+| `total_tokens` | INTEGER | NOT NULL | Default 0 |
+| `duration_ms` | INTEGER | NOT NULL | Default 0 |
+| `error` | TEXT | NULL | NULL if successful |
+| `created_at` | TEXT | NOT NULL | ISO-8601 UTC |
+
+No foreign key constraints — transcripts are standalone records that survive even if the originating run or benchmark is deleted.
+
+Indexes:
+- `idx_dispatch_family` on `(family_slug, challenge_id)` — per-challenge lookups
+- `idx_dispatch_type` on `dispatch_type` — filter by dispatch type
+- `idx_dispatch_run` on `run_id` — per-run audit trail
 
 ---
 

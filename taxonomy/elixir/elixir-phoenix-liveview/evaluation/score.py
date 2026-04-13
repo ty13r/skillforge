@@ -193,6 +193,43 @@ def _has(pattern: re.Pattern, text: str) -> bool:
     return bool(pattern.search(text))
 
 
+def _pipe_aware_contains(pat: str, text: str) -> bool:
+    """Check if a pattern is present, accounting for Elixir pipe operator.
+
+    If pat looks like `fn(arg1, arg2` (a function call with first arg),
+    also check for `|> fn(arg2` (pipe strips first arg).
+
+    Also handles variable-vs-literal: `limit: -50` also matches
+    `limit: -@page_size` or `limit: -@limit`.
+    """
+    if pat in text:
+        return True
+
+    # Pipe-operator variant: fn(first_arg, rest → |> fn(rest
+    # Match patterns like: `stream(socket, :posts` → `|> stream(:posts`
+    pipe_match = re.match(r'^(\w+)\(\s*\w+\s*,\s*(.+)', pat)
+    if pipe_match:
+        fn_name = pipe_match.group(1)
+        rest = pipe_match.group(2)
+        pipe_pat = f"|> {fn_name}({rest}"
+        if pipe_pat in text:
+            return True
+        # Also try with preceding whitespace flexibility
+        if re.search(rf'\|>\s*{re.escape(fn_name)}\({re.escape(rest)}', text):
+            return True
+
+    # Variable-vs-literal: `limit: -50` → also match `limit: -@\w+`
+    literal_match = re.match(r'^(.*:\s*-?)(\d+)(.*)$', pat)
+    if literal_match:
+        prefix = re.escape(literal_match.group(1))
+        suffix = re.escape(literal_match.group(3))
+        var_pat = rf'{prefix}@?\w+{suffix}'
+        if re.search(var_pat, text):
+            return True
+
+    return False
+
+
 def _load_files(output_dir: Path, expected_files: list) -> dict:
     contents = {}
     for rel in expected_files:
@@ -259,7 +296,7 @@ def score_challenge(challenge: dict, output_dir: Path) -> dict:
     all_text = "\n".join(v for v in present_contents.values() if v)
 
     for pat in must_contain:
-        present = pat in all_text
+        present = _pipe_aware_contains(pat, all_text)
         objectives[f"contains:{pat}"] = {
             "passed": present, "weight": 2.5,
             "actual": "present" if present else "absent",
@@ -301,7 +338,9 @@ def score_challenge(challenge: dict, output_dir: Path) -> dict:
     for ap_regex, ap_desc, weight in CROSS_CUTTING_ANTIPATTERNS:
         found = _has(ap_regex, all_text)
         key = f"cross:{ap_desc}"
-        effective_weight = weight if found else weight * 0.15
+        # Downweighted: only contribute when found (penalty), zero when
+        # absent to prevent inflating the denominator with free points.
+        effective_weight = weight * 0.5 if found else 0.0
         objectives[key] = {
             "passed": not found, "weight": effective_weight,
             "actual": "present" if found else "absent",

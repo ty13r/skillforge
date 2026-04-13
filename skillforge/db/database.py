@@ -306,7 +306,36 @@ _INDEXES = [
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_benchmark_challenge_model ON benchmark_results (challenge_id, model)",
     "CREATE INDEX IF NOT EXISTS idx_benchmark_family ON benchmark_results (family_slug, model)",
     "CREATE INDEX IF NOT EXISTS idx_benchmark_tier ON benchmark_results (tier, model)",
+    # SKLD-bench dispatch transcript indexes
+    "CREATE INDEX IF NOT EXISTS idx_dispatch_family ON dispatch_transcripts (family_slug, challenge_id)",
+    "CREATE INDEX IF NOT EXISTS idx_dispatch_type ON dispatch_transcripts (dispatch_type)",
+    "CREATE INDEX IF NOT EXISTS idx_dispatch_run ON dispatch_transcripts (run_id)",
 ]
+
+# ---------------------------------------------------------------------------
+# SKLD-bench — dispatch transcripts (full audit trail for every agent dispatch)
+# ---------------------------------------------------------------------------
+
+_CREATE_DISPATCH_TRANSCRIPTS = """
+CREATE TABLE IF NOT EXISTS dispatch_transcripts (
+    id              TEXT PRIMARY KEY,
+    run_id          TEXT,
+    benchmark_id    TEXT,
+    family_slug     TEXT NOT NULL,
+    challenge_id    TEXT NOT NULL,
+    dispatch_type   TEXT NOT NULL,
+    model           TEXT NOT NULL,
+    skill_variant   TEXT,
+    prompt          TEXT NOT NULL,
+    raw_response    TEXT NOT NULL,
+    extracted_files TEXT NOT NULL,
+    scores          TEXT NOT NULL DEFAULT '{}',
+    total_tokens    INTEGER NOT NULL DEFAULT 0,
+    duration_ms     INTEGER NOT NULL DEFAULT 0,
+    error           TEXT,
+    created_at      TEXT NOT NULL
+)
+"""
 
 # ---------------------------------------------------------------------------
 # SKLD-bench — raw model baseline performance, no skill guidance
@@ -349,12 +378,14 @@ _TABLE_DDLS = [
     _CREATE_SKILL_FAMILIES,
     _CREATE_VARIANT_EVOLUTIONS,
     _CREATE_VARIANTS,
-    # SKLD-bench baseline
+    # SKLD-bench baseline + audit trail
     _CREATE_BENCHMARK_RESULTS,
+    _CREATE_DISPATCH_TRANSCRIPTS,
 ]
 
 _DROP_ORDER = [
     # SKLD-bench
+    "dispatch_transcripts",
     "benchmark_results",
     # v2.0 — drop leaves first
     "variants",
@@ -380,6 +411,8 @@ _ADDITIVE_COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ("evolution_runs", "family_id", "TEXT"),
     ("evolution_runs", "evolution_mode", "TEXT NOT NULL DEFAULT 'molecular'"),
     ("skill_genomes", "variant_id", "TEXT"),
+    # v2.1.3 — multi-level score breakdown on benchmark_results
+    ("benchmark_results", "scores", "TEXT NOT NULL DEFAULT '{}'"),
 ]
 
 

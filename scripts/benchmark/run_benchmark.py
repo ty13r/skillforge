@@ -149,6 +149,29 @@ async def save_result(db_path: Path, result: dict) -> None:
         await conn.commit()
 
 
+async def save_transcript(db_path: Path, result: dict, prompt: str, response: str) -> None:
+    """Save a dispatch transcript for full audit trail."""
+    from skillforge.db.queries import save_transcript as _save
+
+    await _save(
+        id=f"bench-{result['id']}",
+        family_slug=result["family_slug"],
+        challenge_id=result["challenge_id"],
+        dispatch_type="benchmark",
+        model=result["model"],
+        prompt=prompt,
+        raw_response=response,
+        extracted_files=result["output_files"],
+        scores={},  # populated later by composite scorer
+        benchmark_id=result["id"],
+        total_tokens=result["total_tokens"],
+        duration_ms=result["duration_ms"],
+        error=result.get("error"),
+        created_at=result["created_at"],
+        db_path=db_path,
+    )
+
+
 async def already_scored(db_path: Path, challenge_id: str, model: str) -> bool:
     """Check if this (challenge, model) pair already has a result."""
     async with aiosqlite.connect(db_path) as conn:
@@ -166,13 +189,14 @@ async def run_single(
     model: str,
     db_path: Path,
     dry_run: bool = False,
+    force: bool = False,
 ) -> dict | None:
     """Run a single challenge against the model and save the result."""
     ch_id = challenge["id"]
     tier = challenge["tier"]
     dimension = challenge.get("scoring", {}).get("primary_capability", "unknown")
 
-    if await already_scored(db_path, ch_id, model):
+    if not force and await already_scored(db_path, ch_id, model):
         return None  # skip
 
     if dry_run:
@@ -187,14 +211,21 @@ async def run_single(
         from claude_code_sdk import query as claude_query, ClaudeCodeOptions
 
         response_parts = []
-        async for msg in claude_query(
-            prompt=prompt,
-            options=ClaudeCodeOptions(model=model, max_turns=1),
-        ):
-            if hasattr(msg, "content"):
-                response_parts.append(msg.content)
+        try:
+            async for msg in claude_query(
+                prompt=prompt,
+                options=ClaudeCodeOptions(model=model, max_turns=1),
+            ):
+                if hasattr(msg, "content") and isinstance(msg.content, list):
+                    for block in msg.content:
+                        if hasattr(block, "text"):
+                            response_parts.append(block.text)
+        except Exception:
+            # SDK may raise on unknown event types (e.g. rate_limit_event)
+            # at end of stream — data already captured above
+            pass
 
-        response_text = "\n".join(str(p) for p in response_parts)
+        response_text = "\n".join(response_parts)
         total_tokens = len(prompt.split()) * 2  # rough estimate
         error = None
     except Exception as e:
@@ -239,6 +270,7 @@ async def run_single(
     }
 
     await save_result(db_path, result)
+    await save_transcript(db_path, result, prompt, response_text)
 
     status = "PASS" if result["passed"] else "FAIL"
     print(f"  [{status}] {ch_id} ({tier}) score={result['score']:.3f} {duration_ms}ms")
@@ -251,6 +283,7 @@ async def run_family(
     tier: str | None,
     limit: int | None,
     dry_run: bool,
+    force: bool,
     db_path: Path,
 ) -> list[dict]:
     """Run all challenges for a family."""
@@ -260,13 +293,13 @@ async def run_family(
 
     print(f"\n{'='*60}")
     print(f"SKLD-bench: {family_slug} × {model}")
-    print(f"Challenges: {len(challenges)}")
+    print(f"Challenges: {len(challenges)}{' (FORCE re-dispatch)' if force else ''}")
     print(f"{'='*60}")
 
     results = []
     for i, ch in enumerate(challenges):
         print(f"[{i+1}/{len(challenges)}]", end="")
-        result = await run_single(family_slug, ch, model, db_path, dry_run)
+        result = await run_single(family_slug, ch, model, db_path, dry_run, force)
         if result:
             results.append(result)
         elif not dry_run:
@@ -288,13 +321,16 @@ async def main():
     parser.add_argument("--tier", choices=["easy", "medium", "hard", "legendary"])
     parser.add_argument("--limit", type=int, help="Max challenges to run")
     parser.add_argument("--dry-run", action="store_true", help="List challenges without dispatching")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-dispatch even if already scored (for re-capturing lost outputs)")
     args = parser.parse_args()
 
     # Ensure DB has the table
     from skillforge.db.database import init_db
     await init_db()
 
-    await run_family(args.family, args.model, args.tier, args.limit, args.dry_run, DB_PATH)
+    await run_family(args.family, args.model, args.tier, args.limit,
+                     args.dry_run, args.force, DB_PATH)
 
 
 if __name__ == "__main__":

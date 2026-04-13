@@ -9,8 +9,10 @@ An evolutionary breeding platform for Claude Agent Skills. Decomposes skills int
 - **v1.x** (shipped): Monolithic skill evolution — works end-to-end, deployed on Railway
 - **v2.0** (shipped): Atomic variant evolution — 5 phases landed across PRs #2-#6; feature-complete
 - **v2.1 content** (shipped): SKLD-bench controlled evaluation environments — 7 Elixir lighthouse families authored with **867 challenges** (PRs #9-#17). Families: `elixir-phoenix-liveview`, `elixir-ecto-sandbox-test`, `elixir-security-linter`, `elixir-ecto-query-writer`, `elixir-ecto-schema-changeset`, `elixir-oban-worker`, `elixir-pattern-match-refactor`. Workstream plan: `taxonomy/elixir/SEEDING-PLAN.md`. File shapes: `taxonomy/elixir/SCHEMAS.md`.
-- **v2.1 seed runs** (in progress, 2/7 shipped): `elixir-phoenix-liveview-seed-v1` (fitness 0.9407) and `elixir-ecto-sandbox-test-seed-v1` (fitness 0.8939). Remaining 5: elixir-security-linter, elixir-oban-worker, elixir-ecto-schema-changeset, elixir-ecto-query-writer, elixir-pattern-match-refactor. Playbook: `scripts/mock_pipeline/NEXT-SEED-RUN-PLAYBOOK.md`.
-- **v2.1 plumbing** (pending): Wire the 7 families into the evolution engine. `plans/PLAN-V2.1.md` written (~950 lines). Next: ship the remaining 5 seed runs, then execute Phase 0 (DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → install test → live integration test).
+- **v2.1 seed runs** (shipped, 7/7): All 7 Elixir lighthouse families have seed runs on the Registry. Total API cost: $63.18. Families: phoenix-liveview (0.9407), ecto-sandbox-test (0.8939), security-linter, oban-worker, ecto-schema-changeset (0.987), ecto-query-writer (0.935), pattern-match-refactor (0.945).
+- **v2.1 SKLD-bench baseline** (shipped): Raw Sonnet scored against all 867 challenges — avg 93.3% with string-matching scorer. Exposed that current scoring is string-match only (no compilation, no execution, no behavioral testing).
+- **v2.1.3 scoring overhaul** (active): Fix scoring → classify challenges → validate skill lift → productionize. Plan: `plans/PLAN-V2.1.3.md`. Phase 0 (data foundation) is next.
+- **v2.1 plumbing** (blocked on v2.1.3): Wire the 7 families into the evolution engine. Plan archived at `plans/archived/PLAN-V2.1.md`. Should not start until PLAN-V2.1.3 Phase 5 is complete.
 
 ## Tech
 - Python 3.12+, FastAPI, Claude Agent SDK, SQLite (aiosqlite), WebSockets
@@ -292,7 +294,7 @@ The journal is the only doc that's written for humans first and machines second.
 ## Plans & Progress
 
 All planning and progress documents live in `plans/`:
-- **`plans/PLAN-V2.1.md`** — **next active plan** (needs writing): Phase 0 plumbing for v2.1 — wiring the 7 SKLD-bench Elixir families into the evolution engine. DB migration → family loader → evolution dispatcher → L1 scorer subprocess → champion eval → live integration test.
+- **`plans/PLAN-V2.1.3.md`** — **active plan**: Scoring overhaul, data capture & challenge classification. 6 phases: data foundation → compile+AST scorer → behavioral tests → challenge classification → skill-guided benchmark → full scored mock run → production engine.
 - **`plans/SPEC-V2.1.md`** — shipped spec: controlled evaluation environments, tiered challenge pools, train/test separation.
 - **`taxonomy/elixir/SEEDING-PLAN.md`** — shipped workstream plan: SKLD-bench content authoring for the 7 lighthouse Elixir families (867 challenges, PRs #9-#17).
 - **`taxonomy/elixir/SCHEMAS.md`** — file shapes reference for every file in a v2.1 family folder.
@@ -303,6 +305,8 @@ All planning and progress documents live in `plans/`:
 - `plans/PLAN-V1.2.md` — v1.2 plan (Managed Agents port). Shipped via PR #1.
 - `plans/archived/PLAN.md` — original MVP plan (Steps 3-11). Shipped.
 - `plans/archived/PLAN-V1.1.md` — v1.1 plan (seeds, uploads, palette, theme). Shipped.
+- `plans/archived/PLAN-V2.1.md` — v2.1 engine plan (~950 lines). Blocked on v2.1.3 completion.
+- `plans/archived/PLAN-V2.1.2.md` — v2.1.2 scoring overhaul (7 sprints). Superseded by PLAN-V2.1.3.
 
 ### Task Execution Workflow (REQUIRED)
 
