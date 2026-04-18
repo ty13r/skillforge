@@ -166,6 +166,56 @@ export default function AppShell() {
       <main className="flex-1">
         <Outlet />
       </main>
+
+      <footer className="mt-16 border-t border-outline-variant bg-surface-container-lowest">
+        <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-6 py-6 text-sm text-on-surface-dim md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-display tracking-tight">
+              <span className="text-on-surface">SKLD</span>
+              <span className="text-primary">.run</span>
+            </span>
+            <span className="font-mono text-[0.6875rem] uppercase tracking-wider">
+              Skill Kinetics through Layered Darwinism
+            </span>
+          </div>
+          <nav className="flex flex-wrap items-center gap-4">
+            <a
+              href="https://github.com/ty13r/skillforge"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 transition-colors hover:text-on-surface"
+              aria-label="SKLD on GitHub"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M12 2C6.475 2 2 6.475 2 12a9.994 9.994 0 006.838 9.488c.5.087.687-.213.687-.476 0-.237-.013-1.024-.013-1.862-2.512.463-3.162-.612-3.362-1.175-.113-.288-.6-1.175-1.025-1.413-.35-.187-.85-.65-.013-.662.788-.013 1.35.725 1.538 1.025.9 1.512 2.338 1.087 2.912.825.088-.65.35-1.087.638-1.337-2.225-.25-4.55-1.113-4.55-4.938 0-1.088.387-1.987 1.025-2.688-.1-.25-.45-1.275.1-2.65 0 0 .837-.262 2.75 1.026a9.28 9.28 0 012.5-.338c.85 0 1.7.112 2.5.337 1.913-1.3 2.75-1.024 2.75-1.024.55 1.375.2 2.4.1 2.65.637.7 1.025 1.587 1.025 2.687 0 3.838-2.337 4.688-4.562 4.938.362.312.675.912.675 1.85 0 1.337-.013 2.412-.013 2.75 0 .262.188.574.688.474A10.005 10.005 0 0022 12c0-5.525-4.475-10-10-10z"
+                />
+              </svg>
+              GitHub
+            </a>
+            <a
+              href="/llms.txt"
+              className="transition-colors hover:text-on-surface"
+            >
+              /llms.txt
+            </a>
+            <Link to="/research" className="transition-colors hover:text-on-surface">
+              Research
+            </Link>
+            <Link to="/journal" className="transition-colors hover:text-on-surface">
+              Journal
+            </Link>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
