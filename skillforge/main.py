@@ -60,6 +60,7 @@ from skillforge.api.candidates import router as candidates_router
 from skillforge.api.debug import router as debug_router
 from skillforge.api.invites import router as invites_router
 from skillforge.api.journal import router as journal_router
+from skillforge.api.llms import router as llms_router
 from skillforge.api.routes import router as api_router
 from skillforge.api.seeds import router as seeds_router
 from skillforge.api.spec_assistant import router as spec_assistant_router
@@ -122,6 +123,7 @@ app.include_router(seeds_router)
 app.include_router(uploads_router)
 app.include_router(invites_router)
 app.include_router(journal_router)
+app.include_router(llms_router)
 app.include_router(candidates_router)
 app.include_router(taxonomy_router)
 

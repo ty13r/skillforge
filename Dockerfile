@@ -44,6 +44,7 @@ RUN uv sync --frozen --no-dev
 COPY docs/ ./docs/
 COPY bible/ ./bible/
 COPY journal/ ./journal/
+COPY taxonomy/ ./taxonomy/
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Railway sets $PORT dynamically; default to 8000 for local docker run.
