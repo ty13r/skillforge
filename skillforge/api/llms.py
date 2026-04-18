@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 
 from skillforge.config import ROOT_DIR
 from skillforge.db.queries import _connect
@@ -30,6 +30,64 @@ TAXONOMY_DIR = ROOT_DIR / "taxonomy"
 
 def _md(body: str) -> PlainTextResponse:
     return PlainTextResponse(content=body, media_type="text/markdown; charset=utf-8")
+
+
+@router.get("/robots.txt")
+async def robots_txt() -> PlainTextResponse:
+    """Crawler hints. Points to both sitemap.xml and llms.txt."""
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        f"Sitemap: {SITE_URL}/sitemap.xml\n"
+        f"# LLM-readable index: {SITE_URL}/llms.txt\n"
+    )
+    return PlainTextResponse(body, media_type="text/plain; charset=utf-8")
+
+
+@router.get("/sitemap.xml")
+async def sitemap_xml() -> Response:
+    """XML sitemap enumerating every markdown URL + key SPA routes."""
+    urls: list[str] = [
+        f"{SITE_URL}/",
+        f"{SITE_URL}/llms.txt",
+        f"{SITE_URL}/about.md",
+        f"{SITE_URL}/journal",
+        f"{SITE_URL}/journal.md",
+        f"{SITE_URL}/bible",
+        f"{SITE_URL}/bible.md",
+        f"{SITE_URL}/bench",
+        f"{SITE_URL}/bench.md",
+        f"{SITE_URL}/registry",
+        f"{SITE_URL}/registry.md",
+    ]
+    if JOURNAL_DIR.exists():
+        for p in sorted(JOURNAL_DIR.glob("*.md")):
+            urls.append(f"{SITE_URL}/journal/{p.stem}.md")
+    if BIBLE_DIR.exists():
+        for p in sorted(BIBLE_DIR.glob("*.md")):
+            urls.append(f"{SITE_URL}/bible/{p.stem}.md")
+    for slug in _list_families():
+        urls.append(f"{SITE_URL}/bench/{slug}")
+        urls.append(f"{SITE_URL}/bench/{slug}.md")
+
+    try:
+        async with _connect() as conn:
+            conn.row_factory = None
+            cursor = await conn.execute(
+                "SELECT id FROM evolution_runs ORDER BY created_at DESC LIMIT 500"
+            )
+            for (run_id,) in await cursor.fetchall():
+                urls.append(f"{SITE_URL}/runs/{run_id}")
+                urls.append(f"{SITE_URL}/runs/{run_id}.md")
+    except Exception:
+        pass
+
+    body_lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+                  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for url in urls:
+        body_lines.append(f"  <url><loc>{url}</loc></url>")
+    body_lines.append("</urlset>")
+    return Response("\n".join(body_lines), media_type="application/xml")
 
 
 @router.get("/llms.txt")
