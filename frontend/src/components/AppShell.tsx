@@ -61,6 +61,9 @@ export default function AppShell() {
             <NavLink to="/bible" className={navLinkClass}>
               Bible
             </NavLink>
+            <NavLink to="/research" className={navLinkClass}>
+              Research
+            </NavLink>
           </nav>
 
           {/* Desktop right cluster — hidden below md */}
@@ -142,6 +145,9 @@ export default function AppShell() {
               </NavLink>
               <NavLink to="/bible" className={mobileNavLinkClass}>
                 Bible
+              </NavLink>
+              <NavLink to="/research" className={mobileNavLinkClass}>
+                Research
               </NavLink>
               <NavLink to="/journal" className={mobileNavLinkClass}>
                 Journal
