@@ -48,7 +48,23 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="max-width:720px;margin:4rem auto;padding:0 1.5rem;font-family:system-ui,sans-serif;line-height:1.6;">
+        <h1>SKLD — Skill Kinetics through Layered Darwinism</h1>
+        <p><strong>SKLD evolves Claude Agent Skills.</strong> It decomposes a skill into focused atomic variants, evolves each under targeted selection pressure with multi-layer fitness scoring, and assembles the winners into a composite skill you can download and install.</p>
+        <h2>What you can do here</h2>
+        <ul>
+          <li><strong>Registry</strong> — browse evolved skills, inspect each variant's fitness breakdown, and download production-ready skill directories.</li>
+          <li><strong>SKLD-bench</strong> — controlled evaluation environments for Elixir lighthouse families (Phoenix LiveView, Ecto, Oban, and more) with hundreds of graded challenges.</li>
+          <li><strong>Taxonomy</strong> — explore the Domain → Focus → Language → Skill → Variant hierarchy that organizes every evolved package.</li>
+          <li><strong>Evolution runs</strong> — watch the pipeline live: Taxonomist, Scientist, Spawner, Competitor, Reviewer, Breeder, Engineer agents collaborating over generations.</li>
+          <li><strong>Journal</strong> — the narrative record of how SKLD was built, session by session.</li>
+        </ul>
+        <h2>How it works</h2>
+        <p>Each evolution run picks a skill family, decomposes it into foundation and capability dimensions, spawns a small population of variants per dimension, scores each against focused challenges, breeds survivors across generations, and assembles the winning traits into a final SKILL.md package — all observable in real time via WebSocket streams.</p>
+        <p>If you're reading this message, JavaScript is disabled or still loading. The interactive app requires JavaScript.</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
