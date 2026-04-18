@@ -9,6 +9,7 @@ import SeedDetailView from "./components/SeedDetailView";
 import SkillDiffViewer from "./components/SkillDiffViewer";
 import SkillExportPreview from "./components/SkillExportPreview";
 import JournalBrowser from "./components/JournalBrowser";
+import ResearchBrowser from "./components/ResearchBrowser";
 import SkldBench from "./components/SkldBench";
 import SkldBenchFamily from "./components/SkldBenchFamily";
 import SpecializationInput from "./components/SpecializationInput";
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: "bench/:familySlug", element: <SkldBenchFamily /> },
       { path: "taxonomy", element: <TaxonomyBrowser /> },
       { path: "bible", element: <BibleBrowser /> },
+      { path: "research", element: <ResearchBrowser /> },
       { path: "journal", element: <JournalBrowser /> },
     ],
   },

@@ -26,6 +26,7 @@ SITE_URL = "https://skld.run"
 JOURNAL_DIR = ROOT_DIR / "journal"
 BIBLE_DIR = ROOT_DIR / "bible"
 TAXONOMY_DIR = ROOT_DIR / "taxonomy"
+RESEARCH_DIR = ROOT_DIR / "docs" / "research"
 
 
 def _md(body: str) -> PlainTextResponse:
@@ -59,7 +60,14 @@ async def sitemap_xml() -> Response:
         f"{SITE_URL}/bench.md",
         f"{SITE_URL}/registry",
         f"{SITE_URL}/registry.md",
+        f"{SITE_URL}/research",
+        f"{SITE_URL}/research.md",
     ]
+    for cat in ("narrative", "audits"):
+        subdir = RESEARCH_DIR / cat
+        if subdir.exists():
+            for p in sorted(subdir.glob("*.md")):
+                urls.append(f"{SITE_URL}/research/{cat}/{p.stem}.md")
     if JOURNAL_DIR.exists():
         for p in sorted(JOURNAL_DIR.glob("*.md")):
             urls.append(f"{SITE_URL}/journal/{p.stem}.md")
@@ -123,6 +131,17 @@ async def llms_index() -> PlainTextResponse:
     for slug in families:
         lines.append(f"- [{slug}]({SITE_URL}/bench/{slug}.md)")
 
+    lines += ["", "## Research (problem, prior art, methodology, findings)",
+              f"- [Research index]({SITE_URL}/research.md)"]
+    narrative_dir = RESEARCH_DIR / "narrative"
+    if narrative_dir.exists():
+        for p in sorted(narrative_dir.glob("*.md")):
+            lines.append(f"- [{p.stem}]({SITE_URL}/research/narrative/{p.stem}.md)")
+    audits_dir = RESEARCH_DIR / "audits"
+    if audits_dir.exists():
+        for p in sorted(audits_dir.glob("*.md")):
+            lines.append(f"- [audit: {p.stem}]({SITE_URL}/research/audits/{p.stem}.md)")
+
     lines += [
         "",
         "## Registry (evolved skills)",
@@ -184,6 +203,50 @@ async def bible_entry_md(slug: str) -> PlainTextResponse:
     path = BIBLE_DIR / f"{slug}.md"
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"bible entry not found: {slug}")
+    return _md(path.read_text(encoding="utf-8"))
+
+
+# --- Research ---------------------------------------------------------------
+
+
+@router.get("/research.md")
+async def research_md() -> PlainTextResponse:
+    if not RESEARCH_DIR.exists():
+        raise HTTPException(status_code=404, detail="research dir not found")
+    lines = ["# SKLD Research", "",
+             "Problem, prior art, methodology, evaluation, findings, and open "
+             "questions for evolutionary breeding of Claude Agent Skills.", ""]
+    narrative = RESEARCH_DIR / "narrative"
+    if narrative.exists():
+        lines += ["## Narrative", ""]
+        for p in sorted(narrative.glob("*.md")):
+            title = _first_heading(p) or p.stem
+            lines.append(f"- [{title}]({SITE_URL}/research/narrative/{p.stem}.md)")
+    audits = RESEARCH_DIR / "audits"
+    if audits.exists():
+        lines += ["", "## Audits", ""]
+        for p in sorted(audits.glob("*.md")):
+            title = _first_heading(p) or p.stem
+            lines.append(f"- [{title}]({SITE_URL}/research/audits/{p.stem}.md)")
+    external = RESEARCH_DIR / "external-papers"
+    if external.exists():
+        pdfs = sorted(external.glob("*.pdf"))
+        if pdfs:
+            lines += ["", "## External papers", ""]
+            for p in pdfs:
+                lines.append(f"- `{p.name}` (see GitHub repo for PDF)")
+    return _md("\n".join(lines))
+
+
+@router.get("/research/{category}/{slug}.md")
+async def research_entry_md(category: str, slug: str) -> PlainTextResponse:
+    if category not in {"narrative", "audits"}:
+        raise HTTPException(status_code=400, detail=f"unknown category: {category}")
+    path = RESEARCH_DIR / category / f"{slug}.md"
+    if not path.exists():
+        raise HTTPException(
+            status_code=404, detail=f"research entry not found: {category}/{slug}"
+        )
     return _md(path.read_text(encoding="utf-8"))
 
 
