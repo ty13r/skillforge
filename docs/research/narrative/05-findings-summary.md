@@ -1,5 +1,9 @@
 # Findings Summary
 
+> **Status:** provisional · **Depth:** partial · **Last updated:** 2026-04-18
+>
+> Seven findings are documented with primary-source evidence, but several rely on single-run experiments (e.g. the 18-output deep-dive). Promotion to "stable" is gated on multi-run variance measurement and cross-family replication.
+
 The headline findings from SKLD so far. This page is an index, not a duplicate — the full empirical record lives in the Claude Skills Bible ([`/bible`](https://skld.run/bible)), which tracks universal principles (Genesis) and language-specific findings (Elixir). Findings here link into the Bible where the evidence lives.
 
 ---

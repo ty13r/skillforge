@@ -1,5 +1,9 @@
 # Open Questions
 
+> **Status:** drafting · **Depth:** skeletal · **Last updated:** 2026-04-18
+>
+> Ten questions with experiment shapes sketched but none of the experiments have been run yet. Entries will migrate off this page (into findings or rigor arc) as they close.
+
 SKLD has shipped seven seed runs, 867 challenges, and a six-layer composite scorer. This page is the list of uncomfortable questions the current evidence does *not* answer. Each question is the seed of a future experiment; anyone reading this is invited to poke at them.
 
 ---

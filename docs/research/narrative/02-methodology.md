@@ -1,5 +1,9 @@
 # Methodology
 
+> **Status:** active · **Depth:** substantial · **Last updated:** 2026-04-18
+>
+> Documents the shipped v2.0 pipeline. Will drift as v2.1.3 lands (composite scorer productionized, challenge-classification work). Expect updates in-step with engine changes.
+
 SKLD is an evolutionary breeding pipeline for Claude Agent Skills. A skill is a structured artifact — a `SKILL.md` instruction file plus optional scripts and reference documents — that specializes Claude on a particular task. The pipeline takes a description of a domain ("write pytest unit tests", "generate Phoenix LiveView modules") and produces a production-ready skill directory that beats a hand-authored seed on a controlled benchmark.
 
 This page explains the mechanics of the current (v2.0) pipeline. `03-rigor-arc.md` explains how we arrived at this design; this page describes the design itself.

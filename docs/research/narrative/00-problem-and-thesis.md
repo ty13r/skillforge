@@ -1,5 +1,9 @@
 # Problem & Thesis
 
+> **Status:** drafting · **Depth:** partial · **Last updated:** 2026-04-18
+>
+> The four falsifiable claims are staked out but not yet individually tested end-to-end. Thesis framing is Matt's to sharpen.
+
 ## The problem
 
 A **Claude Agent Skill** is a structured instruction set — a `SKILL.md` file plus optional scripts and reference documents — that tells Claude how to behave when a specific kind of task shows up. A good skill changes Claude from a generalist into a specialist: it triggers on the right queries, it follows the right workflow, it avoids the domain's common failure modes.

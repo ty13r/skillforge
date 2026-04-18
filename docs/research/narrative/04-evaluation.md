@@ -1,5 +1,9 @@
 # Evaluation
 
+> **Status:** active · **Depth:** substantial · **Last updated:** 2026-04-18
+>
+> Describes SKLD-bench and the 6-layer composite scorer as currently specced. Held-out scoring infrastructure is in place but the full re-scoring sweep hasn't landed. Variance measurement (§"What the evaluation does not yet measure") is the next gap to close.
+
 Every fitness number in SKLD comes from a specific, auditable pipeline. This page documents that pipeline: the benchmark (**SKLD-bench**), the scoring layers (L0 through L5 with a composite formula), the train / held-out split, and the things the evaluation stack still cannot measure.
 
 `03-rigor-arc.md` explains *why* the evaluation looks like this; this page is the current spec.

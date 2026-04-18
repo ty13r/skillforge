@@ -1,5 +1,9 @@
 # The Scientific-Rigor Arc
 
+> **Status:** active · **Depth:** substantial · **Last updated:** 2026-04-18
+>
+> Five pivots documented with primary-source links. New pivots will land here as they happen — this page is a living ledger, not a finished history.
+
 SKLD's current design didn't arrive fully formed. It emerged from five concrete moments where we discovered the previous approach was quietly lying to us, stopped, and rebuilt the measurement infrastructure. This page is the story of those pivots — what we thought, what we discovered, what we changed, and why the current design is better.
 
 Each section cites the specific journal entry and plan document where the pivot was reasoned through, so a reader can verify the story against the primary sources.

@@ -1,5 +1,9 @@
 # SKLD — Prior Art & Influences
 
+> **Status:** stable · **Depth:** substantial · **Last updated:** 2026-04-18
+>
+> Seven sources mapped with "what we took / what we didn't take / why it matters / citation." Will update as new prior art lands.
+
 ## Overview
 
 SKLD didn't emerge from a vacuum. The concept of applying evolutionary optimization to AI agent configurations has active research behind it. This document maps exactly what we borrowed, what we referenced, and what we built new — with rationale for each decision.
