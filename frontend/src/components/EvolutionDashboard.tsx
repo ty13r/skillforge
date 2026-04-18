@@ -7,26 +7,8 @@ import PrimaryButton from "./PrimaryButton";
 import StatCard from "./StatCard";
 import type { RunSummary } from "../types";
 
-interface SeedSummary {
-  id: string;
-  slug: string;
-  title: string;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-  description: string;
-  traits: string[];
-}
-
-const DIFFICULTY_COLOR: Record<string, string> = {
-  easy: "text-tertiary",
-  medium: "text-warning",
-  hard: "text-error",
-};
-
 export default function EvolutionDashboard() {
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
-  const [seeds, setSeeds] = useState<SeedSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const watchDemo = async () => {
@@ -47,14 +29,7 @@ export default function EvolutionDashboard() {
       })
       // Hide the synthetic seed-library run — it lives in the Registry
       .then((data) => setRuns(data.filter((r) => r.id !== "seed-library")))
-      .catch((err) => {
-        setError(String(err));
-        setRuns([]);
-      });
-    fetch("/api/seeds")
-      .then((r) => r.json() as Promise<SeedSummary[]>)
-      .then(setSeeds)
-      .catch(() => setSeeds([]));
+      .catch(() => setRuns([]));
   }, []);
 
   const totalRuns = runs?.length ?? 0;
@@ -154,16 +129,24 @@ export default function EvolutionDashboard() {
       <PipelineSteps />
 
       {/* Backed by Research — prior art that SKLD builds on */}
-      <section className="mt-14">
+      <section className="relative mt-16 overflow-hidden rounded-2xl border border-tertiary/30 bg-surface-container-lowest bg-research-radial p-8 md:p-10">
+        {/* Decorative corner mark */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-6 top-6 hidden font-mono text-[0.625rem] uppercase tracking-[0.2em] text-tertiary/60 md:block"
+        >
+          ⟵ cite · read · audit ⟶
+        </div>
+
         <div className="flex items-end justify-between">
           <div>
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-tertiary">
-              Provenance
+            <p className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-tertiary">
+              ◆ Provenance · Prior Art
             </p>
-            <h2 className="mt-2 font-display text-2xl tracking-tight">
-              Backed by Research
+            <h2 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
+              Backed by <span className="text-tertiary">Research</span>
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-on-surface-dim">
+            <p className="mt-3 max-w-2xl text-sm text-on-surface-dim">
               SKLD didn't emerge from a vacuum. The techniques below come from
               active ML and applied-AI research; SKLD composes them for a
               specific artifact (Claude Agent Skills) with a controlled
@@ -173,18 +156,18 @@ export default function EvolutionDashboard() {
           </div>
           <Link
             to="/research/narrative/01-prior-art"
-            className="hidden text-sm text-on-surface-dim transition-colors hover:text-on-surface md:inline"
+            className="hidden text-sm text-tertiary transition-colors hover:text-on-surface md:inline"
           >
             Full prior art ↗
           </Link>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <a
             href="https://arxiv.org/abs/2309.08532"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               EvoPrompt · ICLR 2024
@@ -205,7 +188,7 @@ export default function EvolutionDashboard() {
             href="https://github.com/gepa-ai/gepa"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               GEPA · UC Berkeley · ICLR 2026
@@ -227,7 +210,7 @@ export default function EvolutionDashboard() {
             href="https://arxiv.org/pdf/2512.09108"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Artemis · TurinTech · 2025-26
@@ -249,7 +232,7 @@ export default function EvolutionDashboard() {
             href="https://imbue.com/research/2026-02-27-darwinian-evolver/"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Imbue Darwinian Evolver · Feb 2026
@@ -271,7 +254,7 @@ export default function EvolutionDashboard() {
             href="https://claude.com/blog/improving-skill-creator-test-measure-and-refine-agent-skills"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Anthropic skill-creator · Mar 2026
@@ -293,7 +276,7 @@ export default function EvolutionDashboard() {
             href="https://mlflow.org/blog/evaluating-skills-mlflow"
             target="_blank"
             rel="noreferrer noopener"
-            className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               MLflow · Mar 2026
@@ -312,13 +295,16 @@ export default function EvolutionDashboard() {
           </a>
         </div>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-8 flex flex-col items-center gap-2">
           <Link
             to="/research"
-            className="rounded-xl border border-primary/40 bg-surface-container-lowest px-5 py-2.5 text-sm text-primary transition-colors hover:bg-primary/10"
+            className="rounded-xl bg-tertiary/15 px-6 py-3 text-sm font-medium text-tertiary ring-1 ring-tertiary/40 transition-all hover:bg-tertiary/25 hover:ring-tertiary/70"
           >
             Read the Research Section →
           </Link>
+          <p className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
+            Problem · Methodology · Rigor Arc · Findings · Open Questions
+          </p>
         </div>
       </section>
 
@@ -355,78 +341,6 @@ export default function EvolutionDashboard() {
           </div>
         </section>
       )}
-
-      {/* Curated Gen 0 Skills — always visible */}
-      <section className="mt-10">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-2xl tracking-tight">
-              Try a Curated Gen 0 Skill
-            </h2>
-            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-              ✦ Production-ready · fork to evolve
-            </p>
-          </div>
-          {completed.length === 0 && (
-            <Link
-              to="/registry"
-              className="text-sm text-on-surface-dim transition-colors hover:text-on-surface"
-            >
-              View Registry ↗
-            </Link>
-          )}
-        </div>
-
-        {seeds == null ? (
-          <p className="mt-6 text-on-surface-dim">Loading seed library...</p>
-        ) : seeds.length === 0 ? (
-          <div className="mt-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-            <p className="text-on-surface-dim">
-              {error ? "Backend not reachable. Start the server and refresh." : "No seeds available."}
-            </p>
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {seeds.slice(0, 6).map((seed) => (
-              <div
-                key={seed.id}
-                className="group flex flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-5 transition-all hover:border-primary/40 hover:shadow-elevated"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider text-primary">
-                    {seed.category}
-                  </span>
-                  <span
-                    className={`font-mono text-[0.625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[seed.difficulty]}`}
-                  >
-                    {seed.difficulty}
-                  </span>
-                </div>
-                <h3 className="mt-3 font-display text-lg tracking-tight group-hover:text-primary">
-                  {seed.title}
-                </h3>
-                <p className="mt-2 line-clamp-3 flex-1 text-sm text-on-surface-dim">
-                  {seed.description}
-                </p>
-                <div className="mt-4 flex gap-2 border-t border-outline-variant pt-4">
-                  <Link
-                    to={`/runs/seed-library/skills/${seed.id}`}
-                    className="flex-1 rounded-lg bg-surface-container-low px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-mid"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    to={`/new?seed=${seed.id}`}
-                    className="flex-1 rounded-lg bg-primary/15 px-3 py-2 text-center text-xs font-medium text-primary transition-colors hover:bg-primary/25"
-                  >
-                    ⑂ Fork
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* Footer stats */}
       <section className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">

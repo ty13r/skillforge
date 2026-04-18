@@ -66,6 +66,8 @@ export default {
           "linear-gradient(45deg, rgb(var(--color-primary)) 0%, rgb(var(--color-primary-hover)) 100%)",
         "hero-radial":
           "radial-gradient(ellipse at top right, rgb(var(--color-primary) / 0.35), rgb(var(--color-primary) / 0.08) 40%, transparent 70%)",
+        "research-radial":
+          "radial-gradient(ellipse at top left, rgb(var(--color-tertiary) / 0.22), rgb(var(--color-tertiary) / 0.06) 45%, transparent 75%)",
         "shimmer-stripe":
           "linear-gradient(110deg, transparent 30%, rgb(var(--color-on-surface) / 0.08) 50%, transparent 70%)",
       },
