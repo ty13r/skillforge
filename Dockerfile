@@ -40,9 +40,10 @@ ENV UV_NO_CACHE=1
 RUN uv sync --frozen --no-dev
 
 # Copy the rest of the project: docs (golden template + research), bible,
-# the built frontend dist from stage 1.
+# journal entries, and the built frontend dist from stage 1.
 COPY docs/ ./docs/
 COPY bible/ ./bible/
+COPY journal/ ./journal/
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Railway sets $PORT dynamically; default to 8000 for local docker run.
