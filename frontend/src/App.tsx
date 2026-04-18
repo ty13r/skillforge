@@ -32,6 +32,7 @@ const router = createBrowserRouter([
       { path: "taxonomy", element: <TaxonomyBrowser /> },
       { path: "bible", element: <BibleBrowser /> },
       { path: "research", element: <ResearchBrowser /> },
+      { path: "research/:category/:slug", element: <ResearchBrowser /> },
       { path: "journal", element: <JournalBrowser /> },
     ],
   },

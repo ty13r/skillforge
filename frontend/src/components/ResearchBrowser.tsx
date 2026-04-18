@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -23,9 +24,12 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function ResearchBrowser() {
+  const { category, slug } = useParams();
+  const navigate = useNavigate();
+  const urlSlug = category && slug ? `${category}/${slug}` : null;
   const [data, setData] = useState<ResearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(urlSlug);
 
   useEffect(() => {
     fetch("/api/research/entries")
@@ -35,11 +39,22 @@ export default function ResearchBrowser() {
       })
       .then((d) => {
         setData(d);
-        const first = d.narrative[0] ?? d.audits[0] ?? d.external_papers[0];
-        if (first) setSelectedSlug(first.slug);
+        if (!urlSlug) {
+          const first = d.narrative[0] ?? d.audits[0] ?? d.external_papers[0];
+          if (first) setSelectedSlug(first.slug);
+        }
       })
       .catch((err) => setError(String(err)));
-  }, []);
+  }, [urlSlug]);
+
+  useEffect(() => {
+    if (urlSlug) setSelectedSlug(urlSlug);
+  }, [urlSlug]);
+
+  const selectSlug = (next: string) => {
+    setSelectedSlug(next);
+    navigate(`/research/${next}`);
+  };
 
   const allEntries = useMemo(() => {
     if (!data) return [];
@@ -105,7 +120,7 @@ export default function ResearchBrowser() {
                       {entries.map((e) => (
                         <li key={e.slug}>
                           <button
-                            onClick={() => setSelectedSlug(e.slug)}
+                            onClick={() => selectSlug(e.slug)}
                             className={`w-full rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
                               selectedSlug === e.slug
                                 ? key === "narrative"
