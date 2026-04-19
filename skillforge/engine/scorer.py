@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """Async wrapper around scripts/scoring/composite_scorer.py.
 
 Runs the sync composite_score() in a thread pool so the evolution engine
 can await it without blocking the event loop.
 """
+
+from __future__ import annotations
 
 import asyncio
 import json

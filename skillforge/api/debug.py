@@ -128,7 +128,7 @@ defmodule MyAppWeb.{module}Live do
   end
 end
 '''}
-    elif variant == "seed":
+    if variant == "seed":
         return {filename: f'''\
 defmodule MyAppWeb.{module}Live do
   use MyAppWeb, :live_view
@@ -153,8 +153,8 @@ defmodule MyAppWeb.{module}Live do
   end
 end
 '''}
-    else:  # spawn
-        return {filename: f'''\
+    # spawn
+    return {filename: f'''\
 defmodule MyAppWeb.{module}Live do
   use MyAppWeb, :live_view
 
@@ -177,7 +177,8 @@ end
 '''}
 
 
-import random as _random
+import random as _random  # noqa: E402  (placed after scripted narrative blocks)
+
 
 def _demo_scores(variant: str, base_fitness: float) -> dict:
     """Generate realistic per-competitor composite score breakdowns."""
@@ -192,7 +193,7 @@ def _demo_scores(variant: str, base_fitness: float) -> dict:
             "template": round(0.5 + _random.uniform(0, 0.3), 3),
             "brevity": round(0.8 + _random.uniform(0, 0.2), 3),
         }
-    elif variant == "seed":
+    if variant == "seed":
         # Seed skill: strong across the board
         return {
             "composite": round(base_fitness + _random.uniform(-0.02, 0.04), 3),
@@ -203,17 +204,17 @@ def _demo_scores(variant: str, base_fitness: float) -> dict:
             "template": round(0.8 + _random.uniform(0, 0.2), 3),
             "brevity": round(0.85 + _random.uniform(0, 0.15), 3),
         }
-    else:  # spawn
-        # Spawn: variable, sometimes beats seed
-        return {
-            "composite": round(base_fitness - 0.04 + _random.uniform(-0.05, 0.08), 3),
-            "l0": round(0.8 + _random.uniform(-0.1, 0.15), 3),
-            "compile": _random.random() > 0.2,
-            "ast": round(0.3 + _random.uniform(0, 0.35), 3),
-            "behavioral": round(0.15 + _random.uniform(0, 0.5), 3),
-            "template": round(0.7 + _random.uniform(0, 0.3), 3),
-            "brevity": round(0.75 + _random.uniform(0, 0.25), 3),
-        }
+    # spawn
+    # Spawn: variable, sometimes beats seed
+    return {
+        "composite": round(base_fitness - 0.04 + _random.uniform(-0.05, 0.08), 3),
+        "l0": round(0.8 + _random.uniform(-0.1, 0.15), 3),
+        "compile": _random.random() > 0.2,
+        "ast": round(0.3 + _random.uniform(0, 0.35), 3),
+        "behavioral": round(0.15 + _random.uniform(0, 0.5), 3),
+        "template": round(0.7 + _random.uniform(0, 0.3), 3),
+        "brevity": round(0.75 + _random.uniform(0, 0.25), 3),
+    }
 
 
 # Atomic demo: dimension-by-dimension evolution, not generation-based.
@@ -302,7 +303,7 @@ async def _drive_fake_run(
     await step(1.0)
 
     # --- per-dimension mini-evolution ---
-    for dim_idx, dim in enumerate(DIMENSION_SCRIPT):
+    for _dim_idx, dim in enumerate(DIMENSION_SCRIPT):
         vevo_id = f"vevo_{uuid.uuid4().hex[:12]}"
 
         await emit(

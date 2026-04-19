@@ -26,7 +26,6 @@ import aiosqlite
 
 from skillforge.config import DATA_DIR, DB_PATH
 from skillforge.db.queries import (
-    get_family,
     get_family_by_slug,
     get_run,
     get_taxonomy_node_by_slug,

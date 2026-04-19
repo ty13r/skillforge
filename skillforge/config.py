@@ -7,6 +7,7 @@ without touching call sites.
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -224,9 +225,8 @@ def model_for(role: str) -> str:
 ANTHROPIC_API_KEY: str | None = os.getenv("ANTHROPIC_API_KEY")
 
 # --- Startup diagnostic (all constants now defined) ---------------------------
-import logging as _logging
 
-_logging.getLogger("skillforge.config").info(
+logging.getLogger("skillforge.config").info(
     "gating_disabled=%s codes_loaded=%d backend=%s api_key=%s",
     GATING_DISABLED, len(INVITE_CODES), COMPETITOR_BACKEND,
     "set" if ANTHROPIC_API_KEY else "NOT SET",

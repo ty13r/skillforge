@@ -227,7 +227,6 @@ async def _run_dimension_mini_evolution(
 
         # Separate baseline result from skill results for scoring/selection.
         # The baseline is idx 0; skill variants are idx 1+.
-        baseline_result = results[0]
         skill_results = results[1:]
 
         # --- Composite scoring (Phase 6) ---

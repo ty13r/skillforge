@@ -144,6 +144,20 @@ def test_managed_agents_session_runtime_rate_matches_pricing():
 # ---------------------------------------------------------------------------
 
 
+def _restore_cfg(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Un-set env patches and reload cfg so subsequent tests see the baseline.
+
+    monkeypatch teardown runs *after* the test body, so the test's own
+    ``finally`` block runs while env patches are still active. We must
+    explicitly drop the patched vars before the final reload, otherwise
+    cfg retains the mutated ``COMPETITOR_BACKEND`` and downstream tests
+    end up hitting a real ``managed_agents.make_client()`` path.
+    """
+    monkeypatch.delenv("SKILLFORGE_COMPETITOR_BACKEND", raising=False)
+    monkeypatch.delenv("SKILLFORGE_COMPETITOR_CONCURRENCY", raising=False)
+    importlib.reload(cfg)
+
+
 def test_competitor_concurrency_default_under_sdk_is_one(monkeypatch: pytest.MonkeyPatch):
     """SDK backend MUST default to 1 because of the subprocess race."""
     monkeypatch.setenv("SKILLFORGE_COMPETITOR_BACKEND", "sdk")
@@ -153,8 +167,7 @@ def test_competitor_concurrency_default_under_sdk_is_one(monkeypatch: pytest.Mon
         assert reloaded.COMPETITOR_BACKEND == "sdk"
         assert reloaded.COMPETITOR_CONCURRENCY == 1
     finally:
-        # Restore the canonical module state for downstream tests
-        importlib.reload(cfg)
+        _restore_cfg(monkeypatch)
 
 
 def test_competitor_concurrency_default_under_managed_is_five(
@@ -168,7 +181,7 @@ def test_competitor_concurrency_default_under_managed_is_five(
         assert reloaded.COMPETITOR_BACKEND == "managed"
         assert reloaded.COMPETITOR_CONCURRENCY == 5
     finally:
-        importlib.reload(cfg)
+        _restore_cfg(monkeypatch)
 
 
 def test_competitor_concurrency_explicit_override_wins(
@@ -181,7 +194,7 @@ def test_competitor_concurrency_explicit_override_wins(
     try:
         assert reloaded.COMPETITOR_CONCURRENCY == 12
     finally:
-        importlib.reload(cfg)
+        _restore_cfg(monkeypatch)
 
 
 # ---------------------------------------------------------------------------

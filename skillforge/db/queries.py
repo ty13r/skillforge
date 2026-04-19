@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC
 from pathlib import Path
 
 import aiosqlite
@@ -1266,9 +1267,9 @@ async def save_transcript(
     db_path: Path | None = None,
 ) -> None:
     """Upsert a dispatch transcript row."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    ts = created_at or datetime.now(timezone.utc).isoformat()
+    ts = created_at or datetime.now(UTC).isoformat()
     async with _connect(db_path) as conn:
         await conn.execute(
             """

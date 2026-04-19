@@ -335,10 +335,9 @@ async def _extract_lessons_and_report(
 
     if BREEDER_CALL_MODE == "consolidated":
         return await _extract_consolidated(context, learning_log)
-    else:
-        lessons = await _extract_lessons(context, learning_log)
-        report = await _extract_breeding_report(context, slots, elites, pareto_parents)
-        return lessons, report
+    lessons = await _extract_lessons(context, learning_log)
+    report = await _extract_breeding_report(context, slots, elites, pareto_parents)
+    return lessons, report
 
 
 def _build_breeding_context(

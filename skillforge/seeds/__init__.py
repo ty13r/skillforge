@@ -1584,9 +1584,10 @@ _LEGACY_SEEDS: list[dict] = [
 ]
 
 # --- Active seeds: full golden-template packages with scripts + references ---
-from skillforge.seeds.batch1 import BATCH1_SEEDS
-from skillforge.seeds.batch2 import BATCH2_SEEDS
-from skillforge.seeds.batch3 import BATCH3_SEEDS
+# Imports are placed after the legacy seed defs above to avoid circular loads.
+from skillforge.seeds.batch1 import BATCH1_SEEDS  # noqa: E402
+from skillforge.seeds.batch2 import BATCH2_SEEDS  # noqa: E402
+from skillforge.seeds.batch3 import BATCH3_SEEDS  # noqa: E402
 
 SEED_SKILLS: list[dict] = BATCH1_SEEDS + BATCH2_SEEDS + BATCH3_SEEDS
 

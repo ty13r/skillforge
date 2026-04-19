@@ -114,7 +114,7 @@ def _sniff_skill_md(zf: zipfile.ZipFile) -> tuple[str, dict[str, str]]:
 
 
 @router.post("/skill")
-async def upload_skill(file: UploadFile = File(...)) -> dict:
+async def upload_skill(file: UploadFile = File(...)) -> dict:  # noqa: B008  (FastAPI dependency idiom)
     """Upload a SKILL.md or zipped Skill directory for later fork-and-evolve."""
     raw = await file.read()
     if len(raw) > MAX_UPLOAD_BYTES:
@@ -134,13 +134,15 @@ async def upload_skill(file: UploadFile = File(...)) -> dict:
                         status_code=400, detail=f"zip contains more than {MAX_FILES} files"
                     )
                 skill_md, supporting = _sniff_skill_md(zf)
-        except zipfile.BadZipFile:
-            raise HTTPException(status_code=400, detail="file is not a valid zip archive")
+        except zipfile.BadZipFile as exc:
+            raise HTTPException(
+                status_code=400, detail="file is not a valid zip archive"
+            ) from exc
     elif filename.lower().endswith(".md"):
         try:
             skill_md = raw.decode("utf-8")
-        except UnicodeDecodeError:
-            raise HTTPException(status_code=400, detail="SKILL.md must be UTF-8")
+        except UnicodeDecodeError as exc:
+            raise HTTPException(status_code=400, detail="SKILL.md must be UTF-8") from exc
     else:
         raise HTTPException(
             status_code=400, detail="only .md or .zip files are accepted"

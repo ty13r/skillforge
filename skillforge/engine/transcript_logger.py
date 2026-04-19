@@ -20,7 +20,7 @@ async def log_competitor_dispatch(
     challenge_id: str,
     skill_id: str,
     model: str,
-    result: "CompetitionResult",
+    result: CompetitionResult,
     scores: dict | None = None,
     duration_ms: int = 0,
 ) -> None:
