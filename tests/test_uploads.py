@@ -501,9 +501,9 @@ def test_upload_then_fork_round_trip(client):
     assert uploads_module.get_upload(upload_id) is not None
 
     with (
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
-        patch("skillforge.api.routes.run_evolution", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.run_evolution", new_callable=AsyncMock),
     ):
         fork_resp = client.post(
             "/api/evolve/from-parent",

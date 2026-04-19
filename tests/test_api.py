@@ -80,9 +80,9 @@ def test_root_health_check(client):
 
 def test_evolve_creates_run(client):
     with (
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
-        patch("skillforge.api.routes.run_evolution", new_callable=AsyncMock) as mock_evo,
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.run_evolution", new_callable=AsyncMock) as mock_evo,
     ):
         mock_evo.return_value = None
 
@@ -136,7 +136,7 @@ def test_evolve_rejects_domain_mode_without_specialization(client):
 
 
 def test_get_run_returns_404_if_missing(client):
-    with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=None):
+    with patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=None):
         resp = client.get("/api/runs/nonexistent")
     assert resp.status_code == 404
 
@@ -150,7 +150,7 @@ def test_get_run_returns_detail(client):
     skill = _make_skill()
     run = _make_run(best_skill=skill)
 
-    with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run):
+    with patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=run):
         resp = client.get(f"/api/runs/{run.id}")
 
     assert resp.status_code == 200
@@ -172,7 +172,7 @@ def test_get_run_returns_detail(client):
 def test_list_runs_returns_array(client):
     runs = [_make_run(run_id="run-1"), _make_run(run_id="run-2")]
 
-    with patch("skillforge.api.routes.list_runs", new_callable=AsyncMock, return_value=runs):
+    with patch("skillforge.api.routes.runs.list_runs", new_callable=AsyncMock, return_value=runs):
         resp = client.get("/api/runs")
 
     assert resp.status_code == 200
@@ -193,8 +193,8 @@ def test_export_skill_md_format(client):
     run = _make_run(best_skill=skill)
 
     with (
-        patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
-        patch("skillforge.api.routes.export_skill_md", return_value="fake md content"),
+        patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=run),
+        patch("skillforge.api.routes.runs.export_skill_md", return_value="fake md content"),
     ):
         resp = client.get(f"/api/runs/{run.id}/export?format=skill_md")
 
@@ -213,8 +213,8 @@ def test_export_skill_dir_format_returns_zip(client):
     run = _make_run(best_skill=skill)
 
     with (
-        patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
-        patch("skillforge.api.routes.export_skill_zip", return_value=b"PK...fake zip"),
+        patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=run),
+        patch("skillforge.api.routes.runs.export_skill_zip", return_value=b"PK...fake zip"),
     ):
         resp = client.get(f"/api/runs/{run.id}/export?format=skill_dir")
 
@@ -229,7 +229,7 @@ def test_export_skill_dir_format_returns_zip(client):
 
 
 def test_export_404_on_missing_run(client):
-    with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=None):
+    with patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=None):
         resp = client.get("/api/runs/nonexistent/export")
     assert resp.status_code == 404
 
@@ -242,7 +242,7 @@ def test_export_404_on_missing_run(client):
 def test_export_400_on_no_best_skill(client):
     run = _make_run(best_skill=None)
 
-    with patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run):
+    with patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=run):
         resp = client.get(f"/api/runs/{run.id}/export")
 
     assert resp.status_code == 400
@@ -266,8 +266,8 @@ def test_lineage_returns_nodes_and_edges(client):
     ]
 
     with (
-        patch("skillforge.api.routes.get_run", new_callable=AsyncMock, return_value=run),
-        patch("skillforge.api.routes.get_lineage", new_callable=AsyncMock, return_value=fake_edges),
+        patch("skillforge.api.routes.runs.get_run", new_callable=AsyncMock, return_value=run),
+        patch("skillforge.api.routes.runs.get_lineage", new_callable=AsyncMock, return_value=fake_edges),
     ):
         resp = client.get(f"/api/runs/{run.id}/lineage")
 
