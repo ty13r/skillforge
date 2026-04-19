@@ -40,13 +40,9 @@ export default function ModeCard({
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container-highest text-primary">
         {icon}
       </div>
-      <h3 className="mt-1 font-display text-lg tracking-tight text-on-surface">
-        {title}
-      </h3>
+      <h3 className="mt-1 font-display text-lg tracking-tight text-on-surface">{title}</h3>
       <p className="text-sm text-on-surface-dim">{description}</p>
-      {selected && (
-        <span className="absolute right-3 bottom-3 text-primary">✓</span>
-      )}
+      {selected && <span className="absolute bottom-3 right-3 text-primary">✓</span>}
     </button>
   );
 }

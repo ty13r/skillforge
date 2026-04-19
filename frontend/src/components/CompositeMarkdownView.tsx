@@ -50,13 +50,9 @@ export default function CompositeMarkdownView({
             Composite Skill — {bestSkillId?.slice(0, 16) ?? "—"}
           </p>
           {name && (
-            <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight">
-              {name}
-            </h2>
+            <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight">{name}</h2>
           )}
-          {description && (
-            <p className="mt-2 text-sm text-on-surface-dim">{description}</p>
-          )}
+          {description && <p className="mt-2 text-sm text-on-surface-dim">{description}</p>}
         </div>
         <button
           type="button"
@@ -74,8 +70,8 @@ export default function CompositeMarkdownView({
               No SKILL.md artifact
             </p>
             <p className="mt-2 max-w-xs text-xs text-on-surface-dim">
-              This run has no persisted composite skill. Real evolutions
-              render the full evolved SKILL.md here.
+              This run has no persisted composite skill. Real evolutions render the full evolved
+              SKILL.md here.
             </p>
           </div>
         ) : !skillMd ? (
@@ -83,14 +79,10 @@ export default function CompositeMarkdownView({
             Loading SKILL.md…
           </div>
         ) : showRaw ? (
-          <pre className="whitespace-pre-wrap font-mono text-xs text-on-surface">
-            {skillMd}
-          </pre>
+          <pre className="whitespace-pre-wrap font-mono text-xs text-on-surface">{skillMd}</pre>
         ) : (
           <div className="bible-prose">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {body ?? skillMd}
-            </ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body ?? skillMd}</ReactMarkdown>
           </div>
         )}
       </div>

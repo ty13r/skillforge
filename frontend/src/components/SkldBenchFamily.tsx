@@ -63,11 +63,7 @@ export default function SkldBenchFamily() {
         case "dimension":
           return a.dimension.localeCompare(b.dimension) * dir;
         case "compiles":
-          return (
-            (Number(a.raw?.compiles ?? false) -
-              Number(b.raw?.compiles ?? false)) *
-            dir
-          );
+          return (Number(a.raw?.compiles ?? false) - Number(b.raw?.compiles ?? false)) * dir;
         default:
           return 0;
       }
@@ -107,9 +103,7 @@ export default function SkldBenchFamily() {
         >
           &larr; SKLD-bench
         </Link>
-        <h1 className="mt-2 font-display text-4xl tracking-tight">
-          {data.label}
-        </h1>
+        <h1 className="mt-2 font-display text-4xl tracking-tight">{data.label}</h1>
         <p className="mt-1 font-mono text-sm text-on-surface-dim">
           {data.total_challenges} challenges scored with composite evaluation
         </p>
@@ -134,10 +128,7 @@ export default function SkldBenchFamily() {
             </thead>
             <tbody>
               {data.tiers.map((t) => (
-                <tr
-                  key={t.tier}
-                  className="border-b border-outline-variant/30"
-                >
+                <tr key={t.tier} className="border-b border-outline-variant/30">
                   <td
                     className={`py-2.5 pr-4 font-mono text-sm capitalize ${tierColors[t.tier] ?? "text-on-surface"}`}
                   >
@@ -200,7 +191,8 @@ export default function SkldBenchFamily() {
             Score Distribution
           </p>
           <p className="mt-1 text-[0.6875rem] text-on-surface-dim">
-            How many challenges scored in each composite range — most challenges cluster around 0.5–0.8
+            How many challenges scored in each composite range — most challenges cluster around
+            0.5–0.8
           </p>
           <div className="mt-3 space-y-1.5">
             {data.histogram.counts.map((count, i) => {
@@ -315,9 +307,7 @@ export default function SkldBenchFamily() {
                 const rawComp = c.raw?.composite ?? 0;
                 const skillComp = c.skill?.composite;
                 const lift =
-                  skillComp != null && rawComp > 0
-                    ? (skillComp - rawComp) / rawComp
-                    : null;
+                  skillComp != null && rawComp > 0 ? (skillComp - rawComp) / rawComp : null;
 
                 return (
                   <tr
@@ -357,9 +347,7 @@ export default function SkldBenchFamily() {
                             : "text-on-surface-dim"
                       }`}
                     >
-                      {lift != null
-                        ? `${lift > 0 ? "+" : ""}${(lift * 100).toFixed(0)}%`
-                        : "—"}
+                      {lift != null ? `${lift > 0 ? "+" : ""}${(lift * 100).toFixed(0)}%` : "—"}
                     </td>
                   </tr>
                 );
@@ -390,11 +378,7 @@ function SortHeader({
   const arrow = current === sortKey ? (dir === "asc" ? " ↑" : " ↓") : "";
   return (
     <th className={`cursor-pointer pb-2 pr-3 ${className}`}>
-      <button
-        type="button"
-        onClick={() => onClick(sortKey)}
-        className="hover:text-on-surface"
-      >
+      <button type="button" onClick={() => onClick(sortKey)} className="hover:text-on-surface">
         {label}
         {arrow}
       </button>

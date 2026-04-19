@@ -58,8 +58,7 @@ export default {
         glow: "0 0 8px currentColor",
         "glow-lg": "0 0 16px currentColor",
         // Anthropic avoids heavy drop shadows — keep this subtle, warm-tinted.
-        elevated:
-          "0 1px 2px rgba(20,20,19,0.04), 0 4px 12px rgba(20,20,19,0.06)",
+        elevated: "0 1px 2px rgba(20,20,19,0.04), 0 4px 12px rgba(20,20,19,0.06)",
       },
       backgroundImage: {
         "primary-gradient":

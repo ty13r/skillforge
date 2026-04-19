@@ -40,10 +40,7 @@ export default function ProcessFlow({
           Evolution Pipeline
         </p>
         <p className="mt-1 text-sm text-on-surface">
-          Round{" "}
-          <span className="font-display text-base text-primary">
-            {currentGeneration + 1}
-          </span>
+          Round <span className="font-display text-base text-primary">{currentGeneration + 1}</span>
           {totalGenerations != null && (
             <span className="text-on-surface-dim"> / {totalGenerations}</span>
           )}
@@ -53,7 +50,7 @@ export default function ProcessFlow({
       {/* Phases */}
       <div className="relative">
         {/* Vertical connector line behind the dots */}
-        <div className="absolute left-[1.375rem] top-3 bottom-3 w-px bg-outline-variant" />
+        <div className="absolute bottom-3 left-[1.375rem] top-3 w-px bg-outline-variant" />
 
         {phases.map((phase) => (
           <PhaseRow key={phase.id} phase={phase} />
@@ -81,9 +78,7 @@ function PhaseRow({ phase }: { phase: PhaseState }) {
 
       {/* Label + detail */}
       <div className="min-w-0 flex-1">
-        <p className={"text-sm leading-tight " + STATUS_LABEL_CLASS[phase.status]}>
-          {phase.label}
-        </p>
+        <p className={"text-sm leading-tight " + STATUS_LABEL_CLASS[phase.status]}>{phase.label}</p>
         {phase.detail && (
           <p className="mt-0.5 truncate font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             {phase.detail}

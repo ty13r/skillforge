@@ -43,10 +43,7 @@ describe("derivePhases", () => {
   });
 
   it("marks design_challenges running when challenge_design_started fires", () => {
-    const phases = derivePhases(
-      makeState([{ event: "challenge_design_started" }]),
-      15,
-    );
+    const phases = derivePhases(makeState([{ event: "challenge_design_started" }]), 15);
     expect(phases[0].status).toBe("running");
     expect(phases[1].status).toBe("pending");
   });

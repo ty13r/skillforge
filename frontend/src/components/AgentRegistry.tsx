@@ -50,10 +50,7 @@ export default function AgentRegistry() {
   }, []);
 
   const completed = useMemo(
-    () =>
-      (runs ?? []).filter(
-        (r) => r.status === "complete" && r.id !== SEED_RUN_ID,
-      ),
+    () => (runs ?? []).filter((r) => r.status === "complete" && r.id !== SEED_RUN_ID),
     [runs],
   );
 
@@ -68,9 +65,7 @@ export default function AgentRegistry() {
     if (modeFilter !== "all") list = list.filter((r) => r.mode === modeFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(
-        (r) => r.specialization.toLowerCase().includes(q) || r.id.includes(q),
-      );
+      list = list.filter((r) => r.specialization.toLowerCase().includes(q) || r.id.includes(q));
     }
     const sorted = [...list];
     if (sortKey === "fitness") {
@@ -89,8 +84,7 @@ export default function AgentRegistry() {
 
   const filteredSeeds = useMemo(() => {
     let list = seeds ?? [];
-    if (categoryFilter !== "all")
-      list = list.filter((s) => s.category === categoryFilter);
+    if (categoryFilter !== "all") list = list.filter((s) => s.category === categoryFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -115,9 +109,8 @@ export default function AgentRegistry() {
             Skill <span className="text-primary">Registry</span>
           </h1>
           <p className="mt-3 max-w-2xl text-on-surface-dim">
-            Browse curated Gen 0 Skills and completed evolution runs. Deploy
-            any Skill directly or fork-and-evolve it with your own
-            specialization.
+            Browse curated Gen 0 Skills and completed evolution runs. Deploy any Skill directly or
+            fork-and-evolve it with your own specialization.
           </p>
         </div>
       </div>
@@ -133,11 +126,7 @@ export default function AgentRegistry() {
         />
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       {/* ─── Curated Seeds Section ─────────────────────────────────────── */}
       <section className="mt-12">
@@ -146,12 +135,10 @@ export default function AgentRegistry() {
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
               ✦ Curated Library
             </p>
-            <h2 className="mt-1 font-display text-2xl tracking-tight">
-              Gen 0 Skills
-            </h2>
+            <h2 className="mt-1 font-display text-2xl tracking-tight">Gen 0 Skills</h2>
             <p className="mt-1 text-sm text-on-surface-dim">
-              Production-ready Skills you can deploy immediately or fork as the
-              starting point for evolution.
+              Production-ready Skills you can deploy immediately or fork as the starting point for
+              evolution.
             </p>
           </div>
           <div className="text-right font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
@@ -209,7 +196,7 @@ export default function AgentRegistry() {
                     {seed.traits.slice(0, 3).map((t) => (
                       <span
                         key={t}
-                        className="rounded-full bg-surface-container-mid px-2 py-0.5 font-mono text-[0.5625rem] text-on-surface-dim"
+                        className="bg-surface-container-mid rounded-full px-2 py-0.5 font-mono text-[0.5625rem] text-on-surface-dim"
                       >
                         {t}
                       </span>
@@ -219,7 +206,7 @@ export default function AgentRegistry() {
                 <div className="mt-4 flex gap-2 border-t border-outline-variant pt-4">
                   <Link
                     to={`/runs/${SEED_RUN_ID}/skills/${seed.id}`}
-                    className="flex-1 rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-high"
+                    className="bg-surface-container-mid flex-1 rounded-lg px-3 py-2 text-center text-xs font-medium text-on-surface transition-colors hover:bg-surface-container-high"
                   >
                     View
                   </Link>
@@ -243,9 +230,7 @@ export default function AgentRegistry() {
             <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
               Completed Runs
             </p>
-            <h2 className="mt-1 font-display text-2xl tracking-tight">
-              Community Evolutions
-            </h2>
+            <h2 className="mt-1 font-display text-2xl tracking-tight">Community Evolutions</h2>
           </div>
           <div className="text-right font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             {completed.length} runs

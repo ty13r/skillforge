@@ -97,21 +97,15 @@ export default function LiveFeedLog({ events }: LiveFeedLogProps) {
           {errorCount} Errors
         </span>
       </div>
-      <div
-        ref={scrollRef}
-        className="max-h-64 overflow-y-auto px-4 pb-3 font-mono text-xs"
-      >
+      <div ref={scrollRef} className="max-h-64 overflow-y-auto px-4 pb-3 font-mono text-xs">
         {events.length === 0 ? (
           <p className="py-2 text-on-surface-dim">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-secondary mr-2 align-middle" />
+            <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-secondary align-middle" />
             Waiting for events from the engine...
           </p>
         ) : (
           events.map((ev, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-2 py-0.5 animate-slide-in-up"
-            >
+            <div key={i} className="flex animate-slide-in-up items-start gap-2 py-0.5">
               <span
                 className={
                   "mt-[0.4rem] inline-block h-1 w-1 shrink-0 rounded-full " +
@@ -123,9 +117,7 @@ export default function LiveFeedLog({ events }: LiveFeedLogProps) {
               <span className={ACTOR_COLOR[ev.event] ?? "text-on-surface"}>
                 {ev.event.toUpperCase()}:
               </span>
-              <span className="text-on-surface flex-1 min-w-0 break-words">
-                {formatEvent(ev)}
-              </span>
+              <span className="min-w-0 flex-1 break-words text-on-surface">{formatEvent(ev)}</span>
             </div>
           ))
         )}

@@ -8,7 +8,7 @@ interface FileTreeProps {
 
 interface TreeNode {
   name: string;
-  path: string;         // full path for leaf nodes
+  path: string; // full path for leaf nodes
   isDir: boolean;
   children: TreeNode[];
 }
@@ -82,9 +82,7 @@ function TreeNodeRow({
           className="flex w-full items-center gap-1 rounded px-1 py-1 text-left font-mono text-[0.6875rem] text-on-surface-dim transition-colors hover:text-on-surface"
           style={{ paddingLeft: `${indent + 4}px` }}
         >
-          <span className="w-4 text-center text-[0.625rem]">
-            {isOpen ? "▾" : "▸"}
-          </span>
+          <span className="w-4 text-center text-[0.625rem]">{isOpen ? "▾" : "▸"}</span>
           <span className="text-[0.625rem]">📁</span>
           <span>{node.name}/</span>
         </button>
@@ -94,19 +92,18 @@ function TreeNodeRow({
           className={`flex w-full items-center gap-1 rounded px-1 py-1 text-left font-mono text-[0.6875rem] transition-colors ${
             isSelected
               ? "bg-primary/10 text-primary"
-              : "text-on-surface-dim hover:text-on-surface hover:bg-surface-container-mid"
+              : "hover:bg-surface-container-mid text-on-surface-dim hover:text-on-surface"
           }`}
           style={{ paddingLeft: `${indent + 4}px` }}
           title={node.path}
         >
-          <span className="w-4 text-center text-[0.625rem]">
-            {fileIcon(node.name)}
-          </span>
+          <span className="w-4 text-center text-[0.625rem]">{fileIcon(node.name)}</span>
           <span className="truncate">{node.name}</span>
         </button>
       )}
 
-      {node.isDir && isOpen &&
+      {node.isDir &&
+        isOpen &&
         node.children.map((child) => (
           <TreeNodeRow
             key={child.path}

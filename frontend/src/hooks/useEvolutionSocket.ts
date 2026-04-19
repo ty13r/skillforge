@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import type {
-  CompetitorView,
-  EvolutionEvent,
-  GenerationStats,
-  PhaseState,
-} from "../types";
+import type { CompetitorView, EvolutionEvent, GenerationStats, PhaseState } from "../types";
 
 export type ConnectionStatus = "connecting" | "open" | "closed" | "error";
 
@@ -138,10 +133,7 @@ export function useEvolutionSocket(runId: string | null): EvolutionSocketState {
 // Reducer-style state update from incoming events
 // ----------------------------------------------------------------------------
 
-export function applyEvent(
-  state: EvolutionSocketState,
-  ev: EvolutionEvent,
-): EvolutionSocketState {
+export function applyEvent(state: EvolutionSocketState, ev: EvolutionEvent): EvolutionSocketState {
   const events = [...state.events, ev];
   const next = { ...state, events, lastEventAt: Date.now() };
 
@@ -217,8 +209,9 @@ export function applyEvent(
       });
       // For atomic runs, update the active dimension's fitness from scores
       if (next.isAtomic && ev.best_fitness != null) {
-        const target = next.activeDimension
-          ?? next.atomicDimensions.find((d) => d.status === "running")?.dimension;
+        const target =
+          next.activeDimension ??
+          next.atomicDimensions.find((d) => d.status === "running")?.dimension;
         if (target) {
           next.atomicDimensions = next.atomicDimensions.map((d) =>
             d.dimension === target ? { ...d, fitness: ev.best_fitness } : d,
@@ -274,9 +267,7 @@ export function applyEvent(
     case "dimension_phase":
       if (ev.dimension) {
         next.atomicDimensions = next.atomicDimensions.map((d) =>
-          d.dimension === ev.dimension
-            ? { ...d, phase: ev.phase, phaseDetail: ev.detail }
-            : d,
+          d.dimension === ev.dimension ? { ...d, phase: ev.phase, phaseDetail: ev.detail } : d,
         );
       }
       break;
@@ -324,7 +315,9 @@ export function applyEvent(
       break;
 
     case "variant_evolution_complete": {
-      const completeStatus = (ev.status === "complete" ? "complete" : "failed") as "complete" | "failed";
+      const completeStatus = (ev.status === "complete" ? "complete" : "failed") as
+        | "complete"
+        | "failed";
       const exists = next.atomicDimensions.some((d) => d.dimension === ev.dimension);
       if (exists) {
         next.atomicDimensions = next.atomicDimensions.map((d) =>
@@ -335,7 +328,12 @@ export function applyEvent(
       } else if (ev.dimension) {
         next.atomicDimensions = [
           ...next.atomicDimensions,
-          { dimension: ev.dimension, tier: ev.tier ?? "capability", status: completeStatus, fitness: ev.best_fitness },
+          {
+            dimension: ev.dimension,
+            tier: ev.tier ?? "capability",
+            status: completeStatus,
+            fitness: ev.best_fitness,
+          },
         ];
       }
       next.activeDimension = undefined;
@@ -373,8 +371,7 @@ export function derivePhases(
   expectedCompetitors: number,
 ): PhaseState[] {
   const events = state.events;
-  const has = (name: string) =>
-    events.some((e) => e.event === name);
+  const has = (name: string) => events.some((e) => e.event === name);
 
   // Default labels
   const labels: Record<PhaseState["id"], string> = {
@@ -436,8 +433,7 @@ export function derivePhases(
       }
     } else {
       phases[1].status = "running";
-      phases[1].detail =
-        state.currentGeneration === 0 ? "generating skills..." : "breeding...";
+      phases[1].detail = state.currentGeneration === 0 ? "generating skills..." : "breeding...";
       return phases;
     }
   }
@@ -450,8 +446,7 @@ export function derivePhases(
       phases[2].status = "running";
       const expected = Math.max(expectedCompetitors, state.competitors.length);
       const finished = state.finishedCompetitors;
-      phases[2].detail =
-        expected > 0 ? `${finished} of ${expected}` : `${finished} done`;
+      phases[2].detail = expected > 0 ? `${finished} of ${expected}` : `${finished} done`;
       return phases;
     }
   }
@@ -474,9 +469,8 @@ export function derivePhases(
     } else {
       phases[4].status = "running";
       const lastGen = state.generations.at(-1);
-      phases[4].detail = lastGen?.best_fitness != null
-        ? `best ${lastGen.best_fitness.toFixed(2)}`
-        : undefined;
+      phases[4].detail =
+        lastGen?.best_fitness != null ? `best ${lastGen.best_fitness.toFixed(2)}` : undefined;
       return phases;
     }
   }
@@ -489,7 +483,6 @@ export function derivePhases(
 
   return phases;
 }
-
 
 function upsertGeneration(
   list: GenerationStats[],
@@ -504,10 +497,7 @@ function upsertGeneration(
   return next;
 }
 
-function upsertCompetitor(
-  list: CompetitorView[],
-  patch: CompetitorView,
-): CompetitorView[] {
+function upsertCompetitor(list: CompetitorView[], patch: CompetitorView): CompetitorView[] {
   const idx = list.findIndex(
     (c) =>
       c.competitorId === patch.competitorId &&

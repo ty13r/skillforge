@@ -42,9 +42,7 @@ export default function ChallengeGallery({ challenges }: ChallengeGalleryProps) 
         <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
           Challenge Gallery
         </p>
-        <p className="mt-3 text-sm text-on-surface-dim">
-          No challenges recorded for this run.
-        </p>
+        <p className="mt-3 text-sm text-on-surface-dim">No challenges recorded for this run.</p>
       </div>
     );
   }
@@ -85,9 +83,7 @@ export default function ChallengeGallery({ challenges }: ChallengeGalleryProps) 
                       {c.difficulty}
                     </span>
                   </div>
-                  <p className="mt-2 line-clamp-4 text-xs text-on-surface">
-                    {c.prompt}
-                  </p>
+                  <p className="mt-2 line-clamp-4 text-xs text-on-surface">{c.prompt}</p>
                 </div>
               ))}
             </div>

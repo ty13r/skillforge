@@ -91,9 +91,7 @@ export default function VariantBreakdown({ familyId }: VariantBreakdownProps) {
       }
       setActionStatus(`Swapped ${dimension} → ${variantId.slice(0, 12)}`);
       // Re-fetch the variants so the active flag refreshes
-      const fresh = await fetch(`/api/families/${familyId}/variants`).then((r) =>
-        r.json(),
-      );
+      const fresh = await fetch(`/api/families/${familyId}/variants`).then((r) => r.json());
       setAllVariants(fresh);
     } catch (err) {
       setActionStatus(`Error: ${err}`);
@@ -141,8 +139,8 @@ export default function VariantBreakdown({ familyId }: VariantBreakdownProps) {
   if (allVariants.length === 0) {
     return (
       <div className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-dim">
-        This family has no variants yet — atomic evolution may not have run
-        for it. Submit a new run with Evolution Mode = Atomic to populate.
+        This family has no variants yet — atomic evolution may not have run for it. Submit a new run
+        with Evolution Mode = Atomic to populate.
       </div>
     );
   }
@@ -154,9 +152,7 @@ export default function VariantBreakdown({ familyId }: VariantBreakdownProps) {
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
             Advanced — Variant Breakdown
           </p>
-          <h3 className="mt-1 font-display text-xl tracking-tight">
-            {family.label}
-          </h3>
+          <h3 className="mt-1 font-display text-xl tracking-tight">{family.label}</h3>
           <p className="mt-1 font-mono text-[0.625rem] text-on-surface-dim">
             {family.slug} · {family.decomposition_strategy}
           </p>
@@ -224,17 +220,14 @@ interface DimensionRowProps {
 
 function DimensionRow({ group, pending, onSwap, onReEvolve }: DimensionRowProps) {
   const active = group.variants.find((v) => v.is_active) ?? group.variants[0];
-  const isPending =
-    pending !== null && pending.dimension === group.dimension;
+  const isPending = pending !== null && pending.dimension === group.dimension;
 
   return (
     <li className="rounded-lg bg-surface-container-low p-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <code className="font-mono text-sm text-primary">
-              {group.dimension}
-            </code>
+            <code className="font-mono text-sm text-primary">{group.dimension}</code>
             <span className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
               {group.variants.length} variants
             </span>

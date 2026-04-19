@@ -10,12 +10,7 @@ interface SidebarProps {
   phases: PhaseState[];
 }
 
-export default function Sidebar({
-  runId,
-  generation,
-  totalGenerations,
-  phases,
-}: SidebarProps) {
+export default function Sidebar({ runId, generation, totalGenerations, phases }: SidebarProps) {
   return (
     <aside className="w-64 shrink-0 bg-surface-container py-6">
       {/* Project header */}
@@ -23,9 +18,7 @@ export default function Sidebar({
         <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
           Active Run
         </p>
-        <p className="mt-1 font-mono text-[0.6875rem] text-on-surface-dim">
-          {runId.slice(0, 12)}
-        </p>
+        <p className="mt-1 font-mono text-[0.6875rem] text-on-surface-dim">{runId.slice(0, 12)}</p>
       </div>
 
       {/* Process flow diagram */}

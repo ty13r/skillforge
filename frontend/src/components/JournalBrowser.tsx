@@ -83,11 +83,7 @@ export default function JournalBrowser() {
         </span>
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       {/* Mobile entry selector — visible below lg */}
       <div className="relative mt-6 lg:hidden" ref={dropdownRef}>
@@ -143,9 +139,7 @@ export default function JournalBrowser() {
                       <span className="font-mono text-[0.625rem] text-on-surface-dim">
                         #{String(entry.number).padStart(3, "0")}
                       </span>
-                      <span className="text-sm font-medium leading-snug">
-                        {entry.title}
-                      </span>
+                      <span className="text-sm font-medium leading-snug">{entry.title}</span>
                     </div>
                     {entry.date && (
                       <p className="mt-0.5 pl-8 font-mono text-[0.5625rem] text-on-surface-dim">
@@ -183,9 +177,7 @@ export default function JournalBrowser() {
                       <span className="font-mono text-[0.625rem] text-on-surface-dim">
                         #{String(entry.number).padStart(3, "0")}
                       </span>
-                      <span className="text-sm font-medium leading-snug">
-                        {entry.title}
-                      </span>
+                      <span className="text-sm font-medium leading-snug">{entry.title}</span>
                     </div>
                     {entry.date && (
                       <p className="mt-0.5 pl-8 font-mono text-[0.5625rem] text-on-surface-dim">
@@ -208,9 +200,7 @@ export default function JournalBrowser() {
                   Entry #{String(selected.number).padStart(3, "0")}
                 </p>
                 {selected.date && (
-                  <p className="font-mono text-[0.6875rem] text-on-surface-dim">
-                    {selected.date}
-                  </p>
+                  <p className="font-mono text-[0.6875rem] text-on-surface-dim">{selected.date}</p>
                 )}
                 {selected.duration && (
                   <p className="font-mono text-[0.6875rem] text-on-surface-dim">
@@ -219,9 +209,7 @@ export default function JournalBrowser() {
                 )}
               </div>
               <article className="bible-prose mt-4 max-w-none text-on-surface">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selected.body}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>
               </article>
               {/* Prev / Next navigation */}
               <div className="mt-10 flex items-center justify-between border-t border-outline-variant pt-6">
@@ -231,26 +219,32 @@ export default function JournalBrowser() {
                     className="group flex items-center gap-2 text-sm text-on-surface-dim transition-colors hover:text-on-surface"
                   >
                     <span className="transition-transform group-hover:-translate-x-0.5">←</span>
-                    <span className="font-mono text-[0.625rem]">#{String(entries![selectedIndex - 1].number).padStart(3, "0")}</span>
+                    <span className="font-mono text-[0.625rem]">
+                      #{String(entries![selectedIndex - 1].number).padStart(3, "0")}
+                    </span>
                     <span className="hidden sm:inline">{entries![selectedIndex - 1].title}</span>
                   </button>
-                ) : <div />}
+                ) : (
+                  <div />
+                )}
                 {hasNext ? (
                   <button
                     onClick={() => selectEntry(entries![selectedIndex + 1].slug)}
                     className="group flex items-center gap-2 text-sm text-on-surface-dim transition-colors hover:text-on-surface"
                   >
                     <span className="hidden sm:inline">{entries![selectedIndex + 1].title}</span>
-                    <span className="font-mono text-[0.625rem]">#{String(entries![selectedIndex + 1].number).padStart(3, "0")}</span>
+                    <span className="font-mono text-[0.625rem]">
+                      #{String(entries![selectedIndex + 1].number).padStart(3, "0")}
+                    </span>
                     <span className="transition-transform group-hover:translate-x-0.5">→</span>
                   </button>
-                ) : <div />}
+                ) : (
+                  <div />
+                )}
               </div>
             </>
           ) : (
-            <p className="text-on-surface-dim">
-              Select an entry from the left.
-            </p>
+            <p className="text-on-surface-dim">Select an entry from the left.</p>
           )}
         </main>
       </div>

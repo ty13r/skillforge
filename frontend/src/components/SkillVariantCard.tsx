@@ -24,11 +24,7 @@ interface SkillVariantCardProps {
   controlLabel?: string;
 }
 
-const ACTIVE_STATES: ReadonlySet<CompetitorState> = new Set([
-  "writing",
-  "testing",
-  "iterating",
-]);
+const ACTIVE_STATES: ReadonlySet<CompetitorState> = new Set(["writing", "testing", "iterating"]);
 
 const STATE_LABEL_SHORT: Record<CompetitorState, string> = {
   queued: "queued",
@@ -54,7 +50,9 @@ export default function SkillVariantCard({
   const firstCompetitor = competitors[0] ?? undefined;
 
   // Auto-collapse when competitors reset (next dimension starts)
-  const hasOutput = !!(firstCompetitor?.outputFiles && Object.keys(firstCompetitor.outputFiles).length > 0);
+  const hasOutput = !!(
+    firstCompetitor?.outputFiles && Object.keys(firstCompetitor.outputFiles).length > 0
+  );
   useEffect(() => {
     if (!hasOutput) setShowCode(true); // re-expand for next competitor
   }, [hasOutput]);
@@ -76,7 +74,7 @@ export default function SkillVariantCard({
       className={
         "rounded-xl border px-5 py-4 transition-all " +
         (anyActive
-          ? "border-primary/40 bg-surface-container-lowest animate-breathe-border"
+          ? "animate-breathe-border border-primary/40 bg-surface-container-lowest"
           : allDone
             ? "border-tertiary/30 bg-surface-container-lowest"
             : "border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low")
@@ -90,9 +88,7 @@ export default function SkillVariantCard({
             pulse={anyActive}
           />
         </div>
-        <p className="text-base font-medium text-on-surface">
-          {label ?? `Variant ${letter}`}
-        </p>
+        <p className="text-base font-medium text-on-surface">{label ?? `Variant ${letter}`}</p>
         {isControl && (
           <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
             {controlLabel ?? "Control"}
@@ -110,11 +106,7 @@ export default function SkillVariantCard({
         <span
           className={
             "font-mono text-[0.6875rem] uppercase tracking-wider " +
-            (allDone
-              ? "text-tertiary"
-              : anyActive
-                ? "text-primary"
-                : "text-on-surface-dim")
+            (allDone ? "text-tertiary" : anyActive ? "text-primary" : "text-on-surface-dim")
           }
         >
           {allDone
@@ -152,9 +144,7 @@ export default function SkillVariantCard({
                     style={{ width: `${Math.min(1, s.value) * 100}%` }}
                   />
                 </div>
-                <span className="font-mono text-[0.5rem] text-on-surface-dim">
-                  {s.label}
-                </span>
+                <span className="font-mono text-[0.5rem] text-on-surface-dim">{s.label}</span>
                 <span className="ml-auto font-mono text-[0.5rem] text-on-surface">
                   {typeof s.value === "number" ? s.value.toFixed(2) : s.value}
                 </span>
@@ -168,7 +158,10 @@ export default function SkillVariantCard({
       {firstCompetitor?.traits && firstCompetitor.traits.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
           {firstCompetitor.traits.slice(0, 3).map((t) => (
-            <span key={t} className="rounded-full bg-surface-container-low px-1.5 py-0.5 font-mono text-[0.5rem] text-on-surface-dim">
+            <span
+              key={t}
+              className="rounded-full bg-surface-container-low px-1.5 py-0.5 font-mono text-[0.5rem] text-on-surface-dim"
+            >
               {t}
             </span>
           ))}
@@ -177,7 +170,7 @@ export default function SkillVariantCard({
 
       {/* Mutation rationale */}
       {!isControl && firstCompetitor?.mutationRationale && (
-        <p className="mt-1 text-[0.6875rem] text-on-surface-dim italic">
+        <p className="mt-1 text-[0.6875rem] italic text-on-surface-dim">
           {firstCompetitor.mutationRationale}
         </p>
       )}
@@ -232,7 +225,8 @@ export default function SkillVariantCard({
                 </span>
                 {match?.state === "writing" && match.turn != null && (
                   <span className="font-mono text-[0.5625rem] text-primary">
-                    Turn {match.turn}{match.lastTool ? ` \u00b7 ${match.lastTool}` : ""}
+                    Turn {match.turn}
+                    {match.lastTool ? ` \u00b7 ${match.lastTool}` : ""}
                   </span>
                 )}
               </div>
@@ -251,7 +245,8 @@ export default function SkillVariantCard({
           >
             {showCode ? "▾ Hide Output" : "▸ View Output"}{" "}
             <span className="text-on-surface-dim/60">
-              ({Object.keys(firstCompetitor!.outputFiles!).length} file{Object.keys(firstCompetitor!.outputFiles!).length > 1 ? "s" : ""})
+              ({Object.keys(firstCompetitor!.outputFiles!).length} file
+              {Object.keys(firstCompetitor!.outputFiles!).length > 1 ? "s" : ""})
             </span>
           </button>
           {showCode && (
@@ -264,7 +259,11 @@ export default function SkillVariantCard({
                       {content.split("\n").length} lines
                     </span>
                   </div>
-                  <CodeViewer code={content} filePath={path} className="max-h-80 !rounded-none !p-3 text-[0.625rem]" />
+                  <CodeViewer
+                    code={content}
+                    filePath={path}
+                    className="max-h-80 !rounded-none !p-3 text-[0.625rem]"
+                  />
                 </div>
               ))}
             </div>

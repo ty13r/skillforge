@@ -1,10 +1,4 @@
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-} from "recharts";
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer } from "recharts";
 
 import { useCssVar } from "../hooks/useCssVar";
 
@@ -35,17 +29,8 @@ export default function FitnessRadar({ objectives }: FitnessRadarProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data}>
           <PolarGrid stroke={gridColor} />
-          <PolarAngleAxis
-            dataKey="objective"
-            stroke={axisColor}
-            fontSize={10}
-          />
-          <Radar
-            dataKey="value"
-            stroke={primary}
-            fill={primary}
-            fillOpacity={0.2}
-          />
+          <PolarAngleAxis dataKey="objective" stroke={axisColor} fontSize={10} />
+          <Radar dataKey="value" stroke={primary} fill={primary} fillOpacity={0.2} />
         </RadarChart>
       </ResponsiveContainer>
     </div>

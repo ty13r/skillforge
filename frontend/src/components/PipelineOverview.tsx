@@ -37,15 +37,10 @@ export default function PipelineOverview({ report }: PipelineOverviewProps) {
       <h2 className="mt-3 text-lg leading-snug text-on-surface">
         This run decomposed the skill into{" "}
         <strong className="text-tertiary">{winners} dimensions</strong>, spawned{" "}
-        <strong className="text-tertiary">{startingVariants} candidate variants</strong>,
-        competed them on{" "}
-        <strong className="text-tertiary">{challenges} challenges</strong>, and
-        assembled the winners into{" "}
-        <strong className="text-tertiary">one composite skill</strong> at{" "}
-        <strong className="text-tertiary">
-          {fitness.toFixed(2)} average fitness
-        </strong>
-        .
+        <strong className="text-tertiary">{startingVariants} candidate variants</strong>, competed
+        them on <strong className="text-tertiary">{challenges} challenges</strong>, and assembled
+        the winners into <strong className="text-tertiary">one composite skill</strong> at{" "}
+        <strong className="text-tertiary">{fitness.toFixed(2)} average fitness</strong>.
       </h2>
 
       {/* Mini pipeline diagram */}
@@ -56,18 +51,9 @@ export default function PipelineOverview({ report }: PipelineOverviewProps) {
           caption={`${winners} seeds + ${winners} spawns`}
         />
         <Arrow />
-        <PipelineStage
-          label="Competition"
-          count={challenges}
-          caption="challenge runs"
-          accent
-        />
+        <PipelineStage label="Competition" count={challenges} caption="challenge runs" accent />
         <Arrow />
-        <PipelineStage
-          label="Gen 0 · Winners"
-          count={winners}
-          caption={`1 per dimension`}
-        />
+        <PipelineStage label="Gen 0 · Winners" count={winners} caption={`1 per dimension`} />
         <Arrow />
         <PipelineStage
           label="Gen 1 · Composite"
@@ -92,8 +78,8 @@ function PipelineStage({ label, count, caption, accent }: PipelineStageProps) {
     <div
       className={`rounded-lg p-4 text-center ${
         accent
-          ? "bg-tertiary/10 border border-tertiary/30"
-          : "bg-surface-container-low border border-outline-variant"
+          ? "border border-tertiary/30 bg-tertiary/10"
+          : "border border-outline-variant bg-surface-container-low"
       }`}
     >
       <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
@@ -102,9 +88,7 @@ function PipelineStage({ label, count, caption, accent }: PipelineStageProps) {
       <p className="mt-1 font-display text-4xl leading-none tracking-tight text-tertiary">
         {count}
       </p>
-      <p className="mt-2 font-mono text-[0.5625rem] text-on-surface-dim">
-        {caption}
-      </p>
+      <p className="mt-2 font-mono text-[0.5625rem] text-on-surface-dim">{caption}</p>
     </div>
   );
 }

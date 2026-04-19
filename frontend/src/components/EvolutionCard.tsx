@@ -18,10 +18,7 @@ const STATUS_LABEL: Record<RunStatus, string> = {
   failed: "FAILED",
 };
 
-const STATUS_VARIANT: Record<
-  RunStatus,
-  "running" | "success" | "error" | "neutral"
-> = {
+const STATUS_VARIANT: Record<RunStatus, "running" | "success" | "error" | "neutral"> = {
   pending: "neutral",
   running: "running",
   complete: "success",
@@ -47,9 +44,7 @@ export default function EvolutionCard({
             {STATUS_LABEL[status]}
           </span>
         </div>
-        <span className="font-mono text-[0.6875rem] text-on-surface-dim">
-          {id.slice(0, 8)}
-        </span>
+        <span className="font-mono text-[0.6875rem] text-on-surface-dim">{id.slice(0, 8)}</span>
       </div>
 
       <h3 className="mt-3 line-clamp-2 text-base font-medium text-on-surface">

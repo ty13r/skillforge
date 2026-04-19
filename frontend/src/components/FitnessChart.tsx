@@ -57,20 +57,8 @@ export default function FitnessChart({ generations }: FitnessChartProps) {
               fontSize: "11px",
             }}
           />
-          <Line
-            type="monotone"
-            dataKey="best"
-            stroke={primary}
-            strokeWidth={2}
-            dot={{ r: 3 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="avg"
-            stroke={tertiary}
-            strokeWidth={2}
-            dot={{ r: 3 }}
-          />
+          <Line type="monotone" dataKey="best" stroke={primary} strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey="avg" stroke={tertiary} strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

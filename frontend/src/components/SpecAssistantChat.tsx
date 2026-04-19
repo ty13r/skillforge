@@ -21,10 +21,7 @@ interface SpecAssistantChatProps {
   onPackageReady?: (pkg: GeneratedPackage) => void;
 }
 
-export default function SpecAssistantChat({
-  onSpecReady,
-  onPackageReady,
-}: SpecAssistantChatProps) {
+export default function SpecAssistantChat({ onSpecReady, onPackageReady }: SpecAssistantChatProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -104,10 +101,7 @@ export default function SpecAssistantChat({
         message: string;
         final_spec?: string | null;
       };
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
       if (data.final_spec) {
         onSpecReady(data.final_spec);
         setFinalized(true);
@@ -132,10 +126,7 @@ export default function SpecAssistantChat({
   const submit = async () => {
     const text = input.trim();
     if (!text || sending || finalized) return;
-    const next: ChatMessage[] = [
-      ...messages,
-      { role: "user", content: text },
-    ];
+    const next: ChatMessage[] = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
     await sendMessage(next);
@@ -205,18 +196,12 @@ export default function SpecAssistantChat({
       </div>
 
       {/* Messages */}
-      <div
-        ref={scrollRef}
-        className="max-h-80 space-y-3 overflow-y-auto px-4 py-3 text-sm"
-      >
+      <div ref={scrollRef} className="max-h-80 space-y-3 overflow-y-auto px-4 py-3 text-sm">
         {messages.length === 0 && !sending && (
           <p className="text-on-surface-dim">Starting conversation…</p>
         )}
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[85%] rounded-xl px-3 py-2 ${
                 msg.role === "user"
@@ -242,9 +227,7 @@ export default function SpecAssistantChat({
       </div>
 
       {error && (
-        <div className="mx-4 mb-2 rounded-lg bg-error/10 p-2 text-xs text-error">
-          {error}
-        </div>
+        <div className="mx-4 mb-2 rounded-lg bg-error/10 p-2 text-xs text-error">{error}</div>
       )}
 
       {/* Package generation status */}

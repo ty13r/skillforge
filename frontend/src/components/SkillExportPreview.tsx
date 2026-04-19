@@ -11,7 +11,9 @@ export default function SkillExportPreview() {
 
   useEffect(() => {
     if (!runId) return;
-    fetch(`/api/runs/${runId}`).then((r) => r.json()).then(setRun);
+    fetch(`/api/runs/${runId}`)
+      .then((r) => r.json())
+      .then(setRun);
     fetch(`/api/runs/${runId}/export?format=skill_md`)
       .then((r) => r.text())
       .then(setSkillMd)
@@ -44,9 +46,7 @@ export default function SkillExportPreview() {
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             Skill Directory
           </p>
-          <h3 className="mt-1 font-display text-lg tracking-tight">
-            Compressed Binary Structure
-          </h3>
+          <h3 className="mt-1 font-display text-lg tracking-tight">Compressed Binary Structure</h3>
           <pre className="mt-4 max-h-64 overflow-y-auto rounded-xl bg-surface-container-lowest p-3 font-mono text-xs text-on-surface-dim">
             {skillMd ? skillMd.slice(0, 800) + (skillMd.length > 800 ? "\n..." : "") : "(loading)"}
           </pre>
@@ -62,11 +62,11 @@ export default function SkillExportPreview() {
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             Agent SDK Config
           </p>
-          <h3 className="mt-1 font-display text-lg tracking-tight">
-            Skill Schema Definition
-          </h3>
+          <h3 className="mt-1 font-display text-lg tracking-tight">Skill Schema Definition</h3>
           <pre className="mt-4 max-h-64 overflow-y-auto rounded-xl bg-surface-container-lowest p-3 font-mono text-xs text-on-surface-dim">
-            {sdkConfig ? sdkConfig.slice(0, 800) + (sdkConfig.length > 800 ? "\n..." : "") : "(loading)"}
+            {sdkConfig
+              ? sdkConfig.slice(0, 800) + (sdkConfig.length > 800 ? "\n..." : "")
+              : "(loading)"}
           </pre>
           <button
             type="button"
@@ -81,9 +81,7 @@ export default function SkillExportPreview() {
           <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
             Deployment
           </p>
-          <h3 className="mt-1 font-display text-lg tracking-tight">
-            Terminal Protocols
-          </h3>
+          <h3 className="mt-1 font-display text-lg tracking-tight">Terminal Protocols</h3>
           <div className="mt-4 rounded-xl bg-surface-container-lowest p-3 font-mono text-xs text-on-surface-dim">
             <p className="text-on-surface">Claude Code</p>
             <pre className="mt-1">unzip skill.zip -d ~/.claude/skills/</pre>

@@ -141,13 +141,10 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
       <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
         🔒 Invite Only
       </p>
-      <h1 className="mt-2 font-display text-4xl tracking-tight">
-        Start an Evolution Run
-      </h1>
+      <h1 className="mt-2 font-display text-4xl tracking-tight">Start an Evolution Run</h1>
       <p className="mt-3 text-on-surface-dim">
-        Real evolution runs consume API budget, so SKLD.run is currently
-        invite-only. Enter your code below, or request an invite and we'll
-        email you one.
+        Real evolution runs consume API budget, so SKLD.run is currently invite-only. Enter your
+        code below, or request an invite and we'll email you one.
       </p>
 
       {/* Tabs */}
@@ -194,9 +191,7 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
               autoFocus
               className="mt-2 w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
             />
-            {codeError && (
-              <p className="mt-2 text-xs text-error">{codeError}</p>
-            )}
+            {codeError && <p className="mt-2 text-xs text-error">{codeError}</p>}
           </div>
           <button
             onClick={submitCode}
@@ -216,10 +211,9 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
                 ✓ Request received
               </p>
               <p className="text-sm text-on-surface-dim">
-                Thanks — your request has been logged. We review new invites
-                regularly and will email you a code if we can onboard you.
-                This does <strong>not</strong> unlock the platform; you'll
-                need to enter the code when it arrives.
+                Thanks — your request has been logged. We review new invites regularly and will
+                email you a code if we can onboard you. This does <strong>not</strong> unlock the
+                platform; you'll need to enter the code when it arrives.
               </p>
               <button
                 onClick={() => {
@@ -228,7 +222,7 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
                   setMessage("");
                   setTab("code");
                 }}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface transition-colors hover:bg-surface-container-mid"
+                className="hover:bg-surface-container-mid w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface transition-colors"
               >
                 I already have a code →
               </button>
@@ -263,12 +257,10 @@ export default function InviteGate({ onValidated }: InviteGateProps) {
                   className="mt-2 w-full rounded-lg border border-outline-variant bg-surface-container-low px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
                 />
               </div>
-              {requestError && (
-                <p className="text-xs text-error">{requestError}</p>
-              )}
+              {requestError && <p className="text-xs text-error">{requestError}</p>}
               <p className="text-[0.6875rem] text-on-surface-dim">
-                Submitting does not automatically grant access. We'll review
-                and email a code if we can onboard you.
+                Submitting does not automatically grant access. We'll review and email a code if we
+                can onboard you.
               </p>
               <button
                 onClick={submitRequest}

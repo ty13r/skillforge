@@ -131,11 +131,9 @@ export default function SkillDiffViewer() {
     return diffLines(parent.skill_md_content, child.skill_md_content);
   }, [parent, child]);
 
-  const nodeById = (nodeId: string) =>
-    lineage?.nodes.find((n) => n.id === nodeId);
+  const nodeById = (nodeId: string) => lineage?.nodes.find((n) => n.id === nodeId);
 
-  const currentEdge =
-    lineage && selectedIdx != null ? lineage.edges[selectedIdx] : null;
+  const currentEdge = lineage && selectedIdx != null ? lineage.edges[selectedIdx] : null;
 
   // Atomic-mode render path: skip the diff machinery entirely and render
   // the new AtomicLineageView that explains the 12→1 assembly without
@@ -152,9 +150,8 @@ export default function SkillDiffViewer() {
               Lineage <span className="text-secondary">Assembly View</span>
             </h1>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Run {runId?.slice(0, 12)} · this composite was assembled from
-              many parents rather than mutated from one, so there's no diff
-              to show — browse each parent below.
+              Run {runId?.slice(0, 12)} · this composite was assembled from many parents rather than
+              mutated from one, so there's no diff to show — browse each parent below.
             </p>
           </div>
           <Link
@@ -190,8 +187,7 @@ export default function SkillDiffViewer() {
             Lineage <span className="text-secondary">Diff Viewer</span>
           </h1>
           <p className="mt-2 text-sm text-on-surface-dim">
-            Run {runId?.slice(0, 12)} · pick a parent→child transition to see
-            what changed.
+            Run {runId?.slice(0, 12)} · pick a parent→child transition to see what changed.
           </p>
         </div>
         <Link
@@ -202,11 +198,7 @@ export default function SkillDiffViewer() {
         </Link>
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
         <aside className="rounded-xl bg-surface-container-low p-4">
@@ -230,9 +222,7 @@ export default function SkillDiffViewer() {
                     <button
                       onClick={() => setSelectedIdx(i)}
                       className={`w-full rounded-lg px-3 py-2 text-left text-xs transition-colors ${
-                        selected
-                          ? "bg-secondary/15"
-                          : "hover:bg-surface-container-high"
+                        selected ? "bg-secondary/15" : "hover:bg-surface-container-high"
                       }`}
                     >
                       <div
@@ -241,10 +231,8 @@ export default function SkillDiffViewer() {
                         {edge.mutation_type}
                       </div>
                       <div className="mt-1 text-on-surface">
-                        G{parentNode?.generation ?? "?"}/
-                        {edge.parent_id.slice(0, 6)} → G
-                        {childNode?.generation ?? "?"}/
-                        {edge.child_id.slice(0, 6)}
+                        G{parentNode?.generation ?? "?"}/{edge.parent_id.slice(0, 6)} → G
+                        {childNode?.generation ?? "?"}/{edge.child_id.slice(0, 6)}
                       </div>
                     </button>
                   </li>
@@ -258,9 +246,7 @@ export default function SkillDiffViewer() {
           {loading ? (
             <p className="text-on-surface-dim">Loading skills…</p>
           ) : !parent && !child ? (
-            <p className="text-on-surface-dim">
-              Pick a transition from the left to see the diff.
-            </p>
+            <p className="text-on-surface-dim">Pick a transition from the left to see the diff.</p>
           ) : (
             <>
               {child && (
@@ -272,8 +258,7 @@ export default function SkillDiffViewer() {
                     {currentEdge && (
                       <span
                         className={`rounded-full bg-surface-container-high px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-wider ${
-                          MUTATION_COLOR[currentEdge.mutation_type] ??
-                          MUTATION_COLOR.unknown
+                          MUTATION_COLOR[currentEdge.mutation_type] ?? MUTATION_COLOR.unknown
                         }`}
                       >
                         {currentEdge.mutation_type}
@@ -282,9 +267,7 @@ export default function SkillDiffViewer() {
                   </div>
                   <p className="mt-2 text-sm text-on-surface">
                     {child.mutation_rationale || (
-                      <span className="text-on-surface-dim">
-                        (no rationale recorded)
-                      </span>
+                      <span className="text-on-surface-dim">(no rationale recorded)</span>
                     )}
                   </p>
                   {child.mutations.length > 0 && (
@@ -324,9 +307,7 @@ export default function SkillDiffViewer() {
                         <span key={i} className={cls}>
                           {lines
                             .map((line, j) =>
-                              j < lines.length - 1 || line
-                                ? prefix + line + "\n"
-                                : "",
+                              j < lines.length - 1 || line ? prefix + line + "\n" : "",
                             )
                             .join("")}
                         </span>
