@@ -375,6 +375,54 @@ async def test_spawn_gen0_raises_on_persistent_invalid():
         await spawn_gen0("test domain", pop_size=1)
 
 
+def test_auto_repair_missing_references_stubs_missing_files():
+    """Rule-8 drift: a body references a file that isn't in supporting_files.
+
+    The repair pass stubs it with a placeholder so the genome passes
+    structural validation instead of killing the whole population on a
+    cosmetic miss.
+    """
+    from skillforge.agents.spawner import _auto_repair_missing_references
+
+    skill_md = (
+        "---\nname: x\ndescription: Use when y.\n---\n\n"
+        "# X\n\nSee ${CLAUDE_SKILL_DIR}/references/style-guide.md for details.\n"
+    )
+    genome = SkillGenome(
+        id="g1",
+        generation=0,
+        skill_md_content=skill_md,
+        supporting_files={},
+        traits=[],
+    )
+    stubbed = _auto_repair_missing_references(genome)
+    assert stubbed == 1
+    assert "references/style-guide.md" in genome.supporting_files
+    assert genome.supporting_files["references/style-guide.md"].startswith(
+        "# Style Guide"
+    )
+
+
+def test_auto_repair_missing_references_noop_when_all_present():
+    """If every reference already resolves, the repair must not touch anything."""
+    from skillforge.agents.spawner import _auto_repair_missing_references
+
+    skill_md = (
+        "---\nname: x\ndescription: Use when y.\n---\n\n"
+        "# X\n\nSee ${CLAUDE_SKILL_DIR}/references/guide.md.\n"
+    )
+    genome = SkillGenome(
+        id="g2",
+        generation=0,
+        skill_md_content=skill_md,
+        supporting_files={"references/guide.md": "# real content"},
+        traits=[],
+    )
+    stubbed = _auto_repair_missing_references(genome)
+    assert stubbed == 0
+    assert genome.supporting_files["references/guide.md"] == "# real content"
+
+
 # ===========================================================================
 # Spawner tests — breed_next_gen
 # ===========================================================================

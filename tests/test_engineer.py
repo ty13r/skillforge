@@ -21,6 +21,7 @@ import pytest
 from skillforge.agents.engineer import (
     IntegrationReport,
     _detect_conflicts,
+    _try_truncate_description,
     _validate_composite_shape,
     assemble_variants,
 )
@@ -132,10 +133,33 @@ def test_validate_composite_shape_rejects_missing_frontmatter():
         _validate_composite_shape(raw)
 
 
-def test_validate_composite_shape_rejects_oversize_description():
+def test_validate_composite_shape_truncates_oversize_description_in_place():
+    """Oversize description with 'Use when' early is truncated, not rejected.
+
+    Pre-wave-4 refactor this test used to assert the length check raised.
+    We now repair in place because Haiku-tier runs routinely overshoot by
+    10–40% and a no-op truncation saves an LLM retry (~$0.20). See also
+    `test_try_truncate_description_*` below for the pure-helper tests.
+    """
     raw = json.loads(_canned_engineer_response())
-    raw["frontmatter"]["description"] = "Use when " + "x" * 300
-    with pytest.raises(ValueError, match="> 250"):
+    raw["frontmatter"]["description"] = (
+        "Use when evolved family is ready to assemble into a single composite "
+        "skill that merges foundation traits with capability traits "
+        + "and " * 60  # balloon it past 250 chars
+    )
+    _validate_composite_shape(raw)  # no exception — truncation repairs
+    assert len(raw["frontmatter"]["description"]) <= 250
+    assert "use when" in raw["frontmatter"]["description"].lower()
+
+
+def test_validate_composite_shape_rejects_unsalvageable_oversize_description():
+    """Oversize description where 'Use when' sits past char 250 cannot be
+    salvaged by truncation — the validator should raise."""
+    raw = json.loads(_canned_engineer_response())
+    raw["frontmatter"]["description"] = (
+        "x" * 260 + " Use when this lands past the truncation budget"
+    )
+    with pytest.raises(ValueError, match="cannot be safely truncated"):
         _validate_composite_shape(raw)
 
 
@@ -144,6 +168,32 @@ def test_validate_composite_shape_rejects_missing_use_when():
     raw["frontmatter"]["description"] = "Composite skill with no pushy pattern"
     with pytest.raises(ValueError, match="Use when"):
         _validate_composite_shape(raw)
+
+
+# ---------------------------------------------------------------------------
+# _try_truncate_description — pure helper
+# ---------------------------------------------------------------------------
+
+
+def test_try_truncate_description_noop_when_under_cap():
+    assert _try_truncate_description("short desc, Use when x") == "short desc, Use when x"
+
+
+def test_try_truncate_description_repairs_oversize_at_word_boundary():
+    desc = "Use when evolved family is ready. " + "word " * 100
+    out = _try_truncate_description(desc)
+    assert out is not None
+    assert len(out) <= 250
+    assert out.endswith("...")
+    assert "use when" in out.lower()
+    # Boundary was a word boundary, not a mid-word cut.
+    body = out.removesuffix("...")
+    assert not body.endswith(" ")
+
+
+def test_try_truncate_description_returns_none_when_use_when_is_past_cap():
+    desc = "x" * 300 + " Use when we care about long prefixes"
+    assert _try_truncate_description(desc) is None
 
 
 # ---------------------------------------------------------------------------

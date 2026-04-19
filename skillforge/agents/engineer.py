@@ -240,6 +240,38 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     raise ValueError("unterminated JSON object in Engineer response")
 
 
+def _try_truncate_description(desc: str, cap: int = 250) -> str | None:
+    """Return a truncated description that fits under ``cap`` chars, or None.
+
+    Haiku-tier runs routinely over-shoot the 250-char frontmatter cap by
+    10–40% — the constraint is in the prompt but the model doesn't
+    enforce it reliably. Retrying on length alone costs a full LLM call
+    (~$0.20) to re-generate content that's 99% correct; truncating at a
+    word boundary is free and preserves the semantic payload.
+
+    Returns None if we can't truncate without clobbering the "Use when"
+    pushy-pattern marker — at that point it's a genuine content
+    failure and the caller should retry or fail loudly.
+    """
+    if len(desc) <= cap:
+        return desc
+
+    # Reserve 3 chars for the ellipsis suffix.
+    target = cap - 3
+    cut = desc.rfind(" ", 0, target + 1)
+    if cut == -1 or cut < cap // 2:
+        # No word boundary in the useful range — hard-cut at target.
+        cut = target
+    truncated = desc[:cut].rstrip(" ,.;:") + "..."
+
+    # The composite validator below requires "Use when" in the first
+    # 250 chars; if truncation erased it, the repair is worse than the
+    # original problem.
+    if "use when" not in truncated.lower():
+        return None
+    return truncated
+
+
 def _validate_composite_shape(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ValueError("Engineer output must be a JSON object")
@@ -253,9 +285,15 @@ def _validate_composite_shape(raw: dict[str, Any]) -> None:
 
     desc = fm.get("description", "")
     if isinstance(desc, str) and len(desc) > 250:
-        raise ValueError(
-            f"Engineer composite description is {len(desc)} chars > 250 limit"
-        )
+        # Try the cheap repair before escalating to an LLM retry.
+        repaired = _try_truncate_description(desc)
+        if repaired is None:
+            raise ValueError(
+                f"Engineer composite description is {len(desc)} chars > 250 "
+                f"limit and cannot be safely truncated (would remove 'Use when')"
+            )
+        fm["description"] = repaired
+        desc = repaired
     # Pushy-pattern requirement — validate_skill_structure rule 5 rejects
     # descriptions that don't contain "Use when" in the first 250 chars.
     # Catch it here so the Engineer gets one retry instead of hitting the
