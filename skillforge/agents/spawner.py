@@ -15,6 +15,7 @@ for agentic loops with tools and hung the overnight live test.
 
 from __future__ import annotations
 
+import re
 import uuid
 
 from anthropic import AsyncAnthropic
@@ -150,13 +151,62 @@ async def _generate(prompt: str) -> str:
     return "".join(parts)
 
 
+# Pulls ${CLAUDE_SKILL_DIR}/<relative/path> references out of a SKILL.md body.
+# Must match the regex in ``engine.sandbox.validate_skill_structure`` rule 8
+# exactly — see that function for the source-of-truth behavior.
+_REF_PATH_RE = re.compile(r"\$\{CLAUDE_SKILL_DIR\}/([^\s`)\"']+)")
+
+
+def _auto_repair_missing_references(genome: SkillGenome) -> int:
+    """Stub out ``${CLAUDE_SKILL_DIR}/<path>`` refs missing from supporting_files.
+
+    Cheap-tier Haiku routinely emits SKILL.md bodies that reference
+    ``references/*-guide.md`` in prose but forget to include the file in
+    ``supporting_files``. Validator rule 8 rejects those genomes, which
+    in atomic mode (pop=2, 1 retry) was killing the whole run 1-of-3 times.
+
+    Rather than burn another LLM call on a retry that often reproduces
+    the same oversight, we stub each missing reference with a minimal
+    placeholder. The skill still renders, the reference still resolves
+    at runtime, and the genome passes validation. The Breeder can flesh
+    out the stubs in later generations if fitness signal suggests they
+    carry weight.
+
+    Returns the count of paths that were stubbed (0 if everything already
+    resolved, which is the expected Sonnet-tier case).
+    """
+    stubbed = 0
+    for match in _REF_PATH_RE.finditer(genome.skill_md_content):
+        rel_path = match.group(1).rstrip(".,;:)")
+        if rel_path in genome.supporting_files:
+            continue
+        filename = rel_path.rsplit("/", 1)[-1]
+        placeholder_title = filename.removesuffix(".md").replace("-", " ").title()
+        genome.supporting_files[rel_path] = (
+            f"# {placeholder_title}\n\n"
+            f"_Placeholder — stubbed by the spawner's auto-repair pass "
+            f"because the generating LLM referenced this file but did not "
+            f"emit its contents. Replace with domain-specific material "
+            f"during a later generation._\n"
+        )
+        stubbed += 1
+    return stubbed
+
+
 def _validate_genomes(
     genomes: list[SkillGenome],
 ) -> tuple[list[SkillGenome], dict[int, list[str]]]:
-    """Validate each genome; returns (valid_genomes, {idx: violations})."""
+    """Validate each genome; returns (valid_genomes, {idx: violations}).
+
+    Runs the reference-path auto-repair pass before validation so cheap-tier
+    LLM drift on rule 8 (missing supporting_files entries) doesn't kill a
+    whole population. The repair only adds files; it never touches the
+    skill_md body.
+    """
     valid: list[SkillGenome] = []
     invalid: dict[int, list[str]] = {}
     for i, genome in enumerate(genomes):
+        _auto_repair_missing_references(genome)
         violations = validate_skill_structure(genome)
         if violations:
             invalid[i] = violations
