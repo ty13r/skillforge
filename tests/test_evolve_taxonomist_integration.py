@@ -166,7 +166,7 @@ def test_evolve_classifies_run_via_taxonomist(client: TestClient):
         "skillforge.agents.taxonomist.classify_and_decompose",
         new=AsyncMock(return_value=mock_output),
     ), patch(
-        "skillforge.api.routes.run_evolution",
+        "skillforge.api.routes.evolve.run_evolution",
         new=AsyncMock(return_value=None),
     ):
         resp = client.post(
@@ -232,7 +232,7 @@ def test_evolve_explicit_mode_overrides_taxonomist(client: TestClient):
         "skillforge.agents.taxonomist.classify_and_decompose",
         new=AsyncMock(return_value=mock_output),
     ), patch(
-        "skillforge.api.routes.run_evolution",
+        "skillforge.api.routes.evolve.run_evolution",
         new=AsyncMock(return_value=None),
     ):
         resp = client.post(
@@ -272,7 +272,7 @@ def test_evolve_taxonomist_failure_falls_back_to_molecular(client: TestClient):
         "skillforge.agents.taxonomist.classify_and_decompose",
         new=AsyncMock(side_effect=RuntimeError("simulated LLM crash")),
     ), patch(
-        "skillforge.api.routes.run_evolution",
+        "skillforge.api.routes.evolve.run_evolution",
         new=AsyncMock(return_value=None),
     ):
         resp = client.post(
@@ -318,7 +318,7 @@ def test_evolve_skips_taxonomist_when_no_api_key(client: TestClient, monkeypatch
         "skillforge.agents.taxonomist.classify_and_decompose",
         new=classify_mock,
     ), patch(
-        "skillforge.api.routes.run_evolution",
+        "skillforge.api.routes.evolve.run_evolution",
         new=AsyncMock(return_value=None),
     ):
         resp = client.post(

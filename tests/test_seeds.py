@@ -405,14 +405,14 @@ def test_evolve_from_parent_registry_happy_path(client):
 
     with (
         patch(
-            "skillforge.api.routes.get_run",
+            "skillforge.api.routes.evolve.get_run",
             new_callable=AsyncMock,
             return_value=seed_run,
         ),
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
         patch(
-            "skillforge.api.routes.run_evolution", new_callable=AsyncMock
+            "skillforge.api.routes.evolve.run_evolution", new_callable=AsyncMock
         ),
     ):
         resp = client.post(
@@ -449,12 +449,12 @@ def test_evolve_from_parent_registry_unknown_skill_returns_404(client):
 
     with (
         patch(
-            "skillforge.api.routes.get_run",
+            "skillforge.api.routes.evolve.get_run",
             new_callable=AsyncMock,
             return_value=seed_run,
         ),
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
     ):
         resp = client.post(
             "/api/evolve/from-parent",
@@ -472,12 +472,12 @@ def test_evolve_from_parent_registry_no_seed_run_returns_404(client):
     """If get_run('seed-library') returns None, fork still 404s cleanly."""
     with (
         patch(
-            "skillforge.api.routes.get_run",
+            "skillforge.api.routes.evolve.get_run",
             new_callable=AsyncMock,
             return_value=None,
         ),
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
     ):
         resp = client.post(
             "/api/evolve/from-parent",
@@ -499,11 +499,11 @@ def test_evolve_from_parent_upload_unknown_id_returns_404(client):
     """Unknown upload_id → 404."""
     with (
         patch(
-            "skillforge.api.routes.get_upload",
+            "skillforge.api.routes.evolve.get_upload",
             return_value=None,
         ),
-        patch("skillforge.api.routes.init_db", new_callable=AsyncMock),
-        patch("skillforge.api.routes.save_run", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.init_db", new_callable=AsyncMock),
+        patch("skillforge.api.routes.evolve.save_run", new_callable=AsyncMock),
     ):
         resp = client.post(
             "/api/evolve/from-parent",
