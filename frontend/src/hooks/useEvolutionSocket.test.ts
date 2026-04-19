@@ -5,9 +5,7 @@ import type { EvolutionSocketState } from "./useEvolutionSocket";
 import type { EvolutionEvent } from "../types";
 
 /** Helper to create a minimal initial state. */
-function makeState(
-  overrides?: Partial<EvolutionSocketState>,
-): EvolutionSocketState {
+function makeState(overrides?: Partial<EvolutionSocketState>): EvolutionSocketState {
   return {
     events: [],
     status: "connecting",
@@ -31,9 +29,7 @@ describe("applyEvent", () => {
   it("generation_started updates currentGeneration, resets competitors and currentJudgingLayer", () => {
     const before = makeState({
       currentGeneration: 0,
-      competitors: [
-        { competitorId: 0, skillId: "sk-old", state: "done" },
-      ],
+      competitors: [{ competitorId: 0, skillId: "sk-old", state: "done" }],
       currentJudgingLayer: 3,
       finishedCompetitors: 5,
     });
@@ -88,9 +84,7 @@ describe("applyEvent", () => {
 
   it("competitor_finished updates state to 'done' and increments finishedCompetitors", () => {
     const before = makeState({
-      competitors: [
-        { competitorId: 0, skillId: "sk-1", challengeId: "ch-a", state: "writing" },
-      ],
+      competitors: [{ competitorId: 0, skillId: "sk-1", challengeId: "ch-a", state: "writing" }],
       finishedCompetitors: 0,
     });
     const ev: EvolutionEvent = {

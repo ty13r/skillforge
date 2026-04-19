@@ -57,7 +57,10 @@ export default function SkillContentModal({
         {traits && traits.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1">
             {traits.map((t) => (
-              <span key={t} className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.625rem] text-primary">
+              <span
+                key={t}
+                className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.625rem] text-primary"
+              >
                 {t}
               </span>
             ))}
@@ -72,7 +75,10 @@ export default function SkillContentModal({
             </p>
             <div className="mt-1 flex flex-wrap gap-1">
               {mutations.map((m) => (
-                <span key={m} className="rounded-full bg-tertiary/10 px-2 py-0.5 font-mono text-[0.625rem] text-tertiary">
+                <span
+                  key={m}
+                  className="rounded-full bg-tertiary/10 px-2 py-0.5 font-mono text-[0.625rem] text-tertiary"
+                >
                   {m}
                 </span>
               ))}
@@ -82,9 +88,7 @@ export default function SkillContentModal({
 
         {/* Mutation rationale */}
         {mutationRationale && (
-          <p className="mt-2 text-sm text-on-surface-dim italic">
-            {mutationRationale}
-          </p>
+          <p className="mt-2 text-sm italic text-on-surface-dim">{mutationRationale}</p>
         )}
 
         {/* Supporting files list */}
@@ -95,15 +99,12 @@ export default function SkillContentModal({
             </p>
             <div className="space-y-0.5">
               {supportingFiles.map((path) => (
-                <p
-                  key={path}
-                  className="font-mono text-xs text-on-surface-dim px-2 py-1"
-                >
+                <p key={path} className="px-2 py-1 font-mono text-xs text-on-surface-dim">
                   {path}
                 </p>
               ))}
             </div>
-            <p className="mt-2 text-[0.625rem] text-on-surface-dim italic">
+            <p className="mt-2 text-[0.625rem] italic text-on-surface-dim">
               Full package available in the skill registry detail view.
             </p>
           </div>
@@ -115,7 +116,11 @@ export default function SkillContentModal({
             SKILL.md
           </p>
           {skillMdContent ? (
-            <CodeViewer code={skillMdContent} filePath="SKILL.md" className="max-h-[50vh] overflow-y-auto" />
+            <CodeViewer
+              code={skillMdContent}
+              filePath="SKILL.md"
+              className="max-h-[50vh] overflow-y-auto"
+            />
           ) : (
             <p className="text-sm text-on-surface-dim">
               Skill content not available (demo run or skill not yet persisted).

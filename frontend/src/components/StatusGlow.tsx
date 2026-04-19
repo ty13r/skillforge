@@ -18,8 +18,7 @@ export default function StatusGlow({
   className = "",
   pulse,
 }: StatusGlowProps) {
-  const shouldPulse =
-    pulse ?? (variant === "running" || variant === "warning");
+  const shouldPulse = pulse ?? (variant === "running" || variant === "warning");
   return (
     <span
       className={

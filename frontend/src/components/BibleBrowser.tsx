@@ -46,12 +46,7 @@ export default function BibleBrowser() {
 
   const allEntries = useMemo(() => {
     if (!data) return [];
-    return [
-      ...(data.books ?? []),
-      ...data.patterns,
-      ...data.findings,
-      ...data.anti_patterns,
-    ];
+    return [...(data.books ?? []), ...data.patterns, ...data.findings, ...data.anti_patterns];
   }, [data]);
 
   const selected = useMemo(
@@ -79,18 +74,13 @@ export default function BibleBrowser() {
             The <span className="text-secondary">SKLD Bible</span>
           </h1>
           <p className="mt-3 max-w-2xl text-on-surface-dim">
-            Empirical knowledge about building skills for AI coding agents.
-            Every finding is backed by measured data from 867 controlled
-            experiments, not theory or intuition.
+            Empirical knowledge about building skills for AI coding agents. Every finding is backed
+            by measured data from 867 controlled experiments, not theory or intuition.
           </p>
         </div>
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
         {/* Sidebar */}
@@ -140,9 +130,7 @@ export default function BibleBrowser() {
                 {selected.filename}
               </p>
               <article className="bible-prose mt-4 max-w-none text-on-surface">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selected.body}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>
               </article>
             </>
           ) : (

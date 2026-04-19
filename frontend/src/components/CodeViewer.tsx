@@ -12,8 +12,10 @@ Prism.languages.bash = {
     { pattern: /'[^']*'/, greedy: true },
   ],
   variable: /\$(?:\w+|[!#?*@$]|\{[^}]+\})/,
-  keyword: /\b(?:if|then|else|elif|fi|for|while|do|done|in|case|esac|function|return|local|export|readonly|declare|typeset|unset|set|shift|exit|exec|eval|source|true|false)\b/,
-  builtin: /\b(?:echo|printf|read|cd|pwd|pushd|popd|test|grep|sed|awk|find|xargs|cat|head|tail|sort|uniq|wc|tr|cut|tee|mkdir|rm|cp|mv|ln|chmod|chown|curl|wget)\b/,
+  keyword:
+    /\b(?:if|then|else|elif|fi|for|while|do|done|in|case|esac|function|return|local|export|readonly|declare|typeset|unset|set|shift|exit|exec|eval|source|true|false)\b/,
+  builtin:
+    /\b(?:echo|printf|read|cd|pwd|pushd|popd|test|grep|sed|awk|find|xargs|cat|head|tail|sort|uniq|wc|tr|cut|tee|mkdir|rm|cp|mv|ln|chmod|chown|curl|wget)\b/,
   operator: /&&|\|\||[!=<>]=?|<<|>>|[|&;]/,
   function: { pattern: /\b\w+(?=\s*\()/, greedy: true },
   number: /\b\d+\b/,
@@ -29,7 +31,8 @@ Prism.languages.hcl = {
     { pattern: /\/\*[\s\S]*?\*\//, greedy: true },
   ],
   string: { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
-  keyword: /\b(?:resource|data|variable|output|module|provider|terraform|locals|dynamic|for_each|count|depends_on|lifecycle)\b/,
+  keyword:
+    /\b(?:resource|data|variable|output|module|provider|terraform|locals|dynamic|for_each|count|depends_on|lifecycle)\b/,
   boolean: /\b(?:true|false)\b/,
   number: /\b\d+(?:\.\d+)?\b/,
   punctuation: /[{}[\]=]/,
@@ -41,7 +44,8 @@ Prism.languages.tf = Prism.languages.hcl;
 // Docker
 Prism.languages.docker = {
   comment: { pattern: /#.*/, greedy: true },
-  keyword: /\b(?:FROM|AS|RUN|CMD|LABEL|MAINTAINER|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL)\b/i,
+  keyword:
+    /\b(?:FROM|AS|RUN|CMD|LABEL|MAINTAINER|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL)\b/i,
   string: { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
   variable: /\$(?:\w+|\{[^}]+\})/,
   operator: /&&|\|\|/,
@@ -60,10 +64,11 @@ Prism.languages.elixir = {
   ],
   atom: { pattern: /:[a-zA-Z_]\w*[?!]?/, greedy: true },
   boolean: /\b(?:true|false|nil)\b/,
-  keyword: /\b(?:def|defp|defmodule|do|end|if|else|unless|case|cond|when|with|fn|raise|rescue|try|catch|after|for|in|and|or|not|use|import|alias|require|quote|unquote)\b/,
+  keyword:
+    /\b(?:def|defp|defmodule|do|end|if|else|unless|case|cond|when|with|fn|raise|rescue|try|catch|after|for|in|and|or|not|use|import|alias|require|quote|unquote)\b/,
   module: { pattern: /\b[A-Z]\w*(?:\.[A-Z]\w*)*/, greedy: true },
   function: { pattern: /\b\w+(?=[?!]?\s*[(\s])/, greedy: true },
-  operator: /\|>|<>|<-|->|=>|=~|~>|::|\.\.\.|&&|\|\||[!=<>]=?|[+\-*\/\\^|&]/,
+  operator: /\|>|<>|<-|->|=>|=~|~>|::|\.\.\.|&&|\|\||[!=<>]=?|[+\-*/\\^|&]/,
   number: /\b(?:0x[\da-fA-F_]+|0b[01_]+|0o[0-7_]+|\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?)\b/,
   punctuation: /[()[\]{},;.@#%]/,
 };

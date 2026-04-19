@@ -201,10 +201,7 @@ export default function AppShell() {
               </svg>
               GitHub
             </a>
-            <a
-              href="/llms.txt"
-              className="transition-colors hover:text-on-surface"
-            >
+            <a href="/llms.txt" className="transition-colors hover:text-on-surface">
               /llms.txt
             </a>
             <Link to="/research" className="transition-colors hover:text-on-surface">

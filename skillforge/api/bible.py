@@ -77,10 +77,7 @@ async def get_bible_entry(category: str, slug: str) -> dict:
     allowed = {"patterns", "findings", "anti-patterns", "books"}
     if category not in allowed:
         raise HTTPException(status_code=400, detail=f"unknown category: {category}")
-    if category == "books":
-        path = BIBLE_DIR / f"{slug}.md"
-    else:
-        path = BIBLE_DIR / category / f"{slug}.md"
+    path = BIBLE_DIR / f"{slug}.md" if category == "books" else BIBLE_DIR / category / f"{slug}.md"
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"entry not found: {category}/{slug}")
     body = path.read_text(encoding="utf-8")

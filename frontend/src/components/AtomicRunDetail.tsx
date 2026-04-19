@@ -95,7 +95,7 @@ export default function AtomicRunDetail({
   useEffect(() => {
     if (hasPropDims) return;
     fetch(`/api/runs/${runId}/dimensions`)
-      .then((r) => r.ok ? r.json() as Promise<DimensionStatus[]> : [])
+      .then((r) => (r.ok ? (r.json() as Promise<DimensionStatus[]>) : []))
       .then(setDimensionsFetched)
       .catch(() => {});
   }, [runId, hasPropDims]);
@@ -205,10 +205,7 @@ export default function AtomicRunDetail({
   }, [variants]);
 
   const strippedSpecialization = useMemo(
-    () =>
-      runDetail.specialization
-        .replace(/\s*\[(mock|seed)_v[a-f0-9]+\]\s*/gi, " ")
-        .trim(),
+    () => runDetail.specialization.replace(/\s*\[(mock|seed)_v[a-f0-9]+\]\s*/gi, " ").trim(),
     [runDetail.specialization],
   );
 
@@ -226,9 +223,7 @@ export default function AtomicRunDetail({
 
   const totalCost = report?.metadata.total_cost_usd ?? runDetail.total_cost_usd;
   const durationMin =
-    report?.metadata.duration_sec != null
-      ? (report.metadata.duration_sec / 60).toFixed(1)
-      : null;
+    report?.metadata.duration_sec != null ? (report.metadata.duration_sec / 60).toFixed(1) : null;
   const genomes = report?.skill_genomes ?? [];
 
   return (
@@ -242,9 +237,7 @@ export default function AtomicRunDetail({
           <h1 className="mt-2 font-display text-5xl leading-[1.05] tracking-tight">
             {report?.taxonomy?.family_label ?? runDetail.specialization}
           </h1>
-          <p className="mt-3 max-w-3xl text-sm text-on-surface-dim">
-            {strippedSpecialization}
-          </p>
+          <p className="mt-3 max-w-3xl text-sm text-on-surface-dim">{strippedSpecialization}</p>
           <div className="mt-4 flex flex-wrap gap-2 font-mono text-[0.625rem] uppercase tracking-wider">
             <span className="rounded bg-green-500/10 px-2 py-1 text-green-400">
               {runDetail.status}
@@ -255,8 +248,7 @@ export default function AtomicRunDetail({
                 "This run has 1 generation. A re-evolution would produce Gen 2 seeded by this Gen 1 composite + newly-spawned alternatives."
               }
             >
-              Gen {competitionScores?.generation ?? 1} /{" "}
-              {competitionScores?.total_generations ?? 1}
+              Gen {competitionScores?.generation ?? 1} / {competitionScores?.total_generations ?? 1}
             </span>
             <span className="rounded bg-surface-container-low px-2 py-1 text-on-surface-dim">
               {variants?.length ?? "—"} dimensions
@@ -287,9 +279,7 @@ export default function AtomicRunDetail({
               <div className="mt-2 space-y-0.5 text-right">
                 <p className="font-mono text-xs text-on-surface-dim">
                   Baseline:{" "}
-                  <span className="text-on-surface">
-                    {runDetail.baseline_fitness.toFixed(3)}
-                  </span>
+                  <span className="text-on-surface">{runDetail.baseline_fitness.toFixed(3)}</span>
                 </p>
                 {runDetail.best_fitness != null && runDetail.baseline_fitness > 0 && (
                   <p className="font-mono text-xs text-on-surface-dim">
@@ -313,9 +303,7 @@ export default function AtomicRunDetail({
                 )}
               </div>
             )}
-            <p className="mt-1 font-mono text-sm text-on-surface">
-              ${totalCost.toFixed(2)}
-            </p>
+            <p className="mt-1 font-mono text-sm text-on-surface">${totalCost.toFixed(2)}</p>
           </div>
           <div className="flex gap-2">
             <a
@@ -333,9 +321,7 @@ export default function AtomicRunDetail({
               ↓ SDK
             </a>
             <Link to={`/runs/${runId}/export`}>
-              <PrimaryButton className="!px-3 !py-1.5 !text-[0.625rem]">
-                Preview →
-              </PrimaryButton>
+              <PrimaryButton className="!px-3 !py-1.5 !text-[0.625rem]">Preview →</PrimaryButton>
             </Link>
           </div>
         </div>
@@ -348,9 +334,8 @@ export default function AtomicRunDetail({
             report={report}
             seedWinnerCount={seedWinnerDimensions.size}
             perfectFitnessCount={
-              variants?.filter(
-                (v) => v.tier === "capability" && v.fitness_score >= 0.999,
-              ).length ?? 0
+              variants?.filter((v) => v.tier === "capability" && v.fitness_score >= 0.999).length ??
+              0
             }
           />
         </div>
@@ -364,7 +349,7 @@ export default function AtomicRunDetail({
       )}
 
       {/* Sticky tab bar */}
-      <div className="sticky top-[64px] z-10 mt-8 -mx-2 bg-background/80 px-2 py-3 backdrop-blur-md">
+      <div className="bg-background/80 sticky top-[64px] z-10 -mx-2 mt-8 px-2 py-3 backdrop-blur-md">
         <div className="flex flex-wrap gap-1 rounded-xl border border-outline-variant bg-surface-container-lowest p-1">
           {TABS.map((tab) => (
             <button
@@ -406,12 +391,14 @@ export default function AtomicRunDetail({
         )}
 
         {activeTab === "competition" && competitionScores && (
-          <CompetitionBracket scores={competitionScores} genomes={genomes} rawBaselineMap={rawBaselineMap} />
+          <CompetitionBracket
+            scores={competitionScores}
+            genomes={genomes}
+            rawBaselineMap={rawBaselineMap}
+          />
         )}
         {activeTab === "competition" && !competitionScores && (
-          <p className="text-xs text-on-surface-dim">
-            Loading competition scores…
-          </p>
+          <p className="text-xs text-on-surface-dim">Loading competition scores…</p>
         )}
 
         {activeTab === "metrics" && (
@@ -447,9 +434,7 @@ export default function AtomicRunDetail({
           </div>
         )}
 
-        {activeTab === "tests" && report && (
-          <ChallengeGallery challenges={report.challenges} />
-        )}
+        {activeTab === "tests" && report && <ChallengeGallery challenges={report.challenges} />}
 
         {activeTab === "narrative" && report && (
           <RunNarrative
@@ -459,11 +444,7 @@ export default function AtomicRunDetail({
         )}
 
         {activeTab === "lineage" && lineage && (
-          <AtomicLineageView
-            nodes={lineage.nodes}
-            edges={lineage.edges}
-            genomes={genomes}
-          />
+          <AtomicLineageView nodes={lineage.nodes} edges={lineage.edges} genomes={genomes} />
         )}
         {activeTab === "lineage" && !lineage && (
           <p className="text-xs text-on-surface-dim">Loading lineage…</p>
@@ -476,9 +457,7 @@ export default function AtomicRunDetail({
             challenges={report.challenges}
             learningLog={runDetail.learning_log ?? report.learning_log}
             runId={runId}
-            familyLabel={
-              report.taxonomy?.family_label ?? runDetail.specialization
-            }
+            familyLabel={report.taxonomy?.family_label ?? runDetail.specialization}
           />
         )}
         {activeTab === "package" && !report && (
@@ -488,9 +467,7 @@ export default function AtomicRunDetail({
 
       {/* Error fallback */}
       {reportError && (
-        <p className="mt-8 text-xs text-on-surface-dim">
-          Report endpoint error: {reportError}
-        </p>
+        <p className="mt-8 text-xs text-on-surface-dim">Report endpoint error: {reportError}</p>
       )}
     </div>
   );
@@ -525,8 +502,7 @@ function DimensionsOverview({
   const capabilities = dimensions.filter((d) => d.tier === "capability");
 
   const avgFitness =
-    dimensions.reduce((sum, d) => sum + (d.fitness_score ?? 0), 0) /
-    Math.max(dimensions.length, 1);
+    dimensions.reduce((sum, d) => sum + (d.fitness_score ?? 0), 0) / Math.max(dimensions.length, 1);
 
   return (
     <div className="space-y-6">
@@ -536,9 +512,7 @@ function DimensionsOverview({
           <p className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
             Dimensions
           </p>
-          <p className="mt-1 font-display text-3xl tracking-tight">
-            {dimensions.length}
-          </p>
+          <p className="mt-1 font-display text-3xl tracking-tight">{dimensions.length}</p>
           <p className="mt-0.5 text-[0.625rem] text-on-surface-dim">
             {foundations.length} foundation · {capabilities.length} capability
           </p>
@@ -570,13 +544,10 @@ function DimensionsOverview({
               }`}
             >
               {bestFitness > baselineFitness ? "+" : ""}
-              {(((bestFitness - baselineFitness) / baselineFitness) * 100).toFixed(0)}
-              %
+              {(((bestFitness - baselineFitness) / baselineFitness) * 100).toFixed(0)}%
             </p>
           ) : (
-            <p className="mt-1 font-display text-3xl tracking-tight text-on-surface-dim">
-              —
-            </p>
+            <p className="mt-1 font-display text-3xl tracking-tight text-on-surface-dim">—</p>
           )}
         </div>
       </div>
@@ -587,8 +558,8 @@ function DimensionsOverview({
           Per-Dimension Fitness vs Baseline
         </p>
         <p className="mt-1 text-xs text-on-surface-dim">
-          Each dimension's evolved fitness compared to raw Sonnet on the same challenges.
-          Copper = skill fitness. Gray = raw Sonnet baseline.
+          Each dimension's evolved fitness compared to raw Sonnet on the same challenges. Copper =
+          skill fitness. Gray = raw Sonnet baseline.
         </p>
 
         <div className="mt-5 space-y-3">
@@ -599,11 +570,7 @@ function DimensionsOverview({
                 Foundation
               </p>
               {foundations.map((d) => (
-                <DimensionBar
-                  key={d.id}
-                  dim={d}
-                  baseline={dimBaselineMap[d.dimension]}
-                />
+                <DimensionBar key={d.id} dim={d} baseline={dimBaselineMap[d.dimension]} />
               ))}
             </>
           )}
@@ -615,11 +582,7 @@ function DimensionsOverview({
                 Capabilities
               </p>
               {capabilities.map((d) => (
-                <DimensionBar
-                  key={d.id}
-                  dim={d}
-                  baseline={dimBaselineMap[d.dimension]}
-                />
+                <DimensionBar key={d.id} dim={d} baseline={dimBaselineMap[d.dimension]} />
               ))}
             </>
           )}
@@ -633,7 +596,8 @@ function DimensionsOverview({
             Benchmark Tier Breakdown
           </p>
           <p className="mt-1 text-xs text-on-surface-dim">
-            Raw Sonnet performance by challenge difficulty tier on {benchDetail.total_challenges} challenges.
+            Raw Sonnet performance by challenge difficulty tier on {benchDetail.total_challenges}{" "}
+            challenges.
           </p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left">
@@ -648,16 +612,18 @@ function DimensionsOverview({
               </thead>
               <tbody>
                 {benchDetail.tiers.map((t) => (
-                  <tr
-                    key={t.tier}
-                    className="border-b border-outline-variant/30"
-                  >
-                    <td className={`py-2 pr-4 font-mono text-sm capitalize ${
-                      t.tier === "easy" ? "text-green-400"
-                        : t.tier === "medium" ? "text-yellow-400"
-                        : t.tier === "hard" ? "text-orange-400"
-                        : "text-red-400"
-                    }`}>
+                  <tr key={t.tier} className="border-b border-outline-variant/30">
+                    <td
+                      className={`py-2 pr-4 font-mono text-sm capitalize ${
+                        t.tier === "easy"
+                          ? "text-green-400"
+                          : t.tier === "medium"
+                            ? "text-yellow-400"
+                            : t.tier === "hard"
+                              ? "text-orange-400"
+                              : "text-red-400"
+                      }`}
+                    >
                       {t.tier}
                     </td>
                     <td className="py-2 pr-4 text-right font-mono text-sm text-on-surface">
@@ -683,21 +649,12 @@ function DimensionsOverview({
   );
 }
 
-function DimensionBar({
-  dim,
-  baseline,
-}: {
-  dim: DimensionStatus;
-  baseline?: number;
-}) {
+function DimensionBar({ dim, baseline }: { dim: DimensionStatus; baseline?: number }) {
   const fitness = dim.fitness_score ?? 0;
   const maxVal = Math.max(fitness, baseline ?? 0, 0.01);
   const fitnessPct = (fitness / maxVal) * 100;
   const baselinePct = baseline != null ? (baseline / maxVal) * 100 : 0;
-  const lift =
-    baseline != null && baseline > 0
-      ? ((fitness - baseline) / baseline) * 100
-      : null;
+  const lift = baseline != null && baseline > 0 ? ((fitness - baseline) / baseline) * 100 : null;
 
   return (
     <div className="flex items-center gap-3">
@@ -719,9 +676,7 @@ function DimensionBar({
         />
       </div>
       <div className="flex w-28 shrink-0 items-baseline gap-2">
-        <span className="font-mono text-[0.625rem] text-tertiary">
-          {fitness.toFixed(3)}
-        </span>
+        <span className="font-mono text-[0.625rem] text-tertiary">{fitness.toFixed(3)}</span>
         {lift != null && (
           <span
             className={`font-mono text-[0.5625rem] ${

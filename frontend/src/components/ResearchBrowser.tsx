@@ -58,11 +58,7 @@ export default function ResearchBrowser() {
 
   const allEntries = useMemo(() => {
     if (!data) return [];
-    return [
-      ...(data.narrative ?? []),
-      ...(data.audits ?? []),
-      ...(data.external_papers ?? []),
-    ];
+    return [...(data.narrative ?? []), ...(data.audits ?? []), ...(data.external_papers ?? [])];
   }, [data]);
 
   const selected = useMemo(
@@ -70,14 +66,13 @@ export default function ResearchBrowser() {
     [allEntries, selectedSlug],
   );
 
-  const groups: { key: keyof ResearchResponse; entries: ResearchEntry[] }[] =
-    data
-      ? [
-          { key: "narrative", entries: data.narrative ?? [] },
-          { key: "audits", entries: data.audits ?? [] },
-          { key: "external_papers", entries: data.external_papers ?? [] },
-        ]
-      : [];
+  const groups: { key: keyof ResearchResponse; entries: ResearchEntry[] }[] = data
+    ? [
+        { key: "narrative", entries: data.narrative ?? [] },
+        { key: "audits", entries: data.audits ?? [] },
+        { key: "external_papers", entries: data.external_papers ?? [] },
+      ]
+    : [];
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
@@ -90,19 +85,14 @@ export default function ResearchBrowser() {
             <span className="text-secondary">Research</span>
           </h1>
           <p className="mt-3 max-w-2xl text-on-surface-dim">
-            The research angle: the problem SKLD is solving, the prior work it
-            builds on, the methodology and evaluation stack, the findings so
-            far, and the questions still open. Built for reviewers, not
-            marketers.
+            The research angle: the problem SKLD is solving, the prior work it builds on, the
+            methodology and evaluation stack, the findings so far, and the questions still open.
+            Built for reviewers, not marketers.
           </p>
         </div>
       </div>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="rounded-xl bg-surface-container-low p-4">
@@ -150,9 +140,7 @@ export default function ResearchBrowser() {
                 {selected.filename}
               </p>
               <article className="bible-prose mt-4 max-w-none text-on-surface">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selected.body}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{selected.body}</ReactMarkdown>
               </article>
             </>
           ) : (

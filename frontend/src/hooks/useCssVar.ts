@@ -12,9 +12,7 @@ export function useCssVar(name: string, alpha = 1): string {
 
   useEffect(() => {
     const read = () => {
-      const raw = getComputedStyle(document.documentElement)
-        .getPropertyValue(name)
-        .trim();
+      const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
       if (!raw) {
         setValue("");
         return;

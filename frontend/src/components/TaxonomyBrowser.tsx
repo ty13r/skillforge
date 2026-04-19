@@ -55,10 +55,7 @@ function countFamiliesUnderNode(
   ).length;
 }
 
-function familiesMatchingFilter(
-  families: SkillFamily[],
-  filter: FilterSelection,
-): SkillFamily[] {
+function familiesMatchingFilter(families: SkillFamily[], filter: FilterSelection): SkillFamily[] {
   return families.filter((f) => {
     if (filter.domain_id && f.domain_id !== filter.domain_id) return false;
     if (filter.focus_id && f.focus_id !== filter.focus_id) return false;
@@ -91,10 +88,7 @@ export default function TaxonomyBrowser() {
       .catch((err) => setError(String(err)));
   }, []);
 
-  const domains = useMemo(
-    () => (nodes ?? []).filter((n) => n.level === "domain"),
-    [nodes],
-  );
+  const domains = useMemo(() => (nodes ?? []).filter((n) => n.level === "domain"), [nodes]);
 
   const focusesByDomain = useMemo(() => {
     const map = new Map<string, TaxonomyNode[]>();
@@ -123,9 +117,7 @@ export default function TaxonomyBrowser() {
 
   const isLoading = nodes == null || families == null;
   const hasNoFilter =
-    filter.domain_id == null &&
-    filter.focus_id == null &&
-    filter.language_id == null;
+    filter.domain_id == null && filter.focus_id == null && filter.language_id == null;
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-10">
@@ -138,8 +130,8 @@ export default function TaxonomyBrowser() {
             Skill <span className="text-primary">Taxonomy</span>
           </h1>
           <p className="mt-3 max-w-2xl text-on-surface-dim">
-            Browse the Domain → Focus → Language hierarchy. Pick any node to
-            filter the family list to variants that live underneath it.
+            Browse the Domain → Focus → Language hierarchy. Pick any node to filter the family list
+            to variants that live underneath it.
           </p>
         </div>
         <div className="text-right font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
@@ -147,11 +139,7 @@ export default function TaxonomyBrowser() {
         </div>
       </header>
 
-      {error && (
-        <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-6 rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>}
 
       {isLoading ? (
         <p className="mt-10 text-on-surface-dim">Loading taxonomy…</p>
@@ -173,11 +161,7 @@ export default function TaxonomyBrowser() {
             </div>
             <ul className="space-y-1 text-sm">
               {domains.map((dom) => {
-                const domCount = countFamiliesUnderNode(
-                  dom,
-                  nodes ?? [],
-                  families ?? [],
-                );
+                const domCount = countFamiliesUnderNode(dom, nodes ?? [], families ?? []);
                 const isDomActive = filter.domain_id === dom.id;
                 const focuses = focusesByDomain.get(dom.id) ?? [];
                 return (
@@ -205,11 +189,7 @@ export default function TaxonomyBrowser() {
                     {isDomActive && focuses.length > 0 && (
                       <ul className="ml-4 mt-1 space-y-1 border-l border-outline-variant pl-3">
                         {focuses.map((foc) => {
-                          const focCount = countFamiliesUnderNode(
-                            foc,
-                            nodes ?? [],
-                            families ?? [],
-                          );
+                          const focCount = countFamiliesUnderNode(foc, nodes ?? [], families ?? []);
                           const isFocActive = filter.focus_id === foc.id;
                           const languages = languagesByFocus.get(foc.id) ?? [];
                           return (
@@ -242,8 +222,7 @@ export default function TaxonomyBrowser() {
                                       nodes ?? [],
                                       families ?? [],
                                     );
-                                    const isLngActive =
-                                      filter.language_id === lng.id;
+                                    const isLngActive = filter.language_id === lng.id;
                                     return (
                                       <li key={lng.id}>
                                         <button
@@ -252,9 +231,7 @@ export default function TaxonomyBrowser() {
                                             setFilter({
                                               domain_id: dom.id,
                                               focus_id: foc.id,
-                                              language_id: isLngActive
-                                                ? null
-                                                : lng.id,
+                                              language_id: isLngActive ? null : lng.id,
                                             })
                                           }
                                           className={`flex w-full items-center justify-between rounded-lg px-2 py-0.5 text-left text-[0.75rem] transition-colors ${
@@ -303,9 +280,7 @@ export default function TaxonomyBrowser() {
             </div>
 
             {filteredFamilies.length === 0 ? (
-              <p className="mt-6 text-on-surface-dim">
-                No families match the current filter.
-              </p>
+              <p className="mt-6 text-on-surface-dim">No families match the current filter.</p>
             ) : (
               <ul className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {filteredFamilies.map((fam) => {
@@ -342,10 +317,7 @@ export default function TaxonomyBrowser() {
                           </span>
                         </div>
                         <h3 className="mt-2 font-display text-lg tracking-tight">
-                          <Link
-                            to={`/registry?family=${fam.slug}`}
-                            className="hover:text-primary"
-                          >
+                          <Link to={`/registry?family=${fam.slug}`} className="hover:text-primary">
                             {fam.label}
                           </Link>
                         </h3>
@@ -387,9 +359,7 @@ export default function TaxonomyBrowser() {
                         {isExpanded && (
                           <div className="mt-3 border-t border-outline-variant pt-3">
                             {!variants ? (
-                              <p className="text-[0.625rem] text-on-surface-dim">
-                                Loading...
-                              </p>
+                              <p className="text-[0.625rem] text-on-surface-dim">Loading...</p>
                             ) : activeVariants.length === 0 ? (
                               <p className="text-[0.625rem] text-on-surface-dim">
                                 No active variants
@@ -410,10 +380,7 @@ export default function TaxonomyBrowser() {
                                   {activeVariants
                                     .sort((a, b) => b.fitness_score - a.fitness_score)
                                     .map((v) => (
-                                      <div
-                                        key={v.id}
-                                        className="flex items-center gap-2"
-                                      >
+                                      <div key={v.id} className="flex items-center gap-2">
                                         <span className="w-36 shrink-0 truncate font-mono text-[0.5625rem] text-on-surface-dim">
                                           {v.dimension}
                                         </span>

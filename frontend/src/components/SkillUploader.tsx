@@ -15,10 +15,7 @@ interface SkillUploaderProps {
   current: UploadResponse | null;
 }
 
-export default function SkillUploader({
-  onUploadReady,
-  current,
-}: SkillUploaderProps) {
+export default function SkillUploader({ onUploadReady, current }: SkillUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,17 +143,13 @@ export default function SkillUploader({
         <p className="text-on-surface-dim">Uploading…</p>
       ) : (
         <>
-          <p className="font-display text-xl tracking-tight">
-            Drop a SKILL.md or .zip here
-          </p>
+          <p className="font-display text-xl tracking-tight">Drop a SKILL.md or .zip here</p>
           <p className="mt-2 text-sm text-on-surface-dim">
             or click to browse · max 1 MB · validates against bible patterns
           </p>
         </>
       )}
-      {error && (
-        <p className="mt-3 font-mono text-xs text-error">{error}</p>
-      )}
+      {error && <p className="mt-3 font-mono text-xs text-error">{error}</p>}
     </div>
   );
 }

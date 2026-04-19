@@ -20,6 +20,7 @@ dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",
     "ruff>=0.7",
+    "mypy>=1.13",
     "httpx>=0.27",
 ]
 
@@ -39,5 +40,52 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+# E/F: pycodestyle + pyflakes  I: isort  UP: pyupgrade  B: flake8-bugbear
+# SIM: flake8-simplify  LOG: flake8-logging  RET: flake8-return  PTH: flake8-use-pathlib
+# BLE + TRY (exception hygiene) are added in Wave 2 alongside the bare-except cleanup.
+select = ["E", "F", "I", "UP", "B", "SIM", "LOG", "RET", "PTH"]
+ignore = [
+    "E501",   # line-too-long (handled by formatter preference)
+    "RET504", # unnecessary assignment before return (noisy)
+]
+
+# Seed data modules are bulk content, not hand-maintained logic.
+[tool.ruff.lint.per-file-ignores]
+"skillforge/seeds/batch*.py" = ["E402", "E741", "F401", "F811", "SIM", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+# Baseline: opt in per-module. Wave 1 establishes the tooling + a green floor.
+# Wave 2+ moves each refactored module into the checked list until everything
+# is covered. This is intentional ratcheting, not permanent exemption.
+ignore_missing_imports = true
+follow_imports = "silent"
+check_untyped_defs = false
+warn_redundant_casts = true
+warn_unused_ignores = false  # flips to true in Wave 6 polish
+# Skip modules that do not yet pass — added back as refactor waves land.
+exclude = [
+    "^skillforge/seeds/batch[0-9]+\\.py$",
+    "^skillforge/api/debug\\.py$",
+    "^skillforge/api/bench\\.py$",
+    "^skillforge/api/uploads\\.py$",
+    "^skillforge/api/spec_assistant\\.py$",
+    "^skillforge/agents/competitor\\.py$",
+    "^skillforge/agents/competitor_managed\\.py$",
+    "^skillforge/agents/engineer\\.py$",
+    "^skillforge/agents/judge/pipeline\\.py$",
+    "^skillforge/agents/judge/trigger\\.py$",
+    "^skillforge/db/benchmark_seed_loader\\.py$",
+    "^skillforge/engine/evolution\\.py$",
+    "^skillforge/engine/export\\.py$",
+    "^skillforge/engine/sandbox\\.py$",
+    "^skillforge/engine/scorer\\.py$",
+    "^skillforge/main\\.py$",
+    "^skillforge/models/run\\.py$",
+]
+
+[[tool.mypy.overrides]]
+module = ["skillforge.models.*", "skillforge.config"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+strict_optional = true

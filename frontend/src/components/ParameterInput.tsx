@@ -26,8 +26,7 @@ export default function ParameterInput({
     if (!Number.isNaN(next)) onChange(next);
   };
 
-  const accentClass =
-    accent === "tertiary" ? "text-tertiary" : "text-on-surface";
+  const accentClass = accent === "tertiary" ? "text-tertiary" : "text-on-surface";
 
   return (
     <div className="rounded-xl bg-surface-container-low p-4">
@@ -35,9 +34,7 @@ export default function ParameterInput({
         {label}
       </p>
       <div className="mt-2 flex items-baseline gap-1">
-        {prefix && (
-          <span className={"font-display text-2xl " + accentClass}>{prefix}</span>
-        )}
+        {prefix && <span className={"font-display text-2xl " + accentClass}>{prefix}</span>}
         <input
           type="number"
           value={value}
@@ -46,8 +43,7 @@ export default function ParameterInput({
           max={max}
           step={step}
           className={
-            "w-full bg-transparent font-display text-2xl tracking-tight outline-none " +
-            accentClass
+            "w-full bg-transparent font-display text-2xl tracking-tight outline-none " + accentClass
           }
         />
       </div>

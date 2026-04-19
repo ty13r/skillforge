@@ -57,17 +57,13 @@ export default function SpecializationInput() {
   const [searchParams] = useSearchParams();
   const seedParam = searchParams.get("seed");
 
-  const [sourceMode, setSourceMode] = useState<SourceMode>(
-    seedParam ? "fork" : "scratch",
-  );
+  const [sourceMode, setSourceMode] = useState<SourceMode>(seedParam ? "fork" : "scratch");
   const [specialization, setSpecialization] = useState("");
   const [populationSize, setPopulationSize] = useState(5);
   const [numGenerations, setNumGenerations] = useState(3);
   const [budget, setBudget] = useState(10);
   // v2.0 — Auto lets the Taxonomist decide; Atomic and Classic force the mode.
-  const [evolutionMode, setEvolutionMode] = useState<"auto" | "atomic" | "molecular">(
-    "auto",
-  );
+  const [evolutionMode, setEvolutionMode] = useState<"auto" | "atomic" | "molecular">("auto");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upload, setUpload] = useState<UploadResponse | null>(null);
@@ -107,9 +103,8 @@ export default function SpecializationInput() {
     : ["all"];
 
   const visibleSeeds =
-    allSeeds?.filter(
-      (s) => seedCategoryFilter === "all" || s.category === seedCategoryFilter,
-    ) ?? [];
+    allSeeds?.filter((s) => seedCategoryFilter === "all" || s.category === seedCategoryFilter) ??
+    [];
 
   const submit = async () => {
     setSubmitting(true);
@@ -217,9 +212,7 @@ export default function SpecializationInput() {
       <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
         Protocol: New Evolution
       </p>
-      <h1 className="mt-2 font-display text-4xl tracking-tight">
-        Start an Evolution Run
-      </h1>
+      <h1 className="mt-2 font-display text-4xl tracking-tight">Start an Evolution Run</h1>
 
       {/* Source mode toggle */}
       <div className="mt-8">
@@ -297,14 +290,14 @@ export default function SpecializationInput() {
                   <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
                     ⑂ Forking from
                   </p>
-                  <p className="mt-1 font-display text-xl tracking-tight">
-                    {forkedSeed.title}
-                  </p>
+                  <p className="mt-1 font-display text-xl tracking-tight">{forkedSeed.title}</p>
                   <p className="mt-1.5 inline-flex items-center gap-2">
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
                       {forkedSeed.category}
                     </span>
-                    <span className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[forkedSeed.difficulty]}`}>
+                    <span
+                      className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[forkedSeed.difficulty]}`}
+                    >
                       {forkedSeed.difficulty}
                     </span>
                   </p>
@@ -403,8 +396,8 @@ export default function SpecializationInput() {
                 ✓ Skill Package Ready
               </p>
               <p className="mt-1 text-sm text-on-surface-dim">
-                {Object.keys(generatedPackage.supportingFiles).length + 1} files
-                will be used as the Gen 0 seed
+                {Object.keys(generatedPackage.supportingFiles).length + 1} files will be used as the
+                Gen 0 seed
               </p>
             </div>
             <button
@@ -454,9 +447,7 @@ export default function SpecializationInput() {
             >
               <div
                 className={`font-medium ${
-                  evolutionMode === opt.value
-                    ? "text-primary"
-                    : "text-on-surface"
+                  evolutionMode === opt.value ? "text-primary" : "text-on-surface"
                 }`}
               >
                 {opt.label}
@@ -494,11 +485,7 @@ export default function SpecializationInput() {
         />
       </div>
 
-      {error && (
-        <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">{error}</div>}
 
       {(() => {
         // Calibrated from observed live runs:
@@ -514,8 +501,7 @@ export default function SpecializationInput() {
         const SETUP_USD = 1.0;
         const BREEDING_USD_PER_GEN = 0.5;
 
-        const competitorRuns =
-          populationSize * numGenerations * CHALLENGES_PER_GEN;
+        const competitorRuns = populationSize * numGenerations * CHALLENGES_PER_GEN;
         const estMin = Math.round(
           competitorRuns * MIN_PER_COMPETITOR_RUN +
             SETUP_MIN +
@@ -525,10 +511,7 @@ export default function SpecializationInput() {
           competitorRuns * USD_PER_COMPETITOR_RUN +
           SETUP_USD +
           numGenerations * BREEDING_USD_PER_GEN;
-        const estTimeLabel =
-          estMin >= 90
-            ? `~${(estMin / 60).toFixed(1)} hrs`
-            : `~${estMin} min`;
+        const estTimeLabel = estMin >= 90 ? `~${(estMin / 60).toFixed(1)} hrs` : `~${estMin} min`;
         const overBudget = estUsd > budget;
 
         return (
@@ -539,9 +522,7 @@ export default function SpecializationInput() {
                   <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
                     Est. Compute Time
                   </p>
-                  <p className="font-mono text-sm text-on-surface">
-                    {estTimeLabel}
-                  </p>
+                  <p className="font-mono text-sm text-on-surface">{estTimeLabel}</p>
                 </div>
                 <div>
                   <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
@@ -558,8 +539,7 @@ export default function SpecializationInput() {
                     Competitor Runs
                   </p>
                   <p className="font-mono text-sm text-on-surface">
-                    {competitorRuns} ({populationSize}×{numGenerations}×
-                    {CHALLENGES_PER_GEN})
+                    {competitorRuns} ({populationSize}×{numGenerations}×{CHALLENGES_PER_GEN})
                   </p>
                 </div>
               </div>
@@ -569,9 +549,8 @@ export default function SpecializationInput() {
             </div>
             {overBudget && (
               <p className="mt-3 font-mono text-[0.6875rem] text-error">
-                ⚠ Estimated cost exceeds your ${budget} budget cap. The run
-                will abort when the cap is hit — increase the cap or reduce
-                population/generations.
+                ⚠ Estimated cost exceeds your ${budget} budget cap. The run will abort when the cap
+                is hit — increase the cap or reduce population/generations.
               </p>
             )}
           </div>

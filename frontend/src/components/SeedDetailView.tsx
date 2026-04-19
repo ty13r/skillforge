@@ -37,9 +37,7 @@ export default function SeedDetailView() {
 
   const files = useMemo(() => {
     if (!skill) return [];
-    const list = [
-      { path: "SKILL.md", content: skill.skill_md_content || "" },
-    ];
+    const list = [{ path: "SKILL.md", content: skill.skill_md_content || "" }];
     if (skill.supporting_files) {
       for (const [path, content] of Object.entries(skill.supporting_files)) {
         list.push({ path, content: content as string });
@@ -55,9 +53,7 @@ export default function SeedDetailView() {
   if (error) {
     return (
       <div className="mx-auto max-w-[1400px] px-6 py-10">
-        <div className="rounded-xl bg-error/10 p-4 text-sm text-error">
-          {error}
-        </div>
+        <div className="rounded-xl bg-error/10 p-4 text-sm text-error">{error}</div>
       </div>
     );
   }
@@ -71,15 +67,10 @@ export default function SeedDetailView() {
   }
 
   // Strip YAML frontmatter for the main markdown render
-  const bodyOnly = skill.skill_md_content.replace(
-    /^---\n[\s\S]*?\n---\n?/,
-    "",
-  );
+  const bodyOnly = skill.skill_md_content.replace(/^---\n[\s\S]*?\n---\n?/, "");
 
   // Extract frontmatter values for the sidebar
-  const frontmatterMatch = skill.skill_md_content.match(
-    /^---\n([\s\S]*?)\n---/,
-  );
+  const frontmatterMatch = skill.skill_md_content.match(/^---\n([\s\S]*?)\n---/);
   const frontmatter = frontmatterMatch ? frontmatterMatch[1] : "";
   const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
   const descMatch = frontmatter.match(/description:\s*>-\n((?:\s+.*\n?)+)/);
@@ -124,7 +115,7 @@ export default function SeedDetailView() {
             {/* File tree sidebar (only when there are supporting files) */}
             {hasMultipleFiles && (
               <div className="w-52 shrink-0 border-r border-outline-variant pr-4">
-                <p className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim mb-3">
+                <p className="mb-3 font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
                   Skill Package
                 </p>
                 <FileTree
@@ -136,7 +127,7 @@ export default function SeedDetailView() {
             )}
 
             {/* Content viewer */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {hasMultipleFiles && (
                 <p className="mb-3 font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim">
                   {selectedFile}
@@ -194,7 +185,7 @@ export default function SeedDetailView() {
             <div className="mt-3 space-y-2">
               <a
                 href={`/api/runs/${runId}/export?format=skill_dir`}
-                className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
+                className="bg-surface-container-mid block rounded-lg px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
                 &darr; Download .zip
               </a>
@@ -202,7 +193,7 @@ export default function SeedDetailView() {
                 href={`/api/runs/${runId}/export?format=skill_md`}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
+                className="bg-surface-container-mid block rounded-lg px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
                 &darr; Download SKILL.md
               </a>
@@ -210,7 +201,7 @@ export default function SeedDetailView() {
                 href={`/api/runs/${runId}/export?format=agent_sdk_config`}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded-lg bg-surface-container-mid px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
+                className="bg-surface-container-mid block rounded-lg px-3 py-2 text-center text-xs text-on-surface transition-colors hover:bg-surface-container-high"
               >
                 &darr; Agent SDK Config
               </a>

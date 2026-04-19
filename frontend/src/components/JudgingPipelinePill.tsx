@@ -12,11 +12,7 @@ const STATUS_CLASS: Record<JudgingPipelinePillProps["status"], string> = {
   complete: "bg-tertiary/15 text-tertiary",
 };
 
-export default function JudgingPipelinePill({
-  layer,
-  label,
-  status,
-}: JudgingPipelinePillProps) {
+export default function JudgingPipelinePill({ layer, label, status }: JudgingPipelinePillProps) {
   return (
     <div
       className={

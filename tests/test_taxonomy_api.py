@@ -14,8 +14,39 @@ from skillforge.main import app
 
 
 @pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
+def client(tmp_path, monkeypatch):
+    """TestClient wrapped as a context manager so the FastAPI lifespan runs.
+
+    The bare ``TestClient(app)`` pattern (used elsewhere in the suite)
+    does NOT trigger ``lifespan`` — it only intercepts HTTP calls. This
+    module's tests depend on ``load_taxonomy()`` having bootstrapped the
+    DB with real seed families like ``terraform-module-full``, so we
+    must enter ``TestClient`` as a context manager. An isolated temp
+    DB keeps the bootstrap from stomping on the dev DB and keeps tests
+    independent of previous runs.
+    """
+    monkeypatch.setenv("SKILLFORGE_DB", str(tmp_path / "test.db"))
+    monkeypatch.setenv("SKILLFORGE_DATA_DIR", str(tmp_path))
+
+    import importlib
+
+    from skillforge import config as cfg
+    from skillforge.db import database as db_module
+    from skillforge.db import queries as queries_module
+
+    importlib.reload(cfg)
+    importlib.reload(db_module)
+    importlib.reload(queries_module)
+
+    with TestClient(app) as c:
+        yield c
+
+    # Restore module state for downstream tests that import config.
+    monkeypatch.delenv("SKILLFORGE_DB", raising=False)
+    monkeypatch.delenv("SKILLFORGE_DATA_DIR", raising=False)
+    importlib.reload(cfg)
+    importlib.reload(db_module)
+    importlib.reload(queries_module)
 
 
 # ---------------------------------------------------------------------------

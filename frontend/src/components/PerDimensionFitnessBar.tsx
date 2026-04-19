@@ -21,13 +21,11 @@ export default function PerDimensionFitnessBar({
   seedWinnerDimensions,
 }: PerDimensionFitnessBarProps) {
   const rows = useMemo(() => {
-    return variants
-      .slice()
-      .sort((a, b) => {
-        // Foundation first, then by fitness DESC within each tier.
-        if (a.tier !== b.tier) return a.tier === "foundation" ? -1 : 1;
-        return b.fitness_score - a.fitness_score;
-      });
+    return variants.slice().sort((a, b) => {
+      // Foundation first, then by fitness DESC within each tier.
+      if (a.tier !== b.tier) return a.tier === "foundation" ? -1 : 1;
+      return b.fitness_score - a.fitness_score;
+    });
   }, [variants]);
 
   if (rows.length === 0) {
@@ -53,9 +51,7 @@ export default function PerDimensionFitnessBar({
             <div className="relative flex-1 overflow-hidden rounded bg-surface-container-low">
               <div
                 className={`h-5 transition-all ${
-                  isFoundation
-                    ? "bg-tertiary/60"
-                    : "bg-primary/60"
+                  isFoundation ? "bg-tertiary/60" : "bg-primary/60"
                 }`}
                 style={{ width: `${pct}%` }}
               />

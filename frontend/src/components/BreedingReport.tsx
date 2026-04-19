@@ -24,10 +24,7 @@ export default function BreedingReport({ report, lessons }: BreedingReportProps)
           </p>
           <ul className="mt-2 space-y-2">
             {lessons.map((lesson, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-sm text-on-surface"
-              >
+              <li key={i} className="flex gap-2 text-sm text-on-surface">
                 <span className="text-secondary">•</span>
                 <span>{lesson}</span>
               </li>

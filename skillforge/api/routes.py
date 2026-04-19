@@ -8,8 +8,6 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
-logger = logging.getLogger("skillforge.api")
-
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
@@ -29,6 +27,8 @@ from skillforge.db.queries import get_lineage, get_run, list_runs, save_run
 from skillforge.engine.evolution import PENDING_PARENTS, run_evolution
 from skillforge.engine.export import export_agent_sdk_config, export_skill_md, export_skill_zip
 from skillforge.models import EvolutionRun, SkillGenome
+
+logger = logging.getLogger("skillforge.api")
 
 router = APIRouter(prefix="/api")
 
@@ -123,14 +123,13 @@ async def _classify_run_via_taxonomist(
         from datetime import datetime as _dt
         from uuid import uuid4 as _uuid4
 
-        from skillforge.db import save_variant_evolution
-        from skillforge.models import VariantEvolution
-
         # Insert the parent run row first so the FK on
         # variant_evolutions.parent_run_id is satisfied. save_run is
         # idempotent (INSERT OR REPLACE) so the second save_run later in
         # the route handler is a no-op refresh.
         from skillforge.db import save_run as _save_run
+        from skillforge.db import save_variant_evolution
+        from skillforge.models import VariantEvolution
 
         await _save_run(run)
 
@@ -538,14 +537,13 @@ async def export_run(run_id: str, format: ExportFormat = ExportFormat.skill_dir)
             media_type="application/zip",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
-    elif format == ExportFormat.skill_md:
+    if format == ExportFormat.skill_md:
         md = export_skill_md(run.best_skill)
         return Response(content=md, media_type="text/markdown")
-    elif format == ExportFormat.agent_sdk_config:
+    if format == ExportFormat.agent_sdk_config:
         config = export_agent_sdk_config(run.best_skill)
         return Response(content=json.dumps(config, indent=2), media_type="application/json")
-    else:
-        raise HTTPException(status_code=400, detail=f"unknown format: {format}")
+    raise HTTPException(status_code=400, detail=f"unknown format: {format}")
 
 
 @router.get("/runs/{run_id}/lineage")

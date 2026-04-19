@@ -31,22 +31,15 @@ function isMachineEntry(entry: string): boolean {
  *   4. Integration report (collapsible) — the Engineer's reconstructed
  *      post-assembly narrative with conflicts, resolutions, and decisions.
  */
-export default function RunNarrative({
-  learningLog,
-  summary,
-}: RunNarrativeProps) {
+export default function RunNarrative({ learningLog, summary }: RunNarrativeProps) {
   const [showReport, setShowReport] = useState(true);
 
   const regularEntries = learningLog.filter((e) => !isMachineEntry(e));
-  const integrationReportEntry = learningLog.find((e) =>
-    e.startsWith(INTEGRATION_REPORT_PREFIX),
-  );
+  const integrationReportEntry = learningLog.find((e) => e.startsWith(INTEGRATION_REPORT_PREFIX));
   // Defensive: filter machine entries out of key_discoveries in case the
   // backend surfaced them by mistake (older report builds did).
   const keyDiscoveries = summary.key_discoveries.filter((d) => !isMachineEntry(d));
-  const integrationReportMd = integrationReportEntry?.slice(
-    INTEGRATION_REPORT_PREFIX.length,
-  );
+  const integrationReportMd = integrationReportEntry?.slice(INTEGRATION_REPORT_PREFIX.length);
 
   const wallClockMin =
     summary.wall_clock_duration_sec !== null
@@ -150,10 +143,8 @@ export default function RunNarrative({
             <span>{showReport ? "▼" : "▶"}</span>
           </button>
           {showReport && (
-            <div className="mt-4 bible-prose">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {integrationReportMd}
-              </ReactMarkdown>
+            <div className="bible-prose mt-4">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{integrationReportMd}</ReactMarkdown>
             </div>
           )}
         </div>

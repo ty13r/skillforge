@@ -8,10 +8,7 @@ interface AtomicSidebarProps {
   activeDimension?: string | null;
 }
 
-const STATUS_STYLES: Record<
-  DimensionStatus["status"],
-  { dot: string; label: string }
-> = {
+const STATUS_STYLES: Record<DimensionStatus["status"], { dot: string; label: string }> = {
   pending: {
     dot: "bg-surface-container-high",
     label: "text-on-surface-dim",
@@ -30,11 +27,7 @@ const STATUS_STYLES: Record<
   },
 };
 
-export default function AtomicSidebar({
-  runId,
-  dimensions,
-  activeDimension,
-}: AtomicSidebarProps) {
+export default function AtomicSidebar({ runId, dimensions, activeDimension }: AtomicSidebarProps) {
   const completed = dimensions.filter((d) => d.status === "complete").length;
   const total = dimensions.length;
   const foundations = dimensions.filter((d) => d.tier === "foundation");
@@ -47,9 +40,7 @@ export default function AtomicSidebar({
         <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
           Atomic Evolution
         </p>
-        <p className="mt-1 font-mono text-[0.6875rem] text-on-surface-dim">
-          {runId.slice(0, 20)}
-        </p>
+        <p className="mt-1 font-mono text-[0.6875rem] text-on-surface-dim">{runId.slice(0, 20)}</p>
         <div className="mt-3">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[0.5625rem] uppercase tracking-wider text-on-surface-dim">
@@ -77,11 +68,7 @@ export default function AtomicSidebar({
               Foundation
             </p>
             {foundations.map((dim) => (
-              <DimensionRow
-                key={dim.id}
-                dim={dim}
-                isActive={activeDimension === dim.dimension}
-              />
+              <DimensionRow key={dim.id} dim={dim} isActive={activeDimension === dim.dimension} />
             ))}
           </div>
         )}
@@ -93,11 +80,7 @@ export default function AtomicSidebar({
               Capabilities
             </p>
             {capabilities.map((dim) => (
-              <DimensionRow
-                key={dim.id}
-                dim={dim}
-                isActive={activeDimension === dim.dimension}
-              />
+              <DimensionRow key={dim.id} dim={dim} isActive={activeDimension === dim.dimension} />
             ))}
           </div>
         )}
@@ -116,32 +99,19 @@ export default function AtomicSidebar({
   );
 }
 
-function DimensionRow({
-  dim,
-  isActive,
-}: {
-  dim: DimensionStatus;
-  isActive: boolean;
-}) {
+function DimensionRow({ dim, isActive }: { dim: DimensionStatus; isActive: boolean }) {
   const styles = STATUS_STYLES[dim.status];
   const label = dim.dimension.replace(/-/g, " ");
 
   return (
     <div
       className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors ${
-        isActive
-          ? "bg-primary/10"
-          : "hover:bg-surface-container-high"
+        isActive ? "bg-primary/10" : "hover:bg-surface-container-high"
       }`}
     >
-      <div
-        className={`h-2.5 w-2.5 shrink-0 rounded-full ${styles.dot}`}
-        aria-hidden
-      />
+      <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${styles.dot}`} aria-hidden />
       <div className="min-w-0 flex-1">
-        <p
-          className={`truncate text-[0.6875rem] capitalize leading-tight ${styles.label}`}
-        >
+        <p className={`truncate text-[0.6875rem] capitalize leading-tight ${styles.label}`}>
           {label}
         </p>
       </div>
@@ -151,9 +121,7 @@ function DimensionRow({
         </span>
       )}
       {dim.status === "running" && (
-        <span className="shrink-0 font-mono text-[0.5625rem] text-primary">
-          live
-        </span>
+        <span className="shrink-0 font-mono text-[0.5625rem] text-primary">live</span>
       )}
     </div>
   );

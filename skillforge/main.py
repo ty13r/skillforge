@@ -12,16 +12,15 @@ so the backend works in both deployments (with frontend) and dev (without).
 
 from __future__ import annotations
 
+import html
 import json as _json
 import logging
 import os
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-import html
-import re
-
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -53,7 +52,6 @@ else:
         datefmt="%H:%M:%S",
     )
 
-from skillforge.config import ROOT_DIR
 from skillforge.api.bench import router as bench_router
 from skillforge.api.bible import router as bible_router
 from skillforge.api.candidates import router as candidates_router
@@ -68,6 +66,7 @@ from skillforge.api.spec_assistant import router as spec_assistant_router
 from skillforge.api.taxonomy import router as taxonomy_router
 from skillforge.api.uploads import router as uploads_router
 from skillforge.api.websocket import router as ws_router
+from skillforge.config import ROOT_DIR
 from skillforge.db.benchmark_seed_loader import load_benchmark_results
 from skillforge.db.database import init_db
 from skillforge.db.queries import mark_zombie_runs

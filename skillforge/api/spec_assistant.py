@@ -13,6 +13,7 @@ auto-fills the specialization textarea.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import re
@@ -20,13 +21,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-logger = logging.getLogger("skillforge.api.spec_assistant")
-
 from anthropic import AsyncAnthropic
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from skillforge.config import ROOT_DIR, model_for
+
+logger = logging.getLogger("skillforge.api.spec_assistant")
 
 router = APIRouter(prefix="/api/spec-assistant", tags=["spec-assistant"])
 
@@ -271,16 +272,16 @@ async def _validate_package(skill_md: str, supporting_files: dict[str, str]) -> 
         )
         stdout, _ = await proc.communicate()
 
-        try:
-            report = json.loads(stdout.decode())
-            issues = [
-                c["name"] + ": " + c.get("detail", "")
-                for c in report.get("checks", [])
-                if c.get("status") == "fail"
-            ]
-            return report.get("status") == "pass", issues
-        except (json.JSONDecodeError, KeyError):
-            return proc.returncode == 0, []
+    try:
+        report = json.loads(stdout.decode())
+        issues = [
+            c["name"] + ": " + c.get("detail", "")
+            for c in report.get("checks", [])
+            if c.get("status") == "fail"
+        ]
+    except (json.JSONDecodeError, KeyError):
+        return proc.returncode == 0, []
+    return report.get("status") == "pass", issues
 
 
 @router.post("/generate-skill", response_model=GenerateSkillResponse)
@@ -329,10 +330,8 @@ async def generate_skill(req: GenerateSkillRequest) -> GenerateSkillResponse:
 
         if not pkg:
             # Try parsing the entire response as JSON
-            try:
+            with contextlib.suppress(json.JSONDecodeError):
                 pkg = json.loads(raw)
-            except json.JSONDecodeError:
-                pass
 
         if not pkg:
             # Try extracting JSON that may have been truncated (missing closing fence)
@@ -342,10 +341,8 @@ async def generate_skill(req: GenerateSkillRequest) -> GenerateSkillResponse:
                 # Try to find the outermost { ... } even without closing fence
                 brace_start = json_body.find("{")
                 if brace_start >= 0:
-                    try:
+                    with contextlib.suppress(json.JSONDecodeError):
                         pkg = json.loads(json_body[brace_start:])
-                    except json.JSONDecodeError:
-                        pass
 
         if not pkg:
             if attempt == 0:
@@ -369,8 +366,9 @@ async def generate_skill(req: GenerateSkillRequest) -> GenerateSkillResponse:
         if passed or attempt == 1 or supporting_files:
             # Auto-save as candidate seed
             try:
-                from skillforge.db.queries import save_candidate_seed
                 import uuid as _uuid
+
+                from skillforge.db.queries import save_candidate_seed
                 await save_candidate_seed(
                     id=str(_uuid.uuid4()),
                     source="generated",
@@ -395,7 +393,12 @@ async def generate_skill(req: GenerateSkillRequest) -> GenerateSkillResponse:
 
         # Only retry if we got no supporting files at all
         user_msg = (
-            f"The generated skill package has validation issues:\n"
+            "The generated skill package has validation issues:\n"
             + "\n".join(f"- {i}" for i in issues)
             + "\n\nPlease fix these issues and regenerate the complete JSON package."
         )
+
+    # Loop exhausted without returning — signal failure.
+    return GenerateSkillResponse(
+        validation_issues=["LLM did not produce a valid skill package after retries"]
+    )

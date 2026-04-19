@@ -69,9 +69,7 @@ export default function EvolutionDashboard() {
   const completed = runs?.filter((r) => r.status === "complete") ?? [];
   const avgFitness =
     completed.length > 0
-      ? completed
-          .map((r) => r.best_fitness ?? 0)
-          .reduce((a, b) => a + b, 0) / completed.length
+      ? completed.map((r) => r.best_fitness ?? 0).reduce((a, b) => a + b, 0) / completed.length
       : 0;
   const totalSpent = (runs ?? []).reduce((sum, r) => sum + r.total_cost_usd, 0);
 
@@ -88,13 +86,11 @@ export default function EvolutionDashboard() {
             <h1 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight md:text-5xl">
               Evolve Agent Skills
               <br />
-              Through{" "}
-              <span className="text-primary">Natural Selection</span>
+              Through <span className="text-primary">Natural Selection</span>
             </h1>
             <p className="mt-4 text-base text-on-surface-dim">
-              Deploy autonomous populations into adversarial environments.
-              Watch them compete, mutate, and survive to forge the ultimate
-              cognitive skillsets.
+              Deploy autonomous populations into adversarial environments. Watch them compete,
+              mutate, and survive to forge the ultimate cognitive skillsets.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/new">
@@ -117,28 +113,16 @@ export default function EvolutionDashboard() {
               </p>
               <div className="mt-4 space-y-4">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-on-surface">
-                    Bench Challenges
-                  </span>
-                  <span className="font-display text-2xl tracking-tight text-primary">
-                    867
-                  </span>
+                  <span className="text-sm text-on-surface">Bench Challenges</span>
+                  <span className="font-display text-2xl tracking-tight text-primary">867</span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-on-surface">
-                    Skill Families
-                  </span>
-                  <span className="font-display text-2xl tracking-tight text-primary">
-                    7
-                  </span>
+                  <span className="text-sm text-on-surface">Skill Families</span>
+                  <span className="font-display text-2xl tracking-tight text-primary">7</span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-on-surface">
-                    Scoring Layers
-                  </span>
-                  <span className="font-display text-2xl tracking-tight text-primary">
-                    6
-                  </span>
+                  <span className="text-sm text-on-surface">Scoring Layers</span>
+                  <span className="font-display text-2xl tracking-tight text-primary">6</span>
                 </div>
                 <div className="flex items-baseline justify-between border-t border-outline-variant pt-4">
                   <span className="text-sm text-on-surface">Your Runs</span>
@@ -180,11 +164,9 @@ export default function EvolutionDashboard() {
               Backed by <span className="text-tertiary">Research</span>
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-on-surface-dim">
-              SKLD didn't emerge from a vacuum. The techniques below come from
-              active ML and applied-AI research; SKLD composes them for a
-              specific artifact (Claude Agent Skills) with a controlled
-              benchmark. Each source is mapped to what we took and what we
-              didn't.
+              SKLD didn't emerge from a vacuum. The techniques below come from active ML and
+              applied-AI research; SKLD composes them for a specific artifact (Claude Agent Skills)
+              with a controlled benchmark. Each source is mapped to what we took and what we didn't.
             </p>
           </div>
           <Link
@@ -210,8 +192,8 @@ export default function EvolutionDashboard() {
               LLMs as evolutionary operators
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Proved population-based evolution of natural-language prompts
-              outperforms hand-tuning. SKLD's evolution loop skeleton.
+              Proved population-based evolution of natural-language prompts outperforms hand-tuning.
+              SKLD's evolution loop skeleton.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               Guo et al. · arXiv:2309.08532 ↗
@@ -232,9 +214,8 @@ export default function EvolutionDashboard() {
               Reflective mutation + Pareto selection
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Trace-informed diagnosis before mutation, multi-objective
-              Pareto fronts. The two techniques that make evolution
-              intelligent instead of a random walk.
+              Trace-informed diagnosis before mutation, multi-objective Pareto fronts. The two
+              techniques that make evolution intelligent instead of a random walk.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               Agrawal et al. · github.com/gepa-ai ↗
@@ -255,9 +236,8 @@ export default function EvolutionDashboard() {
               Joint multi-component optimization
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Mutating one agent component (a prompt, a tool, a parameter)
-              often requires matching changes elsewhere. SKLD applies this
-              to the interdependent parts of a SKILL.md.
+              Mutating one agent component (a prompt, a tool, a parameter) often requires matching
+              changes elsewhere. SKLD applies this to the interdependent parts of a SKILL.md.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               TurinTech · arXiv:2512.09108 ↗
@@ -278,9 +258,8 @@ export default function EvolutionDashboard() {
               Persistent learning log + multi-parent crossover
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Accumulated lessons inject into every mutation prompt, so the
-              population never re-discovers failures it already explored.
-              SKLD promotes these to the public Bible.
+              Accumulated lessons inject into every mutation prompt, so the population never
+              re-discovers failures it already explored. SKLD promotes these to the public Bible.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               Imbue Research · imbue.com ↗
@@ -301,9 +280,9 @@ export default function EvolutionDashboard() {
               Trigger accuracy + A/B comparator
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              Skills have two reliability problems: activation (does it
-              trigger on the right queries?) and execution (does it produce
-              good output?). SKLD's L2 and L4 layers borrow this directly.
+              Skills have two reliability problems: activation (does it trigger on the right
+              queries?) and execution (does it produce good output?). SKLD's L2 and L4 layers borrow
+              this directly.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               Anthropic · claude.com/blog ↗
@@ -324,9 +303,8 @@ export default function EvolutionDashboard() {
               Trace-based behavioral verification
             </p>
             <p className="mt-2 text-sm text-on-surface-dim">
-              You can't assert <code>output == expected</code> for LLM
-              behavior. Execution traces answer <em>what Claude did</em>,
-              which is what SKLD's L3 layer scores against.
+              You can't assert <code>output == expected</code> for LLM behavior. Execution traces
+              answer <em>what Claude did</em>, which is what SKLD's L3 layer scores against.
             </p>
             <p className="mt-3 font-mono text-[0.625rem] text-on-surface-dim">
               MLflow · mlflow.org/blog ↗
@@ -352,9 +330,7 @@ export default function EvolutionDashboard() {
         <section className="mt-10">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-display text-2xl tracking-tight">
-                Recent Evolutions
-              </h2>
+              <h2 className="font-display text-2xl tracking-tight">Recent Evolutions</h2>
               <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
                 Completed Runs
               </p>

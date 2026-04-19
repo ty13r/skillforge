@@ -55,9 +55,7 @@ export default function RichVariantBreakdown({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="font-mono text-sm font-bold text-on-surface">
-                {v.dimension}
-              </p>
+              <p className="font-mono text-sm font-bold text-on-surface">{v.dimension}</p>
               {isFoundation && (
                 <span className="rounded bg-tertiary/10 px-1.5 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-tertiary">
                   Foundation
@@ -80,10 +78,7 @@ export default function RichVariantBreakdown({
             </div>
             {vevo && (
               <p className="mt-2 font-mono text-[0.6875rem] text-on-surface-dim">
-                Tested against:{" "}
-                <span className="text-on-surface">
-                  {vevo.challenge_id ?? "—"}
-                </span>
+                Tested against: <span className="text-on-surface">{vevo.challenge_id ?? "—"}</span>
                 {" · Status: "}
                 <span className="text-on-surface">{vevo.status}</span>
               </p>

@@ -263,7 +263,13 @@ export interface EvolutionEvent {
   created_new_nodes?: string[];
   dimension_count?: number;
   dimensions?: { name: string; tier: string; description: string; evaluation_focus: string }[];
-  reuse_recommendations?: { source_family_slug: string; dimension: string; variant_slug: string; fitness: number | null; reason: string }[];
+  reuse_recommendations?: {
+    source_family_slug: string;
+    dimension: string;
+    variant_slug: string;
+    fitness: number | null;
+    reason: string;
+  }[];
   // dimension_phase fields
   phase?: string;
   detail?: string;
@@ -290,13 +296,7 @@ export interface EvolutionEvent {
 
 // --- Derived view state ------------------------------------------------------
 
-export type CompetitorState =
-  | "queued"
-  | "writing"
-  | "testing"
-  | "iterating"
-  | "done"
-  | "error";
+export type CompetitorState = "queued" | "writing" | "testing" | "iterating" | "done" | "error";
 
 export interface CompetitorView {
   competitorId: number;

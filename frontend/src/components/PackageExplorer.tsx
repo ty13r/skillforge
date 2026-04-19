@@ -73,9 +73,7 @@ export default function PackageExplorer({
     //    assets/*) produced by post-assembly enrichment OR by a production
     //    engine that natively generates rich directory packages. Sorted so
     //    directories group together visually.
-    const composite = genomes.find(
-      (g) => g.meta_strategy === "engineer_composite",
-    );
+    const composite = genomes.find((g) => g.meta_strategy === "engineer_composite");
     const supportingFiles = composite?.supporting_files ?? {};
     const sortedPaths = Object.keys(supportingFiles).sort((a, b) => {
       // Group by top-level directory, then alphabetical within.
@@ -94,9 +92,7 @@ export default function PackageExplorer({
     }
 
     // 3. PACKAGE.md — metadata, synthesized.
-    const winnerGenomes = genomes.filter(
-      (g) => g.meta_strategy === "seed_pipeline_winner",
-    );
+    const winnerGenomes = genomes.filter((g) => g.meta_strategy === "seed_pipeline_winner");
     meta.push({
       path: "_meta/PACKAGE.md",
       content: buildPackageMd({
@@ -112,9 +108,7 @@ export default function PackageExplorer({
     });
 
     // 4. REPORT.md — integration report from learning_log
-    const reportEntry = learningLog.find((e) =>
-      e.startsWith("[integration_report] "),
-    );
+    const reportEntry = learningLog.find((e) => e.startsWith("[integration_report] "));
     if (reportEntry) {
       meta.push({
         path: "_meta/REPORT.md",
@@ -146,19 +140,9 @@ export default function PackageExplorer({
     }
 
     return { installable: inst, metadata: meta };
-  }, [
-    compositeSkillMd,
-    genomes,
-    challenges,
-    learningLog,
-    runId,
-    familyLabel,
-  ]);
+  }, [compositeSkillMd, genomes, challenges, learningLog, runId, familyLabel]);
 
-  const allFiles = useMemo(
-    () => [...installable, ...metadata],
-    [installable, metadata],
-  );
+  const allFiles = useMemo(() => [...installable, ...metadata], [installable, metadata]);
 
   // SKILL.md is the first installable file and the default selection.
   const [selectedPath, setSelectedPath] = useState<string>("SKILL.md");
@@ -198,9 +182,7 @@ export default function PackageExplorer({
         path: "test_fixtures/",
         label: "test_fixtures/ (sample input files)",
         kind: "optional",
-        present: Array.from(present).some((p) =>
-          p.startsWith("test_fixtures/"),
-        ),
+        present: Array.from(present).some((p) => p.startsWith("test_fixtures/")),
       },
       {
         path: "assets/",
@@ -214,9 +196,7 @@ export default function PackageExplorer({
   const isMarkdown = selectedFile?.language === "markdown";
   const bodyOnly = useMemo(() => {
     if (!selectedFile || !isMarkdown) return "";
-    const m = selectedFile.content.match(
-      /^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/,
-    );
+    const m = selectedFile.content.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/);
     return m?.[1] ?? selectedFile.content;
   }, [selectedFile, isMarkdown]);
 
@@ -231,13 +211,11 @@ export default function PackageExplorer({
             </p>
             <p className="mt-2 text-sm text-on-surface">
               <strong className="text-tertiary">
-                {installable.length} installable{" "}
-                {installable.length === 1 ? "file" : "files"}
+                {installable.length} installable {installable.length === 1 ? "file" : "files"}
               </strong>{" "}
-              ship in the downloadable zip and are loaded by Claude at
-              runtime. {metadata.length} additional metadata files are
-              preserved for auditing the evolution process but are NOT part
-              of the deployable package.
+              ship in the downloadable zip and are loaded by Claude at runtime. {metadata.length}{" "}
+              additional metadata files are preserved for auditing the evolution process but are NOT
+              part of the deployable package.
             </p>
           </div>
           <a
@@ -302,15 +280,10 @@ export default function PackageExplorer({
               <div className="max-h-[720px] overflow-y-auto">
                 {isMarkdown ? (
                   <div className="bible-prose">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {bodyOnly}
-                    </ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{bodyOnly}</ReactMarkdown>
                   </div>
                 ) : (
-                  <CodeViewer
-                    code={selectedFile.content}
-                    filePath={selectedFile.path}
-                  />
+                  <CodeViewer code={selectedFile.content} filePath={selectedFile.path} />
                 )}
               </div>
             </>
@@ -327,10 +300,7 @@ export default function PackageExplorer({
         </p>
         <p className="mt-2 text-sm text-on-surface-dim">
           What this package contains vs. the Skill Authoring Constraints in{" "}
-          <code className="rounded bg-surface-container-high px-1">
-            CLAUDE.md
-          </code>
-          .
+          <code className="rounded bg-surface-container-high px-1">CLAUDE.md</code>.
         </p>
         <div className="mt-4 space-y-2">
           {checklist.map((item) => (
@@ -345,15 +315,11 @@ export default function PackageExplorer({
               >
                 {item.present ? "✓" : "○"}
               </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-mono text-xs text-on-surface">
-                  {item.label}
-                </p>
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-xs text-on-surface">{item.label}</p>
                 <p className="mt-0.5 font-mono text-[0.625rem] text-on-surface-dim">
                   {item.kind} ·{" "}
-                  {item.present
-                    ? "present in this package"
-                    : "not generated by this run"}
+                  {item.present ? "present in this package" : "not generated by this run"}
                 </p>
               </div>
             </div>
@@ -425,9 +391,7 @@ function FileTreeSection({
     const grouped = new Map<string, VirtualFile[]>();
     const dirNames: string[] = [];
     for (const f of files) {
-      const rest = stripPrefix
-        ? f.path.replace(new RegExp(`^${stripPrefix}`), "")
-        : f.path;
+      const rest = stripPrefix ? f.path.replace(new RegExp(`^${stripPrefix}`), "") : f.path;
       if (!rest.includes("/")) {
         top.push(f);
       } else {
@@ -481,9 +445,7 @@ function FileTreeSection({
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left font-mono text-[0.6875rem] text-on-surface-dim transition-colors hover:text-on-surface"
               style={{ paddingLeft: `${8 + indent * 12}px` }}
             >
-              <span className="w-4 text-center text-[0.625rem]">
-                {isOpen ? "▾" : "▸"}
-              </span>
+              <span className="w-4 text-center text-[0.625rem]">{isOpen ? "▾" : "▸"}</span>
               <span className="text-[0.625rem]">📁</span>
               <span>
                 {dir}/ · {dirFiles.length}

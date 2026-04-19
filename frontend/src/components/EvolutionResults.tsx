@@ -15,11 +15,7 @@ interface EvolutionResultsProps {
   runDetail: RunDetail | null;
 }
 
-export default function EvolutionResults({
-  runId,
-  sockState,
-  runDetail,
-}: EvolutionResultsProps) {
+export default function EvolutionResults({ runId, sockState, runDetail }: EvolutionResultsProps) {
   const finalGen = sockState.generations.at(-1);
   const bestFitness = finalGen?.best_fitness ?? runDetail?.best_fitness ?? 0;
 
@@ -153,9 +149,7 @@ export default function EvolutionResults({
                 ↓ Export Agent SDK Config
               </a>
               <Link to={`/runs/${runId}/export`} className="block">
-                <PrimaryButton className="w-full">
-                  Open Export Preview →
-                </PrimaryButton>
+                <PrimaryButton className="w-full">Open Export Preview →</PrimaryButton>
               </Link>
               <Link
                 to={`/runs/${runId}/diff`}

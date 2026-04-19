@@ -17,9 +17,7 @@ interface AtomicLineageViewProps {
 function parseCompositeSections(compositeMd: string): Map<string, string> {
   const out = new Map<string, string>();
   // Strip frontmatter if present.
-  const fmStripped =
-    compositeMd.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/)?.[1] ??
-    compositeMd;
+  const fmStripped = compositeMd.match(/^---\s*\n[\s\S]*?\n---\s*\n([\s\S]*)$/)?.[1] ?? compositeMd;
   const lines = fmStripped.split("\n");
   let currentHeading: string | null = null;
   let currentBody: string[] = [];
@@ -27,10 +25,7 @@ function parseCompositeSections(compositeMd: string): Map<string, string> {
     const m = line.match(/^##\s+(.+)$/);
     if (m) {
       if (currentHeading) {
-        out.set(
-          normalizeHeading(currentHeading),
-          currentBody.join("\n").trim(),
-        );
+        out.set(normalizeHeading(currentHeading), currentBody.join("\n").trim());
       }
       currentHeading = m[1];
       currentBody = [];
@@ -93,11 +88,7 @@ function stripFrontmatter(md: string): string {
  * SKILL.md inline (no fake diff). A user can see exactly what each parent
  * contributed without being told lies about what "changed."
  */
-export default function AtomicLineageView({
-  nodes,
-  edges,
-  genomes,
-}: AtomicLineageViewProps) {
+export default function AtomicLineageView({ nodes, edges, genomes }: AtomicLineageViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Partition nodes into composite (generation 1, engineer_composite) and
@@ -118,9 +109,7 @@ export default function AtomicLineageView({
       return { composite: undefined, parents: [] as LineageNode[] };
     }
     const parentIds = new Set(
-      edges
-        .filter((e) => e.child_id === composite!.id)
-        .map((e) => e.parent_id),
+      edges.filter((e) => e.child_id === composite!.id).map((e) => e.parent_id),
     );
     const parentNodes = nodes.filter((n) => parentIds.has(n.id));
     return { composite, parents: parentNodes };
@@ -135,9 +124,7 @@ export default function AtomicLineageView({
   // side-by-side "what this parent contributed" view when a parent card is
   // clicked. The composite genome is the one with meta_strategy === 'engineer_composite'.
   const compositeSections = useMemo(() => {
-    const compositeGenome = genomes.find(
-      (g) => g.meta_strategy === "engineer_composite",
-    );
+    const compositeGenome = genomes.find((g) => g.meta_strategy === "engineer_composite");
     if (!compositeGenome) return new Map<string, string>();
     return parseCompositeSections(compositeGenome.skill_md_content);
   }, [genomes]);
@@ -195,27 +182,23 @@ export default function AtomicLineageView({
         </p>
         <div className="mt-3 space-y-2 text-sm text-on-surface-dim">
           <p>
-            Atomic composites are <strong className="text-on-surface">assembled</strong>{" "}
-            from many independent parents, not <em>mutated</em> from one.
-            Running a line-by-line diff between a parent (e.g. the
-            heex-and-verified-routes variant) and the composite would produce
-            nonsense — the parent's ~30 lines all appear "removed" and the
-            composite's ~300 lines all appear "added", because they're about
-            completely different topics. The traditional Lineage Diff Viewer
-            is reserved for <strong className="text-on-surface">molecular</strong>{" "}
-            mutation chains where parent → child is a real edit.
+            Atomic composites are <strong className="text-on-surface">assembled</strong> from many
+            independent parents, not <em>mutated</em> from one. Running a line-by-line diff between
+            a parent (e.g. the heex-and-verified-routes variant) and the composite would produce
+            nonsense — the parent's ~30 lines all appear "removed" and the composite's ~300 lines
+            all appear "added", because they're about completely different topics. The traditional
+            Lineage Diff Viewer is reserved for{" "}
+            <strong className="text-on-surface">molecular</strong> mutation chains where parent →
+            child is a real edit.
           </p>
           <p>
             Instead, this view shows a{" "}
-            <strong className="text-on-surface">contribution view</strong>:
-            click a parent card below to see its SKILL.md side-by-side with
-            the matching section in the composite. The composite's body is
-            organized by dimension — the heex-routes parent contributes the
-            <span className="font-mono">## HEEx + Verified Routes</span>{" "}
-            section, the streams parent contributes the{" "}
-            <span className="font-mono">## Streams + Collections</span>{" "}
-            section, and so on. You can read both sides and see exactly
-            what survived into the final skill.
+            <strong className="text-on-surface">contribution view</strong>: click a parent card
+            below to see its SKILL.md side-by-side with the matching section in the composite. The
+            composite's body is organized by dimension — the heex-routes parent contributes the
+            <span className="font-mono">## HEEx + Verified Routes</span> section, the streams parent
+            contributes the <span className="font-mono">## Streams + Collections</span> section, and
+            so on. You can read both sides and see exactly what survived into the final skill.
           </p>
         </div>
       </div>
@@ -231,9 +214,7 @@ export default function AtomicLineageView({
               {compositeGenome?.frontmatter &&
               typeof compositeGenome.frontmatter === "object" &&
               "name" in compositeGenome.frontmatter
-                ? String(
-                    (compositeGenome.frontmatter as { name: string }).name,
-                  )
+                ? String((compositeGenome.frontmatter as { name: string }).name)
                 : composite.id}
             </p>
           </div>
@@ -274,9 +255,7 @@ export default function AtomicLineageView({
                   }`}
                 >
                   <div className="flex w-full items-center justify-between gap-2">
-                    <span className="font-mono text-xs text-on-surface line-clamp-1">
-                      {dim}
-                    </span>
+                    <span className="line-clamp-1 font-mono text-xs text-on-surface">{dim}</span>
                     {isFoundation && (
                       <span className="rounded bg-tertiary/10 px-1.5 py-0.5 font-mono text-[0.5rem] uppercase tracking-wider text-tertiary">
                         FND
@@ -332,9 +311,8 @@ export default function AtomicLineageView({
                       </ReactMarkdown>
                     ) : (
                       <p className="text-sm text-on-surface-dim">
-                        No matching section found in the composite body for
-                        this parent's dimension. The parent may have
-                        contributed cross-cutting rules rather than a single
+                        No matching section found in the composite body for this parent's dimension.
+                        The parent may have contributed cross-cutting rules rather than a single
                         named section.
                       </p>
                     )}
@@ -343,10 +321,9 @@ export default function AtomicLineageView({
               </div>
               <p className="mt-4 text-xs text-on-surface-dim">
                 Top: the parent variant's full SKILL.md. Bottom: the matching{" "}
-                <code className="rounded bg-surface-container-high px-1">##</code>{" "}
-                section from the composite where this parent's guidance was
-                distilled. Sections may have been compressed, reworded, or
-                merged during Engineer assembly.
+                <code className="rounded bg-surface-container-high px-1">##</code> section from the
+                composite where this parent's guidance was distilled. Sections may have been
+                compressed, reworded, or merged during Engineer assembly.
               </p>
             </div>
           ) : (
@@ -355,14 +332,13 @@ export default function AtomicLineageView({
                 Contribution view
               </p>
               <p className="mt-2 text-sm text-on-surface-dim">
-                Select a parent from the list on the left to see its
-                SKILL.md alongside the matching section in the composite.
+                Select a parent from the list on the left to see its SKILL.md alongside the matching
+                section in the composite.
               </p>
             </div>
           )}
         </div>
       </div>
-
     </div>
   );
 }

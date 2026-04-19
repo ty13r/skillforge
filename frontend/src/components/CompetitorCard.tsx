@@ -31,11 +31,7 @@ const STATE_VARIANT: Record<
   error: "error",
 };
 
-const ACTIVE_STATES: ReadonlySet<CompetitorState> = new Set([
-  "writing",
-  "testing",
-  "iterating",
-]);
+const ACTIVE_STATES: ReadonlySet<CompetitorState> = new Set(["writing", "testing", "iterating"]);
 
 export default function CompetitorCard({
   competitorId,
@@ -49,7 +45,7 @@ export default function CompetitorCard({
       className={
         "flex items-start gap-4 rounded-xl border px-5 py-4 transition-all " +
         (isActive
-          ? "border-primary/40 bg-surface-container-lowest animate-breathe-border"
+          ? "animate-breathe-border border-primary/40 bg-surface-container-lowest"
           : state === "done"
             ? "border-tertiary/30 bg-surface-container-lowest"
             : "border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low")
@@ -58,7 +54,7 @@ export default function CompetitorCard({
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-container-high">
         <StatusGlow variant={STATE_VARIANT[state]} pulse={isActive} />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-3">
           <p className="truncate text-base font-medium text-on-surface">
             Competitor {String.fromCharCode(65 + competitorId)}
@@ -76,9 +72,7 @@ export default function CompetitorCard({
           skill {skillId.slice(0, 8)}
         </p>
         {challengeLabel && (
-          <p className="mt-1.5 text-xs leading-relaxed text-on-surface">
-            → {challengeLabel}
-          </p>
+          <p className="mt-1.5 text-xs leading-relaxed text-on-surface">→ {challengeLabel}</p>
         )}
       </div>
     </div>

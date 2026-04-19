@@ -50,10 +50,9 @@ export default function SkldBench() {
           {overall.challenges} Elixir Challenges
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-on-surface-dim">
-          A controlled evaluation benchmark for measuring whether Claude Agent
-          Skills actually improve code generation. Each challenge is scored
-          through multiple layers: string matching, compilation, AST analysis,
-          and behavioral testing.
+          A controlled evaluation benchmark for measuring whether Claude Agent Skills actually
+          improve code generation. Each challenge is scored through multiple layers: string
+          matching, compilation, AST analysis, and behavioral testing.
         </p>
       </div>
 
@@ -75,15 +74,11 @@ export default function SkldBench() {
               key={item.label}
               className="rounded-lg bg-surface-container-lowest p-3 text-center"
             >
-              <p className="font-display text-2xl text-tertiary">
-                {item.weight}
-              </p>
+              <p className="font-display text-2xl text-tertiary">{item.weight}</p>
               <p className="mt-1 font-mono text-[0.625rem] uppercase tracking-wider text-on-surface">
                 {item.label}
               </p>
-              <p className="text-[0.5625rem] text-on-surface-dim">
-                {item.desc}
-              </p>
+              <p className="text-[0.5625rem] text-on-surface-dim">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -220,30 +215,23 @@ export default function SkldBench() {
                       : "—"}
                   </td>
                   <td className="py-3 text-right font-mono text-sm text-on-surface">
-                    {fam.compile_pct != null
-                      ? `${(fam.compile_pct * 100).toFixed(0)}%`
-                      : "—"}
+                    {fam.compile_pct != null ? `${(fam.compile_pct * 100).toFixed(0)}%` : "—"}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="font-mono text-sm font-bold text-on-surface">
-                <td className="pt-3 pr-4">Overall</td>
-                <td className="pt-3 pr-4 text-right">
-                  {overall.challenges}
-                </td>
-                <td className="pt-3 pr-4 text-right">
-                  {overall.raw_composite?.toFixed(3) ?? "—"}
-                </td>
-                <td className="pt-3 pr-4 text-right" colSpan={3}></td>
+                <td className="pr-4 pt-3">Overall</td>
+                <td className="pr-4 pt-3 text-right">{overall.challenges}</td>
+                <td className="pr-4 pt-3 text-right">{overall.raw_composite?.toFixed(3) ?? "—"}</td>
+                <td className="pr-4 pt-3 text-right" colSpan={3}></td>
               </tr>
             </tfoot>
           </table>
         </div>
         <p className="mt-4 text-[0.625rem] text-on-surface-dim">
-          Click a family name to see per-challenge detail, tier breakdowns, and
-          score distributions.
+          Click a family name to see per-challenge detail, tier breakdowns, and score distributions.
         </p>
       </div>
     </div>
