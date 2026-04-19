@@ -101,7 +101,7 @@ def _sniff_skill_md(zf: zipfile.ZipFile) -> tuple[str, dict[str, str]]:
             continue  # silently skip disallowed extensions
         try:
             content = zf.read(info.filename).decode("utf-8", errors="replace")
-        except Exception:
+        except (OSError, zipfile.BadZipFile, RuntimeError):
             continue
         if rel == "SKILL.md":
             skill_md_body = content
@@ -170,15 +170,16 @@ async def upload_skill(file: UploadFile = File(...)) -> dict:  # noqa: B008  (Fa
     # Extract frontmatter for the preview response
     frontmatter_preview: dict = {}
     if skill_md.startswith("---"):
-        try:
-            import yaml
+        import yaml
 
+        try:
             _, fm_block, _ = skill_md.split("---", 2)
             parsed = yaml.safe_load(fm_block) or {}
-            if isinstance(parsed, dict):
-                frontmatter_preview = parsed
-        except Exception:
-            pass
+        except (ValueError, yaml.YAMLError):
+            # Malformed frontmatter — preview stays empty, upload still succeeds.
+            parsed = None
+        if isinstance(parsed, dict):
+            frontmatter_preview = parsed
 
     _UPLOADS[upload_id] = _UploadRecord(skill=genome, filename=filename)
 

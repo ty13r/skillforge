@@ -55,8 +55,8 @@ async def _persist_event(run_id: str, event_type: str, payload: dict[str, Any]) 
                 (run_id, event_type, _json.dumps(payload, default=str), payload.get("timestamp", "")),
             )
             await conn.commit()
-    except Exception:
-        pass  # best-effort, never block the engine
+    except Exception:  # noqa: BLE001 — event persistence is best-effort; must never block the engine
+        logger.debug("event persistence failed (swallowed)", exc_info=True)
 
 
 async def emit(run_id: str, event: str, **kwargs: Any) -> None:

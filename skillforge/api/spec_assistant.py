@@ -379,8 +379,8 @@ async def generate_skill(req: GenerateSkillRequest) -> GenerateSkillResponse:
                     traits=[],
                 )
                 logger.info("auto-saved generated package as candidate seed: %s", name)
-            except Exception as e:
-                logger.warning("failed to auto-save candidate seed: %s", e)
+            except Exception:  # noqa: BLE001 — auto-save is a bonus; never fail the response over it
+                logger.exception("failed to auto-save candidate seed")
 
             return GenerateSkillResponse(
                 name=name,

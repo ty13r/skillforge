@@ -88,14 +88,14 @@ async def lifespan(app: FastAPI):
     await load_seeds()
     try:
         await load_mock_runs()
-    except Exception as exc:  # pragma: no cover - fail-soft on seed run load
-        logger.exception("Seed run loader failed: %s", exc)
+    except Exception:  # noqa: BLE001 — boot-time: never block startup on seed load
+        logger.exception("Seed run loader failed")
     try:
         diag = await load_benchmark_results()
         if diag.get("loaded"):
             logger.info("Benchmark seed loaded: %d rows", diag["loaded"])
-    except Exception as exc:  # pragma: no cover - fail-soft on benchmark seed load
-        logger.exception("Benchmark seed loader failed: %s", exc)
+    except Exception:  # noqa: BLE001 — boot-time: never block startup on seed load
+        logger.exception("Benchmark seed loader failed")
     try:
         taxonomy_diag = await load_taxonomy()
         logger.info(
@@ -104,8 +104,8 @@ async def lifespan(app: FastAPI):
             taxonomy_diag.get("families_created", 0),
             taxonomy_diag.get("families_reused", 0),
         )
-    except Exception as exc:  # pragma: no cover - boot-time resiliency
-        logger.exception("Taxonomy bootstrap failed: %s", exc)
+    except Exception:  # noqa: BLE001 — boot-time: never block startup on bootstrap
+        logger.exception("Taxonomy bootstrap failed")
     zombie_count = await mark_zombie_runs()
     if zombie_count:
         logger.warning("Marked %d zombie run(s) as failed on startup", zombie_count)
@@ -139,11 +139,11 @@ app.include_router(taxonomy_router)
 @app.get("/api/health")
 async def health() -> dict:
     """Backend health check with active run count."""
-    from skillforge.api.routes import _active_runs
+    from skillforge.engine.run_registry import registry
     return {
         "status": "ok",
         "service": "skillforge",
-        "active_runs": len(_active_runs),
+        "active_runs": registry.active_count(),
     }
 
 
@@ -395,8 +395,8 @@ def _mount_frontend_spa() -> None:
             elif base == "bench":
                 content_lines.append("<h1>SKLD-bench: 867 Elixir Challenges</h1>")
                 content_lines.append("<p>Controlled evaluation benchmark across 7 Elixir skill families with 6-layer composite scoring (L0 string match 10%, compilation 15%, AST quality 15%, behavioral tests 40%, template quality 10%, brevity 10%). Families: phoenix-liveview, ecto-query-writer, ecto-sandbox-test, ecto-schema-changeset, oban-worker, pattern-match-refactor, security-linter.</p>")
-        except Exception:
-            pass
+        except Exception:  # noqa: BLE001 — SEO augmentation must never break page render
+            logger.debug("meta_injection: failed to enrich SEO tags", exc_info=True)
 
         if not content_lines:
             return raw_html

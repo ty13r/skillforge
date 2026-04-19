@@ -63,7 +63,9 @@ async def list_journal_entries() -> list[dict]:
     for path in sorted(JOURNAL_DIR.glob("*.md"), reverse=True):
         try:
             entries.append(_parse_entry(path))
-        except Exception:
+        except (OSError, UnicodeDecodeError, ValueError):
+            # Skip malformed entries — the journal index should never
+            # crash because a single file is unreadable.
             continue
     return entries
 

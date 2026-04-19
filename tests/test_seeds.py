@@ -28,7 +28,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from skillforge.db import seed_loader
-from skillforge.engine.evolution import PENDING_PARENTS
+from skillforge.engine.run_registry import registry as _run_registry
 from skillforge.main import app
 from skillforge.models import EvolutionRun, Generation, SkillGenome
 
@@ -44,10 +44,10 @@ def client() -> TestClient:
 
 @pytest.fixture(autouse=True)
 def _clear_pending_parents():
-    """PENDING_PARENTS is module-level state — wipe between tests."""
-    PENDING_PARENTS.clear()
+    """RunRegistry is process-level state — wipe between tests."""
+    _run_registry._pending_parents.clear()
     yield
-    PENDING_PARENTS.clear()
+    _run_registry._pending_parents.clear()
 
 
 def _make_seed_skill(skill_id: str = "seed-foo", description: str = "Use when foo. NOT for bar.") -> SkillGenome:
@@ -431,8 +431,11 @@ def test_evolve_from_parent_registry_happy_path(client):
     assert "run_id" in payload
     assert payload["ws_url"] == f"/ws/evolve/{payload['run_id']}"
     # Parent was stashed for the engine to pick up
-    assert payload["run_id"] in PENDING_PARENTS
-    assert PENDING_PARENTS[payload["run_id"]].id == "seed-registry-1"
+    parent = _run_registry.take_parent(payload["run_id"])
+    assert parent is not None
+    assert parent.id == "seed-registry-1"
+    # Restore so the autouse fixture's post-yield clear() stays idempotent
+    _run_registry.stash_parent(payload["run_id"], parent)
 
 
 # ---------------------------------------------------------------------------
