@@ -1,5 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+
+import {
+  useBenchFamily,
+  useFamilyVariants,
+  useRunDimensions,
+  useRunLineage,
+  useRunReport,
+  useRunSkillMd,
+} from "@/api/hooks/runs";
+import type {
+  BenchFamilyDetail,
+  CompetitionScoresPayload,
+  DimensionStatus,
+  RunDetail,
+} from "@/types";
 
 import AtomicLineageView from "./AtomicLineageView";
 import ChallengeGallery from "./ChallengeGallery";
@@ -13,17 +28,6 @@ import PerDimensionFitnessBar from "./PerDimensionFitnessBar";
 import PipelineOverview from "./PipelineOverview";
 import PrimaryButton from "./PrimaryButton";
 import RunNarrative from "./RunNarrative";
-import type {
-  BenchChallenge,
-  BenchFamilyDetail,
-  CompetitionScoresPayload,
-  DimensionStatus,
-  LineageEdge,
-  LineageNode,
-  RunDetail,
-  RunReport,
-  Variant,
-} from "../types";
 
 interface AtomicRunDetailProps {
   runId: string;
@@ -73,113 +77,40 @@ export default function AtomicRunDetail({
   runDetail,
   dimensions: dimensionsProp,
 }: AtomicRunDetailProps) {
-  const [report, setReport] = useState<RunReport | null>(null);
-  const [reportError, setReportError] = useState<string | null>(null);
-  const [variants, setVariants] = useState<Variant[] | null>(null);
-  const [variantsError, setVariantsError] = useState<string | null>(null);
-  const [lineage, setLineage] = useState<{
-    nodes: LineageNode[];
-    edges: LineageEdge[];
-  } | null>(null);
-  const [skillMd, setSkillMd] = useState<string | null>(null);
-  const [skillMdError, setSkillMdError] = useState<string | null>(null);
-  const [benchChallenges, setBenchChallenges] = useState<BenchChallenge[]>([]);
-  const [benchDetail, setBenchDetail] = useState<BenchFamilyDetail | null>(null);
-  const [dimensionsFetched, setDimensionsFetched] = useState<DimensionStatus[]>([]);
   const [activeTab, setActiveTab] = useState<TabId>("dimensions");
 
-  const dims = dimensionsProp && dimensionsProp.length > 0 ? dimensionsProp : dimensionsFetched;
-
-  // Fetch dimensions if not provided via props
+  // All data-fetching runs through typed React Query hooks. No useEffects,
+  // no manual loading/error state, no duplicate requests across mounts.
   const hasPropDims = dimensionsProp != null && dimensionsProp.length > 0;
-  useEffect(() => {
-    if (hasPropDims) return;
-    fetch(`/api/runs/${runId}/dimensions`)
-      .then((r) => (r.ok ? (r.json() as Promise<DimensionStatus[]>) : []))
-      .then(setDimensionsFetched)
-      .catch(() => {});
-  }, [runId, hasPropDims]);
+  const { data: fetchedDims = [] } = useRunDimensions(hasPropDims ? null : runId);
+  const dims: DimensionStatus[] = hasPropDims ? dimensionsProp! : fetchedDims;
 
-  // Fetch the report (includes skill_genomes array for atomic runs)
-  useEffect(() => {
-    if (!runId) return;
-    fetch(`/api/runs/${runId}/report`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<RunReport>;
-      })
-      .then(setReport)
-      .catch((err) => setReportError(String(err)));
-  }, [runId]);
+  const { data: report = null, error: reportQueryError } = useRunReport(runId);
+  const reportError = reportQueryError ? String(reportQueryError) : null;
 
-  // Fetch the variants list
-  useEffect(() => {
-    const familyId = runDetail.family_id;
-    if (!familyId) return;
-    fetch(`/api/families/${familyId}/variants`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<Variant[]>;
-      })
-      .then(setVariants)
-      .catch((err) => setVariantsError(String(err)));
-  }, [runDetail.family_id]);
+  const { data: variants = null, error: variantsQueryError } = useFamilyVariants(
+    runDetail.family_id,
+  );
+  const variantsError = variantsQueryError ? String(variantsQueryError) : null;
 
-  // Fetch the lineage graph
-  useEffect(() => {
-    if (!runId) return;
-    fetch(`/api/runs/${runId}/lineage`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<{
-          nodes: LineageNode[];
-          edges: LineageEdge[];
-        }>;
-      })
-      .then(setLineage)
-      .catch(() => setLineage({ nodes: [], edges: [] }));
-  }, [runId]);
+  const { data: lineageData } = useRunLineage(runId);
+  const lineage = lineageData ?? { nodes: [], edges: [] };
 
-  // Fetch the composite SKILL.md body
-  useEffect(() => {
-    if (!runId) return;
-    fetch(`/api/runs/${runId}/export?format=skill_md`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
-      })
-      .then(setSkillMd)
-      .catch((err) => setSkillMdError(String(err)));
-  }, [runId]);
+  const { data: skillMd = null, error: skillMdQueryError } = useRunSkillMd(runId);
+  const skillMdError = skillMdQueryError ? String(skillMdQueryError) : null;
 
-  // Fetch raw baseline scores from the bench API for competition display
-  useEffect(() => {
-    const slug = report?.taxonomy?.family_slug;
-    if (!slug) return;
-    fetch(`/api/bench/${slug}`)
-      .then((r) => {
-        if (!r.ok) return null;
-        return r.json() as Promise<BenchFamilyDetail>;
-      })
-      .then((data) => {
-        if (data) {
-          setBenchDetail(data);
-          if (data.challenges) setBenchChallenges(data.challenges);
-        }
-      })
-      .catch(() => {});
-  }, [report?.taxonomy?.family_slug]);
+  const { data: benchDetail = null } = useBenchFamily(report?.taxonomy?.family_slug);
 
   // Build a lookup map: challenge_id → raw composite score
   const rawBaselineMap = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const c of benchChallenges) {
+    for (const c of benchDetail?.challenges ?? []) {
       if (c.raw?.composite != null) {
         map[c.challenge_id] = c.raw.composite;
       }
     }
     return map;
-  }, [benchChallenges]);
+  }, [benchDetail?.challenges]);
 
   // Hard-coded per the seed run's fitness_summary. The pre-existing seed
   // variant beat the Spawner alternative on these 3 dimensions out of 12.
