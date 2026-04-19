@@ -533,8 +533,8 @@ async def run_variant_evolution(run: EvolutionRun) -> EvolutionRun:
             )
             logger.info("run=%s managed environment ready: %s", run.id[:8], env_id)
             await emit(run.id, "managed_environment_ready", environment_id=env_id)
-        except Exception as exc:  # noqa: BLE001
-            logger.error("run=%s managed environment creation failed: %s", run.id[:8], exc)
+        except Exception as exc:  # noqa: BLE001 — managed-env boundary: any SDK failure must be captured
+            logger.exception("run=%s managed environment creation failed", run.id[:8])
             run.status = "failed"
             run.failure_reason = f"managed environment creation failed: {exc}"
             await save_run(run)
@@ -572,12 +572,11 @@ async def run_variant_evolution(run: EvolutionRun) -> EvolutionRun:
                     foundation_winner=foundation_winner,
                     env_id=env_id,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001 — one bad dimension must not crash the whole atomic run
                 logger.exception(
-                    "run=%s dimension %s mini-evolution failed: %s",
+                    "run=%s dimension %s mini-evolution failed",
                     run.id[:8],
                     vevo.dimension,
-                    exc,
                 )
                 vevo.status = "failed"
                 await save_variant_evolution(vevo)

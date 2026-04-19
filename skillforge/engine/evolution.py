@@ -36,14 +36,11 @@ from skillforge.config import COMPETITOR_BACKEND
 from skillforge.db.database import init_db
 from skillforge.db.queries import save_run
 from skillforge.engine.events import emit
+from skillforge.engine.run_registry import registry
 from skillforge.engine.sandbox import cleanup_sandbox, create_sandbox
-from skillforge.models import EvolutionRun, Generation, SkillGenome
+from skillforge.models import EvolutionRun, Generation
 
 logger = logging.getLogger("skillforge.engine")
-
-# Module-level registry: run_id -> parent SkillGenome when the run was started
-# via fork-and-evolve (seed or upload). Looked up at gen 0 spawn time.
-PENDING_PARENTS: dict[str, SkillGenome] = {}
 
 # --- Budget tracking ---------------------------------------------------------
 # MVP: estimate cost from trace length. Each SDK turn is ~$0.02 for Sonnet 4.6
@@ -231,8 +228,8 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
         try:
             run = await run_variant_evolution(run)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("run=%s atomic evolution failed: %s", run.id[:8], exc)
+        except Exception as exc:  # noqa: BLE001 — top-level run boundary must catch all
+            logger.exception("run=%s atomic evolution failed", run.id[:8])
             run.status = "failed"
             run.failure_reason = f"atomic evolution failed: {exc}"
             run.completed_at = datetime.now(UTC)
@@ -288,8 +285,8 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                 "managed_environment_ready",
                 environment_id=env_id,
             )
-        except Exception as exc:  # noqa: BLE001
-            logger.error("run=%s managed environment creation failed: %s", run.id[:8], exc)
+        except Exception as exc:  # noqa: BLE001 — managed-env boundary: any SDK failure must be captured
+            logger.exception("run=%s managed environment creation failed", run.id[:8])
             run.status = "failed"
             run.failure_reason = f"managed environment creation failed: {exc}"
             await emit(run.id, "run_failed", reason="env_create_failed")
@@ -319,7 +316,7 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
 
             # --- Spawn or breed ---------------------------------------
             if gen_num == 0:
-                seed_parent = PENDING_PARENTS.pop(run.id, None)
+                seed_parent = registry.take_parent(run.id)
                 if seed_parent is not None:
                     skills = await spawn_from_parent(seed_parent, run.population_size)
                 else:
@@ -478,8 +475,8 @@ async def run_evolution(run: EvolutionRun) -> EvolutionRun:
                     source_skill_id=best.id,
                 )
                 logger.info("run=%s auto-saved best skill as candidate seed", run.id[:8])
-            except Exception as e:
-                logger.warning("run=%s failed to save candidate seed: %s", run.id[:8], e)
+            except Exception:  # noqa: BLE001 — auto-save is a bonus; never fail the run over it
+                logger.exception("run=%s failed to save candidate seed", run.id[:8])
 
         await emit(
             run.id,
@@ -558,10 +555,8 @@ async def _persist(run: EvolutionRun) -> None:
     """
     try:
         await save_run(run)
-    except Exception as exc:  # noqa: BLE001
-        # DB persistence failures are non-fatal during a run — the Progress
-        # Tracker event stream is the primary truth; DB is a durable backup.
-        logger.error("run=%s DB persistence failed: %s", run.id[:8], exc)
+    except Exception:  # noqa: BLE001 — DB is a durable backup; event stream is the primary truth
+        logger.exception("run=%s DB persistence failed", run.id[:8])
 
 
 def dump_run_json(run: EvolutionRun) -> Path | None:
@@ -582,7 +577,7 @@ def dump_run_json(run: EvolutionRun) -> Path | None:
         RUN_DUMPS_DIR.mkdir(parents=True, exist_ok=True)
         path = RUN_DUMPS_DIR / f"{run.id}.json"
         path.write_text(json.dumps(run.to_dict(), indent=2, default=str))
-        return path
-    except Exception as exc:  # noqa: BLE001
-        logger.error("run=%s JSON dump failed: %s", run.id[:8], exc)
+    except (OSError, TypeError):
+        logger.exception("run=%s JSON dump failed", run.id[:8])
         return None
+    return path

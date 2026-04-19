@@ -24,16 +24,14 @@ from skillforge.api.uploads import clear_upload, get_upload
 from skillforge.config import invite_code_valid
 from skillforge.db.database import init_db
 from skillforge.db.queries import get_lineage, get_run, list_runs, save_run
-from skillforge.engine.evolution import PENDING_PARENTS, run_evolution
+from skillforge.engine.evolution import run_evolution
 from skillforge.engine.export import export_agent_sdk_config, export_skill_md, export_skill_zip
+from skillforge.engine.run_registry import registry
 from skillforge.models import EvolutionRun, SkillGenome
 
 logger = logging.getLogger("skillforge.api")
 
 router = APIRouter(prefix="/api")
-
-# Module-level registry: run_id -> background task
-_active_runs: dict[str, asyncio.Task] = {}
 
 
 async def _classify_run_via_taxonomist(
@@ -193,13 +191,13 @@ async def start_evolution(req: EvolveRequest) -> EvolveResponse:
 
     # Spawn background task — store reference so it isn't GC'd
     task = asyncio.create_task(run_evolution(run))
-    _active_runs[run.id] = task
+    registry.set_task(run.id, task)
     logger.info("run=%s started: spec=%s pop=%d gens=%d",
                 run.id[:8], run.specialization[:60], run.population_size, run.num_generations)
 
     # Cleanup callback removes the task from the registry when it finishes
     def _cleanup(t: asyncio.Task) -> None:
-        _active_runs.pop(run.id, None)
+        registry.clear_task(run.id)
         exc = t.exception() if not t.cancelled() else None
         if exc:
             logger.error("run=%s task failed: %s", run.id[:8], exc)
@@ -239,9 +237,10 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
       - ``upload``: ``parent_id`` is an upload_id from POST /api/uploads/skill.
         Resolved via the in-memory upload cache.
 
-    The parent is stashed in the ``PENDING_PARENTS`` registry keyed by the new
-    run's id. The evolution engine picks it up at gen 0 spawn time and routes
-    through ``spawner.spawn_from_parent()`` instead of ``spawn_gen0()``.
+    The parent is stashed in the ``RunRegistry`` (see ``engine/run_registry.py``)
+    keyed by the new run's id. The evolution engine picks it up at gen 0 spawn
+    time and routes through ``spawner.spawn_from_parent()`` instead of
+    ``spawn_gen0()``.
     """
     if not invite_code_valid(req.invite_code):
         raise HTTPException(
@@ -316,17 +315,17 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
     await save_run(run)
 
     # Stash the parent so the engine's gen-0 spawn picks it up
-    PENDING_PARENTS[run.id] = parent
+    registry.stash_parent(run.id, parent)
 
     # Clear the upload cache so we don't leak memory
     if req.parent_source == "upload":
         clear_upload(req.parent_id)
 
     task = asyncio.create_task(run_evolution(run))
-    _active_runs[run.id] = task
+    registry.set_task(run.id, task)
 
     def _cleanup(t: asyncio.Task) -> None:
-        _active_runs.pop(run.id, None)
+        registry.clear_task(run.id)
 
     task.add_done_callback(_cleanup)
 
@@ -337,12 +336,12 @@ async def start_evolution_from_parent(req: EvolveFromParentRequest) -> EvolveRes
 async def cancel_run(run_id: str) -> dict:
     """Cancel an in-progress evolution run.
 
-    Finds the backing asyncio task in ``_active_runs``, cancels it, and
-    marks the run status as ``cancelled`` in the DB. The engine catches
+    Finds the backing asyncio task in the ``RunRegistry``, cancels it,
+    and marks the run status as ``cancelled`` in the DB. The engine catches
     ``CancelledError`` in its main loop, emits a ``run_cancelled`` event,
     and persists the partial state before exiting.
     """
-    task = _active_runs.get(run_id)
+    task = registry.get_task(run_id)
     if task is None or task.done():
         # Maybe already done, maybe never existed — either way nothing to cancel
         raise HTTPException(

@@ -59,8 +59,8 @@ async def load_benchmark_results() -> dict:
 
         try:
             records = json.loads(SEED_PATH.read_text(encoding="utf-8"))
-        except Exception as exc:  # noqa: BLE001 - never block boot on a bad seed
-            logger.exception("Failed to parse benchmark seed: %s", exc)
+        except (OSError, json.JSONDecodeError):
+            logger.exception("Failed to parse benchmark seed")
             return {"loaded": 0, "skipped_reason": "parse-error"}
 
         if not isinstance(records, list) or not records:

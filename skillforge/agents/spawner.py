@@ -15,14 +15,14 @@ for agentic loops with tools and hung the overnight live test.
 
 from __future__ import annotations
 
-import json
-import re
 import uuid
 
 from anthropic import AsyncAnthropic
 
+from skillforge.agents._json import extract_json_array
 from skillforge.config import ANTHROPIC_API_KEY, BIBLE_DIR, GOLDEN_TEMPLATE_DIR, model_for
 from skillforge.engine.sandbox import validate_skill_structure
+from skillforge.errors import ParseError
 from skillforge.models import SkillGenome
 
 # JSON schema for spawner responses
@@ -67,98 +67,6 @@ def _read_bible_patterns() -> str:
             continue
 
     return "\n\n---\n\n".join(parts)
-
-
-def _extract_json_array(text: str) -> list[dict]:
-    """Extract a JSON array from text.
-
-    Handles three cases robustly:
-      1. Whole response is a raw JSON array
-      2. Response is wrapped in ``` json ... ``` fences (greedy match of
-         the outermost fence — SKILL.md content can contain nested fences
-         that a non-greedy match would trip over)
-      3. JSON array embedded in prose, extracted via bracket-depth scanning
-         that respects string literal state (handles `[` and `]` inside
-         string values like Python list comp examples)
-
-    Raises:
-        ValueError: if no valid JSON array can be extracted.
-    """
-    candidate = text.strip()
-
-    # 1. Try the whole text as JSON (ideal case)
-    if candidate.startswith("[") and candidate.endswith("]"):
-        try:
-            result = json.loads(candidate)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            pass
-
-    # 2. Strip outer ```json ... ``` fence greedily (matches LAST ```).
-    #    Non-greedy would stop at the first nested ``` inside string values.
-    fence_match = re.search(r"```(?:json)?\s*\n?(.*)\n?```", text, re.DOTALL)
-    if fence_match:
-        fenced = fence_match.group(1).strip()
-        try:
-            result = json.loads(fenced)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            # Fall through to bracket scanning on the fenced content
-            text_to_scan = fenced
-        else:
-            text_to_scan = fenced
-    else:
-        text_to_scan = text
-
-    # 3. Bracket-depth scan that respects JSON string literal state
-    array = _scan_outermost_array(text_to_scan)
-    if array is not None:
-        try:
-            result = json.loads(array)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            pass
-
-    raise ValueError("No valid JSON array found in response text")
-
-
-def _scan_outermost_array(text: str) -> str | None:
-    """Find the outermost JSON array substring via bracket-depth scanning.
-
-    Properly tracks string literal state so brackets inside string values
-    don't throw off the depth counter. Returns the substring (including the
-    outer ``[`` and ``]``), or ``None`` if no balanced array is found.
-    """
-    start = text.find("[")
-    if start == -1:
-        return None
-
-    depth = 0
-    in_string = False
-    escape = False
-    for i in range(start, len(text)):
-        ch = text[i]
-        if escape:
-            escape = False
-            continue
-        if ch == "\\":
-            escape = True
-            continue
-        if ch == '"':
-            in_string = not in_string
-            continue
-        if in_string:
-            continue
-        if ch == "[":
-            depth += 1
-        elif ch == "]":
-            depth -= 1
-            if depth == 0:
-                return text[start : i + 1]
-    return None
 
 
 def _extract_response_text(response) -> str:
@@ -388,11 +296,11 @@ async def spawn_gen0(specialization: str, pop_size: int) -> list[SkillGenome]:
     _save_debug_response("spawn_gen0_attempt1", text)
 
     try:
-        raw = _extract_json_array(text)
+        raw = extract_json_array(text)
         genomes = _parse_genomes(raw, generation=0)
         valid_genomes, invalid = _validate_genomes(genomes)
         first_attempt_failed = False
-    except ValueError:
+    except (ValueError, ParseError):
         # JSON parse failure — treat as if everything was invalid so the
         # retry path runs.
         genomes = []
@@ -421,8 +329,8 @@ async def spawn_gen0(specialization: str, pop_size: int) -> list[SkillGenome]:
     _save_debug_response("spawn_gen0_attempt2", text)
 
     try:
-        raw2 = _extract_json_array(text)
-    except ValueError as exc:
+        raw2 = extract_json_array(text)
+    except (ValueError, ParseError) as exc:
         raise ValueError(
             f"spawner failed to produce valid JSON on retry: {exc}. "
             f"See /tmp/sf-spawn_gen0_attempt2.txt for the raw response."
@@ -473,8 +381,8 @@ async def breed_next_gen(
     text = await _generate(system_prompt)
 
     try:
-        raw = _extract_json_array(text)
-    except ValueError as exc:
+        raw = extract_json_array(text)
+    except (ValueError, ParseError) as exc:
         raise ValueError(
             f"spawner breed_next_gen failed to produce valid JSON: {exc}"
         ) from exc
@@ -506,8 +414,8 @@ async def breed_next_gen(
     text = await _generate(repair_prompt)
 
     try:
-        raw2 = _extract_json_array(text)
-    except ValueError as exc:
+        raw2 = extract_json_array(text)
+    except (ValueError, ParseError) as exc:
         raise ValueError(
             f"spawner breed_next_gen failed to produce valid JSON on retry: {exc}"
         ) from exc
@@ -627,8 +535,8 @@ Do NOT modify the parent. Do NOT return fewer or more than {num_mutants} entries
     text = await _generate(system_prompt)
 
     try:
-        raw = _extract_json_array(text)
-    except ValueError:
+        raw = extract_json_array(text)
+    except (ValueError, ParseError):
         # If the LLM refused or produced garbage, fall back to elite-only
         # (graceful degradation — evolution can still proceed with just the parent)
         return [elite]
@@ -773,8 +681,8 @@ async def spawn_variant_gen0(
     _save_debug_response(f"spawn_variant_gen0_{dimension.get('name', 'unknown')}", text)
 
     try:
-        raw = _extract_json_array(text)
-    except ValueError:
+        raw = extract_json_array(text)
+    except (ValueError, ParseError):
         # One retry with a stricter formatting reminder
         retry_prompt = (
             system_prompt
@@ -783,7 +691,7 @@ async def spawn_variant_gen0(
             "markdown fences."
         )
         text = await _generate(retry_prompt)
-        raw = _extract_json_array(text)
+        raw = extract_json_array(text)
 
     genomes = _parse_genomes(raw, generation=0)
     valid_genomes, invalid = _validate_genomes(genomes)

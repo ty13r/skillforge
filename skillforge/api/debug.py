@@ -467,17 +467,14 @@ async def debug_status(token: str = "") -> dict:
     if token != ADMIN_TOKEN:
         raise HTTPException(status_code=403, detail="invalid admin token")
 
-    from skillforge.api.routes import _active_runs
     from skillforge.db.queries import list_leaked_skills, list_runs
+    from skillforge.engine.run_registry import registry
 
     # Active runs
-    active = []
-    for run_id, task in _active_runs.items():
-        active.append({
-            "run_id": run_id,
-            "done": task.done(),
-            "cancelled": task.cancelled(),
-        })
+    active = [
+        {"run_id": run_id, "done": task.done(), "cancelled": task.cancelled()}
+        for run_id, task in registry.iter_tasks()
+    ]
 
     # Recent failed runs
     all_runs = await list_runs(limit=20)

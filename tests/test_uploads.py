@@ -33,7 +33,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from skillforge.api import uploads as uploads_module
-from skillforge.engine.evolution import PENDING_PARENTS
+from skillforge.engine.run_registry import registry as _run_registry
 from skillforge.main import app
 
 # ---------------------------------------------------------------------------
@@ -48,12 +48,12 @@ def client() -> TestClient:
 
 @pytest.fixture(autouse=True)
 def _wipe_upload_state():
-    """Per-test cleanup: in-memory upload cache + PENDING_PARENTS registry."""
+    """Per-test cleanup: in-memory upload cache + RunRegistry pending parents."""
     uploads_module._UPLOADS.clear()
-    PENDING_PARENTS.clear()
+    _run_registry._pending_parents.clear()
     yield
     uploads_module._UPLOADS.clear()
-    PENDING_PARENTS.clear()
+    _run_registry._pending_parents.clear()
 
 
 # A valid SKILL.md that passes validate_skill_structure:
@@ -519,8 +519,9 @@ def test_upload_then_fork_round_trip(client):
     assert fork_resp.status_code == 200, fork_resp.text
     payload = fork_resp.json()
     new_run_id = payload["run_id"]
-    assert new_run_id in PENDING_PARENTS
-    parent = PENDING_PARENTS[new_run_id]
+    parent = _run_registry.take_parent(new_run_id)
+    assert parent is not None
     assert parent.skill_md_content == VALID_SKILL_MD
+    _run_registry.stash_parent(new_run_id, parent)
     # The upload should be cleared from the cache after the fork starts
     assert uploads_module.get_upload(upload_id) is None

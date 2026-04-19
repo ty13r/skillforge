@@ -206,15 +206,15 @@ async def _build_atomic_genomes_section(
             (run.id,),
         ) as cur:
             rows = await cur.fetchall()
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.warning("report: failed to fetch atomic genomes: %s", exc)
+    except Exception:  # noqa: BLE001 — defensive: report rendering must not fail on a bad row
+        logger.exception("report: failed to fetch atomic genomes")
         return []
 
     out: list[dict[str, Any]] = []
     for row in rows:
         try:
             g = _row_to_genome(row)
-        except Exception:
+        except Exception:  # noqa: BLE001 — skip corrupt rows; never crash the whole report
             continue
         out.append(
             {
@@ -250,8 +250,8 @@ async def _build_variant_evolutions_section(
     """
     try:
         evolutions = await get_variant_evolutions_for_run(run.id)
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.warning("report: failed to fetch variant evolutions: %s", exc)
+    except Exception:  # noqa: BLE001 — defensive: report rendering must not fail on a bad row
+        logger.exception("report: failed to fetch variant evolutions")
         return []
 
     out: list[dict[str, Any]] = []
@@ -296,8 +296,8 @@ async def _build_assembly_report(run: EvolutionRun) -> dict[str, Any] | None:
     try:
         variants = await get_variants_for_family(family_id)
         active_variants = [v.to_dict() for v in variants if v.is_active]
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.warning("report: failed to fetch active variants: %s", exc)
+    except Exception:  # noqa: BLE001 — defensive: report rendering degrades gracefully
+        logger.exception("report: failed to fetch active variants")
 
     return {
         "family_id": family.id,
@@ -474,8 +474,8 @@ async def generate_run_report(
     """
     try:
         run = await get_run(run_id)
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.error("report: failed to load run %s: %s", run_id, exc)
+    except Exception:  # noqa: BLE001 — report generation must degrade, never crash
+        logger.exception("report: failed to load run %s", run_id)
         return None
 
     if run is None:
@@ -510,8 +510,8 @@ async def generate_run_report(
             ),
             "generated_at": datetime.now(UTC).isoformat(),
         }
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("report: failed to build report for %s: %s", run_id, exc)
+    except Exception:  # noqa: BLE001 — report generation must degrade, never crash
+        logger.exception("report: failed to build report for %s", run_id)
         return None
 
     target_dir = reports_dir if reports_dir is not None else REPORTS_DIR
@@ -535,8 +535,8 @@ async def generate_run_report(
         logger.info(
             "report: generated %s (%d bytes)", run_id, size_bytes
         )
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("report: failed to write report for %s: %s", run_id, exc)
+    except (OSError, TypeError):
+        logger.exception("report: failed to write report for %s", run_id)
         return None
 
     return report

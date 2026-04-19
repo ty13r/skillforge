@@ -20,6 +20,7 @@ Slot allocation scales with ``target_pop_size`` (never hardcoded; see PLAN.md
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import UTC, datetime
 
@@ -34,6 +35,8 @@ from skillforge.config import (
     model_for,
 )
 from skillforge.models import Generation, SkillGenome
+
+logger = logging.getLogger("skillforge.agents.breeder")
 
 # ---------------------------------------------------------------------------
 # Slot allocation
@@ -150,9 +153,9 @@ async def breed(
                 breeding_instructions=diagnostic_instructions,
             )
             next_gen.extend(diagnostic_children[: slots["diagnostic"]])
-        except Exception as exc:  # noqa: BLE001
-            # Fall through — wildcard slots below absorb the shortfall
-            print(f"breeder: diagnostic mutation failed: {exc}")
+        except Exception:  # noqa: BLE001 — subagent boundary: one slot failure must not kill the whole breed
+            # Fall through — wildcard slots below absorb the shortfall.
+            logger.exception("breeder.diagnostic_failed")
 
     # --- Reflective crossover: combine 2-3 Pareto-optimal parents ---
     pareto_parents = [s for s in ranked if s.is_pareto_optimal][:3]
@@ -171,8 +174,8 @@ async def breed(
                 breeding_instructions=crossover_instructions,
             )
             next_gen.extend(crossover_children[: slots["crossover"]])
-        except Exception as exc:  # noqa: BLE001
-            print(f"breeder: crossover failed: {exc}")
+        except Exception:  # noqa: BLE001 — subagent boundary: one slot failure must not kill the whole breed
+            logger.exception("breeder.crossover_failed")
 
     # --- Wildcard: fresh Skills via spawn_gen0 ---
     if slots["wildcards"] > 0:
@@ -182,14 +185,14 @@ async def breed(
                 pop_size=slots["wildcards"],
             )
             # Mark wildcards as mutations on the next generation
-            next_gen_num = (generation.number + 1)
+            next_gen_num = generation.number + 1
             for w in wildcards:
                 w.generation = next_gen_num
                 w.mutations = ["wildcard"]
                 w.mutation_rationale = "Wildcard slot: fresh spawn to prevent convergence"
             next_gen.extend(wildcards)
-        except Exception as exc:  # noqa: BLE001
-            print(f"breeder: wildcard spawn failed: {exc}")
+        except Exception:  # noqa: BLE001 — subagent boundary: one slot failure must not kill the whole breed
+            logger.exception("breeder.wildcard_spawn_failed")
 
     # --- Trim or pad to exactly target_pop_size ---
     next_gen = next_gen[:target_pop_size]
@@ -413,8 +416,12 @@ async def _extract_lessons(context: str, learning_log: list[str]) -> list[str]:
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
-    except Exception as exc:  # noqa: BLE001
-        return [f"(lesson extraction failed: {exc})"]
+    except Exception:
+        # Degrade gracefully — a breeder that blocks on LLM hiccups would
+        # stall the whole run. The SDK has many concrete error types across
+        # versions; catching at the boundary keeps the engine moving.
+        logger.exception("breeder.lesson_extraction_failed")
+        return ["(lesson extraction failed)"]
 
     match = re.search(r"\[.*\]", text, re.DOTALL)
     if not match:
@@ -452,8 +459,10 @@ async def _extract_breeding_report(
             max_tokens=800,
             messages=[{"role": "user", "content": prompt}],
         )
-    except Exception as exc:  # noqa: BLE001
-        return f"(breeding report failed: {exc})"
+    except Exception:
+        # Degrade gracefully — see _extract_lessons for rationale.
+        logger.exception("breeder.report_extraction_failed")
+        return "(breeding report failed)"
 
 
 async def _extract_consolidated(
@@ -486,8 +495,10 @@ async def _extract_consolidated(
             max_tokens=1200,
             messages=[{"role": "user", "content": prompt}],
         )
-    except Exception as exc:  # noqa: BLE001
-        return ([f"(consolidated extraction failed: {exc})"], "")
+    except Exception:
+        # Degrade gracefully — see _extract_lessons for rationale.
+        logger.exception("breeder.consolidated_extraction_failed")
+        return (["(consolidated extraction failed)"], "")
 
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
@@ -526,8 +537,8 @@ def publish_findings_to_bible(
     findings_dir = BIBLE_DIR / "findings"
     try:
         findings_dir.mkdir(parents=True, exist_ok=True)
-    except OSError as exc:
-        print(f"bible: failed to create findings dir: {exc}")
+    except OSError:
+        logger.exception("bible.findings_dir_mkdir_failed")
         return
 
     # Determine the next finding number by scanning existing files
@@ -556,8 +567,8 @@ def publish_findings_to_bible(
         )
         try:
             (findings_dir / filename).write_text(content)
-        except OSError as exc:
-            print(f"bible: failed to write finding {filename}: {exc}")
+        except OSError:
+            logger.exception("bible.finding_write_failed", extra={"filename": filename})
             continue
         next_num += 1
 
@@ -570,8 +581,8 @@ def publish_findings_to_bible(
             existing = "# Evolution Log\n\n*Chronological log of all SkillForge evolution runs.*\n\n"
         entry_line = f"- **{timestamp}** — run `{run_id[:8]}` gen {generation}: {len(new_entries)} new finding(s)\n"
         log_path.write_text(existing + entry_line)
-    except OSError as exc:
-        print(f"bible: failed to update evolution log: {exc}")
+    except OSError:
+        logger.exception("bible.evolution_log_write_failed")
 
 
 def _slugify(text: str) -> str:

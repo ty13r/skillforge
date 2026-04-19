@@ -19,7 +19,7 @@ Collects the full execution trace + written files for the judging pipeline.
 from __future__ import annotations
 
 import asyncio
-import sys
+import logging
 from pathlib import Path
 
 from claude_agent_sdk import ClaudeAgentOptions, query
@@ -27,6 +27,8 @@ from claude_agent_sdk import ClaudeAgentOptions, query
 from skillforge.config import MAX_TURNS, model_for
 from skillforge.engine.sandbox import collect_written_files
 from skillforge.models import Challenge, CompetitionResult, SkillGenome
+
+logger = logging.getLogger("skillforge.agents.competitor_sdk")
 
 
 def _message_to_dict(msg) -> dict:
@@ -123,8 +125,8 @@ async def run_competitor(
             trace=trace,
             judge_reasoning="timeout after 300s",
         )
-    except Exception as exc:
-        print(f"sdk error in run_competitor: {exc}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 — SDK boundary: degrade gracefully, never crash the run
+        logger.exception("sdk error in run_competitor")
         output_files = collect_written_files(sandbox_path / "output")
         return CompetitionResult(
             skill_id=skill.id,

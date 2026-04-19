@@ -501,5 +501,5 @@ async def load_mock_runs() -> None:
     for path in files:
         try:
             await _load_one(path)
-        except Exception as e:  # noqa: BLE001 - fail soft, never break boot
-            logger.exception("seed_run_loader: failed to load %s: %s", path.name, e)
+        except Exception:  # noqa: BLE001 - fail soft, never break boot
+            logger.exception("seed_run_loader: failed to load %s", path.name)

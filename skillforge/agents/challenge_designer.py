@@ -13,13 +13,13 @@ request when we're ready.
 
 from __future__ import annotations
 
-import json
-import re
 import uuid
 
 from anthropic import AsyncAnthropic
 
+from skillforge.agents._json import extract_json_array
 from skillforge.config import ANTHROPIC_API_KEY, model_for
+from skillforge.errors import ParseError
 from skillforge.models import Challenge
 
 # JSON schema description embedded in prompts
@@ -33,90 +33,6 @@ _SCHEMA_DESCRIPTION = """[
     "gold_standard_hints": "what a great solution looks like"
   }
 ]"""
-
-
-def _extract_json_array(text: str) -> list[dict]:
-    """Extract a JSON array from text.
-
-    Robust against:
-      1. Raw JSON array (ideal case)
-      2. ``` json ... ``` fences with nested backticks in string values
-      3. JSON embedded in prose with `[`/`]` characters in string literals
-
-    Raises:
-        ValueError: if no valid JSON array can be extracted.
-    """
-    candidate = text.strip()
-
-    # 1. Try the whole text as JSON
-    if candidate.startswith("[") and candidate.endswith("]"):
-        try:
-            result = json.loads(candidate)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            pass
-
-    # 2. Strip outer ```json ... ``` fence greedily
-    fence_match = re.search(r"```(?:json)?\s*\n?(.*)\n?```", text, re.DOTALL)
-    if fence_match:
-        fenced = fence_match.group(1).strip()
-        try:
-            result = json.loads(fenced)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            text_to_scan = fenced
-        else:
-            text_to_scan = fenced
-    else:
-        text_to_scan = text
-
-    # 3. Bracket-depth scan respecting string literal state
-    array = _scan_outermost_array(text_to_scan)
-    if array is not None:
-        try:
-            result = json.loads(array)
-            if isinstance(result, list):
-                return result
-        except json.JSONDecodeError:
-            pass
-
-    raise ValueError("No valid JSON array found in response text")
-
-
-def _scan_outermost_array(text: str) -> str | None:
-    """Find the outermost JSON array via bracket-depth scanning that
-    respects string literal state. Returns substring including ``[`` and
-    ``]``, or ``None`` if no balanced array found.
-    """
-    start = text.find("[")
-    if start == -1:
-        return None
-
-    depth = 0
-    in_string = False
-    escape = False
-    for i in range(start, len(text)):
-        ch = text[i]
-        if escape:
-            escape = False
-            continue
-        if ch == "\\":
-            escape = True
-            continue
-        if ch == '"':
-            in_string = not in_string
-            continue
-        if in_string:
-            continue
-        if ch == "[":
-            depth += 1
-        elif ch == "]":
-            depth -= 1
-            if depth == 0:
-                return text[start : i + 1]
-    return None
 
 
 _FILE_CONVENTION = """\
@@ -261,14 +177,14 @@ async def design_challenges(specialization: str, n: int = 3) -> list[Challenge]:
     text = await _generate(_build_system_prompt(specialization, n))
 
     try:
-        raw = _extract_json_array(text)
-    except ValueError:
+        raw = extract_json_array(text)
+    except (ValueError, ParseError):
         # Attempt 2 — retry with more explicit prompt
         text = await _generate(_build_retry_prompt(specialization, n))
         try:
-            raw = _extract_json_array(text)
-        except ValueError as err:
-            raise ValueError(
+            raw = extract_json_array(text)
+        except (ValueError, ParseError) as err:
+            raise ParseError(
                 "challenge designer failed to produce valid JSON after 2 attempts"
             ) from err
 
@@ -331,10 +247,10 @@ async def design_variant_challenge(
     prompt = _build_variant_system_prompt(specialization, dimension)
     text = await _generate(prompt)
     try:
-        raw = _extract_json_array(text)
-    except ValueError:
+        raw = extract_json_array(text)
+    except (ValueError, ParseError):
         text = await _generate(_build_retry_prompt(specialization, n=1))
-        raw = _extract_json_array(text)
+        raw = extract_json_array(text)
 
     challenges = _parse_challenges(raw)
     if len(challenges) != 1:

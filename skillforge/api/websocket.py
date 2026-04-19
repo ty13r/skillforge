@@ -47,7 +47,7 @@ async def evolution_events(websocket: WebSocket, run_id: str) -> None:
     except WebSocketDisconnect:
         logger.info("ws run=%s client disconnected", run_id[:8])
         return
-    except Exception as exc:
-        logger.error("ws run=%s error: %s", run_id[:8], exc)
+    except Exception:  # noqa: BLE001 — WS handler must always close cleanly, never propagate
+        logger.exception("ws run=%s error", run_id[:8])
         with contextlib.suppress(Exception):
             await websocket.close(code=1011)

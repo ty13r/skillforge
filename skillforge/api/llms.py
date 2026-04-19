@@ -12,6 +12,7 @@ that would otherwise be hidden inside a rendered page.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -19,6 +20,8 @@ from fastapi.responses import PlainTextResponse, Response
 
 from skillforge.config import ROOT_DIR
 from skillforge.db.queries import _connect
+
+logger = logging.getLogger("skillforge.api.llms")
 
 router = APIRouter(tags=["llms"])
 
@@ -87,7 +90,7 @@ async def sitemap_xml() -> Response:
             for (run_id,) in await cursor.fetchall():
                 urls.append(f"{SITE_URL}/runs/{run_id}")
                 urls.append(f"{SITE_URL}/runs/{run_id}.md")
-    except Exception:
+    except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
         pass
 
     body_lines = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -283,7 +286,7 @@ async def bench_md() -> PlainTextResponse:
         try:
             data = json.loads(family_json.read_text(encoding="utf-8"))
             summary = data.get("description") or data.get("summary") or ""
-        except Exception:
+        except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
             pass
         lines.append(f"- [{slug}]({SITE_URL}/bench/{slug}.md)"
                      + (f" — {summary}" if summary else ""))
@@ -305,7 +308,7 @@ async def bench_family_md(slug: str) -> PlainTextResponse:
         try:
             data = json.loads(family_json.read_text(encoding="utf-8"))
             body += "\n\n## family.json\n\n```json\n" + json.dumps(data, indent=2) + "\n```\n"
-        except Exception:
+        except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
             pass
     return _md(body)
 
@@ -330,7 +333,7 @@ async def registry_md() -> PlainTextResponse:
                 "FROM evolution_runs ORDER BY created_at DESC LIMIT 200"
             )
             rows = await cursor.fetchall()
-    except Exception:
+    except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
         rows = []
     if not rows:
         lines.append("_No runs found._")
@@ -348,7 +351,7 @@ async def run_md(run_id: str) -> PlainTextResponse:
     try:
         from skillforge.db.queries import get_run
         run = await get_run(run_id)
-    except Exception:
+    except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
         run = None
     if run is None:
         raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
@@ -371,7 +374,7 @@ async def run_md(run_id: str) -> PlainTextResponse:
             try:
                 fit = max(best.pareto_objectives.values())
                 lines.append(f"- **Fitness:** {fit:.4f}")
-            except Exception:
+            except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
                 pass
             lines.append("- **Pareto objectives:**")
             for k, v in sorted(best.pareto_objectives.items()):
@@ -393,6 +396,6 @@ def _first_heading(path: Path) -> str | None:
                 return s.lstrip("#").strip()
             if s.startswith("# "):
                 return s.lstrip("#").strip()
-    except Exception:
+    except Exception:  # noqa: BLE001 — llms.txt endpoint must serve partial content, never 500
         return None
     return None
