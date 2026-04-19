@@ -54,6 +54,7 @@ Core loop: `skillforge/engine/evolution.py` (molecular) + `skillforge/engine/var
 
 ## Key Reference Documents
 - `docs/how-skld-works.md` — **start here**: full system overview for first-time readers.
+- `docs/clean-code.md` — the review rubric every PR is held to (naming, functions, errors, data, async, functional idioms, React/TS, testing, comments, checklist).
 - `plans/SPEC-V2.0.md` — v2.0 architecture spec (taxonomy, agents, variants, evaluation, data model).
 - `plans/PLAN-V2.0.md` — v2.0 implementation plan (5 phases, 15 waves, file-by-file).
 - `plans/SPEC-V2.1.md` — v2.1 architecture spec (controlled evaluation environments, tiered challenge pools, train/test separation).
@@ -181,11 +182,17 @@ When running autonomously (overnight work, no active user):
 - **On hard block**: document in Progress Tracker with `[BLOCKED: reason]` marker, write a journal entry explaining what was tried, skip to any independent work, stop cleanly if no independent work remains.
 
 ## Code Style
+Full rubric: **`docs/clean-code.md`**. TL;DR:
 - Type hints everywhere. Dataclasses for internal models, Pydantic only at API boundary.
 - Async throughout — evolution engine is fully async.
 - No classes where functions suffice.
-- Short functions, clear names, minimal comments.
+- Short functions (≤50 lines), clear names, minimal comments.
 - Prefer composition over inheritance.
+- No bare `except Exception` — typed exceptions from `skillforge/errors.py`.
+- No `print` in library code — `logging` module with `logger.exception` inside excepts.
+- No mutable module globals — use `skillforge/engine/run_registry.py` or similar injected state.
+- No raw `fetch()` in React components — typed hooks from `frontend/src/api/hooks/`.
+- File ceilings: 500 LOC (Python), 400 LOC (TSX). Split into packages when they grow.
 
 ## Testing
 - Unit tests mock the Agent SDK.
