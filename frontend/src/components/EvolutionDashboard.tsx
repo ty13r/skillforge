@@ -7,6 +7,39 @@ import PrimaryButton from "./PrimaryButton";
 import StatCard from "./StatCard";
 import type { RunSummary } from "../types";
 
+/** Decorative stylized "paper" glyph that sits in a card's top-right corner. */
+function PaperGlyph({ tilt = 0 }: { tilt?: number }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 48 56"
+      className="pointer-events-none absolute right-4 top-4 h-12 w-10 text-tertiary/25 transition-all group-hover:text-tertiary/55"
+      style={{ transform: `rotate(${tilt}deg)` }}
+    >
+      {/* Paper body with folded corner */}
+      <path
+        d="M4 4 h30 l10 10 v38 a2 2 0 0 1 -2 2 h-36 a2 2 0 0 1 -2 -2 v-46 a2 2 0 0 1 2 -2 z"
+        fill="currentColor"
+        opacity="0.18"
+      />
+      <path
+        d="M4 4 h30 l10 10 v38 a2 2 0 0 1 -2 2 h-36 a2 2 0 0 1 -2 -2 v-46 a2 2 0 0 1 2 -2 z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        fill="none"
+      />
+      {/* Folded corner */}
+      <path d="M34 4 v10 h10" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      {/* Text lines */}
+      <line x1="10" y1="22" x2="34" y2="22" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="10" y1="28" x2="38" y2="28" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="10" y1="34" x2="30" y2="34" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="10" y1="40" x2="36" y2="40" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="10" y1="46" x2="24" y2="46" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 export default function EvolutionDashboard() {
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   const navigate = useNavigate();
@@ -167,8 +200,9 @@ export default function EvolutionDashboard() {
             href="https://arxiv.org/abs/2309.08532"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={-6} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               EvoPrompt · ICLR 2024
             </p>
@@ -188,8 +222,9 @@ export default function EvolutionDashboard() {
             href="https://github.com/gepa-ai/gepa"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={4} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               GEPA · UC Berkeley · ICLR 2026
             </p>
@@ -210,8 +245,9 @@ export default function EvolutionDashboard() {
             href="https://arxiv.org/pdf/2512.09108"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={-3} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Artemis · TurinTech · 2025-26
             </p>
@@ -232,8 +268,9 @@ export default function EvolutionDashboard() {
             href="https://imbue.com/research/2026-02-27-darwinian-evolver/"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={5} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Imbue Darwinian Evolver · Feb 2026
             </p>
@@ -254,8 +291,9 @@ export default function EvolutionDashboard() {
             href="https://claude.com/blog/improving-skill-creator-test-measure-and-refine-agent-skills"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={-4} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               Anthropic skill-creator · Mar 2026
             </p>
@@ -276,8 +314,9 @@ export default function EvolutionDashboard() {
             href="https://mlflow.org/blog/evaluating-skills-mlflow"
             target="_blank"
             rel="noreferrer noopener"
-            className="group relative rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
+            className="group relative overflow-hidden rounded-xl border border-tertiary/25 bg-surface-container-low/70 p-5 pr-14 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-tertiary/60 hover:bg-surface-container-low hover:shadow-elevated"
           >
+            <PaperGlyph tilt={3} />
             <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
               MLflow · Mar 2026
             </p>
