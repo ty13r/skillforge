@@ -89,7 +89,6 @@ exclude = [
     "^skillforge/engine/evolution\\.py$",
     "^skillforge/engine/export\\.py$",
     "^skillforge/engine/sandbox\\.py$",
-    "^skillforge/engine/scorer\\.py$",
     "^skillforge/main\\.py$",
     "^skillforge/models/run\\.py$",
 ]
