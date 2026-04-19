@@ -394,19 +394,52 @@ async def test_upload_skill_folder_name_matches_frontmatter_name():
 
 
 @pytest.mark.asyncio
-async def test_upload_skill_falls_back_to_arg_name_when_frontmatter_missing():
-    """If SKILL.md has no parseable name, use the ``name`` arg as the folder."""
+async def test_upload_skill_rejects_payload_without_frontmatter():
+    """Content without leading ``---`` is rejected locally, never sent to the API.
+
+    Empirical finding from a live Haiku-tier run: ~1% of managed-backend
+    uploads returned ``400 SKILL.md must start with YAML frontmatter (---)``.
+    Catching it here (instead of after the round-trip) gives a clear error
+    and keeps the fallback-to-inline code path in ``competitor_managed``
+    from being triggered by genuinely bad payloads.
+    """
     mock_client = MagicMock()
-    mock_response = MagicMock()
-    mock_response.id = "skill_fallback_999"
-    mock_client.beta.skills.create = AsyncMock(return_value=mock_response)
+    mock_client.beta.skills.create = AsyncMock()
 
     skill_md = "no frontmatter at all, just prose"
-    await managed_agents.upload_skill(
-        mock_client, name="fallback-name", skill_md=skill_md
+    with pytest.raises(ValueError, match="does not start with YAML frontmatter"):
+        await managed_agents.upload_skill(
+            mock_client, name="fallback-name", skill_md=skill_md
+        )
+    # Never actually called the API
+    mock_client.beta.skills.create.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_upload_skill_strips_bom_and_leading_whitespace():
+    """A leading UTF-8 BOM or stray whitespace is stripped before upload.
+
+    The API is byte-strict about the payload starting with ``---`` —
+    models occasionally emit content with a leading BOM or space that the
+    structural validator happens to tolerate. Normalizing here means the
+    upload succeeds instead of falling back to inline over something
+    cosmetic.
+    """
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.id = "skill_normalized"
+    mock_client.beta.skills.create = AsyncMock(return_value=mock_response)
+
+    skill_md = "\ufeff  \n---\nname: bom-skill\n---\n# x"
+    result = await managed_agents.upload_skill(
+        mock_client, name="display", skill_md=skill_md
     )
+    assert result == "skill_normalized"
     files = mock_client.beta.skills.create.call_args.kwargs["files"]
-    assert files[0][0] == "fallback-name/SKILL.md"
+    filename, content_bytes, _ = files[0]
+    assert filename == "bom-skill/SKILL.md"
+    # BOM/whitespace stripped; payload starts exactly with ``---``
+    assert content_bytes.startswith(b"---\n")
 
 
 def test_extract_skill_name_from_md_happy_path():

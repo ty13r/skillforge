@@ -147,16 +147,31 @@ async def upload_skill(
          use that. The ``name`` arg is still used as the ``display_title``
          (which can be anything human-readable).
 
+    The Anthropic Skills API hard-requires the payload to start literally
+    with ``---``. A UTF-8 BOM or stray leading whitespace — which neither
+    our structural validator nor JSON round-tripping strips — is enough
+    to earn a ``400 SKILL.md must start with YAML frontmatter (---)``.
+    We normalize here so the ~1% of model outputs with a leading BOM or
+    whitespace still upload cleanly instead of falling back to inline.
+
     Returns the new ``skill_id``. The caller is responsible for archiving it
     via :func:`archive_skill` after the session completes.
     """
-    folder = _extract_skill_name_from_md(skill_md) or name
+    # Strip leading BOM + whitespace the API is strict about; don't touch
+    # the rest of the body so checksum/fitness stays stable.
+    normalized = skill_md.lstrip("\ufeff \t\r\n")
+    if not normalized.startswith("---"):
+        raise ValueError(
+            "upload_skill: skill_md does not start with YAML frontmatter (---) "
+            "after stripping BOM/whitespace — refusing to call the API"
+        )
+    folder = _extract_skill_name_from_md(normalized) or name
     resp = await client.beta.skills.create(
         display_title=name,
         files=[
             (
                 f"{folder}/SKILL.md",
-                skill_md.encode("utf-8"),
+                normalized.encode("utf-8"),
                 "text/markdown",
             )
         ],
