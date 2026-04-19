@@ -68,6 +68,7 @@ from skillforge.api.spec_assistant import router as spec_assistant_router
 from skillforge.api.taxonomy import router as taxonomy_router
 from skillforge.api.uploads import router as uploads_router
 from skillforge.api.websocket import router as ws_router
+from skillforge.db.benchmark_seed_loader import load_benchmark_results
 from skillforge.db.database import init_db
 from skillforge.db.queries import mark_zombie_runs
 from skillforge.db.seed_loader import load_seeds
@@ -90,6 +91,12 @@ async def lifespan(app: FastAPI):
         await load_mock_runs()
     except Exception as exc:  # pragma: no cover - fail-soft on seed run load
         logger.exception("Seed run loader failed: %s", exc)
+    try:
+        diag = await load_benchmark_results()
+        if diag.get("loaded"):
+            logger.info("Benchmark seed loaded: %d rows", diag["loaded"])
+    except Exception as exc:  # pragma: no cover - fail-soft on benchmark seed load
+        logger.exception("Benchmark seed loader failed: %s", exc)
     try:
         taxonomy_diag = await load_taxonomy()
         logger.info(
