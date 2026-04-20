@@ -189,6 +189,40 @@ async def test_pipeline_populates_per_skill_fitness(mock_network_layers):
         assert skill.deterministic_scores, "deterministic_scores must be populated"
 
 
+async def test_pipeline_preserves_preexisting_pareto_objectives(mock_network_layers):
+    """Atomic-mode regression: variant_evolution writes composite-scorer
+    objectives onto skill.pareto_objectives BEFORE the judging pipeline
+    runs. The pipeline's per-skill aggregation used to REPLACE those keys
+    with comparative.py's legacy {correctness, code_quality, ...} set —
+    silently clobbering the richer structural breakdown (l0/compile/ast/
+    template/brevity). Now it MERGES: aggregated keys fill in only where
+    the skill doesn't already carry a value.
+    """
+    gen, challenges = _make_generation(n_skills=2, n_challenges=1)
+    # Simulate variant_evolution's composite scorer running first
+    for skill in gen.skills:
+        skill.pareto_objectives = {
+            "composite": 0.72,
+            "l0": 0.85,
+            "compile": 1.0,
+            "ast": 0.60,
+            "template": 1.0,
+            "brevity": 0.80,
+        }
+
+    await run_judging_pipeline(gen, challenges)
+
+    for skill in gen.skills:
+        # Composite-scorer keys survived
+        assert skill.pareto_objectives["composite"] == 0.72
+        assert skill.pareto_objectives["l0"] == 0.85
+        assert skill.pareto_objectives["ast"] == 0.60
+        # Aggregated keys from L4 are still there for molecular-mode parity
+        assert "correctness" in skill.pareto_objectives
+        assert "token_efficiency" in skill.pareto_objectives
+        assert "trigger_accuracy" in skill.pareto_objectives
+
+
 async def test_pipeline_computes_generation_fitness(mock_network_layers):
     gen, challenges = _make_generation(n_skills=3, n_challenges=1)
     await run_judging_pipeline(gen, challenges)
