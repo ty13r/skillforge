@@ -1,57 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+
+import { useSeeds } from "@/api/hooks/seeds";
 
 import InviteGate from "./InviteGate";
 import ParameterInput from "./ParameterInput";
-import PrimaryButton from "./PrimaryButton";
 import SkillUploader from "./SkillUploader";
 import SpecAssistantChat from "./SpecAssistantChat";
-import type { EvolveRequest, EvolveResponse } from "../types";
+import EvolutionModePicker from "./specializationInput/EvolutionModePicker";
+import RunEstimateCard from "./specializationInput/RunEstimateCard";
+import SeedPicker from "./specializationInput/SeedPicker";
+import SourceModePicker from "./specializationInput/SourceModePicker";
+import { estimateCost } from "./specializationInput/estimateCost";
+import { startEvolution } from "./specializationInput/startEvolution";
+import type {
+  EvolutionMode,
+  GeneratedPackage,
+  SeedSummary,
+  SourceMode,
+  UploadResponse,
+} from "./specializationInput/types";
+import { DIFFICULTY_COLOR } from "./specializationInput/types";
 
-type SourceMode = "scratch" | "upload" | "fork";
-
-interface UploadResponse {
-  upload_id: string | null;
-  filename: string;
-  valid: boolean;
-  frontmatter?: Record<string, unknown>;
-  skill_md_content?: string;
-  supporting_files?: string[];
-  errors?: string[];
-}
-
-interface SeedSummary {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: "easy" | "medium" | "hard";
-}
-
-const DIFFICULTY_COLOR: Record<string, string> = {
-  easy: "text-tertiary",
-  medium: "text-warning",
-  hard: "text-error",
-};
-
-const SOURCE_MODES: { value: SourceMode; label: string; hint: string }[] = [
-  {
-    value: "scratch",
-    label: "From Scratch",
-    hint: "Describe a domain and evolve a new Skill from the golden template.",
-  },
-  {
-    value: "upload",
-    label: "Upload Existing",
-    hint: "Bring your own SKILL.md (or zipped Skill dir) and evolve it forward.",
-  },
-  {
-    value: "fork",
-    label: "Fork from Registry",
-    hint: "Pick a curated Gen 0 Skill from the library as your starting point.",
-  },
-];
-
+/**
+ * "Start an Evolution Run" form.
+ *
+ * Orchestrates three source modes (from scratch / upload / fork registry),
+ * four parameter knobs, and the run-estimate footer. The fetch layer, form
+ * sub-views, and pure estimators live in ``specializationInput/*`` so this
+ * file stays focused on state composition and the submit flow.
+ */
 export default function SpecializationInput() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -62,147 +40,58 @@ export default function SpecializationInput() {
   const [populationSize, setPopulationSize] = useState(5);
   const [numGenerations, setNumGenerations] = useState(3);
   const [budget, setBudget] = useState(10);
-  // v2.0 — Auto lets the Taxonomist decide; Atomic and Classic force the mode.
-  const [evolutionMode, setEvolutionMode] = useState<"auto" | "atomic" | "molecular">("auto");
+  const [evolutionMode, setEvolutionMode] = useState<EvolutionMode>("auto");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upload, setUpload] = useState<UploadResponse | null>(null);
   const [forkedSeed, setForkedSeed] = useState<SeedSummary | null>(null);
-  const [allSeeds, setAllSeeds] = useState<SeedSummary[] | null>(null);
-  const [seedCategoryFilter, setSeedCategoryFilter] = useState<string>("all");
   const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [generatedPackage, setGeneratedPackage] = useState<{
-    skillMdContent: string;
-    supportingFiles: Record<string, string>;
-    specialization: string;
-  } | null>(null);
+  const [generatedPackage, setGeneratedPackage] = useState<GeneratedPackage | null>(null);
+
+  const { data: allSeeds = null } = useSeeds();
+
+  // Auto-select the seed named in ?seed=<id> as soon as the library loads.
+  useEffect(() => {
+    if (!seedParam || !allSeeds) return;
+    const match = allSeeds.find((s) => s.id === seedParam);
+    if (match) setForkedSeed(match);
+  }, [seedParam, allSeeds]);
 
   const handleValidated = useCallback((code: string) => {
     setInviteCode(code);
   }, []);
 
-  // Fetch all seeds once — used by both the ?seed=<id> auto-select path
-  // AND the inline picker grid when fork mode is active.
-  useEffect(() => {
-    fetch("/api/seeds")
-      .then((r) => r.json() as Promise<SeedSummary[]>)
-      .then((seeds) => {
-        setAllSeeds(seeds);
-        if (seedParam) {
-          const match = seeds.find((s) => s.id === seedParam);
-          if (match) {
-            setForkedSeed(match);
-          }
-        }
-      })
-      .catch(() => setAllSeeds([]));
-  }, [seedParam]);
-
-  const seedCategories = allSeeds
-    ? ["all", ...Array.from(new Set(allSeeds.map((s) => s.category)))]
-    : ["all"];
-
-  const visibleSeeds =
-    allSeeds?.filter((s) => seedCategoryFilter === "all" || s.category === seedCategoryFilter) ??
-    [];
+  const estimate = useMemo(
+    () => estimateCost({ populationSize, numGenerations }),
+    [populationSize, numGenerations],
+  );
 
   const submit = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      let res: Response;
-      if (sourceMode === "scratch") {
-        if (!specialization.trim() && !generatedPackage) {
-          throw new Error("Specialization is required");
-        }
-        if (generatedPackage) {
-          // Use the AI-generated skill package as parent
-          res = await fetch("/api/evolve/from-parent", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              parent_source: "generated",
-              skill_md_content: generatedPackage.skillMdContent,
-              supporting_files: generatedPackage.supportingFiles,
-              specialization: generatedPackage.specialization || specialization,
-              population_size: populationSize,
-              num_generations: numGenerations,
-              max_budget_usd: budget,
-              invite_code: inviteCode ?? undefined,
-            }),
-          });
-        } else {
-          const body: EvolveRequest & {
-            invite_code?: string;
-            evolution_mode?: string;
-          } = {
-            mode: "domain",
-            specialization,
-            population_size: populationSize,
-            num_generations: numGenerations,
-            max_budget_usd: budget,
-            invite_code: inviteCode ?? undefined,
-            // "auto" maps to undefined so the Taxonomist decides server-side
-            evolution_mode: evolutionMode === "auto" ? undefined : evolutionMode,
-          };
-          res = await fetch("/api/evolve", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-        }
-      } else if (sourceMode === "upload") {
-        if (!upload?.upload_id) {
-          throw new Error("Upload a valid SKILL.md or zip first");
-        }
-        res = await fetch("/api/evolve/from-parent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            parent_source: "upload",
-            parent_id: upload.upload_id,
-            specialization: specialization || undefined,
-            population_size: populationSize,
-            num_generations: numGenerations,
-            max_budget_usd: budget,
-            invite_code: inviteCode ?? undefined,
-          }),
-        });
-      } else {
-        // fork
-        if (!forkedSeed) {
-          throw new Error("No seed selected to fork");
-        }
-        res = await fetch("/api/evolve/from-parent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            parent_source: "registry",
-            parent_id: forkedSeed.id,
-            specialization: specialization || undefined,
-            population_size: populationSize,
-            num_generations: numGenerations,
-            max_budget_usd: budget,
-            invite_code: inviteCode ?? undefined,
-          }),
-        });
-      }
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      const data = (await res.json()) as EvolveResponse;
-      navigate(`/runs/${data.run_id}`);
+      const runId = await startEvolution({
+        sourceMode,
+        specialization,
+        populationSize,
+        numGenerations,
+        budget,
+        evolutionMode,
+        inviteCode,
+        upload,
+        forkedSeedId: forkedSeed?.id ?? null,
+        generatedPackage,
+      });
+      navigate(`/runs/${runId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setSubmitting(false);
     }
   };
 
-  // Invite-gated: if no code has been validated yet, render the gate instead
-  // of the form. The gate handles its own "already validated" fast-path via
-  // localStorage, so returning users with a saved code see the form directly.
+  // Invite gate: no code yet => show gate. The gate handles its own
+  // "already validated" fast-path via localStorage, so returning users
+  // with a saved code see the form directly.
   if (inviteCode === null) {
     return <InviteGate onValidated={handleValidated} />;
   }
@@ -214,251 +103,52 @@ export default function SpecializationInput() {
       </p>
       <h1 className="mt-2 font-display text-4xl tracking-tight">Start an Evolution Run</h1>
 
-      {/* Source mode toggle */}
       <div className="mt-8">
-        <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-          Starting Point
-        </p>
-        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
-          {SOURCE_MODES.map((m) => {
-            const selected = sourceMode === m.value;
-            return (
-              <button
-                key={m.value}
-                onClick={() => setSourceMode(m.value)}
-                className={`rounded-xl border p-4 text-left transition-all ${
-                  selected
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
-                    : "border-outline-variant bg-surface-container-lowest hover:border-primary/40"
-                }`}
-              >
-                <p
-                  className={`font-display text-sm tracking-tight ${selected ? "text-primary" : "text-on-surface"}`}
-                >
-                  {m.label}
-                </p>
-                <p className="mt-1 text-xs text-on-surface-dim">{m.hint}</p>
-              </button>
-            );
-          })}
-        </div>
+        <SourceModePicker value={sourceMode} onChange={setSourceMode} />
       </div>
 
-      {/* Source-specific body */}
       {sourceMode === "scratch" && (
-        <div className="mt-6">
-          <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-            Specialization Blueprint
-          </p>
-          <textarea
-            value={specialization}
-            onChange={(e) => setSpecialization(e.target.value)}
-            placeholder="What should this skill do? e.g., 'Write pytest unit tests for Python code' or 'Review pull requests for security issues' — or click Generate Skill with AI to build one interactively."
-            rows={6}
-            className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-4 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
-          />
-          <SpecAssistantChat onSpecReady={setSpecialization} onPackageReady={setGeneratedPackage} />
-        </div>
+        <ScratchBody
+          specialization={specialization}
+          onSpecChange={setSpecialization}
+          onPackageReady={setGeneratedPackage}
+        />
       )}
 
       {sourceMode === "upload" && (
-        <div className="mt-6 space-y-4">
-          <SkillUploader onUploadReady={setUpload} current={upload} />
-          {upload?.valid && (
-            <div>
-              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                Optional: override the specialization
-              </p>
-              <input
-                type="text"
-                value={specialization}
-                onChange={(e) => setSpecialization(e.target.value)}
-                placeholder="(inherits from the uploaded SKILL.md frontmatter)"
-                className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-dim focus:border-primary focus:outline-none"
-              />
-            </div>
-          )}
-        </div>
+        <UploadBody
+          upload={upload}
+          onUploadReady={setUpload}
+          specialization={specialization}
+          onSpecChange={setSpecialization}
+        />
       )}
 
       {sourceMode === "fork" && (
-        <div className="mt-6 space-y-4">
-          {forkedSeed ? (
-            <>
-              <div className="flex items-start justify-between rounded-xl border border-primary/40 bg-primary/5 p-5">
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
-                    ⑂ Forking from
-                  </p>
-                  <p className="mt-1 font-display text-xl tracking-tight">{forkedSeed.title}</p>
-                  <p className="mt-1.5 inline-flex items-center gap-2">
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
-                      {forkedSeed.category}
-                    </span>
-                    <span
-                      className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[forkedSeed.difficulty]}`}
-                    >
-                      {forkedSeed.difficulty}
-                    </span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setForkedSeed(null);
-                    setSpecialization("");
-                  }}
-                  className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
-                >
-                  Change
-                </button>
-              </div>
-              <div>
-                <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                  Optional: override the specialization
-                </p>
-                <textarea
-                  value={specialization}
-                  onChange={(e) => setSpecialization(e.target.value)}
-                  placeholder="(leave empty to inherit from the seed's specialization)"
-                  rows={3}
-                  className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-3 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Category filter chips */}
-              {allSeeds && allSeeds.length > 0 && (
-                <div className="flex flex-wrap gap-1 rounded-xl border border-outline-variant bg-surface-container-lowest p-1">
-                  {seedCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSeedCategoryFilter(cat)}
-                      className={`rounded-lg px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-wider transition-colors ${
-                        seedCategoryFilter === cat
-                          ? "bg-primary/15 text-primary"
-                          : "text-on-surface-dim hover:text-on-surface"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Seed picker grid */}
-              {allSeeds == null ? (
-                <p className="text-on-surface-dim">Loading seed library…</p>
-              ) : visibleSeeds.length === 0 ? (
-                <p className="text-on-surface-dim">No seeds match the filter.</p>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {visibleSeeds.map((seed) => (
-                    <button
-                      key={seed.id}
-                      onClick={() => {
-                        setForkedSeed(seed);
-                        setSpecialization("");
-                      }}
-                      className="group flex flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-4 text-left transition-all hover:border-primary/40 hover:shadow-elevated"
-                    >
-                      <div className="flex items-start justify-between">
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
-                          {seed.category}
-                        </span>
-                        <span
-                          className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[seed.difficulty]}`}
-                        >
-                          {seed.difficulty}
-                        </span>
-                      </div>
-                      <p className="mt-2 font-display text-base tracking-tight group-hover:text-primary">
-                        {seed.title}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-xs text-on-surface-dim">
-                        {seed.description}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <ForkBody
+          forkedSeed={forkedSeed}
+          allSeeds={allSeeds}
+          specialization={specialization}
+          onSpecChange={setSpecialization}
+          onPickSeed={setForkedSeed}
+          onClearSeed={() => {
+            setForkedSeed(null);
+            setSpecialization("");
+          }}
+        />
       )}
 
-      {/* Generated package summary */}
       {generatedPackage && sourceMode === "scratch" && (
-        <div className="mt-4 rounded-xl border border-tertiary/30 bg-tertiary/5 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
-                ✓ Skill Package Ready
-              </p>
-              <p className="mt-1 text-sm text-on-surface-dim">
-                {Object.keys(generatedPackage.supportingFiles).length + 1} files will be used as the
-                Gen 0 seed
-              </p>
-            </div>
-            <button
-              onClick={() => setGeneratedPackage(null)}
-              className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
-            >
-              Discard
-            </button>
-          </div>
-        </div>
+        <GeneratedPackageBanner
+          fileCount={Object.keys(generatedPackage.supportingFiles).length + 1}
+          onDiscard={() => setGeneratedPackage(null)}
+        />
       )}
 
-      {/* Evolution mode (v2.0) */}
       <div className="mt-6">
-        <p className="mb-2 font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-          Evolution Mode
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              {
-                value: "auto",
-                label: "Auto",
-                hint: "Taxonomist picks atomic vs molecular per spec",
-              },
-              {
-                value: "atomic",
-                label: "Atomic",
-                hint: "Decompose into per-dimension variants then assemble",
-              },
-              {
-                value: "molecular",
-                label: "Classic",
-                hint: "Evolve the whole skill as one unit (v1.x pipeline)",
-              },
-            ] as const
-          ).map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setEvolutionMode(opt.value)}
-              className={`flex-1 rounded-xl border px-4 py-3 text-left transition-all ${
-                evolutionMode === opt.value
-                  ? "border-primary bg-primary/10"
-                  : "border-outline-variant bg-surface-container-lowest hover:border-primary/40"
-              }`}
-            >
-              <div
-                className={`font-medium ${
-                  evolutionMode === opt.value ? "text-primary" : "text-on-surface"
-                }`}
-              >
-                {opt.label}
-              </div>
-              <div className="mt-1 text-xs text-on-surface-dim">{opt.hint}</div>
-            </button>
-          ))}
-        </div>
+        <EvolutionModePicker value={evolutionMode} onChange={setEvolutionMode} />
       </div>
 
-      {/* Parameters */}
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <ParameterInput
           label="Population Size"
@@ -487,75 +177,166 @@ export default function SpecializationInput() {
 
       {error && <div className="mt-4 rounded-xl bg-error/10 p-3 text-sm text-error">{error}</div>}
 
-      {(() => {
-        // Calibrated from observed live runs:
-        //   • 5 pop × 3 gen × 3 challenges = 53 min, ~$7.50
-        //   • 2 pop × 1 gen × 1 challenge = 9 min, ~$2.00
-        // Backend hardcodes num_challenges=3. Competitors run sequentially
-        // (COMPETITOR_CONCURRENCY=1) due to the Agent SDK subprocess race.
-        const CHALLENGES_PER_GEN = 3;
-        const MIN_PER_COMPETITOR_RUN = 0.95;
-        const USD_PER_COMPETITOR_RUN = 0.11;
-        const SETUP_MIN = 5; // challenge design + spawn startup
-        const BREEDING_MIN_PER_GEN = 2;
-        const SETUP_USD = 1.0;
-        const BREEDING_USD_PER_GEN = 0.5;
+      <RunEstimateCard
+        estimate={estimate}
+        budget={budget}
+        populationSize={populationSize}
+        numGenerations={numGenerations}
+        submitting={submitting}
+        onSubmit={submit}
+      />
+    </div>
+  );
+}
 
-        const competitorRuns = populationSize * numGenerations * CHALLENGES_PER_GEN;
-        const estMin = Math.round(
-          competitorRuns * MIN_PER_COMPETITOR_RUN +
-            SETUP_MIN +
-            numGenerations * BREEDING_MIN_PER_GEN,
-        );
-        const estUsd =
-          competitorRuns * USD_PER_COMPETITOR_RUN +
-          SETUP_USD +
-          numGenerations * BREEDING_USD_PER_GEN;
-        const estTimeLabel = estMin >= 90 ? `~${(estMin / 60).toFixed(1)} hrs` : `~${estMin} min`;
-        const overBudget = estUsd > budget;
+// ---------------------------------------------------------------------------
+// Inline source-mode bodies. Small enough that their state is already lifted
+// to the parent — extracting them as full sub-components would trade one
+// level of indirection for two.
+// ---------------------------------------------------------------------------
 
-        return (
-          <div className="mt-8 rounded-xl border border-outline-variant bg-surface-container-low p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex gap-6">
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    Est. Compute Time
-                  </p>
-                  <p className="font-mono text-sm text-on-surface">{estTimeLabel}</p>
-                </div>
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    Est. Compute Cost
-                  </p>
-                  <p
-                    className={`font-mono text-sm ${overBudget ? "text-error" : "text-on-surface"}`}
-                  >
-                    ~${estUsd.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
-                    Competitor Runs
-                  </p>
-                  <p className="font-mono text-sm text-on-surface">
-                    {competitorRuns} ({populationSize}×{numGenerations}×{CHALLENGES_PER_GEN})
-                  </p>
-                </div>
-              </div>
-              <PrimaryButton onClick={submit} disabled={submitting}>
-                {submitting ? "Starting..." : "Start Evolution →"}
-              </PrimaryButton>
-            </div>
-            {overBudget && (
-              <p className="mt-3 font-mono text-[0.6875rem] text-error">
-                ⚠ Estimated cost exceeds your ${budget} budget cap. The run will abort when the cap
-                is hit — increase the cap or reduce population/generations.
+interface ScratchBodyProps {
+  specialization: string;
+  onSpecChange: (next: string) => void;
+  onPackageReady: (pkg: GeneratedPackage) => void;
+}
+
+function ScratchBody({ specialization, onSpecChange, onPackageReady }: ScratchBodyProps) {
+  return (
+    <div className="mt-6">
+      <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+        Specialization Blueprint
+      </p>
+      <textarea
+        value={specialization}
+        onChange={(e) => onSpecChange(e.target.value)}
+        placeholder="What should this skill do? e.g., 'Write pytest unit tests for Python code' or 'Review pull requests for security issues' — or click Generate Skill with AI to build one interactively."
+        rows={6}
+        className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-4 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
+      />
+      <SpecAssistantChat onSpecReady={onSpecChange} onPackageReady={onPackageReady} />
+    </div>
+  );
+}
+
+interface UploadBodyProps {
+  upload: UploadResponse | null;
+  onUploadReady: (next: UploadResponse | null) => void;
+  specialization: string;
+  onSpecChange: (next: string) => void;
+}
+
+function UploadBody({ upload, onUploadReady, specialization, onSpecChange }: UploadBodyProps) {
+  return (
+    <div className="mt-6 space-y-4">
+      <SkillUploader onUploadReady={onUploadReady} current={upload} />
+      {upload?.valid && (
+        <div>
+          <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+            Optional: override the specialization
+          </p>
+          <input
+            type="text"
+            value={specialization}
+            onChange={(e) => onSpecChange(e.target.value)}
+            placeholder="(inherits from the uploaded SKILL.md frontmatter)"
+            className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-dim focus:border-primary focus:outline-none"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ForkBodyProps {
+  forkedSeed: SeedSummary | null;
+  allSeeds: SeedSummary[] | null;
+  specialization: string;
+  onSpecChange: (next: string) => void;
+  onPickSeed: (seed: SeedSummary) => void;
+  onClearSeed: () => void;
+}
+
+function ForkBody({
+  forkedSeed,
+  allSeeds,
+  specialization,
+  onSpecChange,
+  onPickSeed,
+  onClearSeed,
+}: ForkBodyProps) {
+  return (
+    <div className="mt-6 space-y-4">
+      {forkedSeed ? (
+        <>
+          <div className="flex items-start justify-between rounded-xl border border-primary/40 bg-primary/5 p-5">
+            <div>
+              <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-primary">
+                ⑂ Forking from
               </p>
-            )}
+              <p className="mt-1 font-display text-xl tracking-tight">{forkedSeed.title}</p>
+              <p className="mt-1.5 inline-flex items-center gap-2">
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[0.5625rem] uppercase tracking-wider text-primary">
+                  {forkedSeed.category}
+                </span>
+                <span
+                  className={`font-mono text-[0.5625rem] uppercase tracking-wider ${DIFFICULTY_COLOR[forkedSeed.difficulty]}`}
+                >
+                  {forkedSeed.difficulty}
+                </span>
+              </p>
+            </div>
+            <button
+              onClick={onClearSeed}
+              className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
+            >
+              Change
+            </button>
           </div>
-        );
-      })()}
+          <div>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-wider text-on-surface-dim">
+              Optional: override the specialization
+            </p>
+            <textarea
+              value={specialization}
+              onChange={(e) => onSpecChange(e.target.value)}
+              placeholder="(leave empty to inherit from the seed's specialization)"
+              rows={3}
+              className="mt-2 w-full rounded-xl border border-outline-variant bg-surface-container-lowest p-3 font-mono text-sm text-on-surface placeholder:text-on-surface-dim/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+        </>
+      ) : (
+        <SeedPicker seeds={allSeeds} onPick={onPickSeed} />
+      )}
+    </div>
+  );
+}
+
+interface GeneratedPackageBannerProps {
+  fileCount: number;
+  onDiscard: () => void;
+}
+
+function GeneratedPackageBanner({ fileCount, onDiscard }: GeneratedPackageBannerProps) {
+  return (
+    <div className="mt-4 rounded-xl border border-tertiary/30 bg-tertiary/5 p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[0.625rem] uppercase tracking-wider text-tertiary">
+            ✓ Skill Package Ready
+          </p>
+          <p className="mt-1 text-sm text-on-surface-dim">
+            {fileCount} files will be used as the Gen 0 seed
+          </p>
+        </div>
+        <button
+          onClick={onDiscard}
+          className="font-mono text-[0.625rem] uppercase tracking-wider text-on-surface-dim transition-colors hover:text-on-surface"
+        >
+          Discard
+        </button>
+      </div>
     </div>
   );
 }
