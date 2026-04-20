@@ -1,42 +1,9 @@
-"""Variant evolution orchestrator (v2.0 Wave 3-1).
+"""Per-dimension mini-evolution.
 
-Atomic-mode entry point. When ``run.evolution_mode == "atomic"`` the parent
-``run_evolution`` dispatcher delegates here. The orchestrator runs one
-mini-evolution per variant dimension recorded against the parent run, then
-calls a stub assembly step that returns the winning foundation as the
-composite skill (Phase 4 will replace the stub with the real Engineer).
-
-Per-dimension flow:
-
-  1. Read all ``variant_evolutions`` rows for ``run.id``, sorted so
-     foundation dimensions come before capability dimensions.
-  2. For each dimension, run a tiny mini-evolution:
-       a. Mark the row ``status="running"``, emit
-          ``variant_evolution_started``.
-       b. Design ONE focused challenge via
-          ``challenge_designer.design_variant_challenge``.
-       c. Spawn ``population_size`` variants via
-          ``spawner.spawn_variant_gen0`` — capability variants receive the
-          winning foundation as grounding context.
-       d. Run each spawned variant through the Competitor against the
-          single focused challenge.
-       e. Run the judging pipeline against the gathered results.
-       f. Pick the highest-fitness variant as the winner. Persist it as a
-          ``Variant`` row tied back to the family + the
-          ``VariantEvolution`` id.
-       g. Mark the ``VariantEvolution`` row ``status="complete"`` with
-          ``winner_variant_id`` and ``completed_at``. Emit
-          ``variant_evolution_complete``.
-  3. After every dimension is done, call the assembly stub.
-     The Phase 4 Engineer will replace this stub.
-  4. Set ``run.best_skill`` to the assembled composite, persist, and let
-     the parent ``run_evolution`` finalize.
-
-The mini-evolutions reuse existing helpers (Spawner, Competitor, judging
-pipeline) directly rather than recursing into ``run_evolution`` itself.
-Recursion would force a second event loop and complicate the parent run's
-event stream — direct helper calls keep the event order deterministic and
-the wall-clock budget bounded.
+Takes one ``VariantEvolution`` row, runs the full small-scale pipeline
+(challenge design → spawn → compete → score → judge → breed → pick
+winner), and returns the winning Variant + its genome. Called once per
+dimension by ``main.run_variant_evolution``.
 """
 
 from __future__ import annotations
@@ -47,7 +14,6 @@ import uuid
 from datetime import UTC, datetime
 
 from skillforge.db.queries import (
-    get_variant_evolutions_for_run,
     get_variants_for_family,
     save_challenge,
     save_genome,
@@ -56,43 +22,14 @@ from skillforge.db.queries import (
     save_variant_evolution,
 )
 from skillforge.engine.events import emit
-from skillforge.models import (
-    Generation,
-    SkillGenome,
-    Variant,
-    VariantEvolution,
+from skillforge.engine.variant_evolution._helpers import (
+    DEFAULT_VARIANT_CONCURRENCY,
+    _aggregate_fitness,
 )
+from skillforge.models import Generation, SkillGenome, Variant, VariantEvolution
 from skillforge.models.run import EvolutionRun
 
-logger = logging.getLogger("skillforge.engine.variant_evolution")
-
-# Atomic-mode defaults — small populations because the per-dimension
-# challenge is narrow. Wave 1 of Phase 3 keeps gen=1 (no breeding loop yet);
-# Wave 4 will introduce per-dimension breeding.
-DEFAULT_VARIANT_POP = 2
-# Post-v2.0 item 4: multi-generation breeding loops are now supported inside
-# _run_dimension_mini_evolution. Bumped to 2 so the default produces one
-# round of breeding after gen 0. Existing VariantEvolution rows with
-# ``num_generations=1`` still work — the loop collapses to a single pass.
-DEFAULT_VARIANT_GENS = 2
-DEFAULT_VARIANT_CONCURRENCY = 3
-
-
-def _tier_sort_key(ve: VariantEvolution) -> tuple[int, str]:
-    """Sort foundation dimensions before capability dimensions."""
-    order = {"foundation": 0, "capability": 1}
-    return (order.get(ve.tier, 99), ve.dimension)
-
-
-def _aggregate_fitness(skill: SkillGenome) -> float:
-    """Compute a single fitness number for ranking variants."""
-    if skill.pareto_objectives:
-        vals = list(skill.pareto_objectives.values())
-        return sum(vals) / max(1, len(vals))
-    if skill.deterministic_scores:
-        vals = list(skill.deterministic_scores.values())
-        return sum(vals) / max(1, len(vals))
-    return 0.0
+logger = logging.getLogger("skillforge.engine.variant_evolution.dimension")
 
 
 async def _run_dimension_mini_evolution(
@@ -406,215 +343,3 @@ async def _run_dimension_mini_evolution(
     return variant, winner_genome
 
 
-async def _real_assembly(
-    run: EvolutionRun,
-    foundation_winner: SkillGenome | None,
-    capability_winners: list[SkillGenome],
-) -> SkillGenome:
-    """Phase 4 real assembly — invoke the Engineer agent + integration test.
-
-    Falls back to a "use the highest-fitness winner as-is" path when no
-    foundation variant exists (some atomic decompositions only have
-    capability dimensions). Otherwise runs the full Engineer flow:
-    weave → validate → optionally refine → persist composite.
-    """
-    if foundation_winner is None:
-        if not capability_winners:
-            raise RuntimeError("assembly: no winners to assemble from")
-        # Edge case: no foundation tier in this decomposition. Use the
-        # highest-fitness capability as the de facto skeleton and emit
-        # a stub assembly_complete. Wave 4 polish will extend the
-        # Engineer to handle capability-only assemblies.
-        await emit(
-            run.id,
-            "assembly_started",
-            capability_count=len(capability_winners),
-            mode="capability_only_fallback",
-        )
-        composite = max(capability_winners, key=_aggregate_fitness)
-        await emit(
-            run.id,
-            "assembly_complete",
-            composite_skill_id=composite.id,
-            capability_count=len(capability_winners),
-            integration_passed=True,
-            mode="capability_only_fallback",
-        )
-        return composite
-
-    # Resolve the family for the Engineer call
-    from skillforge.db.queries import get_family
-
-    family = await get_family(run.family_id) if run.family_id else None
-    if family is None:
-        # Defensive fallback — synthesize a minimal SkillFamily so the
-        # Engineer call still has metadata to work with. The orchestrator
-        # logs a warning but doesn't block.
-        from skillforge.models import SkillFamily
-
-        logger.warning(
-            "run=%s atomic assembly: no family found for family_id=%s; "
-            "using a synthesized SkillFamily for the Engineer call",
-            run.id[:8],
-            run.family_id,
-        )
-        family = SkillFamily(
-            id=run.family_id or "fam_unknown",
-            slug="composite",
-            label="Composite",
-            specialization=run.specialization,
-        )
-
-    from skillforge.engine.assembly import assemble_skill
-
-    composite, _report = await assemble_skill(
-        run, family, foundation_winner, capability_winners
-    )
-    return composite
-
-
-async def run_variant_evolution(run: EvolutionRun) -> EvolutionRun:
-    """Top-level atomic-mode orchestrator.
-
-    Reads the ``variant_evolutions`` rows for ``run.id``, processes each
-    dimension in tier order, and stamps ``run.best_skill`` with the
-    assembled composite. Falls back to molecular mode and logs a warning
-    if no dimensions are recorded against the run (defensive — the
-    Taxonomist should always create them at submission time for atomic).
-    """
-    all_rows = await get_variant_evolutions_for_run(run.id)
-
-    # Filter to rows that actually need work. Rows already in a terminal
-    # state (complete/failed) from prior runs must NOT be re-processed —
-    # that was causing 4x API spend on re-runs because the live test's
-    # hardcoded run_id accumulates stale rows across test invocations.
-    # "running" is included because a previous crash may have left a row
-    # stuck mid-processing; we let the orchestrator retry it.
-    pending = [
-        v for v in all_rows if v.status not in {"complete", "failed"}
-    ]
-    skipped = len(all_rows) - len(pending)
-    if skipped:
-        logger.info(
-            "run=%s atomic mode: skipping %d terminal variant_evolutions "
-            "(%d pending)",
-            run.id[:8],
-            skipped,
-            len(pending),
-        )
-
-    if not pending:
-        logger.warning(
-            "run=%s atomic mode requested but no pending variant_evolutions; "
-            "falling back to molecular pipeline",
-            run.id[:8],
-        )
-        # Caller (run_evolution dispatcher) will handle the fallback
-        run.evolution_mode = "molecular"
-        return run
-
-    pending.sort(key=_tier_sort_key)
-    foundation_winner: SkillGenome | None = None
-    capability_winners: list[SkillGenome] = []
-
-    # --- Managed Agents environment (shared across all dimensions) ---
-    from skillforge.config import COMPETITOR_BACKEND
-
-    env_id: str | None = None
-    managed_client = None
-    if COMPETITOR_BACKEND == "managed":
-        from skillforge.agents import managed_agents
-
-        try:
-            logger.info("run=%s creating managed environment...", run.id[:8])
-            managed_client = managed_agents.make_client()
-            env_id = await managed_agents.create_environment(
-                managed_client, run_id=run.id
-            )
-            logger.info("run=%s managed environment ready: %s", run.id[:8], env_id)
-            await emit(run.id, "managed_environment_ready", environment_id=env_id)
-        except Exception as exc:  # noqa: BLE001 — managed-env boundary: any SDK failure must be captured
-            logger.exception("run=%s managed environment creation failed", run.id[:8])
-            run.status = "failed"
-            run.failure_reason = f"managed environment creation failed: {exc}"
-            await save_run(run)
-            return run
-
-    logger.info(
-        "run=%s atomic mode: %d variant_evolutions queued",
-        run.id[:8],
-        len(pending),
-    )
-
-    try:
-        for vevo in pending:
-            # Apply default population size if the row was created without one
-            if vevo.population_size <= 0:
-                vevo.population_size = DEFAULT_VARIANT_POP
-            if vevo.num_generations <= 0:
-                vevo.num_generations = DEFAULT_VARIANT_GENS
-
-            vevo.status = "running"
-            await save_variant_evolution(vevo)
-            await emit(
-                run.id,
-                "variant_evolution_started",
-                variant_evolution_id=vevo.id,
-                dimension=vevo.dimension,
-                tier=vevo.tier,
-                population_size=vevo.population_size,
-            )
-
-            try:
-                _variant, winner_genome = await _run_dimension_mini_evolution(
-                    run=run,
-                    vevo=vevo,
-                    foundation_winner=foundation_winner,
-                    env_id=env_id,
-                )
-            except Exception as exc:  # noqa: BLE001 — one bad dimension must not crash the whole atomic run
-                logger.exception(
-                    "run=%s dimension %s mini-evolution failed",
-                    run.id[:8],
-                    vevo.dimension,
-                )
-                vevo.status = "failed"
-                await save_variant_evolution(vevo)
-                await emit(
-                    run.id,
-                    "variant_evolution_complete",
-                    variant_evolution_id=vevo.id,
-                    dimension=vevo.dimension,
-                    tier=vevo.tier,
-                    status="failed",
-                    error=str(exc),
-                )
-                raise
-
-            await emit(
-                run.id,
-                "variant_evolution_complete",
-                variant_evolution_id=vevo.id,
-                dimension=vevo.dimension,
-                tier=vevo.tier,
-                winner_variant_id=vevo.winner_variant_id,
-                status="complete",
-            )
-
-            if vevo.tier == "foundation":
-                foundation_winner = winner_genome
-            else:
-                capability_winners.append(winner_genome)
-
-        composite = await _real_assembly(run, foundation_winner, capability_winners)
-        run.best_skill = composite
-    finally:
-        # Tear down managed environment
-        if env_id is not None and managed_client is not None:
-            try:
-                from skillforge.agents import managed_agents as _ma
-                await _ma.archive_environment(managed_client, env_id)
-                logger.info("run=%s managed environment archived: %s", run.id[:8], env_id)
-            except Exception:  # noqa: BLE001
-                logger.warning("run=%s managed environment cleanup failed", run.id[:8])
-    return run

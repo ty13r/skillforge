@@ -94,4 +94,7 @@ __all__ = [
     "compute_token_usage",
     "compute_session_runtime_hours",
     "session_was_skill_loaded",
+    # Private helpers re-exported for test access
+    "_extract_skill_name_from_md",
+    "_normalize_output_path",
 ]
