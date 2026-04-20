@@ -42,11 +42,15 @@ export function useRunReport(runId: string | null) {
   });
 }
 
-export function useRunDimensions(runId: string | null) {
+export function useRunDimensions(
+  runId: string | null,
+  opts: { refetchInterval?: number | false } = {},
+) {
   return useQuery({
     queryKey: [...runKey(runId ?? ""), "dimensions"],
     queryFn: () => apiClient.get<DimensionStatus[]>(`/api/runs/${runId}/dimensions`),
     enabled: !!runId,
+    refetchInterval: opts.refetchInterval ?? false,
   });
 }
 
