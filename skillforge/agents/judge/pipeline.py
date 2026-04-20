@@ -150,14 +150,24 @@ async def run_judging_pipeline(
         if not skill_results:
             continue
 
-        # Average Pareto objectives across this skill's challenge results
-        objective_keys = set()
+        # Average Pareto objectives across this skill's challenge results.
+        # MERGE rather than REPLACE: in atomic mode, variant_evolution has
+        # already populated skill.pareto_objectives with the composite scorer's
+        # richer structural breakdown (l0/compile/ast/template/brevity/
+        # behavioral). Wholesale replacement clobbered those keys and left
+        # every atomic-run skill scored only on comparative.py's legacy
+        # axes. Pre-existing skill-level values win on key conflicts; the
+        # aggregation only fills in keys the skill doesn't already carry.
+        aggregated: dict[str, float] = {}
+        objective_keys: set[str] = set()
         for r in skill_results:
             objective_keys.update(r.pareto_objectives.keys())
-        skill.pareto_objectives = {
-            k: sum(r.pareto_objectives.get(k, 0.0) for r in skill_results) / len(skill_results)
-            for k in objective_keys
-        }
+        for k in objective_keys:
+            aggregated[k] = (
+                sum(r.pareto_objectives.get(k, 0.0) for r in skill_results)
+                / len(skill_results)
+            )
+        skill.pareto_objectives = {**aggregated, **skill.pareto_objectives}
 
         # Trigger scores (same across all results for a skill — take the first)
         skill.trigger_precision = skill_results[0].trigger_precision
